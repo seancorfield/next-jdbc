@@ -1,6 +1,6 @@
 (ns next.jdbc-test
-  (:require [clojure.test :refer [deftest is]]
-            [next.jdbc :refer []]))
+  (:require [clojure.test :refer [deftest is testing]]
+            [next.jdbc :as j]))
 
 (deftest a-test
   (testing "FIXME, I fail."
