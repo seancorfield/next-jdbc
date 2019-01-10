@@ -7,5 +7,5 @@ or whether it will be a public, open source project.
 
 Please do not send Pull Requests at this point!
 
-Feel free to [open Issues](https://github.com/next.jdbc/issues) with opinions
+Feel free to [open Issues](https://github.com/seancorfield/next-jdbc/issues) with opinions
 and suggestions -- I'm having to have discussions about the concepts!
