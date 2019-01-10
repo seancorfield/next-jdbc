@@ -214,12 +214,13 @@
   "Common logic for loading the DriverManager and the designed JDBC driver
   class and obtaining the appropriate Connection object."
   [url etc]
+  ;; force DriverManager to be loaded
+  (DriverManager/getLoginTimeout)
   (-> (DriverManager/getConnection url (as-properties etc))
       (modify-connection etc)))
 
-(defn- spec->datasource
+(defn- spec->url+etc
   ""
-  ^DataSource
   [{:keys [dbtype dbname host port classname] :as db-spec}]
   (let [;; allow aliases for dbtype
         subprotocol (aliases dbtype dbtype)
@@ -240,8 +241,6 @@
     ;; verify the datasource is loadable
     (if-let [class-name (or classname (classnames subprotocol))]
       (do
-        ;; force DriverManager to be loaded
-        (DriverManager/getLoginTimeout)
         (if (string? class-name)
           (clojure.lang.RT/loadClassForName class-name)
           (loop [[clazz & more] class-name]
@@ -255,29 +254,33 @@
                 (recur more)
                 (throw load-failure))))))
       (throw (ex-info (str "Unknown dbtype: " dbtype) db-spec)))
-    ;; return a DataSource
-    (reify DataSource
-      (getConnection [this]
-                     (get-driver-connection url etc))
-      (getConnection [this username password]
-                     (get-driver-connection url
-                                            (assoc etc
-                                                   :username username
-                                                   :password password))))))
+    [url etc]))
 
-(defn- string->spec
+(defn- string->url+etc
   ""
   [s]
-  {})
+  [s {}])
+
+(defn- url+etc->datasource
+  ""
+  [[url etc]]
+  (reify DataSource
+    (getConnection [this]
+                   (get-driver-connection url etc))
+    (getConnection [this username password]
+                   (get-driver-connection url
+                                          (assoc etc
+                                                 :username username
+                                                 :password password)))))
 
 (extend-protocol
  Sourceable
  clojure.lang.Associative
- (get-datasource [this] (spec->datasource this))
+ (get-datasource [this] (url+etc->datasource (spec->url+etc this)))
  DataSource
  (get-datasource [this] this)
  String
- (get-datasource [this] (get-datasource (string->spec this))))
+ (get-datasource [this] (url+etc->datasource (string->url+etc this))))
 
 (extend-protocol
  Connectable
@@ -393,6 +396,7 @@
 (comment
   (def db-spec {:dbtype "mysql" :dbname "worldsingles" :user "root" :password "visual" :useSSL false})
   (def db-spec {:dbtype "h2:mem" :dbname "perf"})
+  (def con db-spec)
   (def con (get-connection db-spec))
   (println con)
   (def ds (get-datasource db-spec))
