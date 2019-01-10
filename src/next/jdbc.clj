@@ -410,6 +410,11 @@
                  (with-open [stmt (prepare con sql-params opts)]
                    (reduce-stmt stmt f init))))))))
 
+(defn query
+  ""
+  [connectable sql-params & [opts]]
+  (into [] (map (partial into {})) (execute! connectable sql-params opts)))
+
 (comment
   (def db-spec {:dbtype "h2:mem" :dbname "perf"})
   (def con db-spec)
