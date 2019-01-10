@@ -44,14 +44,22 @@
 (defprotocol Transactable
   (transact [this f opts]))
 
+(defn set-parameters
+  ""
+  ^PreparedStatement
+  [^PreparedStatement ps params]
+  (loop [[p & more] params i 1]
+    (.setObject ps i p)
+    (if more
+      (recur more (inc i))
+      ps)))
+
 (defn- prepare*
   "Given a connection, a SQL statement, its parameters, and some options,
   return a PreparedStatement representing that."
   [^Connection con [sql & params] opts]
-  (let [^PreparedStatement s (.prepareStatement con sql)]
-    (doseq [p params]
-      (.setObject s 1 p))
-    s))
+  (doto (.prepareStatement con sql)
+        (set-parameters params)))
 
 (def ^:private isolation-levels
   "Transaction isolation levels."
