@@ -2,27 +2,55 @@
 
 (ns next.jdbc
   ""
-  (:require [clojure.set :as set])
-  (:import (java.sql Connection DriverManager ResultSet ResultSetMetaData
-                     SQLException)
+  (:require [clojure.set :as set]
+            [clojure.string :as str])
+  (:import (java.lang AutoCloseable)
+           (java.sql Connection DriverManager
+                     PreparedStatement
+                     ResultSet ResultSetMetaData
+                     SQLException Statement)
            (javax.sql DataSource)
            (java.util Properties)))
 
+(comment
+  "Key areas of interaction:
+  1a. Making a DataSource -- turn everything connectable into a DataSource
+  1b. Given a DataSource, we can getConnection()
+  2. Preparing a Statement -- connection + SQL + params (+ options)
+      (multiple param groups means addBatch() calls)
+  3. Execute a (Prepared) Statement to produce a ResultSet (or update count)
+      (can execute batch of prepared statements and get multiple results)"
+
+  "Additional areas:
+  1. with-db-connection -- given 'something', get a connection, execute the
+      body, and close the connection (if we opened it).
+  2. with-db-transaction -- given 'something', get a connection, start a
+      transaction, execute the body, commit/rollback, and close the connection
+      (if we opened it else restore connection state)."
+  "Database metadata can tell us:
+  0. If get generated keys is supported!
+  1. If batch updates are supported
+  2. If save points are supported
+  3. If various concurrency/holdability/etc options are supported")
+
 (set! *warn-on-reflection* true)
 
-(defprotocol Closeable
-  (close [this]))
 (defprotocol Connectable
-  (get-connection [this opts]))
+  (get-connection ^AutoCloseable [this]))
 (defprotocol Preparable
-  (->jdbc-connection [this])
-  (get-statement [this db-spec sql-params opts]))
+  (->jdbc-connection ^Connection [this])
+  (prepare ^PreparedStatement [this sql-params opts]))
 (defprotocol Transactable
   (transact [this f opts]))
 
-(defn- get-statement*
-  [db-spec con sql-params opts]
-  (.prepareStatement con (first sql-params)))
+(defn- prepare*
+  "Given a connection, a SQL statement, its parameters, and some options,
+  return a PreparedStatement representing that."
+  [^Connection con [sql & params] opts]
+  (let [^PreparedStatement s (.prepareStatement con sql)]
+    (doseq [p params]
+      (.setObject s 1 p))
+    s))
 
 (def ^:private isolation-levels
   "Transaction isolation levels."
@@ -50,15 +78,14 @@
 
 (defn- transact*
   ""
-  [db-spec con transacted f opts]
-  (let [{:keys [isolation read-only? rollback-only?]}
-        (merge (when (map? db-spec) db-spec) opts)
+  [con transacted f opts]
+  (let [{:keys [isolation read-only? rollback-only?]} opts
         committable? (not rollback-only?)]
     (if transacted
       ;; should check isolation level; maybe implement save points?
       (f con)
-      (with-open [t-con (assoc (get-connection con opts)
-                               :transacted (atom committable?))]
+      (with-open [^AutoCloseable t-con (assoc (get-connection con)
+                                              :transacted (atom committable?))]
         (let [^Connection jdbc (->jdbc-connection t-con)
               old-autocommit   (.getAutoCommit jdbc)
               old-isolation    (.getTransactionIsolation jdbc)
@@ -104,33 +131,27 @@
                    (.setReadOnly jdbc old-readonly)
                    (catch Exception _)))))))))))
 
-(defrecord NestedConnection [db-spec con transacted opts]
+(defrecord NestedConnection [con transacted]
   Connectable
-  (get-connection [this opts']
-    (->NestedConnection db-spec con transacted (merge opts opts')))
+  (get-connection [this] (->NestedConnection con transacted))
   Preparable
   (->jdbc-connection [this] con)
-  (get-statement [this db-spec sql-params opts']
-    (get-statement* db-spec con sql-params (merge opts opts')))
-  Closeable
+  (prepare [this sql-params opts] (prepare* con sql-params opts))
+  AutoCloseable
   (close [this])
   Transactable
-  (transact [this f opts']
-    (transact* db-spec con transacted f (merge opts opts'))))
+  (transact [this f opts] (transact* con transacted f opts)))
 
-(defrecord Connected [db-spec con transacted opts]
+(defrecord Connected [con transacted]
   Connectable
-  (get-connection [this opts']
-    (->NestedConnection db-spec con transacted (merge opts opts')))
+  (get-connection [this] (->NestedConnection con transacted))
   Preparable
   (->jdbc-connection [this] con)
-  (get-statement [this db-spec sql-params opts']
-    (get-statement* db-spec con sql-params (merge opts opts')))
-  Closeable
+  (prepare [this sql-params opts] (prepare* con sql-params opts))
+  AutoCloseable
   (close [this] (.close ^Connection con))
   Transactable
-  (transact [this f opts']
-    (transact* db-spec con transacted f (merge opts opts'))))
+  (transact [this f opts] (transact* con transacted f opts)))
 
 (defmacro in-transaction
   [[sym con opts] & body]
@@ -213,7 +234,7 @@
 (defn- get-driver-connection
   "Common logic for loading the DriverManager and the designed JDBC driver
   class and obtaining the appropriate Connection object."
-  [classname subprotocol db-spec url etc opts error-msg]
+  [classname subprotocol db-spec url etc error-msg]
   (if-let [class-name (or classname (classnames subprotocol))]
     (do
       ;; force DriverManager to be loaded
@@ -232,11 +253,11 @@
               (throw load-failure))))))
     (throw (ex-info error-msg db-spec)))
   (-> (DriverManager/getConnection url (as-properties etc))
-      (modify-connection opts)))
+      (modify-connection etc)))
 
 (defn- spec->connection
   ""
-  [{:keys [dbtype dbname host port classname] :as db-spec} opts]
+  [{:keys [dbtype dbname host port classname] :as db-spec}]
   (let [;; allow aliases for dbtype
         subprotocol (aliases dbtype dbtype)
         host (or host "127.0.0.1")
@@ -254,7 +275,7 @@
                        db-sep dbname))
         etc (dissoc db-spec :dbtype :dbname)]
     (get-driver-connection classname subprotocol db-spec
-                           url etc opts
+                           url etc
                            (str "Unknown dbtype: " dbtype))))
 
 (defn- string->spec
@@ -262,19 +283,20 @@
   [s]
   {})
 
-(extend-protocol Connectable
-  clojure.lang.Associative
-  (get-connection [this opts]
-    (->Connected this (spec->connection this opts) nil opts))
-  Connection
-  (get-connection [this opts]
-    (->Connected {} this nil opts))
-  DataSource
-  (get-connection [this opts]
-    (->Connected {} (modify-connection (.getConnection this) opts) nil opts))
-  String
-  (get-connection [this opts]
-    (get-connection (string->spec this) opts)))
+(extend-protocol
+ Connectable
+ clojure.lang.Associative
+ (get-connection [this]
+                 (->Connected (spec->connection this) nil))
+ Connection
+ (get-connection [this]
+                 (->Connected this nil))
+ DataSource
+ (get-connection [this]
+                 (->Connected (.getConnection this) nil))
+ String
+ (get-connection [this]
+                 (get-connection (string->spec this))))
 
 (comment
   (get-connection {:dbtype "derby" :dbname "clojure_test" :create true} {})
@@ -286,20 +308,27 @@
   (let [^ResultSetMetaData rsmeta (.getMetaData rs)
         idxs (range 1 (inc (.getColumnCount rsmeta)))]
     (mapv (fn [^Integer i]
-            (keyword (.getTableName rsmeta i) (.getColumnLabel rsmeta i)))
+            (keyword (str/lower-case (.getTableName rsmeta i))
+                     (str/lower-case (.getColumnLabel rsmeta i))))
           idxs)))
 
 (defn- mapify-result-set
   "Given a result set, return an object that wraps the current row as a hash
   map. Note that a result set is mutable and the current row will change behind
   this wrapper so operations need to be eager (and fairly limited).
+
   Supports ILookup (keywords are treated as strings).
+
   Supports Associative for lookup only (again, keywords are treated as strings).
+
+  Supports Seqable which realizes a full row of the data.
+
   Later we may realize a new hash map when assoc (and other, future, operations
   are performed on the result set row)."
-  [^ResultSet rs]
+  [^ResultSet rs opts]
   (let [cols (delay (get-column-names rs))]
     (reify
+
       clojure.lang.ILookup
       (valAt [this k]
              (try
@@ -310,6 +339,7 @@
                (.getObject rs (name k))
                (catch SQLException _
                  not-found)))
+
       clojure.lang.Associative
       (containsKey [this k]
                    (try
@@ -323,35 +353,50 @@
                  (catch SQLException _)))
       (assoc [this _ _]
              (throw (ex-info "assoc not supported on raw result set" {})))
+
       clojure.lang.Seqable
       (seq [this]
-        (seq (mapv (fn [^Integer i]
-                     (clojure.lang.MapEntry. (nth @cols i)
-                                             (.getObject rs (inc i))))
-                   (range (count @cols))))))))
+           (seq (mapv (fn [^Integer i]
+                        (clojure.lang.MapEntry. (nth @cols (dec i))
+                                                (.getObject rs i)))
+                      (range 1 (inc (count @cols)))))))))
 
 (defn execute!
   "General SQL execution function. Returns a reducible that, when reduced,
   runs the SQL and yields the result."
-  [db-spec sql-params opts]
-  (reify clojure.lang.IReduceInit
-    (reduce [this f init]
-      (with-open [con (get-connection db-spec opts)]
-        (with-open [stmt (get-statement con db-spec sql-params opts)]
-          (if (.execute stmt)
-            (let [rs     (.getResultSet stmt)
-                  rs-map (mapify-result-set rs)]
-              (loop [init' init]
-                (if (.next rs)
-                  (let [result (f init' rs-map)]
-                    (if (reduced? result)
-                      @result
-                      (recur result)))
-                  init')))
-            (.getUpdateCount stmt)))))))
+  [db-spec sql-params & [opts]]
+  (let [opts (merge (when (map? db-spec) db-spec) opts)]
+    (reify clojure.lang.IReduceInit
+      (reduce [this f init]
+        (with-open [con (get-connection db-spec)]
+          (with-open [stmt (prepare con sql-params opts)]
+            (if (.execute stmt)
+              (let [rs     (.getResultSet stmt)
+                    rs-map (mapify-result-set rs opts)]
+                (loop [init' init]
+                  (if (.next rs)
+                    (let [result (f init' rs-map)]
+                      (if (reduced? result)
+                        @result
+                        (recur result)))
+                    init')))
+              (.getUpdateCount stmt))))))))
 
 (comment
-  (def db-spec {:dbtype "mysql" :dbname "worldsingles" :user "root" :password "visual"})
-  (reduce (fn [rs m] (conj rs (into {} m)))
-          []
-          (execute! db-spec ["select * from status"] {})))
+  (def db-spec {:dbtype "mysql" :dbname "worldsingles" :user "root" :password "visual" :useSSL false})
+  (def db-spec {:dbtype "h2:mem" :dbname "perf"})
+  (def con (get-connection db-spec))
+  (reduce + 0 (execute! con ["DROP TABLE fruit"]))
+  (reduce + 0 (execute! con ["CREATE TABLE fruit (id int default 0, name varchar(32) primary key, appearance varchar(32), cost int, grade real)"]))
+  (reduce + 0 (execute! con ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (1,'Apple','red',59,87), (2,'Banana','yellow',29,92.2), (3,'Peach','fuzzy',139,90.0), (4,'Orange','juicy',89,88.6)"]))
+  (close con)
+  (require '[criterium.core :refer [bench quick-bench]])
+  (quick-bench (reduce + (take 10e6 (range))))
+  (quick-bench
+   (reduce (fn [_ row] (reduced (:name row)))
+           nil
+           (execute! con ["select * from fruit where appearance = ?" "red"])))
+  (quick-bench
+   (reduce (fn [rs m] (reduced (into {} m)))
+           nil
+           (execute! con ["select * from fruit where appearance = ?" "red"]))))
