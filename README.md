@@ -4,7 +4,7 @@ The next generation of `clojure.java.jdbc`: a new low-level Clojure wrapper for 
 
 ## Usage
 
-FIXME
+Still evolving and very much subject to change!
 
 ## License
 
