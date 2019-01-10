@@ -35,10 +35,11 @@
 
 (set! *warn-on-reflection* true)
 
+(defprotocol Sourceable
+  (get-datasource ^DataSource [this]))
 (defprotocol Connectable
   (get-connection ^AutoCloseable [this]))
 (defprotocol Preparable
-  (->jdbc-connection ^Connection [this])
   (prepare ^PreparedStatement [this sql-params opts]))
 (defprotocol Transactable
   (transact [this f opts]))
@@ -54,11 +55,11 @@
 
 (def ^:private isolation-levels
   "Transaction isolation levels."
-  {:none             java.sql.Connection/TRANSACTION_NONE
-   :read-committed   java.sql.Connection/TRANSACTION_READ_COMMITTED
-   :read-uncommitted java.sql.Connection/TRANSACTION_READ_UNCOMMITTED
-   :repeatable-read  java.sql.Connection/TRANSACTION_REPEATABLE_READ
-   :serializable     java.sql.Connection/TRANSACTION_SERIALIZABLE})
+  {:none             Connection/TRANSACTION_NONE
+   :read-committed   Connection/TRANSACTION_READ_COMMITTED
+   :read-uncommitted Connection/TRANSACTION_READ_UNCOMMITTED
+   :repeatable-read  Connection/TRANSACTION_REPEATABLE_READ
+   :serializable     Connection/TRANSACTION_SERIALIZABLE})
 
 (def ^:private isolation-kws
   "Map transaction isolation constants to our keywords."
@@ -86,7 +87,7 @@
       (f con)
       (with-open [^AutoCloseable t-con (assoc (get-connection con)
                                               :transacted (atom committable?))]
-        (let [^Connection jdbc (->jdbc-connection t-con)
+        (let [^Connection jdbc t-con
               old-autocommit   (.getAutoCommit jdbc)
               old-isolation    (.getTransactionIsolation jdbc)
               old-readonly     (.isReadOnly jdbc)]
@@ -130,28 +131,6 @@
                  (try
                    (.setReadOnly jdbc old-readonly)
                    (catch Exception _)))))))))))
-
-(defrecord NestedConnection [con transacted]
-  Connectable
-  (get-connection [this] (->NestedConnection con transacted))
-  Preparable
-  (->jdbc-connection [this] con)
-  (prepare [this sql-params opts] (prepare* con sql-params opts))
-  AutoCloseable
-  (close [this])
-  Transactable
-  (transact [this f opts] (transact* con transacted f opts)))
-
-(defrecord Connected [con transacted]
-  Connectable
-  (get-connection [this] (->NestedConnection con transacted))
-  Preparable
-  (->jdbc-connection [this] con)
-  (prepare [this sql-params opts] (prepare* con sql-params opts))
-  AutoCloseable
-  (close [this] (.close ^Connection con))
-  Transactable
-  (transact [this f opts] (transact* con transacted f opts)))
 
 (defmacro in-transaction
   [[sym con opts] & body]
@@ -214,8 +193,8 @@
 (defn- modify-connection
   "Given a database connection and a map of options, update the connection
   as specified by the options."
-  ^java.sql.Connection
-  [^java.sql.Connection connection opts]
+  ^Connection
+  [^Connection connection opts]
   (when (and connection (contains? opts :auto-commit?))
     (.setAutoCommit connection (boolean (:auto-commit? opts))))
   (when (and connection (contains? opts :read-only?))
@@ -234,29 +213,13 @@
 (defn- get-driver-connection
   "Common logic for loading the DriverManager and the designed JDBC driver
   class and obtaining the appropriate Connection object."
-  [classname subprotocol db-spec url etc error-msg]
-  (if-let [class-name (or classname (classnames subprotocol))]
-    (do
-      ;; force DriverManager to be loaded
-      (DriverManager/getLoginTimeout)
-      (if (string? class-name)
-        (clojure.lang.RT/loadClassForName class-name)
-        (loop [[clazz & more] class-name]
-          (when-let [load-failure
-                     (try
-                       (clojure.lang.RT/loadClassForName clazz)
-                       nil
-                       (catch Exception e
-                         e))]
-            (if (seq more)
-              (recur more)
-              (throw load-failure))))))
-    (throw (ex-info error-msg db-spec)))
+  [url etc]
   (-> (DriverManager/getConnection url (as-properties etc))
       (modify-connection etc)))
 
-(defn- spec->connection
+(defn- spec->datasource
   ""
+  ^DataSource
   [{:keys [dbtype dbname host port classname] :as db-spec}]
   (let [;; allow aliases for dbtype
         subprotocol (aliases dbtype dbtype)
@@ -274,9 +237,33 @@
                        (when port (str ":" port))
                        db-sep dbname))
         etc (dissoc db-spec :dbtype :dbname)]
-    (get-driver-connection classname subprotocol db-spec
-                           url etc
-                           (str "Unknown dbtype: " dbtype))))
+    ;; verify the datasource is loadable
+    (if-let [class-name (or classname (classnames subprotocol))]
+      (do
+        ;; force DriverManager to be loaded
+        (DriverManager/getLoginTimeout)
+        (if (string? class-name)
+          (clojure.lang.RT/loadClassForName class-name)
+          (loop [[clazz & more] class-name]
+            (when-let [load-failure
+                       (try
+                         (clojure.lang.RT/loadClassForName clazz)
+                         nil
+                         (catch Exception e
+                           e))]
+              (if (seq more)
+                (recur more)
+                (throw load-failure))))))
+      (throw (ex-info (str "Unknown dbtype: " dbtype) db-spec)))
+    ;; return a DataSource
+    (reify DataSource
+      (getConnection [this]
+                     (get-driver-connection url etc))
+      (getConnection [this username password]
+                     (get-driver-connection url
+                                            (assoc etc
+                                                   :username username
+                                                   :password password))))))
 
 (defn- string->spec
   ""
@@ -284,19 +271,40 @@
   {})
 
 (extend-protocol
+ Sourceable
+ clojure.lang.Associative
+ (get-datasource [this] (spec->datasource this))
+ DataSource
+ (get-datasource [this] this)
+ String
+ (get-datasource [this] (get-datasource (string->spec this))))
+
+(extend-protocol
  Connectable
  clojure.lang.Associative
- (get-connection [this]
-                 (->Connected (spec->connection this) nil))
+ (get-connection [this] (get-connection (get-datasource this)))
  Connection
- (get-connection [this]
-                 (->Connected this nil))
+ (get-connection [this] (reify
+                          AutoCloseable
+                          (close [this'])
+                          Connectable
+                          (get-connection [this'] this')
+                          Preparable
+                          (prepare [this' sql-params opts]
+                                   (prepare this sql-params opts))))
  DataSource
- (get-connection [this]
-                 (->Connected (.getConnection this) nil))
- String
- (get-connection [this]
-                 (get-connection (string->spec this))))
+ (get-connection [this] (.getConnection this))
+ Object
+ (get-connection [this] (get-connection (get-datasource this))))
+
+(extend-protocol
+ Preparable
+ Connection
+ (prepare [this sql-params opts] (prepare* this sql-params opts))
+ DataSource
+ (prepare [this sql-params opts] (prepare (get-connection this) sql-params opts))
+ Object
+ (prepare [this sql-params opts] (prepare (get-datasource this) sql-params opts)))
 
 (comment
   (get-connection {:dbtype "derby" :dbname "clojure_test" :create true} {})
@@ -386,11 +394,15 @@
   (def db-spec {:dbtype "mysql" :dbname "worldsingles" :user "root" :password "visual" :useSSL false})
   (def db-spec {:dbtype "h2:mem" :dbname "perf"})
   (def con (get-connection db-spec))
+  (println con)
+  (def ds (get-datasource db-spec))
+  (def con (get-connection ds))
   (reduce + 0 (execute! con ["DROP TABLE fruit"]))
   (reduce + 0 (execute! con ["CREATE TABLE fruit (id int default 0, name varchar(32) primary key, appearance varchar(32), cost int, grade real)"]))
   (reduce + 0 (execute! con ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (1,'Apple','red',59,87), (2,'Banana','yellow',29,92.2), (3,'Peach','fuzzy',139,90.0), (4,'Orange','juicy',89,88.6)"]))
   (close con)
   (require '[criterium.core :refer [bench quick-bench]])
+  ;; calibrate
   (quick-bench (reduce + (take 10e6 (range))))
   (quick-bench
    (reduce (fn [_ row] (reduced (:name row)))
