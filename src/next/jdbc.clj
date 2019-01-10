@@ -369,8 +369,8 @@
                (try
                  (clojure.lang.MapEntry. k (.getObject rs (name k)))
                  (catch SQLException _)))
-      (assoc [this _ _]
-             (throw (ex-info "assoc not supported on raw result set" {})))
+      (assoc [this k v]
+             (assoc (into {} (seq this)) k v))
 
       clojure.lang.Seqable
       (seq [this]
@@ -448,4 +448,7 @@
   (quick-bench
    (reduce (fn [rs m] (reduced (into {} m)))
            nil
-           (execute! con ["select * from fruit where appearance = ?" "red"]))))
+           (execute! con ["select * from fruit where appearance = ?" "red"])))
+  (reduce (fn [rs m] (reduced (assoc m :test :value)))
+          nil
+          (execute! con ["select * from fruit where appearance = ?" "red"])))
