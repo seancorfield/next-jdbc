@@ -327,8 +327,8 @@
   (let [^ResultSetMetaData rsmeta (.getMetaData rs)
         idxs (range 1 (inc (.getColumnCount rsmeta)))]
     (mapv (fn [^Integer i]
-            (keyword (str/lower-case (.getTableName rsmeta i))
-                     (str/lower-case (.getColumnLabel rsmeta i))))
+            (keyword (.getTableName rsmeta i)
+                     (.getColumnLabel rsmeta i)))
           idxs)))
 
 (defn- mapify-result-set
