@@ -2,8 +2,7 @@
 
 (ns next.jdbc
   ""
-  (:require [clojure.set :as set]
-            [clojure.string :as str])
+  (:require [clojure.set :as set])
   (:import (java.lang AutoCloseable)
            (java.sql Connection DriverManager
                      PreparedStatement
@@ -297,11 +296,11 @@
  Connection
  (get-connection [this] (reify
                           AutoCloseable
-                          (close [this'])
+                          (close [_])
                           Connectable
-                          (get-connection [this'] this')
+                          (get-connection [_] this)
                           Preparable
-                          (prepare [this' sql-params opts]
+                          (prepare [_ sql-params opts]
                                    (prepare this sql-params opts))))
  DataSource
  (get-connection [this] (.getConnection this))
