@@ -344,7 +344,7 @@
 
   Later we may realize a new hash map when assoc (and other, future, operations
   are performed on the result set row)."
-  [^ResultSet rs opts]
+  [^ResultSet rs]
   (let [cols (delay (get-column-names rs))]
     (reify
 
@@ -380,29 +380,37 @@
                                                 (.getObject rs i)))
                       (range 1 (inc (count @cols)))))))))
 
+(defn- reduce-stmt
+  ""
+  [^PreparedStatement stmt f init]
+  (if (.execute stmt)
+    (let [rs     (.getResultSet stmt)
+          rs-map (mapify-result-set rs)]
+      (loop [init' init]
+        (if (.next rs)
+          (let [result (f init' rs-map)]
+            (if (reduced? result)
+              @result
+              (recur result)))
+          init')))
+    (.getUpdateCount stmt)))
+
 (defn execute!
-  "General SQL execution function. Returns a reducible that, when reduced,
-  runs the SQL and yields the result."
-  [db-spec sql-params & [opts]]
-  (let [opts (merge (when (map? db-spec) db-spec) opts)]
-    (reify clojure.lang.IReduceInit
-      (reduce [this f init]
-        (with-open [con (get-connection db-spec)]
-          (with-open [stmt (prepare con sql-params opts)]
-            (if (.execute stmt)
-              (let [rs     (.getResultSet stmt)
-                    rs-map (mapify-result-set rs opts)]
-                (loop [init' init]
-                  (if (.next rs)
-                    (let [result (f init' rs-map)]
-                      (if (reduced? result)
-                        @result
-                        (recur result)))
-                    init')))
-              (.getUpdateCount stmt))))))))
+  "General SQL execution function.
+
+  Returns a reducible that, when reduced, runs the SQL and yields the result."
+  ([stmt]
+   (reify clojure.lang.IReduceInit
+     (reduce [this f init] (reduce-stmt stmt f init))))
+  ([connectable sql-params & [opts]]
+   (let [opts (merge (when (map? connectable) connectable) opts)]
+     (reify clojure.lang.IReduceInit
+       (reduce [this f init]
+               (with-open [con (get-connection connectable)]
+                 (with-open [stmt (prepare con sql-params opts)]
+                   (reduce-stmt stmt f init))))))))
 
 (comment
-  (def db-spec {:dbtype "mysql" :dbname "worldsingles" :user "root" :password "visual" :useSSL false})
   (def db-spec {:dbtype "h2:mem" :dbname "perf"})
   (def con db-spec)
   (def con (get-connection db-spec))
@@ -416,6 +424,19 @@
   (require '[criterium.core :refer [bench quick-bench]])
   ;; calibrate
   (quick-bench (reduce + (take 10e6 (range))))
+  (with-open [ps (prepare con ["select * from fruit where appearance = ?"] {})]
+    (quick-bench
+     (reduce (fn [_ row] (reduced (:name row)))
+             nil
+             (execute! (set-parameters ps ["red"])))))
+  (with-open [ps (prepare con ["select * from fruit where appearance = ?"] {})]
+    (quick-bench
+     [(reduce (fn [_ row] (reduced (:name row)))
+              nil
+              (execute! (set-parameters ps ["red"])))
+      (reduce (fn [_ row] (reduced (:name row)))
+              nil
+              (execute! (set-parameters ps ["fuzzy"])))]))
   (quick-bench
    (reduce (fn [_ row] (reduced (:name row)))
            nil
