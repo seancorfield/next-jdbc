@@ -428,6 +428,8 @@
   (require '[criterium.core :refer [bench quick-bench]])
   ;; calibrate
   (quick-bench (reduce + (take 10e6 (range))))
+  (quick-bench
+   (query con ["select * from fruit where appearance = ?" "red"]))
   (with-open [ps (prepare con ["select * from fruit where appearance = ?"] {})]
     (quick-bench
      (reduce (fn [_ row] (reduced (:name row)))
