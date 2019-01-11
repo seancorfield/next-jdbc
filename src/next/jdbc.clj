@@ -35,13 +35,22 @@
 (set! *warn-on-reflection* true)
 
 (defprotocol Sourceable
-  (get-datasource ^DataSource [this]))
+  (get-datasource ^DataSource [this opts]))
 (defprotocol Connectable
   (get-connection ^AutoCloseable [this]))
 (defprotocol Preparable
   (prepare ^PreparedStatement [this sql-params opts]))
 (defprotocol Transactable
   (transact [this f opts]))
+(defprotocol WithOptions
+  (get-options [this]))
+
+(extend-protocol
+ WithOptions
+ Object
+ (get-options [_] {})
+ nil
+ (get-options [_] {}))
 
 (defn set-parameters
   ""
@@ -271,29 +280,40 @@
 
 (defn- url+etc->datasource
   ""
-  [[url etc]]
-  (reify DataSource
-    (getConnection [this]
+  [[url etc] opts]
+  (reify
+    DataSource
+    (getConnection [_]
                    (get-driver-connection url etc))
-    (getConnection [this username password]
+    (getConnection [_ username password]
                    (get-driver-connection url
                                           (assoc etc
                                                  :username username
-                                                 :password password)))))
+                                                 :password password)))
+    WithOptions
+    (get-options [_] opts)))
 
 (extend-protocol
  Sourceable
  clojure.lang.Associative
- (get-datasource [this] (url+etc->datasource (spec->url+etc this)))
+ (get-datasource [this opts] (url+etc->datasource (spec->url+etc this) opts))
  DataSource
- (get-datasource [this] this)
+ (get-datasource [this opts]
+  (reify
+    DataSource
+    (getConnection [_]
+                   (.getConnection this))
+    (getConnection [_ username password]
+                   (.getConnection this username password))
+    WithOptions
+    (get-options [_] opts)))
  String
- (get-datasource [this] (url+etc->datasource (string->url+etc this))))
+ (get-datasource [this opts] (url+etc->datasource (string->url+etc this) opts)))
 
 (extend-protocol
  Connectable
  clojure.lang.Associative
- (get-connection [this] (get-connection (get-datasource this)))
+ (get-connection [this] (get-connection (get-datasource this {})))
  Connection
  (get-connection [this] (reify
                           AutoCloseable
@@ -306,7 +326,7 @@
  DataSource
  (get-connection [this] (.getConnection this))
  Object
- (get-connection [this] (get-connection (get-datasource this))))
+ (get-connection [this] (get-connection (get-datasource this {}))))
 
 (extend-protocol
  Preparable
@@ -403,7 +423,7 @@
    (reify clojure.lang.IReduceInit
      (reduce [this f init] (reduce-stmt stmt f init))))
   ([connectable sql-params & [opts]]
-   (let [opts (merge (when (map? connectable) connectable) opts)]
+   (let [opts (merge (get-options connectable) opts)]
      (reify clojure.lang.IReduceInit
        (reduce [this f init]
                (with-open [con (get-connection connectable)]
@@ -418,6 +438,7 @@
 (comment
   (def db-spec {:dbtype "h2:mem" :dbname "perf"})
   (def con db-spec)
+  (def con (get-datasource db-spec {}))
   (def con (get-connection db-spec))
   (println con)
   (def ds (get-datasource db-spec))
@@ -425,17 +446,30 @@
   (reduce + 0 (execute! con ["DROP TABLE fruit"]))
   (reduce + 0 (execute! con ["CREATE TABLE fruit (id int default 0, name varchar(32) primary key, appearance varchar(32), cost int, grade real)"]))
   (reduce + 0 (execute! con ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (1,'Apple','red',59,87), (2,'Banana','yellow',29,92.2), (3,'Peach','fuzzy',139,90.0), (4,'Orange','juicy',89,88.6)"]))
+
   (close con)
+
   (require '[criterium.core :refer [bench quick-bench]])
+
   ;; calibrate
   (quick-bench (reduce + (take 10e6 (range))))
+
   (quick-bench
    (query con ["select * from fruit where appearance = ?" "red"]))
+
   (with-open [ps (prepare con ["select * from fruit where appearance = ?"] {})]
     (quick-bench
      (reduce (fn [_ row] (reduced (:name row)))
              nil
              (execute! (set-parameters ps ["red"])))))
+
+  (with-open [ps (prepare con ["select * from fruit where appearance = ?"] {})]
+    (quick-bench
+     [(reduce (fn [_ row] (reduced (:name row)))
+              nil
+              (execute! (set-parameters ps ["red"])))]))
+
+  ;; this takes more than twice the time of the one above which seems strange
   (with-open [ps (prepare con ["select * from fruit where appearance = ?"] {})]
     (quick-bench
      [(reduce (fn [_ row] (reduced (:name row)))
