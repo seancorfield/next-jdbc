@@ -54,11 +54,12 @@
   ""
   ^PreparedStatement
   [^PreparedStatement ps params]
+  (when (seq params)
   (loop [[p & more] params i 1]
     (.setObject ps i p)
-    (if more
-      (recur more (inc i))
-      ps)))
+      (when more
+        (recur more (inc i)))))
+  ps)
 
 (defn- prepare*
   "Given a connection, a SQL statement, its parameters, and some options,
