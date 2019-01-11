@@ -93,6 +93,7 @@
       ;; should check isolation level; maybe implement save points?
       (f con)
       (with-open [^AutoCloseable t-con (assoc (get-connection con)
+                                              ;; FIXME: not a record/map!
                                               :transacted (atom committable?))]
         (let [^Connection jdbc t-con
               old-autocommit   (.getAutoCommit jdbc)
