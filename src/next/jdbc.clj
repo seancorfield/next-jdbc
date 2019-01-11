@@ -38,10 +38,20 @@
   (get-datasource ^DataSource [this opts]))
 (defprotocol Connectable
   (get-connection ^AutoCloseable [this]))
+(defprotocol Executable
+  (-execute ^clojure.lang.IReduceInit [this sql-params opts]))
 (defprotocol Preparable
   (prepare ^PreparedStatement [this sql-params opts]))
 (defprotocol WithOptions
   (get-options [this]))
+
+(defn execute!
+  "General SQL execution function.
+
+  Returns a reducible that, when reduced, runs the SQL and yields the result."
+  ([stmt] (-execute stmt [] {}))
+  ([connectable sql-params & [opts]]
+   (-execute connectable sql-params opts)))
 
 (extend-protocol
  WithOptions
@@ -280,8 +290,7 @@
 (defn- url+etc->datasource
   ""
   [[url etc] opts]
-  (reify
-    DataSource
+  (reify DataSource
     (getConnection [_]
                    (get-driver-connection url etc))
     (getConnection [_ username password]
@@ -292,53 +301,41 @@
     WithOptions
     (get-options [_] opts)))
 
-(extend-protocol
- Sourceable
- clojure.lang.Associative
- (get-datasource [this opts] (url+etc->datasource (spec->url+etc this) opts))
- DataSource
- (get-datasource [this opts]
-  (reify
-    DataSource
-    (getConnection [_]
-                   (.getConnection this))
-    (getConnection [_ username password]
-                   (.getConnection this username password))
-    WithOptions
-    (get-options [_] opts)))
- String
- (get-datasource [this opts] (url+etc->datasource (string->url+etc this) opts)))
+(extend-protocol Sourceable
+  clojure.lang.Associative
+  (get-datasource [this opts]
+                  (url+etc->datasource (spec->url+etc this) opts))
+  DataSource
+  (get-datasource [this opts]
+                  (reify DataSource
+                    (getConnection [_]
+                                   (.getConnection this))
+                    (getConnection [_ username password]
+                                   (.getConnection this username password))
+                    WithOptions
+                    (get-options [_] opts)))
+  String
+  (get-datasource [this opts]
+                  (url+etc->datasource (string->url+etc this) opts)))
 
-(extend-protocol
- Connectable
- clojure.lang.Associative
- (get-connection [this] (get-connection (get-datasource this {})))
- Connection
- (get-connection [this] (reify
-                          AutoCloseable
-                          (close [_])
-                          Connectable
-                          (get-connection [_] this)
-                          Preparable
-                          (prepare [_ sql-params opts]
-                                   (prepare this sql-params opts))))
- DataSource
- (get-connection [this] (.getConnection this))
- Object
- (get-connection [this] (get-connection (get-datasource this {}))))
+(extend-protocol Connectable
+  DataSource
+  (get-connection [this] (.getConnection this))
+  Object
+  (get-connection [this] (get-connection (get-datasource this {}))))
 
-(extend-protocol
- Preparable
- Connection
- (prepare [this sql-params opts] (prepare* this sql-params opts))
- DataSource
- (prepare [this sql-params opts] (prepare (get-connection this) sql-params opts))
- Object
- (prepare [this sql-params opts] (prepare (get-datasource this opts) sql-params opts)))
-
-(comment
-  (get-connection {:dbtype "derby" :dbname "clojure_test" :create true} {})
-  (-> "jdbc:some:stuff" (get-connection {}) (get-connection {})))
+(extend-protocol Preparable
+  Connection
+  (prepare [this sql-params opts]
+           (prepare* this sql-params opts))
+  DataSource
+  (prepare [this sql-params opts]
+           (prepare (.getConnection this)
+                    sql-params
+                    (merge (get-options this) opts)))
+  Object
+  (prepare [this sql-params opts]
+           (prepare (get-datasource this opts) sql-params opts)))
 
 (defn- get-column-names
   ""
@@ -357,7 +354,7 @@
 
   Supports ILookup (keywords are treated as strings).
 
-  Supports Associative for lookup only (again, keywords are treated as strings).
+  Supports Associative (again, keywords are treated as strings).
 
   Supports Seqable which realizes a full row of the data.
 
@@ -414,25 +411,28 @@
           init')))
     (.getUpdateCount stmt)))
 
-(defn execute!
-  "General SQL execution function.
-
-  Returns a reducible that, when reduced, runs the SQL and yields the result."
-  ([stmt]
-   (reify clojure.lang.IReduceInit
-     (reduce [this f init] (reduce-stmt stmt f init))))
-  ([connectable sql-params & [opts]]
-   (let [opts (merge (get-options connectable) opts)]
-     (if (instance? Connection connectable)
-       (reify clojure.lang.IReduceInit
-         (reduce [this f init]
-                 (with-open [stmt (prepare connectable sql-params opts)]
-                   (reduce-stmt stmt f init))))
-       (reify clojure.lang.IReduceInit
-         (reduce [this f init]
-                 (with-open [con (get-connection connectable)]
-                   (with-open [stmt (prepare con sql-params opts)]
-                     (reduce-stmt stmt f init)))))))))
+(extend-protocol Executable
+  Connection
+  (-execute [this sql-params opts]
+            (reify clojure.lang.IReduceInit
+              (reduce [_ f init]
+                      (with-open [stmt (prepare this sql-params opts)]
+                        (reduce-stmt stmt f init)))))
+  DataSource
+  (-execute [this sql-params opts]
+            (let [opts (merge (get-options this) opts)]
+              (reify clojure.lang.IReduceInit
+                (reduce [_ f init]
+                        (with-open [con (get-connection this)]
+                          (with-open [stmt (prepare con sql-params opts)]
+                            (reduce-stmt stmt f init)))))))
+  PreparedStatement
+  (-execute [this _ _]
+            (reify clojure.lang.IReduceInit
+              (reduce [_ f init] (reduce-stmt this f init))))
+  Object
+  (-execute [this sql-params opts]
+            (-execute (get-datasource this opts) sql-params opts)))
 
 (defn query
   ""
