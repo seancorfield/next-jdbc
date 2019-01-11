@@ -409,7 +409,7 @@
               @result
               (recur result)))
           init')))
-    (.getUpdateCount stmt)))
+    (f init (.getUpdateCount stmt))))
 
 (extend-protocol Executable
   Connection
@@ -443,6 +443,8 @@
   (def db-spec {:dbtype "h2:mem" :dbname "perf"})
   (def con db-spec)
   (def con (get-datasource db-spec {}))
+  (get-connection con)
+  (def con (get-connection (get-datasource db-spec {})))
   (def con (get-connection db-spec))
   (reduce + 0 (execute! con ["DROP TABLE fruit"]))
   (reduce + 0 (execute! con ["CREATE TABLE fruit (id int default 0, name varchar(32) primary key, appearance varchar(32), cost int, grade real)"]))
