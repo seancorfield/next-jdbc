@@ -40,8 +40,6 @@
   (get-connection ^AutoCloseable [this]))
 (defprotocol Preparable
   (prepare ^PreparedStatement [this sql-params opts]))
-(defprotocol Transactable
-  (transact [this f opts]))
 (defprotocol WithOptions
   (get-options [this]))
 
@@ -93,7 +91,7 @@
     (reset! state commit?))
   con)
 
-(defn- transact*
+(defn transact*
   ""
   [con transacted f opts]
   (let [{:keys [isolation read-only? rollback-only?]} opts
@@ -151,7 +149,7 @@
 
 (defmacro in-transaction
   [[sym con opts] & body]
-  `(transact ~con (fn [~sym] ~@body) ~opts))
+  `(transact* ~con (fn [~sym] ~@body) ~opts))
 
 (def ^:private classnames
   "Map of subprotocols to classnames. dbtype specifies one of these keys.
@@ -335,7 +333,7 @@
  DataSource
  (prepare [this sql-params opts] (prepare (get-connection this) sql-params opts))
  Object
- (prepare [this sql-params opts] (prepare (get-datasource this) sql-params opts)))
+ (prepare [this sql-params opts] (prepare (get-datasource this opts) sql-params opts)))
 
 (comment
   (get-connection {:dbtype "derby" :dbname "clojure_test" :create true} {})
