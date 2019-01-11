@@ -55,8 +55,8 @@
   ^PreparedStatement
   [^PreparedStatement ps params]
   (when (seq params)
-  (loop [[p & more] params i 1]
-    (.setObject ps i p)
+    (loop [[p & more] params i 1]
+      (.setObject ps i p)
       (when more
         (recur more (inc i)))))
   ps)
@@ -423,11 +423,16 @@
      (reduce [this f init] (reduce-stmt stmt f init))))
   ([connectable sql-params & [opts]]
    (let [opts (merge (get-options connectable) opts)]
-     (reify clojure.lang.IReduceInit
-       (reduce [this f init]
-               (with-open [con (get-connection connectable)]
-                 (with-open [stmt (prepare con sql-params opts)]
-                   (reduce-stmt stmt f init))))))))
+     (if (instance? Connection connectable)
+       (reify clojure.lang.IReduceInit
+         (reduce [this f init]
+                 (with-open [stmt (prepare connectable sql-params opts)]
+                   (reduce-stmt stmt f init))))
+       (reify clojure.lang.IReduceInit
+         (reduce [this f init]
+                 (with-open [con (get-connection connectable)]
+                   (with-open [stmt (prepare con sql-params opts)]
+                     (reduce-stmt stmt f init)))))))))
 
 (defn query
   ""
@@ -439,13 +444,11 @@
   (def con db-spec)
   (def con (get-datasource db-spec {}))
   (def con (get-connection db-spec))
-  (println con)
-  (def ds (get-datasource db-spec))
-  (def con (get-connection ds))
   (reduce + 0 (execute! con ["DROP TABLE fruit"]))
   (reduce + 0 (execute! con ["CREATE TABLE fruit (id int default 0, name varchar(32) primary key, appearance varchar(32), cost int, grade real)"]))
   (reduce + 0 (execute! con ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (1,'Apple','red',59,87), (2,'Banana','yellow',29,92.2), (3,'Peach','fuzzy',139,90.0), (4,'Orange','juicy',89,88.6)"]))
 
+  (println con)
   (close con)
 
   (require '[criterium.core :refer [bench quick-bench]])
@@ -453,15 +456,24 @@
   ;; calibrate
   (quick-bench (reduce + (take 10e6 (range))))
 
+  ;; same as the Java example in java.jdbc perf test
+  (quick-bench
+   (reduce (fn [rs m] (reduced (:name m)))
+           nil
+           (execute! con ["select * from fruit where appearance = ?" "red"])))
+
+  ;; simple query
   (quick-bench
    (query con ["select * from fruit where appearance = ?" "red"]))
 
-  (with-open [ps (prepare con ["select * from fruit where appearance = ?"] {})]
+  ;; with a prepopulated prepared statement
+  (with-open [ps (prepare con ["select * from fruit where appearance = ?" "red"] {})]
     (quick-bench
-     (reduce (fn [_ row] (reduced (:name row)))
-             nil
-             (execute! (set-parameters ps ["red"])))))
+     [(reduce (fn [_ row] (reduced (:name row)))
+              nil
+              (execute! ps))]))
 
+  ;; same as above but setting parameters inside the benchmark
   (with-open [ps (prepare con ["select * from fruit where appearance = ?"] {})]
     (quick-bench
      [(reduce (fn [_ row] (reduced (:name row)))
@@ -477,14 +489,14 @@
       (reduce (fn [_ row] (reduced (:name row)))
               nil
               (execute! (set-parameters ps ["fuzzy"])))]))
-  (quick-bench
-   (reduce (fn [_ row] (reduced (:name row)))
-           nil
-           (execute! con ["select * from fruit where appearance = ?" "red"])))
+
+  ;; full first row
   (quick-bench
    (reduce (fn [rs m] (reduced (into {} m)))
            nil
            (execute! con ["select * from fruit where appearance = ?" "red"])))
+
+  ;; test assoc works
   (reduce (fn [rs m] (reduced (assoc m :test :value)))
           nil
           (execute! con ["select * from fruit where appearance = ?" "red"])))
