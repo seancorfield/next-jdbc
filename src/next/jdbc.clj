@@ -35,13 +35,14 @@
 (set! *warn-on-reflection* true)
 
 (defprotocol Sourceable
-  (get-datasource ^DataSource [this opts]))
+  (get-datasource ^DataSource [this]))
 (defprotocol Connectable
   (get-connection ^AutoCloseable [this]))
 (defprotocol Executable
   (-execute ^clojure.lang.IReduceInit [this sql-params opts]))
 (defprotocol Preparable
-  (prepare ^PreparedStatement [this sql-params opts]))
+  (prepare ^PreparedStatement [this sql-params opts])
+  (prepare-fn ^PreparedStatement [this sql-params factory]))
 
 (defn execute!
   "General SQL execution function.
@@ -62,12 +63,101 @@
         (recur more (inc i)))))
   ps)
 
+(def ^{:private true
+       :doc "Map friendly :concurrency values to ResultSet constants."}
+  result-set-concurrency
+  {:read-only ResultSet/CONCUR_READ_ONLY
+   :updatable ResultSet/CONCUR_UPDATABLE})
+
+(def ^{:private true
+       :doc "Map friendly :cursors values to ResultSet constants."}
+  result-set-holdability
+  {:hold ResultSet/HOLD_CURSORS_OVER_COMMIT
+   :close ResultSet/CLOSE_CURSORS_AT_COMMIT})
+
+(def ^{:private true
+       :doc "Map friendly :type values to ResultSet constants."}
+  result-set-type
+  {:forward-only ResultSet/TYPE_FORWARD_ONLY
+   :scroll-insensitive ResultSet/TYPE_SCROLL_INSENSITIVE
+   :scroll-sensitive ResultSet/TYPE_SCROLL_SENSITIVE})
+
+(defn- ^{:tag (class (into-array String []))} string-array
+  [return-keys]
+  (into-array String return-keys))
+
+(defn- pre-prepare*
+  "Given a some options, return a function that will accept a connection and a
+  SQL string and parameters, and return a PreparedStatement representing that."
+  [{:keys [return-keys result-type concurrency cursors
+           fetch-size max-rows timeout]}]
+  (cond->
+    (cond
+     return-keys
+     (do
+       (when (or result-type concurrency cursors)
+         (throw (IllegalArgumentException.
+                 (str ":concurrency, :cursors, and :result-type "
+                      "may not be specified with :return-keys."))))
+       (if (vector? return-keys)
+         (let [key-names (string-array return-keys)]
+           (fn [^Connection con ^String sql]
+             (try
+               (try
+                 (.prepareStatement con sql key-names)
+                 (catch Exception _
+                   ;; assume it is unsupported and try regular generated keys:
+                   (.prepareStatement con sql java.sql.Statement/RETURN_GENERATED_KEYS)))
+               (catch Exception _
+                 ;; assume it is unsupported and try basic PreparedStatement:
+                 (.prepareStatement con sql)))))
+         (fn [^Connection con ^String sql]
+           (try
+             (.prepareStatement con sql java.sql.Statement/RETURN_GENERATED_KEYS)
+             (catch Exception _
+               ;; assume it is unsupported and try basic PreparedStatement:
+               (.prepareStatement con sql))))))
+
+     (and result-type concurrency)
+     (if cursors
+       (fn [^Connection con ^String sql]
+         (.prepareStatement con sql
+                            (get result-set-type result-type result-type)
+                            (get result-set-concurrency concurrency concurrency)
+                            (get result-set-holdability cursors cursors)))
+       (fn [^Connection con ^String sql]
+         (.prepareStatement con sql
+                            (get result-set-type result-type result-type)
+                            (get result-set-concurrency concurrency concurrency))))
+
+     (or result-type concurrency cursors)
+     (throw (IllegalArgumentException.
+             (str ":concurrency, :cursors, and :result-type "
+                  "may not be specified independently.")))
+     :else
+     (fn [^Connection con ^String sql]
+       (.prepareStatement con sql)))
+    fetch-size (as-> f
+                     (fn [^Connection con ^String sql]
+                       (.setFetchSize ^PreparedStatement (f con sql) fetch-size)))
+    max-rows (as-> f
+                   (fn [^Connection con ^String sql]
+                     (.setMaxRows ^PreparedStatement (f con sql) max-rows)))
+    timeout (as-> f
+                  (fn [^Connection con ^String sql]
+                    (.setQueryTimeout ^PreparedStatement (f con sql) timeout)))))
+
 (defn- prepare*
   "Given a connection, a SQL statement, its parameters, and some options,
   return a PreparedStatement representing that."
-  [^Connection con [sql & params] opts]
-  (doto (.prepareStatement con sql)
-        (set-parameters params)))
+  [con [sql & params] opts]
+  (set-parameters ((pre-prepare* opts) con sql) params))
+
+(defn- prepare-fn*
+  "Given a connection, a SQL statement, its parameters, and some options,
+  return a PreparedStatement representing that."
+  [con [sql & params] factory]
+  (set-parameters (factory con sql) params))
 
 (def ^:private isolation-levels
   "Transaction isolation levels."
@@ -280,7 +370,7 @@
 
 (defn- url+etc->datasource
   ""
-  [[url etc] opts]
+  [[url etc]]
   (reify DataSource
     (getConnection [_]
                    (get-driver-connection url etc))
@@ -292,35 +382,36 @@
 
 (extend-protocol Sourceable
   clojure.lang.Associative
-  (get-datasource [this opts]
-                  (url+etc->datasource (spec->url+etc this) opts))
+  (get-datasource [this]
+                  (url+etc->datasource (spec->url+etc this)))
   DataSource
-  (get-datasource [this opts]
-                  (reify DataSource
-                    (getConnection [_]
-                                   (.getConnection this))
-                    (getConnection [_ username password]
-                                   (.getConnection this username password))))
+  (get-datasource [this] this)
   String
-  (get-datasource [this opts]
-                  (url+etc->datasource (string->url+etc this) opts)))
+  (get-datasource [this]
+                  (url+etc->datasource (string->url+etc this))))
 
 (extend-protocol Connectable
   DataSource
   (get-connection [this] (.getConnection this))
   Object
-  (get-connection [this] (get-connection (get-datasource this {}))))
+  (get-connection [this] (get-connection (get-datasource this))))
 
 (extend-protocol Preparable
   Connection
   (prepare [this sql-params opts]
            (prepare* this sql-params opts))
+  (prepare-fn [this sql-params factory]
+              (prepare-fn* this sql-params factory))
   DataSource
   (prepare [this sql-params opts]
            (prepare (.getConnection this) sql-params opts))
+  (prepare-fn [this sql-params factory]
+              (prepare-fn (.getConnection this) sql-params factory))
   Object
   (prepare [this sql-params opts]
-           (prepare (get-datasource this opts) sql-params opts)))
+           (prepare (get-datasource this) sql-params opts))
+  (prepare-fn [this sql-params factory]
+              (prepare-fn (get-datasource this) sql-params factory)))
 
 (defn- get-column-names
   ""
@@ -399,24 +490,26 @@
 (extend-protocol Executable
   Connection
   (-execute [this sql-params opts]
-            (reify clojure.lang.IReduceInit
-              (reduce [_ f init]
-                      (with-open [stmt (prepare this sql-params opts)]
-                        (reduce-stmt stmt f init)))))
+            (let [factory (pre-prepare* opts)]
+              (reify clojure.lang.IReduceInit
+                (reduce [_ f init]
+                        (with-open [stmt (prepare-fn this sql-params factory)]
+                          (reduce-stmt stmt f init))))))
   DataSource
   (-execute [this sql-params opts]
-            (reify clojure.lang.IReduceInit
-              (reduce [_ f init]
-                      (with-open [con (get-connection this)]
-                        (with-open [stmt (prepare con sql-params opts)]
-                          (reduce-stmt stmt f init))))))
+            (let [factory (pre-prepare* opts)]
+              (reify clojure.lang.IReduceInit
+                (reduce [_ f init]
+                        (with-open [con (get-connection this)]
+                          (with-open [stmt (prepare-fn con sql-params factory)]
+                            (reduce-stmt stmt f init)))))))
   PreparedStatement
   (-execute [this _ _]
             (reify clojure.lang.IReduceInit
               (reduce [_ f init] (reduce-stmt this f init))))
   Object
   (-execute [this sql-params opts]
-            (-execute (get-datasource this opts) sql-params opts)))
+            (-execute (get-datasource this) sql-params opts)))
 
 (defn query
   ""
@@ -440,9 +533,9 @@
 (comment
   (def db-spec {:dbtype "h2:mem" :dbname "perf"})
   (def con db-spec)
-  (def con (get-datasource db-spec {}))
+  (def con (get-datasource db-spec))
   (get-connection con)
-  (def con (get-connection (get-datasource db-spec {})))
+  (def con (get-connection (get-datasource db-spec)))
   (def con (get-connection db-spec))
   (command! con ["DROP TABLE fruit"])
   (command! con ["CREATE TABLE fruit (id int default 0, name varchar(32) primary key, appearance varchar(32), cost int, grade real)"])
