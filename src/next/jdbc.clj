@@ -42,7 +42,7 @@
   (-execute ^clojure.lang.IReduceInit [this sql-params opts]))
 (defprotocol Preparable
   (prepare ^PreparedStatement [this sql-params opts])
-  (prepare-fn ^PreparedStatement [this sql-params factory]))
+  (prepare-fn ^PreparedStatement [this sql params factory]))
 
 (defn execute!
   "General SQL execution function.
@@ -156,7 +156,7 @@
 (defn- prepare-fn*
   "Given a connection, a SQL statement, its parameters, and some options,
   return a PreparedStatement representing that."
-  [con [sql & params] factory]
+  [con sql params factory]
   (set-parameters (factory con sql) params))
 
 (def ^:private isolation-levels
@@ -400,18 +400,18 @@
   Connection
   (prepare [this sql-params opts]
            (prepare* this sql-params opts))
-  (prepare-fn [this sql-params factory]
-              (prepare-fn* this sql-params factory))
+  (prepare-fn [this sql params factory]
+              (prepare-fn* this sql params factory))
   DataSource
   (prepare [this sql-params opts]
            (prepare (.getConnection this) sql-params opts))
-  (prepare-fn [this sql-params factory]
-              (prepare-fn (.getConnection this) sql-params factory))
+  (prepare-fn [this sql params factory]
+              (prepare-fn (.getConnection this) sql params factory))
   Object
   (prepare [this sql-params opts]
            (prepare (get-datasource this) sql-params opts))
-  (prepare-fn [this sql-params factory]
-              (prepare-fn (get-datasource this) sql-params factory)))
+  (prepare-fn [this sql params factory]
+              (prepare-fn (get-datasource this) sql params factory)))
 
 (defn- get-column-names
   ""
@@ -489,19 +489,19 @@
 
 (extend-protocol Executable
   Connection
-  (-execute [this sql-params opts]
+  (-execute [this [sql & params] opts]
             (let [factory (pre-prepare* opts)]
               (reify clojure.lang.IReduceInit
                 (reduce [_ f init]
-                        (with-open [stmt (prepare-fn this sql-params factory)]
+                        (with-open [stmt (prepare-fn this sql params factory)]
                           (reduce-stmt stmt f init))))))
   DataSource
-  (-execute [this sql-params opts]
+  (-execute [this [sql & params] opts]
             (let [factory (pre-prepare* opts)]
               (reify clojure.lang.IReduceInit
                 (reduce [_ f init]
                         (with-open [con (get-connection this opts)]
-                          (with-open [stmt (prepare-fn con sql-params factory)]
+                          (with-open [stmt (prepare-fn con sql params factory)]
                             (reduce-stmt stmt f init)))))))
   PreparedStatement
   (-execute [this _ _]
@@ -560,7 +560,7 @@
       value))
   (quick-bench (select* con))
 
-  ;; same as the Java example in java.jdbc perf test
+  ;; almost same as the Java example above
   (quick-bench
    (reduce (fn [rs m] (reduced (:name m)))
            nil
