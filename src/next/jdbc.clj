@@ -456,6 +456,17 @@
   ;; calibrate
   (quick-bench (reduce + (take 10e6 (range))))
 
+  ;; raw java
+  (defn select* [^Connection con]
+    (let [ps (doto (.prepareStatement con "SELECT * FROM fruit WHERE appearance = ?")
+               (.setObject 1 "red"))
+          rs (.executeQuery ps)
+          _ (.next rs)
+          value (.getObject rs "name")]
+      (.close ps)
+      value))
+  (quick-bench (select* con))
+
   ;; same as the Java example in java.jdbc perf test
   (quick-bench
    (reduce (fn [rs m] (reduced (:name m)))
