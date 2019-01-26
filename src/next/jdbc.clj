@@ -42,8 +42,6 @@
   (-execute ^clojure.lang.IReduceInit [this sql-params opts]))
 (defprotocol Preparable
   (prepare ^PreparedStatement [this sql-params opts]))
-(defprotocol WithOptions
-  (get-options [this]))
 
 (defn execute!
   "General SQL execution function.
@@ -52,13 +50,6 @@
   ([stmt] (-execute stmt [] {}))
   ([connectable sql-params & [opts]]
    (-execute connectable sql-params opts)))
-
-(extend-protocol
- WithOptions
- Object
- (get-options [_] {})
- nil
- (get-options [_] {}))
 
 (defn set-parameters
   ""
@@ -297,9 +288,7 @@
                    (get-driver-connection url
                                           (assoc etc
                                                  :username username
-                                                 :password password)))
-    WithOptions
-    (get-options [_] opts)))
+                                                 :password password)))))
 
 (extend-protocol Sourceable
   clojure.lang.Associative
@@ -311,9 +300,7 @@
                     (getConnection [_]
                                    (.getConnection this))
                     (getConnection [_ username password]
-                                   (.getConnection this username password))
-                    WithOptions
-                    (get-options [_] opts)))
+                                   (.getConnection this username password))))
   String
   (get-datasource [this opts]
                   (url+etc->datasource (string->url+etc this) opts)))
@@ -330,9 +317,7 @@
            (prepare* this sql-params opts))
   DataSource
   (prepare [this sql-params opts]
-           (prepare (.getConnection this)
-                    sql-params
-                    (merge (get-options this) opts)))
+           (prepare (.getConnection this) sql-params opts))
   Object
   (prepare [this sql-params opts]
            (prepare (get-datasource this opts) sql-params opts)))
@@ -420,12 +405,11 @@
                         (reduce-stmt stmt f init)))))
   DataSource
   (-execute [this sql-params opts]
-            (let [opts (merge (get-options this) opts)]
-              (reify clojure.lang.IReduceInit
-                (reduce [_ f init]
-                        (with-open [con (get-connection this)]
-                          (with-open [stmt (prepare con sql-params opts)]
-                            (reduce-stmt stmt f init)))))))
+            (reify clojure.lang.IReduceInit
+              (reduce [_ f init]
+                      (with-open [con (get-connection this)]
+                        (with-open [stmt (prepare con sql-params opts)]
+                          (reduce-stmt stmt f init))))))
   PreparedStatement
   (-execute [this _ _]
             (reify clojure.lang.IReduceInit
@@ -437,7 +421,21 @@
 (defn query
   ""
   [connectable sql-params & [opts]]
-  (into [] (map (partial into {})) (execute! connectable sql-params opts)))
+  (into []
+        (map (or (:row-fn opts) (partial into {})))
+        (execute! connectable sql-params opts)))
+
+(defn query-one
+  ""
+  [connectable sql-params & [opts]]
+  (reduce (fn [_ row] (reduced ((or (:row-fn opts) (partial into {})) row)))
+          nil
+          (execute! connectable sql-params opts)))
+
+(defn command!
+  ""
+  [connectable sql-params & [opts]]
+  (reduce + 0 (execute! connectable sql-params opts)))
 
 (comment
   (def db-spec {:dbtype "h2:mem" :dbname "perf"})
@@ -446,12 +444,12 @@
   (get-connection con)
   (def con (get-connection (get-datasource db-spec {})))
   (def con (get-connection db-spec))
-  (reduce + 0 (execute! con ["DROP TABLE fruit"]))
-  (reduce + 0 (execute! con ["CREATE TABLE fruit (id int default 0, name varchar(32) primary key, appearance varchar(32), cost int, grade real)"]))
-  (reduce + 0 (execute! con ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (1,'Apple','red',59,87), (2,'Banana','yellow',29,92.2), (3,'Peach','fuzzy',139,90.0), (4,'Orange','juicy',89,88.6)"]))
+  (command! con ["DROP TABLE fruit"])
+  (command! con ["CREATE TABLE fruit (id int default 0, name varchar(32) primary key, appearance varchar(32), cost int, grade real)"])
+  (command! con ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (1,'Apple','red',59,87), (2,'Banana','yellow',29,92.2), (3,'Peach','fuzzy',139,90.0), (4,'Orange','juicy',89,88.6)"])
 
   (println con)
-  (close con)
+  (.close con)
 
   (require '[criterium.core :refer [bench quick-bench]])
 
@@ -463,6 +461,10 @@
    (reduce (fn [rs m] (reduced (:name m)))
            nil
            (execute! con ["select * from fruit where appearance = ?" "red"])))
+  (quick-bench
+   (query-one con
+              ["select * from fruit where appearance = ?" "red"]
+              {:row-fn :name}))
 
   ;; simple query
   (quick-bench
@@ -494,11 +496,13 @@
 
   ;; full first row
   (quick-bench
-   (reduce (fn [rs m] (reduced (into {} m)))
-           nil
-           (execute! con ["select * from fruit where appearance = ?" "red"])))
+   (query-one con ["select * from fruit where appearance = ?" "red"]))
 
   ;; test assoc works
-  (reduce (fn [rs m] (reduced (assoc m :test :value)))
-          nil
-          (execute! con ["select * from fruit where appearance = ?" "red"])))
+  (query-one con
+             ["select * from fruit where appearance = ?" "red"]
+             {:row-fn #(assoc % :test :value)})
+  ;; test assoc works
+  (query con
+         ["select * from fruit where appearance = ?" "red"]
+         {:row-fn #(assoc % :test :value)}))
