@@ -37,7 +37,7 @@
 (defprotocol Sourceable
   (get-datasource ^DataSource [this]))
 (defprotocol Connectable
-  (get-connection ^AutoCloseable [this]))
+  (get-connection ^AutoCloseable [this opts]))
 (defprotocol Executable
   (-execute ^clojure.lang.IReduceInit [this sql-params opts]))
 (defprotocol Preparable
@@ -191,7 +191,7 @@
     (if transacted
       ;; should check isolation level; maybe implement save points?
       (f con)
-      (with-open [^AutoCloseable t-con (assoc (get-connection con)
+      (with-open [^AutoCloseable t-con (assoc (get-connection con opts)
                                               ;; FIXME: not a record/map!
                                               :transacted (atom committable?))]
         (let [^Connection jdbc t-con
@@ -323,8 +323,7 @@
   [url etc]
   ;; force DriverManager to be loaded
   (DriverManager/getLoginTimeout)
-  (-> (DriverManager/getConnection url (as-properties etc))
-      (modify-connection etc)))
+  (DriverManager/getConnection url (as-properties etc)))
 
 (defn- spec->url+etc
   ""
@@ -392,9 +391,10 @@
 
 (extend-protocol Connectable
   DataSource
-  (get-connection [this] (.getConnection this))
+  (get-connection [this opts] (-> (.getConnection this)
+                                  (modify-connection opts)))
   Object
-  (get-connection [this] (get-connection (get-datasource this))))
+  (get-connection [this opts] (get-connection (get-datasource this) opts)))
 
 (extend-protocol Preparable
   Connection
@@ -500,7 +500,7 @@
             (let [factory (pre-prepare* opts)]
               (reify clojure.lang.IReduceInit
                 (reduce [_ f init]
-                        (with-open [con (get-connection this)]
+                        (with-open [con (get-connection this opts)]
                           (with-open [stmt (prepare-fn con sql-params factory)]
                             (reduce-stmt stmt f init)))))))
   PreparedStatement
@@ -534,9 +534,9 @@
   (def db-spec {:dbtype "h2:mem" :dbname "perf"})
   (def con db-spec)
   (def con (get-datasource db-spec))
-  (get-connection con)
-  (def con (get-connection (get-datasource db-spec)))
-  (def con (get-connection db-spec))
+  (get-connection con {})
+  (def con (get-connection (get-datasource db-spec) {}))
+  (def con (get-connection db-spec {}))
   (command! con ["DROP TABLE fruit"])
   (command! con ["CREATE TABLE fruit (id int default 0, name varchar(32) primary key, appearance varchar(32), cost int, grade real)"])
   (command! con ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (1,'Apple','red',59,87), (2,'Banana','yellow',29,92.2), (3,'Peach','fuzzy',139,90.0), (4,'Orange','juicy',89,88.6)"])
