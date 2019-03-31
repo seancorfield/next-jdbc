@@ -359,13 +359,19 @@
 
 (defn- get-column-names
   ""
-  [^ResultSet rs]
+  [^ResultSet rs opts]
   (let [^ResultSetMetaData rsmeta (.getMetaData rs)
         idxs (range 1 (inc (.getColumnCount rsmeta)))]
-    (mapv (fn [^Integer i]
-            (keyword (not-empty (.getTableName rsmeta i))
-                     (.getColumnLabel rsmeta i)))
-          idxs)))
+    (if-let [ident-fn (:identifiers opts)]
+      (mapv (fn [^Integer i]
+              (keyword (when-let [qualifier (not-empty (.getTableName rsmeta i))]
+                         (ident-fn qualifier))
+                       (ident-fn (.getColumnLabel rsmeta i))))
+            idxs)
+      (mapv (fn [^Integer i]
+              (keyword (not-empty (.getTableName rsmeta i))
+                       (.getColumnLabel rsmeta i)))
+            idxs))))
 
 (defn- mapify-result-set
   "Given a result set, return an object that wraps the current row as a hash
@@ -378,8 +384,8 @@
   a full row will be realized (via seq/into).
 
   Supports Seqable which realizes a full row of the data."
-  [^ResultSet rs]
-  (let [cols (delay (get-column-names rs))]
+  [^ResultSet rs opts]
+  (let [cols (delay (get-column-names rs opts))]
     (reify
 
       clojure.lang.ILookup
@@ -416,14 +422,14 @@
 
 (defn- reduce-stmt
   ""
-  [^PreparedStatement stmt f init try-generated-keys?]
+  [^PreparedStatement stmt f init opts]
   (if-let [^ResultSet rs (if (.execute stmt)
                            (.getResultSet stmt)
-                           (when try-generated-keys?
+                           (when (:return-keys opts)
                              (try
                                (.getGeneratedKeys stmt)
                                (catch Exception _))))]
-    (let [rs-map (mapify-result-set rs)]
+    (let [rs-map (mapify-result-set rs opts)]
       (loop [init' init]
         (if (.next rs)
           (let [result (f init' rs-map)]
@@ -435,27 +441,34 @@
 
 (extend-protocol Executable
   Connection
-  (-execute [this [sql & params] opts]
+  (-execute [this sql-params opts]
             (let [factory (pre-prepare* opts)]
               (reify clojure.lang.IReduceInit
                 (reduce [_ f init]
-                        (with-open [stmt (prepare-fn* this sql params factory)]
-                          (reduce-stmt stmt f init (:return-keys opts)))))))
+                        (with-open [stmt (prepare-fn* this
+                                                      (first sql-params)
+                                                      (rest sql-params)
+                                                      factory)]
+                          (reduce-stmt stmt f init opts))))))
   DataSource
-  (-execute [this [sql & params] opts]
+  (-execute [this sql-params opts]
             (let [factory (pre-prepare* opts)]
               (reify clojure.lang.IReduceInit
                 (reduce [_ f init]
                         (with-open [con (get-connection this opts)]
-                          (with-open [stmt (prepare-fn* con sql params factory)]
-                            (reduce-stmt stmt f init (:return-keys opts))))))))
+                          (with-open [stmt (prepare-fn* con
+                                                        (first sql-params)
+                                                        (rest sql-params)
+                                                        factory)]
+                            (reduce-stmt stmt f init opts)))))))
   PreparedStatement
-  (-execute [this _ _]
+  (-execute [this _ opts]
             (reify clojure.lang.IReduceInit
               ;; we can't tell if this PreparedStatement will return generated
               ;; keys so we pass a truthy value to at least attempt it if we
               ;; do not get a ResultSet back from the execute call
-              (reduce [_ f init] (reduce-stmt this f init :maybe-keys))))
+              (reduce [_ f init]
+                      (reduce-stmt this f init (assoc opts :return-keys true)))))
   Object
   (-execute [this sql-params opts]
             (-execute (get-datasource this) sql-params opts)))
@@ -568,6 +581,7 @@
   (execute-one! con
                 ["select * from fruit where appearance = ?" "red"]
                 {:row-fn #(assoc % :test :value)})
+
   ;; test assoc works
   (execute! con
             ["select * from fruit where appearance = ?" "red"]
@@ -576,9 +590,4 @@
   (with-transaction [t con {:rollback-only? true}]
     (execute! t ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (5,'Pear','green',49,47)"])
     (execute! t ["select * from fruit where name = ?" "Pear"]))
-  (execute! con ["select * from fruit where name = ?" "Pear"])
-
-
-  (require '[clojure.java.jdbc :as j])
-  (j/insert! db-spec :fruit {:id 6, :name "Kiwi", :appearance "Hairy", :cost 99, :grade 66.6})
-  (require '[compliment.core]))
+  (execute! con ["select * from fruit where name = ?" "Pear"]))
