@@ -363,7 +363,7 @@
   (let [^ResultSetMetaData rsmeta (.getMetaData rs)
         idxs (range 1 (inc (.getColumnCount rsmeta)))]
     (mapv (fn [^Integer i]
-            (keyword (.getTableName rsmeta i)
+            (keyword (not-empty (.getTableName rsmeta i))
                      (.getColumnLabel rsmeta i)))
           idxs)))
 
