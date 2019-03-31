@@ -416,10 +416,14 @@
 
 (defn- reduce-stmt
   ""
-  [^PreparedStatement stmt f init]
-  (if (.execute stmt)
-    (let [rs     (.getResultSet stmt)
-          rs-map (mapify-result-set rs)]
+  [^PreparedStatement stmt f init try-generated-keys?]
+  (if-let [^ResultSet rs (if (.execute stmt)
+                           (.getResultSet stmt)
+                           (when try-generated-keys?
+                             (try
+                               (.getGeneratedKeys stmt)
+                               (catch Exception _))))]
+    (let [rs-map (mapify-result-set rs)]
       (loop [init' init]
         (if (.next rs)
           (let [result (f init' rs-map)]
@@ -427,7 +431,7 @@
               @result
               (recur result)))
           init')))
-    (f init (.getUpdateCount stmt))))
+    (f init {::update-count (.getUpdateCount stmt)})))
 
 (extend-protocol Executable
   Connection
@@ -436,7 +440,7 @@
               (reify clojure.lang.IReduceInit
                 (reduce [_ f init]
                         (with-open [stmt (prepare-fn* this sql params factory)]
-                          (reduce-stmt stmt f init))))))
+                          (reduce-stmt stmt f init (:return-keys opts)))))))
   DataSource
   (-execute [this [sql & params] opts]
             (let [factory (pre-prepare* opts)]
@@ -444,16 +448,19 @@
                 (reduce [_ f init]
                         (with-open [con (get-connection this opts)]
                           (with-open [stmt (prepare-fn* con sql params factory)]
-                            (reduce-stmt stmt f init)))))))
+                            (reduce-stmt stmt f init (:return-keys opts))))))))
   PreparedStatement
   (-execute [this _ _]
             (reify clojure.lang.IReduceInit
-              (reduce [_ f init] (reduce-stmt this f init))))
+              ;; we can't tell if this PreparedStatement will return generated
+              ;; keys so we pass a truthy value to at least attempt it if we
+              ;; do not get a ResultSet back from the execute call
+              (reduce [_ f init] (reduce-stmt this f init :maybe-keys))))
   Object
   (-execute [this sql-params opts]
             (-execute (get-datasource this) sql-params opts)))
 
-(defn execute!
+(defn reducible!
   "General SQL execution function.
 
   Returns a reducible that, when reduced, runs the SQL and yields the result."
