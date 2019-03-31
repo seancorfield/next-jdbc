@@ -193,7 +193,7 @@
   (-transact [this body-fn opts]
              (-transact (get-datasource this) body-fn opts)))
 
-(defmacro in-transaction
+(defmacro with-transaction
   [[sym connectable opts] & body]
   `(-transact ~connectable (fn [~sym] ~@body) ~opts))
 
