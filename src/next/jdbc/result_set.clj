@@ -96,24 +96,24 @@
 (extend-protocol p/Executable
   java.sql.Connection
   (-execute [this sql-params opts]
-    (let [factory (prepare/pre-prepare* opts)]
+    (let [factory (prepare/->factory opts)]
       (reify clojure.lang.IReduceInit
         (reduce [_ f init]
-                (with-open [stmt (prepare/prepare-fn* this
-                                                      (first sql-params)
-                                                      (rest sql-params)
-                                                      factory)]
+                (with-open [stmt (prepare/create this
+                                                 (first sql-params)
+                                                 (rest sql-params)
+                                                 factory)]
                   (reduce-stmt stmt f init opts))))))
   javax.sql.DataSource
   (-execute [this sql-params opts]
-    (let [factory (prepare/pre-prepare* opts)]
+    (let [factory (prepare/->factory opts)]
       (reify clojure.lang.IReduceInit
         (reduce [_ f init]
                 (with-open [con (p/get-connection this opts)]
-                  (with-open [stmt (prepare/prepare-fn* con
-                                                        (first sql-params)
-                                                        (rest sql-params)
-                                                        factory)]
+                  (with-open [stmt (prepare/create con
+                                                   (first sql-params)
+                                                   (rest sql-params)
+                                                   factory)]
                     (reduce-stmt stmt f init opts)))))))
   java.sql.PreparedStatement
   (-execute [this _ opts]
@@ -129,7 +129,7 @@
 
 (declare navize-row)
 
-(defn- row-into-map
+(defn datafiable-row
   [connectable opts]
   (fn [row]
     (into (with-meta {} {`core-p/datafy (navize-row connectable opts)}) row)))
@@ -138,13 +138,13 @@
   ""
   [connectable sql-params opts]
   (into []
-        (map (or (:row-fn opts) (row-into-map connectable opts)))
+        (map (or (:row-fn opts) (datafiable-row connectable opts)))
         (p/-execute connectable sql-params opts)))
 
 (defn execute-one!
   ""
   [connectable sql-params opts]
-  (let [row-fn (or (:row-fn opts) (row-into-map connectable opts))]
+  (let [row-fn (or (:row-fn opts) (datafiable-row connectable opts))]
     (reduce (fn [_ row]
               (reduced (row-fn row)))
             nil

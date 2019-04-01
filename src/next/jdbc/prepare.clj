@@ -44,7 +44,7 @@
   [return-keys]
   (into-array String return-keys))
 
-(defn pre-prepare*
+(defn ->factory
   "Given a some options, return a statement factory -- a function that will
   accept a connection and a SQL string and parameters, and return a
   PreparedStatement representing that."
@@ -106,7 +106,7 @@
                   (fn [^Connection con ^String sql]
                     (.setQueryTimeout ^PreparedStatement (f con sql) timeout)))))
 
-(defn prepare-fn*
+(defn create
   "Given a connection, a SQL statement, its parameters, and a statement factory,
   return a PreparedStatement representing that."
   ^java.sql.PreparedStatement
@@ -117,5 +117,5 @@
   java.sql.Connection
   (prepare [this sql-params opts]
            (let [[sql & params] sql-params
-                 factory        (pre-prepare* opts)]
+                 factory        (->factory opts)]
              (set-parameters (factory this sql) params))))
