@@ -1,6 +1,7 @@
 (ns next.jdbc-test
   (:require [clojure.test :refer [deftest is testing]]
-            [next.jdbc :refer :all]))
+            [next.jdbc :refer :all]
+            [next.jdbc.result-set :as rs]))
 
 (deftest a-test
   (testing "FIXME, I fail."
@@ -19,6 +20,12 @@
   ;; h2
   (execute! con ["CREATE TABLE fruit (id int default 0, name varchar(32) primary key, appearance varchar(32), cost int, grade real)"])
   (execute! con ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (1,'Apple','red',59,87), (2,'Banana','yellow',29,92.2), (3,'Peach','fuzzy',139,90.0), (4,'Orange','juicy',89,88.6)"])
+  (insert-multi! con :fruit [:id :name :appearance :cost :grade]
+                 [[1 "Apple" "red" 59 87]
+                  [2,"Banana","yellow",29,92.2]
+                  [3,"Peach","fuzzy",139,90.0]
+                  [4,"Orange","juicy",89,88.6]]
+                 {:return-keys false})
   ;; mysql
   (execute! con ["CREATE TABLE fruit (id int auto_increment, name varchar(32), appearance varchar(32), cost int, grade real, primary key (id))"])
   (execute! con ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (1,'Apple','red',59,87), (2,'Banana','yellow',29,92.2), (3,'Peach','fuzzy',139,90.0), (4,'Orange','juicy',89,88.6)"]
@@ -58,6 +65,7 @@
 
   (execute! con ["select * from fruit"])
   (into [] (map (partial into {})) (reducible! con ["select * from fruit"]))
+  (into [] (map (rs/datafiable-row con {})) (reducible! con ["select * from fruit"]))
 
   ;; with a prepopulated prepared statement
   (with-open [ps (prepare con ["select * from fruit where appearance = ?" "red"] {})]
@@ -101,5 +109,7 @@
     (execute! t ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (5,'Pear','green',49,47)"])
     (execute! t ["select * from fruit where name = ?" "Pear"]))
   (execute! con ["select * from fruit where name = ?" "Pear"])
+  (delete! con :fruit {:id 1})
 
+  (update! con :fruit {:appearance "Brown"} {:name "Banana"})
   (execute! con ["select * from membership"]))
