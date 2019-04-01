@@ -6,7 +6,7 @@
             [next.jdbc.prepare :as prepare] ; used to extend protocols
             [next.jdbc.protocols :as p]
             [next.jdbc.result-set :as rs]
-            [next.jdbc.transaction :as tx])) ; used to extend protocols
+            [next.jdbc.transaction])) ; used to extend protocols
 
 (set! *warn-on-reflection* true)
 
