@@ -1,7 +1,7 @@
 ;; copyright (c) 2018-2019 Sean Corfield, all rights reserved
 
 (ns next.jdbc.result-set
-  ""
+  "An implementation of ResultSet handling functions."
   (:require [clojure.core.protocols :as core-p]
             [next.jdbc.prepare :as prepare]
             [next.jdbc.protocols :as p])
@@ -12,7 +12,11 @@
 (set! *warn-on-reflection* true)
 
 (defn- get-column-names
-  ""
+  "Given a ResultSet, return a vector of columns names, each qualified by
+  the table from which it came.
+
+  If :identifiers was specified, apply that to both the table qualifier
+  and the column name."
   [^ResultSet rs opts]
   (let [^ResultSetMetaData rsmeta (.getMetaData rs)
         idxs (range 1 (inc (.getColumnCount rsmeta)))]
@@ -75,7 +79,13 @@
                       (range 1 (inc (count @cols)))))))))
 
 (defn- reduce-stmt
-  ""
+  "Execute the PreparedStatement, attempt to get either its ResultSet or
+  its generated keys (as a ResultSet), and reduce that using the supplied
+  function and initial value.
+
+  If the statement yields neither a ResultSet nor generated keys, return
+  a hash map containing ::update-count and the number of rows updated,
+  with the supplied function and initial value applied."
   [^PreparedStatement stmt f init opts]
   (if-let [^ResultSet rs (if (.execute stmt)
                            (.getResultSet stmt)
@@ -130,19 +140,27 @@
 (declare navize-row)
 
 (defn datafiable-row
+  "Given a connectable object, return a function that knows how to turn a row
+  into a datafiable object that can be 'nav'igated."
   [connectable opts]
   (fn [row]
     (into (with-meta {} {`core-p/datafy (navize-row connectable opts)}) row)))
 
 (defn execute!
-  ""
+  "Given a connectable object and SQL and parameters, execute it and reduce it
+  into a vector of processed hash maps (rows).
+
+  By default, this will create datafiable rows but :row-fn can override that."
   [connectable sql-params opts]
   (into []
         (map (or (:row-fn opts) (datafiable-row connectable opts)))
         (p/-execute connectable sql-params opts)))
 
 (defn execute-one!
-  ""
+  "Given a connectable object and SQL and parameters, execute it and return
+  just the first processed hash map (row).
+
+  By default, this will create a datafiable row but :row-fn can override that."
   [connectable sql-params opts]
   (let [row-fn (or (:row-fn opts) (datafiable-row connectable opts))]
     (reduce (fn [_ row]
@@ -161,7 +179,22 @@
       [(keyword table) :id])))
 
 (defn- navize-row
-  ""
+  "Given a connectable object, return a function that knows how to turn a row
+  into a navigable object.
+
+  A :schema option can provide a map of qualified column names (:table/column)
+  to tuples that indicate which table they are a foreign key for, the name of
+  the key within that table, and (optionality) the cardinality of that
+  relationship (:many, :one).
+
+  If no :schema item is provided for a column, the convention of <table>id or
+  <table>_id is used, and the assumption is that such columns are foreign keys
+  in the <table> portion of their name, the key is called 'id', and the
+  cardinality is :one.
+
+  Rows are looked up using 'execute!' or 'execute-one!' and the :entities
+  function, if provided, is applied to both the assumed table name and the
+  assumed foreign key column name."
   [connectable opts]
   (fn [row]
     (with-meta row

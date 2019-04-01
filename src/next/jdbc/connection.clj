@@ -1,7 +1,7 @@
 ;; copyright (c) 2018-2019 Sean Corfield, all rights reserved
 
 (ns next.jdbc.connection
-  ""
+  "Standard implementations of get-datasource and get-connection."
   (:require [next.jdbc.protocols :as p])
   (:import (java.sql Connection DriverManager)
            (javax.sql DataSource)
@@ -81,7 +81,7 @@
   (DriverManager/getConnection url (as-properties etc)))
 
 (defn- spec->url+etc
-  ""
+  "Given a database spec, return a JDBC URL and a map of any additional options."
   [{:keys [dbtype dbname host port classname] :as db-spec}]
   (let [;; allow aliases for dbtype
         subprotocol (aliases dbtype dbtype)
@@ -118,12 +118,13 @@
     [url etc]))
 
 (defn- string->url+etc
-  ""
+  "Given a JDBC URL, return it with an empty set of options with no parsing."
   [s]
   [s {}])
 
 (defn- url+etc->datasource
-  ""
+  "Given a JDBC URL and a map of options, return a DataSource that can be
+  used to obtain a new database connection."
   [[url etc]]
   (reify DataSource
     (getConnection [_]
@@ -136,14 +137,19 @@
 
 (defn- make-connection
   "Given a DataSource and a map of options, get a connection and update it
-  as specified by the options."
+  as specified by the options.
+
+  The options supported are:
+  * :auto-commit -- whether the connection should be set to auto-commit or not;
+      without this option, the defaut is true -- connections will auto-commit,
+  * :read-only -- whether the connection should be set to read-only mode."
   ^Connection
   [^DataSource datasource opts]
   (let [^Connection connection (.getConnection datasource)]
-    (when (contains? opts :auto-commit?)
-      (.setAutoCommit connection (boolean (:auto-commit? opts))))
-    (when (contains? opts :read-only?)
-      (.setReadOnly connection (boolean (:read-only? opts))))
+    (when (contains? opts :auto-commit)
+      (.setAutoCommit connection (boolean (:auto-commit opts))))
+    (when (contains? opts :read-only)
+      (.setReadOnly connection (boolean (:read-only opts))))
     connection))
 
 (extend-protocol p/Sourceable

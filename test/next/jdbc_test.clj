@@ -1,4 +1,5 @@
 (ns next.jdbc-test
+  "Not exactly a test suite -- more a series of examples."
   (:require [clojure.test :refer [deftest is testing]]
             [next.jdbc :refer :all]
             [next.jdbc.result-set :as rs]))
@@ -9,17 +10,15 @@
 
 (comment
   (def db-spec {:dbtype "h2:mem" :dbname "perf"})
-  (def db-spec {:dbtype "derby" :dbname "perf" :create true})
-  (def db-spec {:dbtype "mysql" :dbname "worldsingles" :user "root" :password "visual"})
-  (def con db-spec)
-  (def con (get-datasource db-spec))
-  (get-connection con {})
+  ;; these should be equivalent
   (def con (get-connection (get-datasource db-spec) {}))
   (def con (get-connection db-spec {}))
   (execute! con ["DROP TABLE fruit"])
   ;; h2
   (execute! con ["CREATE TABLE fruit (id int default 0, name varchar(32) primary key, appearance varchar(32), cost int, grade real)"])
+  ;; either this...
   (execute! con ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (1,'Apple','red',59,87), (2,'Banana','yellow',29,92.2), (3,'Peach','fuzzy',139,90.0), (4,'Orange','juicy',89,88.6)"])
+  ;; ...or this
   (insert-multi! con :fruit [:id :name :appearance :cost :grade]
                  [[1 "Apple" "red" 59 87]
                   [2,"Banana","yellow",29,92.2]
@@ -30,7 +29,7 @@
   (execute! con ["CREATE TABLE fruit (id int auto_increment, name varchar(32), appearance varchar(32), cost int, grade real, primary key (id))"])
   (execute! con ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (1,'Apple','red',59,87), (2,'Banana','yellow',29,92.2), (3,'Peach','fuzzy',139,90.0), (4,'Orange','juicy',89,88.6)"]
             {:return-keys true})
-
+  ;; when you're done
   (.close con)
 
   (require '[criterium.core :refer [bench quick-bench]])
@@ -64,7 +63,9 @@
    (execute! con ["select * from fruit where appearance = ?" "red"]))
 
   (execute! con ["select * from fruit"])
+  ;; this is not quite equivalent
   (into [] (map (partial into {})) (reducible! con ["select * from fruit"]))
+  ;; but this is (equivalent to execute!)
   (into [] (map (rs/datafiable-row con {})) (reducible! con ["select * from fruit"]))
 
   ;; with a prepopulated prepared statement
@@ -105,11 +106,10 @@
             ["select * from fruit where appearance = ?" "red"]
             {:row-fn #(assoc % :test :value)})
 
-  (with-transaction [t con {:rollback-only? true}]
+  (with-transaction [t con {:rollback-only true}]
     (execute! t ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (5,'Pear','green',49,47)"])
     (execute! t ["select * from fruit where name = ?" "Pear"]))
   (execute! con ["select * from fruit where name = ?" "Pear"])
-  (delete! con :fruit {:id 1})
 
-  (update! con :fruit {:appearance "Brown"} {:name "Banana"})
-  (execute! con ["select * from membership"]))
+  (delete! con :fruit {:id 1})
+  (update! con :fruit {:appearance "Brown"} {:name "Banana"}))

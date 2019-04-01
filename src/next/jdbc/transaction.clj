@@ -19,19 +19,19 @@
 (defn- transact*
   ""
   [^Connection con f opts]
-  (let [{:keys [isolation read-only? rollback-only?]} opts
+  (let [{:keys [isolation read-only rollback-only]} opts
         old-autocommit (.getAutoCommit con)
         old-isolation  (.getTransactionIsolation con)
         old-readonly   (.isReadOnly con)]
     (io!
      (when isolation
        (.setTransactionIsolation con (isolation isolation-levels)))
-     (when read-only?
+     (when read-only
        (.setReadOnly con true))
      (.setAutoCommit con false)
      (try
        (let [result (f con)]
-         (if rollback-only?
+         (if rollback-only
            (.rollback con)
            (.commit con))
          result)
@@ -58,7 +58,7 @@
            (try
              (.setTransactionIsolation con old-isolation)
              (catch Exception _)))
-         (when read-only?
+         (when read-only
            (try
              (.setReadOnly con old-readonly)
              (catch Exception _))))))))

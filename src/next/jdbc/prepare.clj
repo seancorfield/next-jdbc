@@ -1,7 +1,11 @@
 ;; copyright (c) 2018-2019 Sean Corfield, all rights reserved
 
 (ns next.jdbc.prepare
-  ""
+  "Mostly an implementation namespace for how PreparedStatement objects are
+  created by the next generation java.jdbc library.
+
+  set-parameters is public and may be useful if you have a PreparedStatement
+  that you wish to reuse and (re)set the parameters on it."
   (:require [next.jdbc.protocols :as p])
   (:import (java.sql Connection
                      PreparedStatement
@@ -11,7 +15,10 @@
 (set! *warn-on-reflection* true)
 
 (defn set-parameters
-  ""
+  "Given a PreparedStatement and a vector of parameter values, update the
+  PreparedStatement with those parameters and return it.
+
+  Currently uses .setObject with no possibility of an override."
   ^java.sql.PreparedStatement
   [^PreparedStatement ps params]
   (when (seq params)
