@@ -1,7 +1,7 @@
 ;; copyright (c) 2018-2019 Sean Corfield, all rights reserved
 
 (ns next.jdbc.transaction
-  ""
+  "SQL Transaction logic."
   (:require [next.jdbc.protocols :as p])
   (:import (java.sql Connection
                      SQLException)))
@@ -17,7 +17,11 @@
    :serializable     Connection/TRANSACTION_SERIALIZABLE})
 
 (defn- transact*
-  ""
+  "Run the given function inside a transaction created on the given connection.
+
+  Isolation level options can be provided, as well as marking the transaction
+  as read-only and/or rollback-only (so it will automatically rollback
+  instead of committing any changes)."
   [^Connection con f opts]
   (let [{:keys [isolation read-only rollback-only]} opts
         old-autocommit (.getAutoCommit con)

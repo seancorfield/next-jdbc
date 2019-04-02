@@ -130,19 +130,32 @@
 (comment
   (require '[next.jdbc.quoted :refer [mysql]])
   (by-keys {:a nil :b 42 :c "s"} :where {})
+  ;=> ["WHERE a IS NULL AND b = ? AND c = ?" 42 "s"]
   (as-keys {:a nil :b 42 :c "s"} {})
+  ;=> a, b, c
   (as-? {:a nil :b 42 :c "s"} {})
+  ;=> ?, ?, ?
   (for-query :user {:id 9} {:entities mysql})
+  ;=> ["SELECT * FROM `user` WHERE `id` = ?" 9]
   (for-query :user {:id nil} {:entities mysql})
+  ;=> ["SELECT * FROM `user` WHERE `id` IS NULL"]
   (for-query :user ["id = ? and opt is null" 9] {:entities mysql})
+  ;=> ["SELECT * FROM `user` WHERE id = ? and opt is null" 9]
   (for-delete :user {:opt nil :id 9} {:entities mysql})
+  ;=> ["DELETE FROM `user` WHERE `opt` IS NULL AND `id` = ?" 9]
   (for-delete :user ["id = ? and opt is null" 9] {:entities mysql})
+  ;=> ["DELETE FROM `user` WHERE id = ? and opt is null" 9]
   (for-update :user {:status 42} {} {:entities mysql})
+  ;=> ["UPDATE `user` SET `status` = ? WHERE " 42]
   (for-update :user {:status 42} {:id 9} {:entities mysql})
+  ;=> ["UPDATE `user` SET `status` = ? WHERE `id` = ?" 42 9]
   (for-update :user {:status 42, :opt nil} ["id = ?" 9] {:entities mysql})
+  ;=> ["UPDATE `user` SET `status` = ?, `opt` = ? WHERE id = ?" 42 nil 9]
   (for-insert :user {:id 9 :status 42 :opt nil} {:entities mysql})
+  ;=> ["INSERT INTO `user` (`id`, `status`, `opt`) VALUES (?, ?, ?)" 9 42 nil]
   (for-insert-multi :user [:id :status]
                     [[42 "hello"]
                      [35 "world"]
                      [64 "dollars"]]
                     {:entities mysql}))
+  ;=> ["INSERT INTO `user` (`id`, `status`) VALUES (?, ?), (?, ?), (?, ?)" 42 "hello" 35 "world" 64 "dollars"])

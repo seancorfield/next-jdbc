@@ -64,7 +64,7 @@
    "oracle:sid" ":"})
 
 (defn- ^Properties as-properties
-  "Convert any seq of pairs to a java.utils.Properties instance.
+  "Convert any seq of pairs to a java.util.Properties instance.
    Uses as-sql-name to convert both keys and values into strings."
   [m]
   (let [p (Properties.)]
