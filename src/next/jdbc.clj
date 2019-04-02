@@ -156,6 +156,16 @@
   ([connectable sql-params opts]
    (rs/execute-one! connectable sql-params opts)))
 
+(defn transact
+  "Given a connectable object and a function (taking a Connection),
+  execute the function on a new connection in a transactional manner.
+
+  An options map may be provided before the function."
+  ([connectable f]
+   (p/-transact connectable f {}))
+  ([connectable opts f]
+   (p/-transact connectable f opts)))
+
 (defmacro with-transaction
   "Given a connectable object, gets a new connection and binds it to 'sym',
   then executes the 'body' in that context, committing any changes if the body
@@ -167,7 +177,7 @@
   * :read-only -- true / false,
   * :rollback-only -- true / false."
   [[sym connectable opts] & body]
-  `(p/-transact ~connectable (fn [~sym] ~@body) ~opts))
+  `(transact ~connectable ~opts (fn [~sym] ~@body)))
 
 (defn insert!
   "Given a connectable object, a table name, and a data hash map, inserts the
