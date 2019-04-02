@@ -36,7 +36,7 @@
   (column-names [this] "Return the column names from a result set.")
   (row-values [this] "Return the values from the current row of a result set."))
 
-(defprotocol IReadColumn
+(defprotocol ReadableColumn
   "Protocol for reading objects from the java.sql.ResultSet. Default
   implementations (for Object and nil) return the argument, and the
   Boolean implementation ensures a canonicalized true/false value,
@@ -46,7 +46,7 @@
   (read-column-by-index [val rsmeta idx]
     "Function for transforming values after reading them via a column index."))
 
-(extend-protocol IReadColumn
+(extend-protocol ReadableColumn
   Object
   (read-column-by-label [x _] x)
   (read-column-by-index [x _2 _3] x)

@@ -14,7 +14,7 @@
 
 (set! *warn-on-reflection* true)
 
-(defprotocol ISQLParameter :extend-via-metadata true
+(defprotocol SettableParameter :extend-via-metadata true
   "Protocol for setting SQL parameters in statement objects, which
   can convert from Clojure values. The default implementation just
   calls .setObject on the parameter value. It can be extended to use other
@@ -23,7 +23,7 @@
     "Convert a Clojure value into a SQL value and store it as the ix'th
     parameter in the given SQL statement object."))
 
-(extend-protocol ISQLParameter
+(extend-protocol SettableParameter
   Object
   (set-parameter [v ^PreparedStatement s ^long i]
     (.setObject s i v))
