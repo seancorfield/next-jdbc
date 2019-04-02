@@ -14,6 +14,24 @@
 
 (set! *warn-on-reflection* true)
 
+(defprotocol ISQLParameter :extend-via-metadata true
+  "Protocol for setting SQL parameters in statement objects, which
+  can convert from Clojure values. The default implementation just
+  calls .setObject on the parameter value. It can be extended to use other
+  methods of PreparedStatement to convert and set parameter values."
+  (set-parameter [val stmt ix]
+    "Convert a Clojure value into a SQL value and store it as the ix'th
+    parameter in the given SQL statement object."))
+
+(extend-protocol ISQLParameter
+  Object
+  (set-parameter [v ^PreparedStatement s ^long i]
+    (.setObject s i v))
+
+  nil
+  (set-parameter [_ ^PreparedStatement s ^long i]
+    (.setObject s i nil)))
+
 (defn set-parameters
   "Given a PreparedStatement and a vector of parameter values, update the
   PreparedStatement with those parameters and return it.
@@ -23,7 +41,7 @@
   [^PreparedStatement ps params]
   (when (seq params)
     (loop [[p & more] params i 1]
-      (.setObject ps i p)
+      (set-parameter p ps i)
       (when more
         (recur more (inc i)))))
   ps)

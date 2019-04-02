@@ -17,9 +17,8 @@
 
   If :identifiers was specified, apply that to both the table qualifier
   and the column name."
-  [^ResultSet rs opts]
-  (let [^ResultSetMetaData rsmeta (.getMetaData rs)
-        idxs (range 1 (inc (.getColumnCount rsmeta)))]
+  [^ResultSet rs ^ResultSetMetaData rsmeta opts]
+  (let [idxs (range 1 (inc (.getColumnCount rsmeta)))]
     (if-let [ident-fn (:identifiers opts)]
       (mapv (fn [^Integer i]
               (keyword (when-let [qualifier (not-empty (.getTableName rsmeta i))]
@@ -32,8 +31,33 @@
             idxs))))
 
 (defprotocol ColumnarResultSet
-  (column-names [this])
-  (row-values [this]))
+  "To allow reducing functions to access a result set's column names and
+  row values, such as the as-arrays reducing function in this namespace."
+  (column-names [this] "Return the column names from a result set.")
+  (row-values [this] "Return the values from the current row of a result set."))
+
+(defprotocol IReadColumn
+  "Protocol for reading objects from the java.sql.ResultSet. Default
+  implementations (for Object and nil) return the argument, and the
+  Boolean implementation ensures a canonicalized true/false value,
+  but it can be extended to provide custom behavior for special types."
+  (read-column-by-label [val label]
+    "Function for transforming values after reading them via a column label.")
+  (read-column-by-index [val rsmeta idx]
+    "Function for transforming values after reading them via a column index."))
+
+(extend-protocol IReadColumn
+  Object
+  (read-column-by-label [x _] x)
+  (read-column-by-index [x _2 _3] x)
+
+  Boolean
+  (read-column-by-label [x _] (if (= true x) true false))
+  (read-column-by-index [x _2 _3] (if (= true x) true false))
+
+  nil
+  (read-column-by-label [_1 _2] nil)
+  (read-column-by-index [_1 _2 _3] nil))
 
 (defn- mapify-result-set
   "Given a result set, return an object that wraps the current row as a hash
@@ -47,17 +71,18 @@
 
   Supports Seqable which realizes a full row of the data."
   [^ResultSet rs opts]
-  (let [cols (delay (get-column-names rs opts))]
+  (let [rsmeta (.getMetaData rs)
+        cols   (delay (get-column-names rs rsmeta opts))]
     (reify
 
       clojure.lang.ILookup
       (valAt [this k]
              (try
-               (.getObject rs (name k))
+               (read-column-by-label (.getObject rs (name k)) (name k))
                (catch SQLException _)))
       (valAt [this k not-found]
              (try
-               (.getObject rs (name k))
+               (read-column-by-label (.getObject rs (name k)) (name k))
                (catch SQLException _
                  not-found)))
 
@@ -70,7 +95,9 @@
                        false)))
       (entryAt [this k]
                (try
-                 (clojure.lang.MapEntry. k (.getObject rs (name k)))
+                 (clojure.lang.MapEntry. k (read-column-by-label
+                                            (.getObject rs (name k))
+                                            (name k)))
                  (catch SQLException _)))
       (assoc [this k v]
              (assoc (into {} (seq this)) k v))
@@ -79,13 +106,17 @@
       (seq [this]
            (seq (mapv (fn [^Integer i]
                         (clojure.lang.MapEntry. (nth @cols (dec i))
-                                                (.getObject rs i)))
+                                                (read-column-by-index
+                                                 (.getObject rs i)
+                                                 rsmeta i)))
                       (range 1 (inc (count @cols))))))
 
       ColumnarResultSet
       (column-names [this] @cols)
       (row-values [this]
-                  (mapv (fn [^Integer i] (.getObject rs i))
+                  (mapv (fn [^Integer i] (read-column-by-index
+                                          (.getObject rs i)
+                                          rsmeta i))
                         (range 1 (inc (count @cols))))))))
 
 (defn as-arrays
