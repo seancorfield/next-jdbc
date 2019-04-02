@@ -208,7 +208,7 @@
    (rs/execute! connectable
                 (sql/for-insert table key-map opts)
                 (partial into {})
-                (merge {:return-keys true} opts))))
+                (assoc opts :return-keys true))))
 
 (defn insert-multi!
   "Syntactic sugar over execute! to make inserting columns/rows easier.
@@ -223,7 +223,7 @@
    (rs/execute! connectable
                 (sql/for-insert-multi table cols rows opts)
                 (partial into {})
-                (merge {:return-keys true} opts))))
+                (assoc opts :return-keys true))))
 
 (defn query
   "Syntactic sugar over execute! to provide a query alias.
