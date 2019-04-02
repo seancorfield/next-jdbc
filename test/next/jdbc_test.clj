@@ -59,7 +59,8 @@
   (quick-bench
    (execute-one! con
                  ["select * from fruit where appearance = ?" "red"]
-                 {:row-fn :name}))
+                 :name
+                 {}))
   ;; 5.7 micros -- 3.7x
   (quick-bench
    (jdbc/query {:connection con}
@@ -136,12 +137,14 @@
   ;; test assoc works
   (execute-one! con
                 ["select * from fruit where appearance = ?" "red"]
-                {:row-fn #(assoc % :test :value)})
+                #(assoc % :test :value)
+                {})
 
   ;; test assoc works
   (execute! con
             ["select * from fruit where appearance = ?" "red"]
-            {:row-fn #(assoc % :test :value)})
+            #(assoc % :test :value)
+            {})
 
   (with-transaction [t con {:rollback-only true}]
     (insert! t :fruit {:id 5, :name "Pear", :appearance "green", :cost 49, :grade 47})

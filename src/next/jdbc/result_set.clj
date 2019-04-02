@@ -206,9 +206,9 @@
   into a vector of processed hash maps (rows).
 
   By default, this will create datafiable rows but :row-fn can override that."
-  [connectable sql-params opts]
+  [connectable sql-params f opts]
   (into []
-        (map (or (:row-fn opts) (datafiable-row connectable opts)))
+        (map f)
         (p/-execute connectable sql-params opts)))
 
 (defn execute-one!
@@ -216,12 +216,10 @@
   just the first processed hash map (row).
 
   By default, this will create a datafiable row but :row-fn can override that."
-  [connectable sql-params opts]
-  (let [row-fn (or (:row-fn opts) (datafiable-row connectable opts))]
-    (reduce (fn [_ row]
-              (reduced (row-fn row)))
-            nil
-            (p/-execute connectable sql-params opts))))
+  [connectable sql-params f opts]
+  (reduce (fn [_ row] (reduced (f row)))
+          nil
+          (p/-execute connectable sql-params opts)))
 
 (defn- default-schema
   "The default schema lookup rule for column names.
@@ -269,6 +267,7 @@
                                              (entity-fn (name fk))
                                              " = ?")
                                         v]
+                                       (datafiable-row connectable opts)
                                        opts))
                            (catch Exception _
                              ;; assume an exception means we just cannot
