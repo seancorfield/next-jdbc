@@ -34,6 +34,8 @@
 
   (require '[criterium.core :refer [bench quick-bench]])
 
+  (require '[clojure.java.jdbc :as jdbc])
+
   ;; calibrate
   (quick-bench (reduce + (take 10e6 (range))))
 
@@ -46,28 +48,63 @@
           value (.getObject rs "name")]
       (.close ps)
       value))
-  (quick-bench (select* con))
+  (quick-bench (select* con)) ; 1.06 micros
 
-  ;; almost same as the Java example above
+  ;; almost same as the Java example above -- 1.42-1.49 micros -- 1.4x Java
   (quick-bench
    (reduce (fn [rs m] (reduced (:name m)))
            nil
            (reducible! con ["select * from fruit where appearance = ?" "red"])))
+  ;; run through convenience function -- 1.52-1.55 micros
   (quick-bench
    (execute-one! con
                  ["select * from fruit where appearance = ?" "red"]
                  {:row-fn :name}))
+  ;; 5.7 micros -- 3.7x
+  (quick-bench
+   (jdbc/query {:connection con}
+               ["select * from fruit where appearance = ?" "red"]
+               {:row-fn :name :result-set-fn first}))
 
-  ;; simple query
+  ;; simple query -- 3.1-3.2 micros
   (quick-bench
    (execute! con ["select * from fruit where appearance = ?" "red"]))
 
-  (execute! con ["select * from fruit"])
-  ;; this is not quite equivalent
-  (into [] (map (partial into {})) (reducible! con ["select * from fruit"]))
-  ;; but this is (equivalent to execute!)
-  (into [] (map (rs/datafiable-row con {})) (reducible! con ["select * from fruit"]))
+  ;; 5.9 -- ~2x
+  (quick-bench
+   (jdbc/query {:connection con} ["select * from fruit where appearance = ?" "red"]))
 
+  (quick-bench ; 5.77-5.89
+   (execute! con ["select * from fruit"]))
+  ;; this is not quite equivalent
+  (quick-bench ; 5.34-5.4
+   (into [] (map (partial into {})) (reducible! con ["select * from fruit"])))
+  ;; but this is (equivalent to execute!)
+  (quick-bench ; 5.58-5.8
+   (into [] (map (rs/datafiable-row con {})) (reducible! con ["select * from fruit"])))
+
+  (quick-bench ; 7.84-7.96 -- 1.3x
+   (jdbc/query {:connection con} ["select * from fruit"]))
+
+  (quick-bench ; 9.4-9.7
+   (with-transaction [t con {:rollback-only true}]
+     (execute! t ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (5,'Pear','green',49,47)"])))
+
+  (quick-bench ; 14.14-14.63
+   (with-transaction [t con {:rollback-only true}]
+     (insert! t :fruit {:id 5, :name "Pear", :appearance "green", :cost 49, :grade 47})))
+
+  (quick-bench ; 12.9-13 -- 1.36x
+   (jdbc/with-db-transaction [t {:connection con}]
+     (jdbc/db-set-rollback-only! t)
+     (jdbc/execute! t ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (5,'Pear','green',49,47)"])))
+
+  (quick-bench ; 25.52-25.74 -- 1.77x
+   (jdbc/with-db-transaction [t {:connection con}]
+     (jdbc/db-set-rollback-only! t)
+     (jdbc/insert! t :fruit {:id 5, :name "Pear", :appearance "green", :cost 49, :grade 47})))
+
+  (delete! con :fruit {:id 5})
   ;; with a prepopulated prepared statement
   (with-open [ps (prepare con ["select * from fruit where appearance = ?" "red"] {})]
     (quick-bench

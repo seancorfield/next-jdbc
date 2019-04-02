@@ -14,6 +14,11 @@
                       org.xerial/sqlite-jdbc {:mvn/version "3.23.1"}
                       ;; Note: Assumes Java 8; there's a .jre7 version as well
                       com.microsoft.sqlserver/mssql-jdbc {:mvn/version "6.2.2.jre8"}}}
+  :perf {:extra-deps {criterium {:mvn/version "0.4.4"}
+                      org.clojure/java.jdbc {:mvn/version "0.7.9"}}
+         :jvm-opts ["-server"
+                    "-Xmx4096m"
+                    "-Dclojure.compiler.direct-linking=true"]}
   :runner
   {:extra-deps {com.cognitect/test-runner
                 {:git/url "https://github.com/cognitect-labs/test-runner"
