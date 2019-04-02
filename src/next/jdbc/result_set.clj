@@ -31,6 +31,10 @@
                        (.getColumnLabel rsmeta i)))
             idxs))))
 
+(defprotocol ColumnarResultSet
+  (column-names [this])
+  (row-values [this]))
+
 (defn- mapify-result-set
   "Given a result set, return an object that wraps the current row as a hash
   map. Note that a result set is mutable and the current row will change behind
@@ -76,7 +80,27 @@
            (seq (mapv (fn [^Integer i]
                         (clojure.lang.MapEntry. (nth @cols (dec i))
                                                 (.getObject rs i)))
-                      (range 1 (inc (count @cols)))))))))
+                      (range 1 (inc (count @cols))))))
+
+      ColumnarResultSet
+      (column-names [this] @cols)
+      (row-values [this]
+                  (mapv (fn [^Integer i] (.getObject rs i))
+                        (range 1 (inc (count @cols))))))))
+
+(defn as-arrays
+  "A reducing function that can be used on a result set to produce an
+  array-based representation, where the first element is a vector of the
+  column names in the result set, and subsequent elements are vectors of
+  the rows from the result set.
+
+  It should be used with a nil initial value:
+
+  (reduce rs/as-arrays nil (reducible! con sql-params))"
+  [result rs-map]
+  (if result
+    (conj result (row-values rs-map))
+    (conj [(column-names rs-map)] (row-values rs-map))))
 
 (defn- reduce-stmt
   "Execute the PreparedStatement, attempt to get either its ResultSet or

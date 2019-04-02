@@ -149,4 +149,6 @@
   (execute! con ["select * from fruit where name = ?" "Pear"])
 
   (delete! con :fruit {:id 1})
-  (update! con :fruit {:appearance "Brown"} {:name "Banana"}))
+  (update! con :fruit {:appearance "Brown"} {:name "Banana"})
+
+  (reduce rs/as-arrays nil (reducible! con ["select * from fruit"])))
