@@ -144,9 +144,9 @@
             {:row-fn #(assoc % :test :value)})
 
   (with-transaction [t con {:rollback-only true}]
-    (execute! t ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (5,'Pear','green',49,47)"])
-    (execute! t ["select * from fruit where name = ?" "Pear"]))
-  (execute! con ["select * from fruit where name = ?" "Pear"])
+    (insert! t :fruit {:id 5, :name "Pear", :appearance "green", :cost 49, :grade 47})
+    (query t ["select * from fruit where name = ?" "Pear"]))
+  (query con ["select * from fruit where name = ?" "Pear"])
 
   (delete! con :fruit {:id 1})
   (update! con :fruit {:appearance "Brown"} {:name "Banana"})

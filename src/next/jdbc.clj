@@ -100,8 +100,10 @@
 
   If you call get-connection on anything else, it will call get-datasource
   first to try to get a DataSource, and then call get-connection on that."
-  [spec opts]
-  (p/get-connection spec opts))
+  ([spec]
+   (p/get-connection spec {}))
+  ([spec opts]
+   (p/get-connection spec opts)))
 
 (defn prepare
   "Given a connection to a database, and a vector containing SQL and any
@@ -114,8 +116,10 @@
 
   See the list of options above (in the namespace docstring) for what can
   be passed to prepare."
-  [connection sql-params opts]
-  (p/prepare connection sql-params opts))
+  ([connection sql-params]
+   (p/prepare connection sql-params {}))
+  ([connection sql-params opts]
+   (p/prepare connection sql-params opts)))
 
 (defn reducible!
   "General SQL execution function.
@@ -124,8 +128,11 @@
 
   Can be called on a PreparedStatement, a Connection, or something that can
   produce a Connection via a DataSource."
-  ([stmt] (p/-execute stmt [] {}))
-  ([connectable sql-params & [opts]]
+  ([stmt]
+   (p/-execute stmt [] {}))
+  ([connectable sql-params]
+   (p/-execute connectable sql-params {}))
+  ([connectable sql-params opts]
    (p/-execute connectable sql-params opts)))
 
 (defn execute!
@@ -180,7 +187,9 @@
   `(transact ~connectable ~opts (fn [~sym] ~@body)))
 
 (defn insert!
-  "Given a connectable object, a table name, and a data hash map, inserts the
+  "Syntactic sugar over execute! to make inserting hash maps easier.
+
+  Given a connectable object, a table name, and a data hash map, inserts the
   data as a single row in the database and attempts to return a map of generated
   keys."
   ([connectable table key-map]
@@ -193,7 +202,9 @@
                 (merge {:return-keys true} opts))))
 
 (defn insert-multi!
-  "Given a connectable object, a table name, a sequence of column names, and
+  "Syntactic sugar over execute! to make inserting columns/rows easier.
+
+  Given a connectable object, a table name, a sequence of column names, and
   a vector of rows of data (vectors of column values), inserts the data as
   multiple rows in the database and attempts to return a vector of maps of
   generated keys."
@@ -206,8 +217,20 @@
                 (sql/for-insert-multi table cols rows opts)
                 (merge {:return-keys true} opts))))
 
+(defn query
+  "Syntactic sugar over execute! to provide a query alias.
+
+  Given a connectable object, and a vector of SQL and its parameters,
+  returns a vector of hash maps of rows that match."
+  ([connectable sql-params]
+   (rs/execute! connectable sql-params {}))
+  ([connectable sql-params opts]
+   (rs/execute! connectable sql-params opts)))
+
 (defn find-by-keys
-  "Given a connectable object, a table name, and a hash map of columns and
+  "Syntactic sugar over execute! to make certain common queries easier.
+
+  Given a connectable object, a table name, and a hash map of columns and
   their values, returns a vector of hash maps of rows that match."
   ([connectable table key-map]
    (rs/execute! connectable (sql/for-query table key-map {}) {}))
@@ -215,7 +238,9 @@
    (rs/execute! connectable (sql/for-query table key-map opts) opts)))
 
 (defn get-by-id
-  "Given a connectable object, a table name, and a primary key value, returns
+  "Syntactic sugar over execute! to make certain common queries easier.
+
+  Given a connectable object, a table name, and a primary key value, returns
   a hash map of the first row that matches.
 
   By default, the primary key is assumed to be 'id' but that can be overridden
@@ -228,7 +253,9 @@
    (rs/execute-one! connectable (sql/for-query table {pk-name pk} opts) opts)))
 
 (defn update!
-  "Given a connectable object, a table name, a hash map of columns and values
+  "Syntactic sugar over execute! to make certain common updates easier.
+
+  Given a connectable object, a table name, a hash map of columns and values
   to set, and either a hash map of columns and values to search on or a vector
   of a SQL where clause and parameters, perform an update on the table."
   ([connectable table key-map where-params]
@@ -237,7 +264,9 @@
    (rs/execute! connectable (sql/for-update table key-map where-params opts) opts)))
 
 (defn delete!
-  "Given a connectable object, a table name, and either a hash map of columns
+  "Syntactic sugar over execute! to make certain common deletes easier.
+
+  Given a connectable object, a table name, and either a hash map of columns
   and values to search on or a vector of a SQL where clause and parameters,
   perform a delete on the table."
   ([connectable table where-params]
