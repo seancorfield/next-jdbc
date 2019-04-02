@@ -29,8 +29,8 @@
 
 (set! *warn-on-reflection* true)
 
-(defprotocol Sourceable
-  (get-datasource ^javax.sql.DataSource [this]))
+(defprotocol Sourceable :extend-via-metadata true
+  (get-datasource ^javax.sql.DataSource [this] "Turn this into a javax.sql.DataSource."))
 (defprotocol Connectable
   (get-connection ^java.lang.AutoCloseable [this opts]))
 (defprotocol Executable
