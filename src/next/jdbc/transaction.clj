@@ -23,7 +23,9 @@
   as read-only and/or rollback-only (so it will automatically rollback
   instead of committing any changes)."
   [^Connection con f opts]
-  (let [{:keys [isolation read-only rollback-only]} opts
+  (let [isolation (:isolation opts)
+        read-only (:read-only opts)
+        rollback-only (:rollback-only opts)
         old-autocommit (.getAutoCommit con)
         old-isolation  (.getTransactionIsolation con)
         old-readonly   (.isReadOnly con)]
