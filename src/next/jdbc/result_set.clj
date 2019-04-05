@@ -139,8 +139,8 @@
   function and initial value.
 
   If the statement yields neither a ResultSet nor generated keys, return
-  a hash map containing ::update-count and the number of rows updated,
-  with the supplied function and initial value applied."
+  a hash map containing :next.jdbc/update-count and the number of rows
+  updated, with the supplied function and initial value applied."
   [^PreparedStatement stmt f init opts]
   (if-let [^ResultSet rs (if (.execute stmt)
                            (.getResultSet stmt)
@@ -156,7 +156,7 @@
               @result
               (recur result)))
           init')))
-    (f init {::update-count (.getUpdateCount stmt)})))
+    (f init {:next.jdbc/update-count (.getUpdateCount stmt)})))
 
 (extend-protocol p/Executable
   java.sql.Connection
