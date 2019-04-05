@@ -20,6 +20,59 @@ My latest round of changes exposed the mapped-function-over-rows API more promin
 
 So, while I'm comfortable to put it out there and get feedback – and I've had lots of great feedback so far – expect to see more changes, possible some dramatic ones, in the next month or so before I actually settle on where the library will live and what the published artifacts will look like.
 
+## Usage
+
+The primary concepts behind `next.jdbc` are that you start by producing a `javax.sql.DataSource`. You can create a pooled datasource object using your preferred library (c3p0, hikari-cp, etc). You can use `next.jdbc`'s `get-datasource` function to create a `DataSource` from a `db-spec` hash map or from a JDBC URL (string). The underlying protocol, `Sourceable`, can be extended to allow more things to be turned into a `DataSource` (and can be extended via metadata on an object as well as via types).
+
+From a `DataSource`, either you or `next.jdbc` can create a `java.sql.Connection` via the `get-connection` function. You can specify an options hash map to `get-connection` to modify the connection that is created: `:read-only`, `:auto-commit`.
+
+The primary SQL execution API in `next.jdbc` is:
+* `reducible!` -- yields an `IReduceInit` that, when reduced, executes the SQL statement and then reduces over the `ResultSet` with as little overhead as possible.
+* `execute!` -- executes the SQL statement and reduces it into a vector of realized hash maps, that use qualified keywords for the column names, of the form `:<table>/<column>`. If you join across multiple tables, the qualified keywords will reflect the originating tables for each of the columns. If the SQL produces named values that do not come from an associated table, a simple, unqualified keyword will be used. The realized hash maps returned by `execute!` are `Datafiable` and thus `Navigable` (see Clojure 1.10's `datafy` and `nav` functions, and tools like Cognitect's REBL).
+
+In addition, there are API functions to create `PreparedStatement`s (`prepare`) from `Connection`s, which can be passed to `reducible!` or `execute!`, and to run code inside a transaction (the `transact` function and the `with-transaction` macro).
+
+Since `next.jdbc` uses raw Java JDBC types, you can use `with-open` directly to reuse connections and ensure they are cleaned up correctly:
+
+```
+  (let [my-datasource (get-datasource {:dbtype "..." :dbname "..." ...})]
+    (with-open [connection (get-connection my-datasource)]
+      (execute! connection [...])
+      (reduce my-fn init-value (reducible! connection [...]))
+      (execute! connection [...])
+```
+
+### Usage scenarios
+
+There are three intended usage scenarios that may drive the API to change:
+* Execute a SQL statement to obtain a single, fully-realized, `Datafiable` hash map that represents either the first row from a `ResultSet`, the first generated keys result (again, from a `ResultSet`), or the first result where neither of those are available (`next.jdbc` will yield `[{:next.jdbc/update-count N}])` when it can only return an update count). This usage is currently supported by `execute-one!` but I'm not very happy with it.
+* Execute a SQL statement to obtain a fully-realized, `Datafiable` result set -- a vector of hash maps. This usage is supported by `execute!`.
+* Execute a SQL statement and process it in a single eager operation, which may allow for the results to be streamed from the database (how to persuade JDBC to do that is database-specific!), and which cleans up resources before returning the result -- even if the reduction is short-circuited via `reduced`. This usage is supported by `reducible!`.
+
+In addition, convenience functions -- "syntactic sugar" -- are provided to insert rows, run queries, update rows, and delete rows, using the same names as in `clojure.java.jdbc`. These are currently in `next.jdbc` but may move to `next.jdbc.sql` since they involve SQL creation, or they may move into a separate "sibling" library -- since they are not part of the intended core API.
+
+## Differences from `clojure.java.jdbc`
+
+In addition to the obvious differences outlined above, there are a number of other smaller differences outlined below and also listed in https://github.com/seancorfield/next-jdbc/issues/5
+
+### The `db-spec` hash map
+
+Whereas `clojure.java.jdbc` supports a wide variety of options to describe how to make a database connection, `next.jdbc` streamlines this to just the `:dbtype`/`:dbname` approach which has been the recommended way to write `db-spec`s for some time in `clojure.java.jdbc`. See the docstring for `get-connection` for the full list of databases supported and options available.
+
+### The `:result-set-fn` and `:row-fn` options
+
+`:result-set-fn` is not supported: either call your function on the result of `execute!` or handle it via reducing the result of `reducible!`.
+
+`:row-fn` is still (currently) supported in `execute!` and, if present, will prevent the default behavior of producing `Datafiable` rows. Depending on what your row-processing function does, you may be able to combine it with `next.jdbc.result-set/datafiable-row` (which is what is used by default to produce `Datafiable` rows).
+
+### Clojure identifier creation
+
+While the `:identifiers` option is still (currently) supported for operations that produce realized row hash maps, it defaults to `identity` rather than `clojure.java.jdbc`'s `clojure.string/lower-case`, and it is called separately for the table name string and the column name string in the qualified keys of those maps.
+
+### SQL entity creation
+
+The `:entities` option is still (currently) supported for operations that create SQL strings from Clojure data structures. As with `clojure.java.jdbc`, it is applied to the string that will be used for the SQL entity (after converting incoming keywords to strings), and the various "quoting" strategies used in specific databases are now functions in the `next.jdbc.quoted` namespace: `ansi`, `mysql`, `postgres` (alias for `ansi`), `oracle` (also an alias for `ansi`), and `sql-server`.
+
 ## License
 
 Copyright © 2018-2019 Sean Corfield
