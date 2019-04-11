@@ -113,6 +113,8 @@
               nil
               (reducible! ps))]))
 
+  (require '[next.jdbc.prepare :as prepare])
+
   ;; same as above but setting parameters inside the benchmark
   (with-open [ps (prepare con ["select * from fruit where appearance = ?"] {})]
     (quick-bench

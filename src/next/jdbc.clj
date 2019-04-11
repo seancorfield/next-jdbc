@@ -6,7 +6,7 @@
   The basic building blocks are the java.sql/javax.sql classes:
   * DataSource -- something to get connections from,
   * Connection -- an active connection to the database,
-  * PreparedStatement -- SQL and parameters combined, from a connection
+  * PreparedStatement -- SQL and parameters combined, from a connection,
   and the following two functions and a macro:
   * reducible! -- given a connectable and SQL + parameters or a statement,
       return a reducible that, when reduced will execute the SQL and consume

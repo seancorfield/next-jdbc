@@ -161,25 +161,23 @@
 (extend-protocol p/Executable
   java.sql.Connection
   (-execute [this sql-params opts]
-    (let [factory (prepare/->factory opts)]
-      (reify clojure.lang.IReduceInit
-        (reduce [_ f init]
-                (with-open [stmt (prepare/create this
-                                                 (first sql-params)
-                                                 (rest sql-params)
-                                                 factory)]
-                  (reduce-stmt stmt f init opts))))))
+    (reify clojure.lang.IReduceInit
+      (reduce [_ f init]
+              (with-open [stmt (prepare/create this
+                                               (first sql-params)
+                                               (rest sql-params)
+                                               opts)]
+                (reduce-stmt stmt f init opts)))))
   javax.sql.DataSource
   (-execute [this sql-params opts]
-    (let [factory (prepare/->factory opts)]
-      (reify clojure.lang.IReduceInit
-        (reduce [_ f init]
-                (with-open [con (p/get-connection this opts)]
-                  (with-open [stmt (prepare/create con
-                                                   (first sql-params)
-                                                   (rest sql-params)
-                                                   factory)]
-                    (reduce-stmt stmt f init opts)))))))
+    (reify clojure.lang.IReduceInit
+      (reduce [_ f init]
+              (with-open [con (p/get-connection this opts)]
+                (with-open [stmt (prepare/create con
+                                                 (first sql-params)
+                                                 (rest sql-params)
+                                                 opts)]
+                  (reduce-stmt stmt f init opts))))))
   java.sql.PreparedStatement
   (-execute [this _ opts]
     (reify clojure.lang.IReduceInit
