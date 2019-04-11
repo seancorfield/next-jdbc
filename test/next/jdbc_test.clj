@@ -61,6 +61,12 @@
                  ["select * from fruit where appearance = ?" "red"]
                  :name
                  {}))
+  (quick-bench
+   (execute-one! con
+                 ["select * from fruit where appearance = ?" "red"]
+                 :name ; turn off row builder as we don't need it
+                 ;; this gives a very slight improvement
+                 {:gen-fn (constantly nil)}))
   ;; 5.7 micros -- 3.7x
   (quick-bench
    (jdbc/query {:connection con}
@@ -79,10 +85,12 @@
    (execute! con ["select * from fruit"]))
   ;; this is not quite equivalent
   (quick-bench ; 5.34-5.4
-   (into [] (map (partial into {})) (reducible! con ["select * from fruit"])))
+   (into [] (map (partial into {})) (reducible! con ["select * from fruit"]
+                                                {:gen-fn rs/map-row-builder})))
   ;; but this is (equivalent to execute!)
   (quick-bench ; 5.58-5.8
-   (into [] (map (rs/datafiable-row con {})) (reducible! con ["select * from fruit"])))
+   (into [] (map #(rs/datafiable-row % con {})) (reducible! con ["select * from fruit"]
+                                                            {:gen-fn rs/map-row-builder})))
 
   (quick-bench ; 7.84-7.96 -- 1.3x
    (jdbc/query {:connection con} ["select * from fruit"]))
@@ -137,16 +145,18 @@
    (execute-one! con ["select * from fruit where appearance = ?" "red"]))
 
   ;; test assoc works
-  (execute-one! con
-                ["select * from fruit where appearance = ?" "red"]
-                #(assoc % :test :value)
-                {})
+  (quick-bench
+   (execute-one! con
+                 ["select * from fruit where appearance = ?" "red"]
+                 #(assoc % :test :value)
+                 {}))
 
   ;; test assoc works
-  (execute! con
-            ["select * from fruit where appearance = ?" "red"]
-            #(assoc % :test :value)
-            {})
+  (quick-bench
+   (execute! con
+             ["select * from fruit where appearance = ?" "red"]
+             #(assoc % :test :value)
+             {}))
 
   (with-transaction [t con {:rollback-only true}]
     (insert! t :fruit {:id 5, :name "Pear", :appearance "green", :cost 49, :grade 47})

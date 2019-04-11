@@ -148,9 +148,9 @@
   ([stmt]
    (rs/execute! stmt [] (partial into {}) {}))
   ([connectable sql-params]
-   (rs/execute! connectable sql-params (rs/datafiable-row connectable {}) {}))
+   (rs/execute! connectable sql-params #(rs/datafiable-row % connectable {}) {}))
   ([connectable sql-params opts]
-   (rs/execute! connectable sql-params (rs/datafiable-row connectable opts) opts))
+   (rs/execute! connectable sql-params #(rs/datafiable-row % connectable opts) opts))
   ([connectable sql-params f opts]
    (rs/execute! connectable sql-params f opts)))
 
@@ -167,9 +167,9 @@
   ([stmt]
    (rs/execute-one! stmt [] (partial into {}) {}))
   ([connectable sql-params]
-   (rs/execute-one! connectable sql-params (rs/datafiable-row connectable {}) {}))
+   (rs/execute-one! connectable sql-params #(rs/datafiable-row % connectable {}) {}))
   ([connectable sql-params opts]
-   (rs/execute-one! connectable sql-params (rs/datafiable-row connectable opts) opts))
+   (rs/execute-one! connectable sql-params #(rs/datafiable-row % connectable opts) opts))
   ([connectable sql-params f opts]
    (rs/execute-one! connectable sql-params f opts)))
 
@@ -240,7 +240,7 @@
                   opts)
      (rs/execute! connectable
                   sql-params
-                  (rs/datafiable-row connectable opts)
+                  #(rs/datafiable-row % connectable opts)
                   opts))))
 
 (defn find-by-keys
@@ -258,7 +258,7 @@
                   opts)
      (rs/execute! connectable
                   (sql/for-query table key-map opts)
-                  (rs/datafiable-row connectable opts)
+                  #(rs/datafiable-row % connectable opts)
                   opts))))
 
 (defn get-by-id
@@ -281,7 +281,7 @@
                       opts)
      (rs/execute-one! connectable
                       (sql/for-query table {pk-name pk} opts)
-                      (rs/datafiable-row connectable opts)
+                      #(rs/datafiable-row % connectable opts)
                       opts))))
 
 (defn update!

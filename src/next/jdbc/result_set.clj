@@ -12,12 +12,12 @@
 (set! *warn-on-reflection* true)
 
 (defn- get-column-names
-  "Given a ResultSet, return a vector of columns names, each qualified by
+  "Given ResultSetMetaData, return a vector of columns names, each qualified by
   the table from which it came.
 
   If :identifiers was specified, apply that to both the table qualifier
   and the column name."
-  [^ResultSet rs ^ResultSetMetaData rsmeta opts]
+  [^ResultSetMetaData rsmeta opts]
   (let [idxs (range 1 (inc (.getColumnCount rsmeta)))]
     (if-let [ident-fn (:identifiers opts)]
       (mapv (fn [^Integer i]
@@ -29,12 +29,6 @@
               (keyword (not-empty (.getTableName rsmeta i))
                        (.getColumnLabel rsmeta i)))
             idxs))))
-
-(defprotocol ColumnarResultSet
-  "To allow reducing functions to access a result set's column names and
-  row values, such as the as-arrays reducing function in this namespace."
-  (column-names [this] "Return the column names from a result set.")
-  (row-values [this] "Return the values from the current row of a result set."))
 
 (defprotocol ReadableColumn
   "Protocol for reading objects from the java.sql.ResultSet. Default
@@ -59,6 +53,37 @@
   (read-column-by-label [_1 _2] nil)
   (read-column-by-index [_1 _2 _3] nil))
 
+(defprotocol RowBuilder
+  "Protocol for building rows in various representations:
+  row         -- called once per row to create the basis of each row
+  columns     -- return the number of columns in each row
+  with-column -- called with the index of the column to be added
+  build       -- called once per row to finalize each row once it is complete"
+  (row [_])
+  (columns [_])
+  (with-column [_ row i])
+  (build [_ row]))
+
+(defn map-row-builder [^ResultSet rs opts]
+  (let [rsmeta (.getMetaData rs)
+        cols   (get-column-names rsmeta opts)]
+    (reify
+      RowBuilder
+      (row [this] (transient {}))
+      (columns [this] (count cols))
+      (with-column [this row i]
+        (assoc! row
+                (nth cols (dec i))
+                (read-column-by-index (.getObject rs ^Integer i) rsmeta i)))
+      (build [this row] (persistent! row)))))
+
+(declare navize-row)
+
+(defprotocol DatafiableRow
+  "Given a connectable object, return a function that knows how to turn a row
+  into a datafiable object that can be 'nav'igated."
+  (datafiable-row [this connectable opts]))
+
 (defn- mapify-result-set
   "Given a result set, return an object that wraps the current row as a hash
   map. Note that a result set is mutable and the current row will change behind
@@ -71,8 +96,12 @@
 
   Supports Seqable which realizes a full row of the data."
   [^ResultSet rs opts]
-  (let [rsmeta (.getMetaData rs)
-        cols   (delay (get-column-names rs rsmeta opts))]
+  (let [gen (when-let [gen-fn (:gen-fn opts)] (gen-fn rs opts))
+        row-builder (fn [] ; blows up if :gen-fn not provided
+                      (->> (reduce (fn [r i] (with-column gen r i))
+                                   (row gen)
+                                   (range 1 (inc (columns gen))))
+                           (build gen)))]
     (reify
 
       clojure.lang.ILookup
@@ -100,27 +129,28 @@
                                             (name k)))
                  (catch SQLException _)))
       (assoc [this k v]
-             (assoc (into {} (seq this)) k v))
+             (assoc (row-builder) k v))
 
       clojure.lang.Seqable
       (seq [this]
-           (seq (mapv (fn [^Integer i]
-                        (clojure.lang.MapEntry. (nth @cols (dec i))
-                                                (read-column-by-index
-                                                 (.getObject rs i)
-                                                 rsmeta i)))
-                      (range 1 (inc (count @cols))))))
+           (seq (row-builder)))
 
-      ColumnarResultSet
-      (column-names [this] @cols)
-      (row-values [this]
-                  (mapv (fn [^Integer i] (read-column-by-index
-                                          (.getObject rs i)
-                                          rsmeta i))
-                        (range 1 (inc (count @cols))))))))
+      DatafiableRow
+      (datafiable-row [this connectable opts]
+                      (with-meta
+                        (row-builder)
+                        {`core-p/datafy (navize-row connectable opts)})))))
 
-(defn as-arrays
-  "A reducing function that can be used on a result set to produce an
+(extend-protocol
+  DatafiableRow
+  clojure.lang.IObj
+  (datafiable-row [this connectable opts]
+                  (with-meta
+                    this
+                    {`core-p/datafy (navize-row connectable opts)})))
+
+#_(defn as-arrays
+    "A reducing function that can be used on a result set to produce an
   array-based representation, where the first element is a vector of the
   column names in the result set, and subsequent elements are vectors of
   the rows from the result set.
@@ -128,10 +158,10 @@
   It should be used with a nil initial value:
 
   (reduce rs/as-arrays nil (reducible! con sql-params))"
-  [result rs-map]
-  (if result
-    (conj result (row-values rs-map))
-    (conj [(column-names rs-map)] (row-values rs-map))))
+    [result rs-map]
+    (if result
+      (conj result (row-values rs-map))
+      (conj [(column-names rs-map)] (row-values rs-map))))
 
 (defn- reduce-stmt
   "Execute the PreparedStatement, attempt to get either its ResultSet or
@@ -190,15 +220,6 @@
   (-execute [this sql-params opts]
     (p/-execute (p/get-datasource this) sql-params opts)))
 
-(declare navize-row)
-
-(defn datafiable-row
-  "Given a connectable object, return a function that knows how to turn a row
-  into a datafiable object that can be 'nav'igated."
-  [connectable opts]
-  (fn [row]
-    (into (with-meta {} {`core-p/datafy (navize-row connectable opts)}) row)))
-
 (defn execute!
   "Given a connectable object and SQL and parameters, execute it and reduce it
   into a vector of processed hash maps (rows).
@@ -207,7 +228,9 @@
   [connectable sql-params f opts]
   (into []
         (map f)
-        (p/-execute connectable sql-params opts)))
+        (p/-execute connectable
+                    sql-params
+                    (update opts :gen-fn #(or % map-row-builder)))))
 
 (defn execute-one!
   "Given a connectable object and SQL and parameters, execute it and return
@@ -217,7 +240,9 @@
   [connectable sql-params f opts]
   (reduce (fn [_ row] (reduced (f row)))
           nil
-          (p/-execute connectable sql-params opts)))
+          (p/-execute connectable
+                      sql-params
+                      (update opts :gen-fn #(or % map-row-builder)))))
 
 (defn- default-schema
   "The default schema lookup rule for column names.
@@ -265,7 +290,7 @@
                                              (entity-fn (name fk))
                                              " = ?")
                                         v]
-                                       (datafiable-row connectable opts)
+                                       #(datafiable-row % connectable opts)
                                        opts))
                            (catch Exception _
                              ;; assume an exception means we just cannot
