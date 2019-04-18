@@ -141,6 +141,18 @@
   (delete! con :fruit {:id 1})
   (update! con :fruit {:appearance "Brown"} {:name "Banana"})
 
+  (reduce (fn [rs m] (reduced (assoc m :test 42)))
+          nil
+          (reducible! con ["select * from fruit where appearance = ?" "red"]))
+
+  (reduce (fn [rs m] (reduced (rs/datafiable-row (assoc m :test 42) con {})))
+          nil
+          (reducible! con ["select * from fruit where appearance = ?" "red"]))
+
+  (reduce (fn [rs m] (reduced (rs/datafiable-row m con {})))
+          nil
+          (reducible! con ["select * from fruit where appearance = ?" "red"]))
+
   (defrecord Fruit [id name appearance cost grade])
 
   (defn fruit-builder [^java.sql.ResultSet rs opts]

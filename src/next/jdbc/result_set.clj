@@ -166,7 +166,7 @@
 
   Supports Seqable which realizes a full row of the data."
   [^ResultSet rs opts]
-  (let [gen (when-let [gen-fn (:gen-fn opts)] (delay (gen-fn rs opts)))]
+  (let [gen (delay ((get :gen-fn opts map-row-builder) rs opts))]
     (reify
 
       clojure.lang.ILookup
