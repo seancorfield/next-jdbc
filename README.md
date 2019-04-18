@@ -16,7 +16,7 @@ I also wanted `datafy`/`nav` support baked right in (it was added to `clojure.ja
 
 At this point, I would consider the API to be fairly stable (2019-04-18). The "syntactic sugar" SQL functions (`insert!`, `query`, `update!`, and `delete!`) go beyond what I  wanted to include in the core API so they are in `next.jdbc.sql`. I know that their equivalents in `clojure.java.jdbc` are heavily used (based on the number of questions and JIRA issues I get).
 
-I am still considering whether this should go into Contrib as new namespaces in `clojure.java.jdbc` or whether it will continue to live standalone so I'm not accepting Pull Requests yet (but I haven't disabled them on GitHub!). There are pros and cons to both choices, in my mind.
+I am still [considering whether this should go into Contrib](https://github.com/seancorfield/next-jdbc/issues/3) as new namespaces in `clojure.java.jdbc` or whether it will continue to live standalone so I'm not accepting Pull Requests yet (but I can't disable them on GitHub!). There are pros and cons to both choices, in my mind.
 
 ## Usage
 
