@@ -1,7 +1,16 @@
 ;; copyright (c) 2018-2019 Sean Corfield, all rights reserved
 
 (ns next.jdbc.result-set
-  "An implementation of ResultSet handling functions."
+  "An implementation of ResultSet handling functions.
+
+  Defines the following protocols:
+  * ReadableColumn -- to read column values by label or index
+  * RowBuilder -- for materializing a row
+  * ResultSetBuilder -- for materializing a result set
+  * DatafiableRow -- for turning a row into something datafiable
+
+  Also provides the default implemenations for Executable and
+  the default datafy/nav behavior for rows from a result set."
   (:require [clojure.core.protocols :as core-p]
             [next.jdbc.prepare :as prepare]
             [next.jdbc.protocols :as p])
@@ -11,7 +20,7 @@
 
 (set! *warn-on-reflection* true)
 
-(defn- get-column-names
+(defn get-column-names
   "Given ResultSetMetaData, return a vector of columns names, each qualified by
   the table from which it came.
 

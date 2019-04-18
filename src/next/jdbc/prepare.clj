@@ -5,7 +5,10 @@
   created by the next generation java.jdbc library.
 
   set-parameters is public and may be useful if you have a PreparedStatement
-  that you wish to reuse and (re)set the parameters on it."
+  that you wish to reuse and (re)set the parameters on it.
+
+  Defines the SettableParameter protocol for converting Clojure values
+  to database-specific values."
   (:require [next.jdbc.protocols :as p])
   (:import (java.sql Connection
                      PreparedStatement
