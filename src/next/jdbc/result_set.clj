@@ -262,8 +262,10 @@
                                      (rest sql-params)
                                      opts)]
       (if-let [rs (stmt->result-set stmt opts)]
-        (when (.next rs)
-          (datafiable-row (row-builder (map-row-builder rs opts)) this opts))
+        (let [gen-fn (get opts :gen-fn map-row-builder)
+              gen    (gen-fn rs opts)]
+          (when (.next rs)
+            (datafiable-row (row-builder gen) this opts)))
         {:next.jdbc/update-count (.getUpdateCount stmt)})))
   (-execute-all [this sql-params opts]
     (with-open [stmt (prepare/create this
