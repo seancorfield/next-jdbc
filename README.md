@@ -48,7 +48,7 @@ There are three intended usage scenarios that may drive the API to change:
 * Execute a SQL statement to obtain a fully-realized, `Datafiable` result set -- a vector of hash maps. This usage is supported by `execute!`. You can also produce a vector of column names/row values (`next.jdbc.result-set/as-arrays`).
 * Execute a SQL statement and process it in a single eager operation, which may allow for the results to be streamed from the database (how to persuade JDBC to do that is database-specific!), and which cleans up resources before returning the result -- even if the reduction is short-circuited via `reduced`. This usage is supported by `reducible!`.
 
-In addition, convenience functions -- "syntactic sugar" -- are provided to insert rows, run queries, update rows, and delete rows, using the same names as in `clojure.java.jdbc`. These are currently in `next.jdbc` but may move to `next.jdbc.sql` since they involve SQL creation, or they may move into a separate "sibling" library -- since they are not part of the intended core API.
+In addition, convenience functions -- "syntactic sugar" -- are provided to insert rows, run queries, update rows, and delete rows, using the same names as in `clojure.java.jdbc`. These are in `next.jdbc.sql` since they involve SQL creation -- they may move into a separate "sibling" library, since they are not part of the intended core API.
 
 ## Differences from `clojure.java.jdbc`
 
