@@ -61,8 +61,11 @@
   "Protocol for building rows in various representations:
   ->row        -- called once per row to create the basis of each row
   column-count -- return the number of columns in each row
-  with-column  -- called with the index of the column to be added
-  row!         -- called once per row to finalize each row once it is complete"
+  with-column  -- called with the row and the index of the column to be added;
+                  this is expected to read the column value from the ResultSet!
+  row!         -- called once per row to finalize each row once it is complete
+
+  The default implementation for building hash maps: MapResultSetBuilder"
   (->row [_])
   (column-count [_])
   (with-column [_ row i])
@@ -71,8 +74,11 @@
 (defprotocol ResultSetBuilder
   "Protocol for building result sets in various representations:
   ->rs         -- called to create the basis of the result set
-  with-row     -- called with the row to be added
-  rs!          -- called to finalize the result set once it is complete"
+  with-row     -- called with the result set and the row to be added
+  rs!          -- called to finalize the result set once it is complete
+
+  Default implementations for building vectors of hash maps and vectors
+  of column names and row values: MapResultSetBuilder & ArrayResultSetBuilder"
   (->rs [_])
   (with-row [_ rs row])
   (rs! [_ rs]))
@@ -93,7 +99,7 @@
   (rs! [this mrs] (persistent! mrs)))
 
 (defn as-maps
-  "Given a ResultSet and options, return a RowBuilder and ResultSetBuilder
+  "Given a ResultSet and options, return a RowBuilder / ResultSetBuilder
   that produces bare vectors of hash map rows."
   [^ResultSet rs opts]
   (let [rsmeta (.getMetaData rs)
@@ -101,7 +107,7 @@
     (->MapResultSetBuilder rs rsmeta cols)))
 
 (defn as-unqualified-maps
-  "Given a ResultSet and options, return a RowBuilder and ResultSetBuilder
+  "Given a ResultSet and options, return a RowBuilder / ResultSetBuilder
   that produces bare vectors of hash map rows, with simple keys."
   [^ResultSet rs opts]
   (let [rsmeta (.getMetaData rs)
@@ -122,7 +128,7 @@
   (rs! [this ars] (persistent! ars)))
 
 (defn as-arrays
-  "Given a ResulSet and options, return a RowBuilder and ResultSetBuilder
+  "Given a ResulSet and options, return a RowBuilder / ResultSetBuilder
   that produces a vector of column names followed by vectors of row values."
   [^ResultSet rs opts]
   (let [rsmeta (.getMetaData rs)
@@ -130,7 +136,7 @@
     (->ArrayResultSetBuilder rs rsmeta cols)))
 
 (defn as-unqualified-arrays
-  "Given a ResulSet and options, return a RowBuilder and ResultSetBuilder
+  "Given a ResulSet and options, return a RowBuilder / ResultSetBuilder
   that produces a vector of simple column names followed by vectors of row
   values."
   [^ResultSet rs opts]
@@ -139,6 +145,11 @@
     (->ArrayResultSetBuilder rs rsmeta cols)))
 
 (declare navize-row)
+
+(defprotocol DatafiableRow
+  "Given a connectable object, return a function that knows how to turn a row
+  into a datafiable object that can be 'nav'igated."
+  (datafiable-row [this connectable opts]))
 
 (defn- row-builder
   "Given a RowBuilder -- a row materialization strategy -- produce a fully
@@ -149,11 +160,6 @@
                (range 1 (inc (column-count gen))))
        (row! gen)))
 
-(defprotocol DatafiableRow
-  "Given a connectable object, return a function that knows how to turn a row
-  into a datafiable object that can be 'nav'igated."
-  (datafiable-row [this connectable opts]))
-
 (defn- mapify-result-set
   "Given a result set, return an object that wraps the current row as a hash
   map. Note that a result set is mutable and the current row will change behind
@@ -162,7 +168,7 @@
   Supports ILookup (keywords are treated as strings).
 
   Supports Associative (again, keywords are treated as strings). If you assoc,
-  a full row will be realized (via seq/into).
+  a full row will be realized (via `row-builder` above).
 
   Supports Seqable which realizes a full row of the data."
   [^ResultSet rs opts]
@@ -208,12 +214,12 @@
 
 (extend-protocol
   DatafiableRow
-  java.util.Map ; assume we can "navigate" any kind of hash map for now
+  clojure.lang.IObj ; assume we can "navigate" anything that accepts metadata
+  ;; in reality, this is going to be over-optimistic and will like cause `nav`
+  ;; to fail on attempts to navigate into result sets that are not hash maps
   (datafiable-row [this connectable opts]
                   (with-meta this
-                    {`core-p/datafy (navize-row connectable opts)}))
-  clojure.lang.IObj ; but we cannot "navigate" other things
-  (datafiable-row [this connectable opts] this))
+                    {`core-p/datafy (navize-row connectable opts)})))
 
 (defn- stmt->result-set
   "Given a PreparedStatement and options, execute it and return a ResultSet
@@ -370,27 +376,27 @@
   "Given a connectable object, return a function that knows how to turn a row
   into a navigable object.
 
-  A :schema option can provide a map of qualified column names (:table/column)
-  to tuples that indicate which table they are a foreign key for, the name of
-  the key within that table, and (optionality) the cardinality of that
-  relationship (:many, :one).
+  A `:schema` option can provide a map from qualified column names
+  (`:<table>/<column>`) to tuples that indicate for which table they are a
+  foreign key, the name of the key within that table, and (optionality) the
+  cardinality of that relationship (`:many`, `:one`).
 
-  If no :schema item is provided for a column, the convention of <table>id or
+  If no `:schema` item is provided for a column, the convention of <table>id or
   <table>_id is used, and the assumption is that such columns are foreign keys
-  in the <table> portion of their name, the key is called 'id', and the
+  in the <table> portion of their name, the key is called `id`, and the
   cardinality is :one.
 
-  Rows are looked up using 'execute!' or 'execute-one!' and the :table-fn
-  function, if provided, is applied to both the assumed table name and the
+  Rows are looked up using `-execute-all` or `-execute-one` and the `:table-fn`
+  option, if provided, is applied to both the assumed table name and the
   assumed foreign key column name."
   [connectable opts]
   (fn [row]
     (with-meta row
       {`core-p/nav (fn [coll k v]
-                     (let [[table fk cardinality] (or (get-in opts [:schema k])
-                                                      (default-schema k))]
-                       (if fk
-                         (try
+                     (try
+                       (let [[table fk cardinality] (or (get-in opts [:schema k])
+                                                        (default-schema k))]
+                         (if fk
                            (let [entity-fn (:table-fn opts identity)
                                  exec-fn!  (if (= :many cardinality)
                                              p/-execute-all
@@ -403,8 +409,8 @@
                                              " = ?")
                                         v]
                                        opts))
-                           (catch Exception _
-                             ;; assume an exception means we just cannot
-                             ;; navigate anywhere, so return just the value
-                             v))
+                           v))
+                       (catch Exception _
+                         ;; assume an exception means we just cannot
+                         ;; navigate anywhere, so return just the value
                          v)))})))
