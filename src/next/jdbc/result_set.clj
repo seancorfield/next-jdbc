@@ -128,7 +128,7 @@
   (rs! [this ars] (persistent! ars)))
 
 (defn as-arrays
-  "Given a ResulSet and options, return a RowBuilder / ResultSetBuilder
+  "Given a ResultSet and options, return a RowBuilder / ResultSetBuilder
   that produces a vector of column names followed by vectors of row values."
   [^ResultSet rs opts]
   (let [rsmeta (.getMetaData rs)
@@ -136,7 +136,7 @@
     (->ArrayResultSetBuilder rs rsmeta cols)))
 
 (defn as-unqualified-arrays
-  "Given a ResulSet and options, return a RowBuilder / ResultSetBuilder
+  "Given a ResultSet and options, return a RowBuilder / ResultSetBuilder
   that produces a vector of simple column names followed by vectors of row
   values."
   [^ResultSet rs opts]
