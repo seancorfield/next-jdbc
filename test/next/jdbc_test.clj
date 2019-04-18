@@ -179,4 +179,9 @@
              {:gen-fn fruit-builder}))
   (quick-bench ; 3 micros
    (execute! con ["select * from fruit"]
-             {:gen-fn fruit-builder})))
+             {:gen-fn fruit-builder}))
+
+  ;; with a prepopulated prepared statement - 1.7-1.8 micros
+  (with-open [ps (prepare con ["select * from fruit"] {})]
+    (quick-bench
+     (execute! ps [] {:gen-fn fruit-builder}))))
