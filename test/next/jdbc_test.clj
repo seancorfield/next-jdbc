@@ -2,7 +2,8 @@
   "Not exactly a test suite -- more a series of examples."
   (:require [clojure.test :refer [deftest is testing]]
             [next.jdbc :refer :all]
-            [next.jdbc.result-set :as rs]))
+            [next.jdbc.result-set :as rs]
+            [next.jdbc.sql :refer :all]))
 
 (deftest a-test
   (testing "FIXME, I fail."

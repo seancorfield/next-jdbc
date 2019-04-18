@@ -18,9 +18,6 @@
       via a schema definition).
   * with-transaction -- execute a series of SQL operations within a transaction.
 
-  In addition, there are some utility functions that make common operations
-  easier by providing some syntactic sugar over 'execute!'.
-
   The following options are supported generally:
   * :entities -- specify a function used to convert strings to SQL entity names
       (to turn table and column names into appropriate SQL names -- see the
@@ -42,7 +39,6 @@
             [next.jdbc.prepare :as prepare] ; used to extend protocols
             [next.jdbc.protocols :as p]
             [next.jdbc.result-set :as rs]
-            [next.jdbc.sql :as sql]
             [next.jdbc.transaction])) ; used to extend protocols
 
 (set! *warn-on-reflection* true)
@@ -186,89 +182,3 @@
   * :rollback-only -- true / false."
   [[sym connectable opts] & body]
   `(transact ~connectable ~opts (fn [~sym] ~@body)))
-
-(defn insert!
-  "Syntactic sugar over execute-one! to make inserting hash maps easier.
-
-  Given a connectable object, a table name, and a data hash map, inserts the
-  data as a single row in the database and attempts to return a map of generated
-  keys."
-  ([connectable table key-map]
-   (insert! connectable table key-map {}))
-  ([connectable table key-map opts]
-   (execute-one! connectable
-                 (sql/for-insert table key-map opts)
-                 (merge {:return-keys true} opts))))
-
-(defn insert-multi!
-  "Syntactic sugar over execute! to make inserting columns/rows easier.
-
-  Given a connectable object, a table name, a sequence of column names, and
-  a vector of rows of data (vectors of column values), inserts the data as
-  multiple rows in the database and attempts to return a vector of maps of
-  generated keys."
-  ([connectable table cols rows]
-   (insert-multi! connectable table cols rows {}))
-  ([connectable table cols rows opts]
-   (execute! connectable
-             (sql/for-insert-multi table cols rows opts)
-             (merge {:return-keys true} opts))))
-
-(defn query
-  "Syntactic sugar over execute! to provide a query alias.
-
-  Given a connectable object, and a vector of SQL and its parameters,
-  returns a vector of hash maps of rows that match."
-  ([connectable sql-params]
-   (query connectable sql-params {}))
-  ([connectable sql-params opts]
-   (execute! connectable sql-params opts)))
-
-(defn find-by-keys
-  "Syntactic sugar over execute! to make certain common queries easier.
-
-  Given a connectable object, a table name, and a hash map of columns and
-  their values, returns a vector of hash maps of rows that match."
-  ([connectable table key-map]
-   (find-by-keys connectable table key-map {}))
-  ([connectable table key-map opts]
-   (execute! connectable (sql/for-query table key-map opts) opts)))
-
-(defn get-by-id
-  "Syntactic sugar over execute-one! to make certain common queries easier.
-
-  Given a connectable object, a table name, and a primary key value, returns
-  a hash map of the first row that matches.
-
-  By default, the primary key is assumed to be 'id' but that can be overridden
-  in the five-argument call."
-  ([connectable table pk]
-   (get-by-id connectable table pk :id {}))
-  ([connectable table pk opts]
-   (get-by-id connectable table pk :id opts))
-  ([connectable table pk pk-name opts]
-   (execute-one! connectable (sql/for-query table {pk-name pk} opts) opts)))
-
-(defn update!
-  "Syntactic sugar over execute-one! to make certain common updates easier.
-
-  Given a connectable object, a table name, a hash map of columns and values
-  to set, and either a hash map of columns and values to search on or a vector
-  of a SQL where clause and parameters, perform an update on the table."
-  ([connectable table key-map where-params]
-   (update! connectable table key-map where-params {}))
-  ([connectable table key-map where-params opts]
-   (execute-one! connectable
-                 (sql/for-update table key-map where-params opts)
-                 opts)))
-
-(defn delete!
-  "Syntactic sugar over execute-one! to make certain common deletes easier.
-
-  Given a connectable object, a table name, and either a hash map of columns
-  and values to search on or a vector of a SQL where clause and parameters,
-  perform a delete on the table."
-  ([connectable table where-params]
-   (delete! connectable table where-params {}))
-  ([connectable table where-params opts]
-   (execute-one! connectable (sql/for-delete table where-params opts) opts)))

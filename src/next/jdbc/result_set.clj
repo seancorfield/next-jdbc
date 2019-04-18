@@ -390,8 +390,8 @@
                          (try
                            (let [entity-fn (:entities opts identity)
                                  exec-fn!  (if (= :many cardinality)
-                                             execute!
-                                             execute-one!)]
+                                             p/-execute-all
+                                             p/-execute-one)]
                              (exec-fn! connectable
                                        [(str "SELECT * FROM "
                                              (entity-fn (name table))
@@ -399,7 +399,6 @@
                                              (entity-fn (name fk))
                                              " = ?")
                                         v]
-                                       #(datafiable-row % connectable opts)
                                        opts))
                            (catch Exception _
                              ;; assume an exception means we just cannot
