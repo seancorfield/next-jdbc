@@ -7,18 +7,33 @@
   * DataSource -- something to get connections from,
   * Connection -- an active connection to the database,
   * PreparedStatement -- SQL and parameters combined, from a connection,
-  and the following two functions and a macro:
+
+  and the following functions and a macro:
   * reducible! -- given a connectable and SQL + parameters or a statement,
       return a reducible that, when reduced will execute the SQL and consume
       the ResultSet produced,
   * execute! -- given a connectable and SQL + parameters or a statement,
       execute the SQL, consume the ResultSet produced, and return a vector
-      of hash maps representing the rows; this can be datafied to allow
+      of hash maps representing the rows (@1); this can be datafied to allow
       navigation of foreign keys into other tables (either by convention or
-      via a schema definition).
+      via a schema definition),
+  * execute-one! -- given a connectable and SQL + parameters or a statement,
+      execute the SQL, consume the first row of the ResultSet produced, and
+      return a hash map representing that row; this can be datafied to allow
+      navigation of foreign keys into other tables (either by convention or
+      via a schema definition),
+  * prepare -- given a Connection and SQL + parameters, construct a new
+      PreparedStatement; in general this should be used with `with-open`,
+  * transact -- the functional implementation of `with-transaction`,
   * with-transaction -- execute a series of SQL operations within a transaction.
 
-  The following options are supported where a PreparedStatement is created:
+  @1 result sets are built, by default, as vectors of hash maps, containing
+      qualified keywords as column names, but the row builder and result set
+      builder machinery is open and alternatives are provided to produce
+      unqualified keywords as column names, and to produce a vector the
+      column names followed by vectors of column values for each row.
+
+  The following options are supported wherever a PreparedStatement is created:
   * :concurrency -- :read-only, :updatable,
   * :cursors -- :close, :hold
   * :fetch-size -- the fetch size value,
@@ -128,10 +143,7 @@
   Invokes 'reducible!' and then reduces that into a vector of hash maps.
 
   Can be called on a PreparedStatement, a Connection, or something that can
-  produce a Connection via a DataSource.
-
-  If it is called on a PreparedStatement, it cannot produce a datafiable
-  result (because that requires a connectable instead)."
+  produce a Connection via a DataSource."
   ([stmt]
    (p/-execute-all stmt [] {}))
   ([connectable sql-params]
@@ -155,10 +167,10 @@
   "Given a connectable object and a function (taking a Connection),
   execute the function on a new connection in a transactional manner.
 
-  An options map may be provided before the function."
+  See `with-transaction` for supported options."
   ([connectable f]
    (p/-transact connectable f {}))
-  ([connectable opts f]
+  ([connectable f opts]
    (p/-transact connectable f opts)))
 
 (defmacro with-transaction
@@ -172,4 +184,4 @@
   * :read-only -- true / false,
   * :rollback-only -- true / false."
   [[sym connectable opts] & body]
-  `(transact ~connectable ~opts (fn [~sym] ~@body)))
+  `(transact ~connectable (fn [~sym] ~@body) ~opts))
