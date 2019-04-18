@@ -165,5 +165,10 @@
 (extend-protocol p/Connectable
   javax.sql.DataSource
   (get-connection [this opts] (make-connection this opts))
+  java.sql.PreparedStatement
+  ;; note: options are ignored and this should not be closed independently
+  ;; of the PreparedStatement to which it belongs: this done to allow
+  ;; datafy/nav across a PreparedStatement only...
+  (get-connection [this _] (.getConnection this))
   Object
   (get-connection [this opts] (p/get-connection (p/get-datasource this) opts)))

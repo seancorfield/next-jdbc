@@ -13,12 +13,12 @@
   ;; these should be equivalent
   (def con (get-connection (get-datasource db-spec) {}))
   (def con (get-connection db-spec {}))
-  (execute! con ["DROP TABLE fruit"])
+  (execute-one! con ["DROP TABLE fruit"])
   ;; h2
-  (execute! con ["CREATE TABLE fruit (id int default 0, name varchar(32) primary key, appearance varchar(32), cost int, grade real)"])
+  (execute-one! con ["CREATE TABLE fruit (id int default 0, name varchar(32) primary key, appearance varchar(32), cost int, grade real)"])
   ;; either this...
-  (execute! con ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (1,'Apple','red',59,87), (2,'Banana','yellow',29,92.2), (3,'Peach','fuzzy',139,90.0), (4,'Orange','juicy',89,88.6)"])
-  ;; ...or this
+  (execute-one! con ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (1,'Apple','red',59,87), (2,'Banana','yellow',29,92.2), (3,'Peach','fuzzy',139,90.0), (4,'Orange','juicy',89,88.6)"])
+  ;; ...or this (H2 can't return generated keys for this)
   (insert-multi! con :fruit [:id :name :appearance :cost :grade]
                  [[1 "Apple" "red" 59 87]
                   [2,"Banana","yellow",29,92.2]
@@ -48,73 +48,61 @@
           value (.getObject rs "name")]
       (.close ps)
       value))
-  (quick-bench (select* con)) ; 1.06 micros
+  (quick-bench (select* con)) ; 1.15-1.19 micros
 
-  ;; almost same as the Java example above -- 1.42-1.49 micros -- 1.4x Java
+  ;; almost same as the Java example above -- 1.66-1.7 micros -- 1.4x Java
   (quick-bench
    (reduce (fn [rs m] (reduced (:name m)))
            nil
            (reducible! con ["select * from fruit where appearance = ?" "red"])))
-  ;; run through convenience function -- 1.52-1.55 micros
+  ;; run through convenience function -- 2.4 micros
   (quick-bench
-   (execute-one! con
-                 ["select * from fruit where appearance = ?" "red"]
-                 :name
-                 {}))
-  (quick-bench
-   (execute-one! con
-                 ["select * from fruit where appearance = ?" "red"]
-                 :name ; turn off row builder as we don't need it
-                 ;; this gives a very slight improvement
-                 {:gen-fn (constantly nil)}))
-  ;; 5.7 micros -- 3.7x
+   (:FRUIT/NAME (execute-one! con
+                              ["select * from fruit where appearance = ?" "red"]
+                              {})))
+
+  ;; 6.8 micros -- 3x
   (quick-bench
    (jdbc/query {:connection con}
                ["select * from fruit where appearance = ?" "red"]
                {:row-fn :name :result-set-fn first}))
 
-  ;; simple query -- 3.1-3.2 micros
+  ;; simple query -- 2.6 micros
   (quick-bench
    (execute! con ["select * from fruit where appearance = ?" "red"]))
 
-  ;; 5.9 -- ~2x
+  ;; 6.9 -- ~2.6x
   (quick-bench
    (jdbc/query {:connection con} ["select * from fruit where appearance = ?" "red"]))
 
-  (quick-bench ; 5.77-5.89
+  (quick-bench ; 4.55-4.57
    (execute! con ["select * from fruit"]))
-  ;; this is not quite equivalent
-  (quick-bench ; 5.34-5.4
-   (into [] (map (partial into {})) (reducible! con ["select * from fruit"]
-                                                {:gen-fn rs/map-row-builder})))
-  ;; but this is (equivalent to execute!)
-  (quick-bench ; 5.58-5.8
-   (into [] (map #(rs/datafiable-row % con {})) (reducible! con ["select * from fruit"]
-                                                            {:gen-fn rs/map-row-builder})))
+  (quick-bench ; 4.34-4.4
+   (execute! con ["select * from fruit"] {:gen-fn rs/as-arrays}))
 
-  (quick-bench ; 7.84-7.96 -- 1.3x
+  (quick-bench ; 9.5 -- 2x
    (jdbc/query {:connection con} ["select * from fruit"]))
 
-  (quick-bench ; 9.4-9.7
+  (quick-bench ; 8.2
    (with-transaction [t con {:rollback-only true}]
      (execute! t ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (5,'Pear','green',49,47)"])))
 
-  (quick-bench ; 14.14-14.63
+  (quick-bench ; 15.7
    (with-transaction [t con {:rollback-only true}]
      (insert! t :fruit {:id 5, :name "Pear", :appearance "green", :cost 49, :grade 47})))
 
-  (quick-bench ; 12.9-13 -- 1.36x
+  (quick-bench ; 13.6 -- 1.6x
    (jdbc/with-db-transaction [t {:connection con}]
      (jdbc/db-set-rollback-only! t)
      (jdbc/execute! t ["INSERT INTO fruit (id,name,appearance,cost,grade) VALUES (5,'Pear','green',49,47)"])))
 
-  (quick-bench ; 25.52-25.74 -- 1.77x
+  (quick-bench ; 27.9-28.8 -- 1.8x
    (jdbc/with-db-transaction [t {:connection con}]
      (jdbc/db-set-rollback-only! t)
      (jdbc/insert! t :fruit {:id 5, :name "Pear", :appearance "green", :cost 49, :grade 47})))
 
   (delete! con :fruit {:id 5})
-  ;; with a prepopulated prepared statement
+  ;; with a prepopulated prepared statement - 450ns
   (with-open [ps (prepare con ["select * from fruit where appearance = ?" "red"] {})]
     (quick-bench
      [(reduce (fn [_ row] (reduced (:name row)))
@@ -144,26 +132,10 @@
   (quick-bench
    (execute-one! con ["select * from fruit where appearance = ?" "red"]))
 
-  ;; test assoc works
-  (quick-bench
-   (execute-one! con
-                 ["select * from fruit where appearance = ?" "red"]
-                 #(assoc % :test :value)
-                 {}))
-
-  ;; test assoc works
-  (quick-bench
-   (execute! con
-             ["select * from fruit where appearance = ?" "red"]
-             #(assoc % :test :value)
-             {}))
-
   (with-transaction [t con {:rollback-only true}]
     (insert! t :fruit {:id 5, :name "Pear", :appearance "green", :cost 49, :grade 47})
     (query t ["select * from fruit where name = ?" "Pear"]))
   (query con ["select * from fruit where name = ?" "Pear"])
 
   (delete! con :fruit {:id 1})
-  (update! con :fruit {:appearance "Brown"} {:name "Banana"})
-
-  (reduce rs/as-arrays nil (reducible! con ["select * from fruit"])))
+  (update! con :fruit {:appearance "Brown"} {:name "Banana"}))

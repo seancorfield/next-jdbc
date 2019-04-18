@@ -146,32 +146,23 @@
   If it is called on a PreparedStatement, it cannot produce a datafiable
   result (because that requires a connectable instead)."
   ([stmt]
-   (rs/execute! stmt [] (partial into {}) {}))
+   (p/-execute-all stmt [] {}))
   ([connectable sql-params]
-   (rs/execute! connectable sql-params #(rs/datafiable-row % connectable {}) {}))
+   (p/-execute-all connectable sql-params {}))
   ([connectable sql-params opts]
-   (rs/execute! connectable sql-params #(rs/datafiable-row % connectable opts) opts))
-  ([connectable sql-params f opts]
-   (rs/execute! connectable sql-params f opts)))
+   (p/-execute-all connectable sql-params opts)))
 
 (defn execute-one!
   "General SQL execution function that returns just the first row of a result.
 
-  Invokes 'reducible!' but immediately returns the first row.
-
   Can be called on a PreparedStatement, a Connection, or something that can
-  produce a Connection via a DataSource.
-
-  If it is called on a PreparedStatement, it cannot produce a datafiable
-  result (because that requires a connectable instead)."
+  produce a Connection via a DataSource."
   ([stmt]
-   (rs/execute-one! stmt [] (partial into {}) {}))
+   (p/-execute-one stmt [] {}))
   ([connectable sql-params]
-   (rs/execute-one! connectable sql-params #(rs/datafiable-row % connectable {}) {}))
+   (p/-execute-one connectable sql-params {}))
   ([connectable sql-params opts]
-   (rs/execute-one! connectable sql-params #(rs/datafiable-row % connectable opts) opts))
-  ([connectable sql-params f opts]
-   (rs/execute-one! connectable sql-params f opts)))
+   (p/-execute-one connectable sql-params opts)))
 
 (defn transact
   "Given a connectable object and a function (taking a Connection),
@@ -197,7 +188,7 @@
   `(transact ~connectable ~opts (fn [~sym] ~@body)))
 
 (defn insert!
-  "Syntactic sugar over execute! to make inserting hash maps easier.
+  "Syntactic sugar over execute-one! to make inserting hash maps easier.
 
   Given a connectable object, a table name, and a data hash map, inserts the
   data as a single row in the database and attempts to return a map of generated
@@ -205,10 +196,9 @@
   ([connectable table key-map]
    (insert! connectable table key-map {}))
   ([connectable table key-map opts]
-   (rs/execute! connectable
-                (sql/for-insert table key-map opts)
-                (partial into {})
-                (merge {:return-keys true} opts))))
+   (execute-one! connectable
+                 (sql/for-insert table key-map opts)
+                 (merge {:return-keys true} opts))))
 
 (defn insert-multi!
   "Syntactic sugar over execute! to make inserting columns/rows easier.
@@ -220,10 +210,9 @@
   ([connectable table cols rows]
    (insert-multi! connectable table cols rows {}))
   ([connectable table cols rows opts]
-   (rs/execute! connectable
-                (sql/for-insert-multi table cols rows opts)
-                (partial into {})
-                (merge {:return-keys true} opts))))
+   (execute! connectable
+             (sql/for-insert-multi table cols rows opts)
+             (merge {:return-keys true} opts))))
 
 (defn query
   "Syntactic sugar over execute! to provide a query alias.
@@ -233,15 +222,7 @@
   ([connectable sql-params]
    (query connectable sql-params {}))
   ([connectable sql-params opts]
-   (if-let [row-fn (:row-fn opts)]
-     (rs/execute! connectable
-                  sql-params
-                  row-fn
-                  opts)
-     (rs/execute! connectable
-                  sql-params
-                  #(rs/datafiable-row % connectable opts)
-                  opts))))
+   (execute! connectable sql-params opts)))
 
 (defn find-by-keys
   "Syntactic sugar over execute! to make certain common queries easier.
@@ -251,18 +232,10 @@
   ([connectable table key-map]
    (find-by-keys connectable table key-map {}))
   ([connectable table key-map opts]
-   (if-let [row-fn (:row-fn opts)]
-     (rs/execute! connectable
-                  (sql/for-query table key-map opts)
-                  row-fn
-                  opts)
-     (rs/execute! connectable
-                  (sql/for-query table key-map opts)
-                  #(rs/datafiable-row % connectable opts)
-                  opts))))
+   (execute! connectable (sql/for-query table key-map opts) opts)))
 
 (defn get-by-id
-  "Syntactic sugar over execute! to make certain common queries easier.
+  "Syntactic sugar over execute-one! to make certain common queries easier.
 
   Given a connectable object, a table name, and a primary key value, returns
   a hash map of the first row that matches.
@@ -274,18 +247,10 @@
   ([connectable table pk opts]
    (get-by-id connectable table pk :id opts))
   ([connectable table pk pk-name opts]
-   (if-let [row-fn (:row-fn opts)]
-     (rs/execute-one! connectable
-                      (sql/for-query table {pk-name pk} opts)
-                      row-fn
-                      opts)
-     (rs/execute-one! connectable
-                      (sql/for-query table {pk-name pk} opts)
-                      #(rs/datafiable-row % connectable opts)
-                      opts))))
+   (execute-one! connectable (sql/for-query table {pk-name pk} opts) opts)))
 
 (defn update!
-  "Syntactic sugar over execute! to make certain common updates easier.
+  "Syntactic sugar over execute-one! to make certain common updates easier.
 
   Given a connectable object, a table name, a hash map of columns and values
   to set, and either a hash map of columns and values to search on or a vector
@@ -293,13 +258,12 @@
   ([connectable table key-map where-params]
    (update! connectable table key-map where-params {}))
   ([connectable table key-map where-params opts]
-   (rs/execute! connectable
-                (sql/for-update table key-map where-params opts)
-                (partial into {})
-                opts)))
+   (execute-one! connectable
+                 (sql/for-update table key-map where-params opts)
+                 opts)))
 
 (defn delete!
-  "Syntactic sugar over execute! to make certain common deletes easier.
+  "Syntactic sugar over execute-one! to make certain common deletes easier.
 
   Given a connectable object, a table name, and either a hash map of columns
   and values to search on or a vector of a SQL where clause and parameters,
@@ -307,7 +271,4 @@
   ([connectable table where-params]
    (delete! connectable table where-params {}))
   ([connectable table where-params opts]
-   (rs/execute! connectable
-                (sql/for-delete table where-params opts)
-                (partial into {})
-                opts)))
+   (execute-one! connectable (sql/for-delete table where-params opts) opts)))

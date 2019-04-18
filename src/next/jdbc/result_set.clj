@@ -55,29 +55,90 @@
 
 (defprotocol RowBuilder
   "Protocol for building rows in various representations:
-  row         -- called once per row to create the basis of each row
-  columns     -- return the number of columns in each row
-  with-column -- called with the index of the column to be added
-  build       -- called once per row to finalize each row once it is complete"
-  (row [_])
-  (columns [_])
+  ->row        -- called once per row to create the basis of each row
+  column-count -- return the number of columns in each row
+  with-column  -- called with the index of the column to be added
+  row!         -- called once per row to finalize each row once it is complete"
+  (->row [_])
+  (column-count [_])
   (with-column [_ row i])
-  (build [_ row]))
+  (row! [_ row]))
 
-(defn map-row-builder [^ResultSet rs opts]
+(defprotocol ResultSetBuilder
+  "Protocol for building result sets in various representations:
+  ->rs         -- called to create the basis of the result set
+  with-row     -- called with the row to be added
+  rs!          -- called to finalize the result set once it is complete"
+  (->rs [_])
+  (with-row [_ rs row])
+  (rs! [_ rs]))
+
+(defn map-row-builder
+  "Given a ResultSet and options, return a RowBuilder that produces
+  bare hash map rows."
+  [^ResultSet rs opts]
   (let [rsmeta (.getMetaData rs)
         cols   (get-column-names rsmeta opts)]
     (reify
       RowBuilder
-      (row [this] (transient {}))
-      (columns [this] (count cols))
+      (->row [this] (transient {}))
+      (column-count [this] (count cols))
       (with-column [this row i]
         (assoc! row
                 (nth cols (dec i))
                 (read-column-by-index (.getObject rs ^Integer i) rsmeta i)))
-      (build [this row] (persistent! row)))))
+      (row! [this row] (persistent! row)))))
+
+(defn map-rs-builder
+  "Given a ResultSet and options, return a RowBuilder and ResultSetBuilder
+  that produces bare vectors of hash map rows."
+  [^ResultSet rs opts]
+  (let [rsmeta (.getMetaData rs)
+        cols   (get-column-names rsmeta opts)]
+    (reify
+      RowBuilder
+      (->row [this] (transient {}))
+      (column-count [this] (count cols))
+      (with-column [this row i]
+        (assoc! row
+                (nth cols (dec i))
+                (read-column-by-index (.getObject rs ^Integer i) rsmeta i)))
+      (row! [this row] (persistent! row))
+      ResultSetBuilder
+      (->rs [this] (transient []))
+      (with-row [this rs row]
+        (conj! rs row))
+      (rs! [this rs] (persistent! rs)))))
+
+(defn as-arrays
+  "Given a ResulSet and options, return a RowBuilder and ResultSetBuilder
+  that produces a vector of column names followed by vectors of row values."
+  [^ResultSet rs opts]
+  (let [rsmeta (.getMetaData rs)
+        cols   (get-column-names rsmeta opts)]
+    (reify
+      RowBuilder
+      (->row [this] (transient []))
+      (column-count [this] (count cols))
+      (with-column [this row i]
+        (conj! row (read-column-by-index (.getObject rs ^Integer i) rsmeta i)))
+      (row! [this row] (persistent! row))
+      ResultSetBuilder
+      (->rs [this] (transient [cols]))
+      (with-row [this rs row]
+        (conj! rs row))
+      (rs! [this rs] (persistent! rs)))))
 
 (declare navize-row)
+
+(defn- row-builder
+  "Given a RowBuilder -- a row materialization strategy -- produce a fully
+  materialized row from it."
+  [gen]
+  (->> (reduce (fn [r i] (with-column gen r i))
+               (->row gen)
+               (range 1 (inc (column-count gen))))
+       (row! gen)))
 
 (defprotocol DatafiableRow
   "Given a connectable object, return a function that knows how to turn a row
@@ -96,12 +157,7 @@
 
   Supports Seqable which realizes a full row of the data."
   [^ResultSet rs opts]
-  (let [gen (when-let [gen-fn (:gen-fn opts)] (gen-fn rs opts))
-        row-builder (fn [] ; blows up if :gen-fn not provided
-                      (->> (reduce (fn [r i] (with-column gen r i))
-                                   (row gen)
-                                   (range 1 (inc (columns gen))))
-                           (build gen)))]
+  (let [gen (when-let [gen-fn (:gen-fn opts)] (delay (gen-fn rs opts)))]
     (reify
 
       clojure.lang.ILookup
@@ -129,16 +185,16 @@
                                             (name k)))
                  (catch SQLException _)))
       (assoc [this k v]
-             (assoc (row-builder) k v))
+             (assoc (row-builder @gen) k v))
 
       clojure.lang.Seqable
       (seq [this]
-           (seq (row-builder)))
+           (seq (row-builder @gen)))
 
       DatafiableRow
       (datafiable-row [this connectable opts]
                       (with-meta
-                        (row-builder)
+                        (row-builder @gen)
                         {`core-p/datafy (navize-row connectable opts)})))))
 
 (extend-protocol
@@ -149,19 +205,17 @@
                     this
                     {`core-p/datafy (navize-row connectable opts)})))
 
-#_(defn as-arrays
-    "A reducing function that can be used on a result set to produce an
-  array-based representation, where the first element is a vector of the
-  column names in the result set, and subsequent elements are vectors of
-  the rows from the result set.
-
-  It should be used with a nil initial value:
-
-  (reduce rs/as-arrays nil (reducible! con sql-params))"
-    [result rs-map]
-    (if result
-      (conj result (row-values rs-map))
-      (conj [(column-names rs-map)] (row-values rs-map))))
+(defn- stmt->result-set
+  "Given a PreparedStatement and options, execute it and return a ResultSet
+  if possible."
+  ^ResultSet
+  [^PreparedStatement stmt opts]
+  (if (.execute stmt)
+    (.getResultSet stmt)
+    (when (:return-keys opts)
+      (try
+        (.getGeneratedKeys stmt)
+        (catch Exception _)))))
 
 (defn- reduce-stmt
   "Execute the PreparedStatement, attempt to get either its ResultSet or
@@ -172,12 +226,7 @@
   a hash map containing :next.jdbc/update-count and the number of rows
   updated, with the supplied function and initial value applied."
   [^PreparedStatement stmt f init opts]
-  (if-let [^ResultSet rs (if (.execute stmt)
-                           (.getResultSet stmt)
-                           (when (:return-keys opts)
-                             (try
-                               (.getGeneratedKeys stmt)
-                               (catch Exception _))))]
+  (if-let [rs (stmt->result-set stmt opts)]
     (let [rs-map (mapify-result-set rs opts)]
       (loop [init' init]
         (if (.next rs)
@@ -198,6 +247,31 @@
                                                (rest sql-params)
                                                opts)]
                 (reduce-stmt stmt f init opts)))))
+  (-execute-one [this sql-params opts]
+    (with-open [stmt (prepare/create this
+                                     (first sql-params)
+                                     (rest sql-params)
+                                     opts)]
+      (if-let [rs (stmt->result-set stmt opts)]
+        (when (.next rs)
+          (datafiable-row (row-builder (map-row-builder rs opts)) this opts))
+        {:next.jdbc/update-count (.getUpdateCount stmt)})))
+  (-execute-all [this sql-params opts]
+    (with-open [stmt (prepare/create this
+                                     (first sql-params)
+                                     (rest sql-params)
+                                     opts)]
+      (if-let [rs (stmt->result-set stmt opts)]
+        (let [gen-fn (get opts :gen-fn map-rs-builder)
+              gen    (gen-fn rs opts)]
+          (loop [rs' (->rs gen) more? (.next rs)]
+            (if more?
+              (recur (with-row gen rs'
+                       (datafiable-row (row-builder gen) this opts))
+                     (.next rs))
+              (rs! gen rs'))))
+        {:next.jdbc/update-count (.getUpdateCount stmt)})))
+
   javax.sql.DataSource
   (-execute [this sql-params opts]
     (reify clojure.lang.IReduceInit
@@ -208,41 +282,67 @@
                                                  (rest sql-params)
                                                  opts)]
                   (reduce-stmt stmt f init opts))))))
+  (-execute-one [this sql-params opts]
+    (with-open [con (p/get-connection this opts)]
+      (with-open [stmt (prepare/create con
+                                       (first sql-params)
+                                       (rest sql-params)
+                                       opts)]
+        (if-let [rs (stmt->result-set stmt opts)]
+          (when (.next rs)
+            (datafiable-row (row-builder (map-row-builder rs opts)) this opts))
+          {:next.jdbc/update-count (.getUpdateCount stmt)}))))
+  (-execute-all [this sql-params opts]
+    (with-open [con (p/get-connection this opts)]
+      (with-open [stmt (prepare/create con
+                                       (first sql-params)
+                                       (rest sql-params)
+                                       opts)]
+        (if-let [rs (stmt->result-set stmt opts)]
+          (let [gen-fn (get opts :gen-fn map-rs-builder)
+                gen    (gen-fn rs opts)]
+            (loop [rs' (->rs gen) more? (.next rs)]
+              (if more?
+                (recur (with-row gen rs'
+                         (datafiable-row (row-builder gen) this opts))
+                       (.next rs))
+                (rs! gen rs'))))
+          {:next.jdbc/update-count (.getUpdateCount stmt)}))))
+
   java.sql.PreparedStatement
+  ;; we can't tell if this PreparedStatement will return generated
+  ;; keys so we pass a truthy value to at least attempt it if we
+  ;; do not get a ResultSet back from the execute call
   (-execute [this _ opts]
     (reify clojure.lang.IReduceInit
-      ;; we can't tell if this PreparedStatement will return generated
-      ;; keys so we pass a truthy value to at least attempt it if we
-      ;; do not get a ResultSet back from the execute call
       (reduce [_ f init]
               (reduce-stmt this f init (assoc opts :return-keys true)))))
+  (-execute-one [this _ opts]
+    (if-let [rs (stmt->result-set this (assoc opts :return-keys true))]
+      (when (.next rs)
+        (datafiable-row (row-builder (map-row-builder rs opts))
+                        (.getConnection this) opts))
+      {:next.jdbc/update-count (.getUpdateCount this)}))
+  (-execute-all [this sql-params opts]
+    (if-let [rs (stmt->result-set this opts)]
+      (let [gen-fn (get opts :gen-fn map-rs-builder)
+            gen    (gen-fn rs opts)]
+        (loop [rs' (->rs gen) more? (.next rs)]
+          (if more?
+            (recur (with-row gen rs'
+                     (datafiable-row (row-builder gen)
+                                     (.getConnection this) opts))
+                   (.next rs))
+            (rs! gen rs'))))
+      {:next.jdbc/update-count (.getUpdateCount this)}))
+
   Object
   (-execute [this sql-params opts]
-    (p/-execute (p/get-datasource this) sql-params opts)))
-
-(defn execute!
-  "Given a connectable object and SQL and parameters, execute it and reduce it
-  into a vector of processed hash maps (rows).
-
-  By default, this will create datafiable rows but :row-fn can override that."
-  [connectable sql-params f opts]
-  (into []
-        (map f)
-        (p/-execute connectable
-                    sql-params
-                    (update opts :gen-fn #(or % map-row-builder)))))
-
-(defn execute-one!
-  "Given a connectable object and SQL and parameters, execute it and return
-  just the first processed hash map (row).
-
-  By default, this will create a datafiable row but :row-fn can override that."
-  [connectable sql-params f opts]
-  (reduce (fn [_ row] (reduced (f row)))
-          nil
-          (p/-execute connectable
-                      sql-params
-                      (update opts :gen-fn #(or % map-row-builder)))))
+    (p/-execute (p/get-datasource this) sql-params opts))
+  (-execute-one [this sql-params opts]
+    (p/-execute-one (p/get-datasource this) sql-params opts))
+  (-execute-all [this sql-params opts]
+    (p/-execute-all (p/get-datasource this) sql-params opts)))
 
 (defn- default-schema
   "The default schema lookup rule for column names.

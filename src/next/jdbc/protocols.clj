@@ -18,6 +18,19 @@
       PreparedStatement, and Object (on the assumption that an Object can be
       turned into a DataSource and therefore used to get a Connection).
 
+  -execute-one -- given SQL and parameters, executes the SQL and produces
+      the first row of the ResultSet as a datafiable hash map (by default);
+      implementations are provided for Connection, DataSource,
+      PreparedStatement, and Object (on the assumption that an Object can be
+      turned into a DataSource and therefore used to get a Connection).
+
+  -execute-all -- given SQL and parameters, executes the SQL and produces
+      either a vector of datafiable hash maps from the ResultSet (default)
+      or a vector of column names followed by vectors of row values;
+      implementations are provided for Connection, DataSource,
+      PreparedStatement, and Object (on the assumption that an Object can be
+      turned into a DataSource and therefore used to get a Connection).
+
   prepare -- given SQL and parameters, produce a PreparedStatement that can
       be executed (by -execute above); implementation is provided for
       Connection.
@@ -34,7 +47,9 @@
 (defprotocol Connectable
   (get-connection ^java.lang.AutoCloseable [this opts]))
 (defprotocol Executable
-  (-execute ^clojure.lang.IReduceInit [this sql-params opts]))
+  (-execute ^clojure.lang.IReduceInit [this sql-params opts])
+  (-execute-one [this sql-params opts])
+  (-execute-all [this sql-params opts]))
 (defprotocol Preparable
   (prepare ^java.sql.PreparedStatement [this sql-params opts]))
 (defprotocol Transactable

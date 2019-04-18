@@ -16,8 +16,6 @@ I also wanted `datafy`/`nav` support baked right in (it was added to `clojure.ja
 
 The API so far is still very much a work-in-progress. I'm still very conflicted about the "syntactic sugar" SQL functions (`insert!`, `query`, `update!`, and `delete!`). They go beyond what I really want to include in the API, but I know that their equivalents in `clojure.java.jdbc` are heavily used (based on the number of questions and JIRA issues I get).
 
-My latest round of changes exposed the mapped-function-over-rows API more prominently, but I'm still not happy with the "feel" of that aspect of the API yet (it creates a tension with the datafication behavior).
-
 So, while I'm comfortable to put it out there and get feedback – and I've had lots of great feedback so far – expect to see more changes, possible some dramatic ones, in the next month or so before I actually settle on where the library will live and what the published artifacts will look like.
 
 ## Usage
@@ -28,9 +26,10 @@ From a `DataSource`, either you or `next.jdbc` can create a `java.sql.Connection
 
 The primary SQL execution API in `next.jdbc` is:
 * `reducible!` -- yields an `IReduceInit` that, when reduced, executes the SQL statement and then reduces over the `ResultSet` with as little overhead as possible.
-* `execute!` -- executes the SQL statement and reduces it into a vector of realized hash maps, that use qualified keywords for the column names, of the form `:<table>/<column>`. If you join across multiple tables, the qualified keywords will reflect the originating tables for each of the columns. If the SQL produces named values that do not come from an associated table, a simple, unqualified keyword will be used. The realized hash maps returned by `execute!` are `Datafiable` and thus `Navigable` (see Clojure 1.10's `datafy` and `nav` functions, and tools like Cognitect's REBL).
+* `execute!` -- executes the SQL statement and produces a vector of realized hash maps, that use qualified keywords for the column names, of the form `:<table>/<column>`. If you join across multiple tables, the qualified keywords will reflect the originating tables for each of the columns. If the SQL produces named values that do not come from an associated table, a simple, unqualified keyword will be used. The realized hash maps returned by `execute!` are `Datafiable` and thus `Navigable` (see Clojure 1.10's `datafy` and `nav` functions, and tools like Cognitect's REBL). Alternatively, you can specify `{:gen-fn rs/as-arrays}` and produce a vector with column names followed by vectors of row values.
+* `execute-one!` -- executes the SQL statement and produces a single realized hash map. The realized hash map returned by `execute-one!` is `Datafiable` and thus `Navigable`.
 
-In addition, there are API functions to create `PreparedStatement`s (`prepare`) from `Connection`s, which can be passed to `reducible!` or `execute!`, and to run code inside a transaction (the `transact` function and the `with-transaction` macro).
+In addition, there are API functions to create `PreparedStatement`s (`prepare`) from `Connection`s, which can be passed to `reducible!`, `execute!`, or `execute-one!`, and to run code inside a transaction (the `transact` function and the `with-transaction` macro).
 
 Since `next.jdbc` uses raw Java JDBC types, you can use `with-open` directly to reuse connections and ensure they are cleaned up correctly:
 
@@ -45,8 +44,8 @@ Since `next.jdbc` uses raw Java JDBC types, you can use `with-open` directly to 
 ### Usage scenarios
 
 There are three intended usage scenarios that may drive the API to change:
-* Execute a SQL statement to obtain a single, fully-realized, `Datafiable` hash map that represents either the first row from a `ResultSet`, the first generated keys result (again, from a `ResultSet`), or the first result where neither of those are available (`next.jdbc` will yield `[{:next.jdbc/update-count N}])` when it can only return an update count). This usage is currently supported by `execute-one!` but I'm not very happy with it.
-* Execute a SQL statement to obtain a fully-realized, `Datafiable` result set -- a vector of hash maps. This usage is supported by `execute!`.
+* Execute a SQL statement to obtain a single, fully-realized, `Datafiable` hash map that represents either the first row from a `ResultSet`, the first generated keys result (again, from a `ResultSet`), or the first result where neither of those are available (`next.jdbc` will yield `{:next.jdbc/update-count N}`) when it can only return an update count). This usage is currently supported by `execute-one!`.
+* Execute a SQL statement to obtain a fully-realized, `Datafiable` result set -- a vector of hash maps. This usage is supported by `execute!`. You can also produce a vector of column names/row values (`next.jdbc.result-set/as-arrays`).
 * Execute a SQL statement and process it in a single eager operation, which may allow for the results to be streamed from the database (how to persuade JDBC to do that is database-specific!), and which cleans up resources before returning the result -- even if the reduction is short-circuited via `reduced`. This usage is supported by `reducible!`.
 
 In addition, convenience functions -- "syntactic sugar" -- are provided to insert rows, run queries, update rows, and delete rows, using the same names as in `clojure.java.jdbc`. These are currently in `next.jdbc` but may move to `next.jdbc.sql` since they involve SQL creation, or they may move into a separate "sibling" library -- since they are not part of the intended core API.
@@ -63,7 +62,7 @@ Whereas `clojure.java.jdbc` supports a wide variety of options to describe how t
 
 `:result-set-fn` is not supported: either call your function on the result of `execute!` or handle it via reducing the result of `reducible!`.
 
-`:row-fn` is still (currently) supported in `execute!` and, if present, will prevent the default behavior of producing `Datafiable` rows. Depending on what your row-processing function does, you may be able to combine it with `next.jdbc.result-set/datafiable-row` (which is what is used by default to produce `Datafiable` rows).
+`:row-fn` is not supported; either `map` your function over the result of `execute!` or handle it via reducing the result of `reducible!`.
 
 ### Clojure identifier creation
 
