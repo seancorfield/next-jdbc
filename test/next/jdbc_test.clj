@@ -139,4 +139,32 @@
   (query con ["select * from fruit where name = ?" "Pear"])
 
   (delete! con :fruit {:id 1})
-  (update! con :fruit {:appearance "Brown"} {:name "Banana"}))
+  (update! con :fruit {:appearance "Brown"} {:name "Banana"})
+
+  (defrecord Fruit [id name appearance cost grade])
+
+  (defn fruit-builder [^java.sql.ResultSet rs opts]
+    (reify
+      rs/RowBuilder
+      (->row [_] (->Fruit (.getObject rs "id")
+                          (.getObject rs "name")
+                          (.getObject rs "appearance")
+                          (.getObject rs "cost")
+                          (.getObject rs "grade")))
+      (with-column [_ row i] row)
+      (column-count [_] 0) ; no need to iterate over columns
+      (row! [_ row] row)
+      rs/ResultSetBuilder
+      (->rs [_] (transient []))
+      (with-row [_ rs row] (conj! rs row))
+      (rs! [_ rs] (persistent! rs))))
+
+  (quick-bench ; 2.2 micros
+   (execute-one! con ["select * from fruit where appearance = ?" "red"]
+                 {:gen-fn fruit-builder}))
+  (quick-bench ; 2.47 micros
+   (execute! con ["select * from fruit where appearance = ?" "red"]
+             {:gen-fn fruit-builder}))
+  (quick-bench ; 3 micros
+   (execute! con ["select * from fruit"]
+             {:gen-fn fruit-builder})))
