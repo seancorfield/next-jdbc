@@ -21,23 +21,18 @@
 (set! *warn-on-reflection* true)
 
 (defn get-column-names
-  "Given ResultSetMetaData, return a vector of columns names, each qualified by
-  the table from which it came.
-
-  If :identifiers was specified, apply that to both the table qualifier
-  and the column name."
+  "Given ResultSetMetaData, return a vector of column names, each qualified by
+  the table from which it came."
   [^ResultSetMetaData rsmeta opts]
-  (let [idxs (range 1 (inc (.getColumnCount rsmeta)))]
-    (if-let [ident-fn (:identifiers opts)]
-      (mapv (fn [^Integer i]
-              (keyword (when-let [qualifier (not-empty (.getTableName rsmeta i))]
-                         (ident-fn qualifier))
-                       (ident-fn (.getColumnLabel rsmeta i))))
-            idxs)
-      (mapv (fn [^Integer i]
-              (keyword (not-empty (.getTableName rsmeta i))
-                       (.getColumnLabel rsmeta i)))
-            idxs))))
+  (mapv (fn [^Integer i] (keyword (not-empty (.getTableName rsmeta i))
+                                  (.getColumnLabel rsmeta i)))
+        (range 1 (inc (.getColumnCount rsmeta)))))
+
+(defn get-unqualified-column-names
+  "Given ResultSetMetaData, return a vector of unqualified column names."
+  [^ResultSetMetaData rsmeta opts]
+  (mapv (fn [^Integer i] (keyword (.getColumnLabel rsmeta i)))
+        (range 1 (inc (.getColumnCount rsmeta)))))
 
 (defprotocol ReadableColumn
   "Protocol for reading objects from the java.sql.ResultSet. Default
@@ -82,42 +77,49 @@
   (with-row [_ rs row])
   (rs! [_ rs]))
 
-(defn map-row-builder
-  "Given a ResultSet and options, return a RowBuilder that produces
-  bare hash map rows."
-  [^ResultSet rs opts]
-  (let [rsmeta (.getMetaData rs)
-        cols   (get-column-names rsmeta opts)]
-    (reify
-      RowBuilder
-      (->row [this] (transient {}))
-      (column-count [this] (count cols))
-      (with-column [this row i]
-        (assoc! row
-                (nth cols (dec i))
-                (read-column-by-index (.getObject rs ^Integer i) rsmeta i)))
-      (row! [this row] (persistent! row)))))
+(defrecord MapResultSetBuilder [^ResultSet rs rsmeta cols]
+  RowBuilder
+  (->row [this] (transient {}))
+  (column-count [this] (count cols))
+  (with-column [this row i]
+    (assoc! row
+            (nth cols (dec i))
+            (read-column-by-index (.getObject rs ^Integer i) rsmeta i)))
+  (row! [this row] (persistent! row))
+  ResultSetBuilder
+  (->rs [this] (transient []))
+  (with-row [this mrs row]
+    (conj! mrs row))
+  (rs! [this mrs] (persistent! mrs)))
 
-(defn map-rs-builder
+(defn as-maps
   "Given a ResultSet and options, return a RowBuilder and ResultSetBuilder
   that produces bare vectors of hash map rows."
   [^ResultSet rs opts]
   (let [rsmeta (.getMetaData rs)
         cols   (get-column-names rsmeta opts)]
-    (reify
-      RowBuilder
-      (->row [this] (transient {}))
-      (column-count [this] (count cols))
-      (with-column [this row i]
-        (assoc! row
-                (nth cols (dec i))
-                (read-column-by-index (.getObject rs ^Integer i) rsmeta i)))
-      (row! [this row] (persistent! row))
-      ResultSetBuilder
-      (->rs [this] (transient []))
-      (with-row [this rs row]
-        (conj! rs row))
-      (rs! [this rs] (persistent! rs)))))
+    (->MapResultSetBuilder rs rsmeta cols)))
+
+(defn as-unqualified-maps
+  "Given a ResultSet and options, return a RowBuilder and ResultSetBuilder
+  that produces bare vectors of hash map rows, with simple keys."
+  [^ResultSet rs opts]
+  (let [rsmeta (.getMetaData rs)
+        cols   (get-unqualified-column-names rsmeta opts)]
+    (->MapResultSetBuilder rs rsmeta cols)))
+
+(defrecord ArrayResultSetBuilder [^ResultSet rs rsmeta cols]
+  RowBuilder
+  (->row [this] (transient []))
+  (column-count [this] (count cols))
+  (with-column [this row i]
+    (conj! row (read-column-by-index (.getObject rs ^Integer i) rsmeta i)))
+  (row! [this row] (persistent! row))
+  ResultSetBuilder
+  (->rs [this] (transient [cols]))
+  (with-row [this ars row]
+    (conj! ars row))
+  (rs! [this ars] (persistent! ars)))
 
 (defn as-arrays
   "Given a ResulSet and options, return a RowBuilder and ResultSetBuilder
@@ -125,18 +127,16 @@
   [^ResultSet rs opts]
   (let [rsmeta (.getMetaData rs)
         cols   (get-column-names rsmeta opts)]
-    (reify
-      RowBuilder
-      (->row [this] (transient []))
-      (column-count [this] (count cols))
-      (with-column [this row i]
-        (conj! row (read-column-by-index (.getObject rs ^Integer i) rsmeta i)))
-      (row! [this row] (persistent! row))
-      ResultSetBuilder
-      (->rs [this] (transient [cols]))
-      (with-row [this rs row]
-        (conj! rs row))
-      (rs! [this rs] (persistent! rs)))))
+    (->ArrayResultSetBuilder rs rsmeta cols)))
+
+(defn as-unqualified-arrays
+  "Given a ResulSet and options, return a RowBuilder and ResultSetBuilder
+  that produces a vector of simple column names followed by vectors of row
+  values."
+  [^ResultSet rs opts]
+  (let [rsmeta (.getMetaData rs)
+        cols   (get-unqualified-column-names rsmeta opts)]
+    (->ArrayResultSetBuilder rs rsmeta cols)))
 
 (declare navize-row)
 
@@ -166,7 +166,7 @@
 
   Supports Seqable which realizes a full row of the data."
   [^ResultSet rs opts]
-  (let [gen (delay ((get :gen-fn opts map-row-builder) rs opts))]
+  (let [gen (delay ((get :gen-fn opts as-maps) rs opts))]
     (reify
 
       clojure.lang.ILookup
@@ -208,11 +208,12 @@
 
 (extend-protocol
   DatafiableRow
-  clojure.lang.IObj
+  java.util.Map ; assume we can "navigate" any kind of hash map for now
   (datafiable-row [this connectable opts]
-                  (with-meta
-                    this
-                    {`core-p/datafy (navize-row connectable opts)})))
+                  (with-meta this
+                    {`core-p/datafy (navize-row connectable opts)}))
+  clojure.lang.IObj ; but we cannot "navigate" other things
+  (datafiable-row [this connectable opts] this))
 
 (defn- stmt->result-set
   "Given a PreparedStatement and options, execute it and return a ResultSet
@@ -262,7 +263,7 @@
                                      (rest sql-params)
                                      opts)]
       (if-let [rs (stmt->result-set stmt opts)]
-        (let [gen-fn (get opts :gen-fn map-row-builder)
+        (let [gen-fn (get opts :gen-fn as-maps)
               gen    (gen-fn rs opts)]
           (when (.next rs)
             (datafiable-row (row-builder gen) this opts)))
@@ -273,7 +274,7 @@
                                      (rest sql-params)
                                      opts)]
       (if-let [rs (stmt->result-set stmt opts)]
-        (let [gen-fn (get opts :gen-fn map-rs-builder)
+        (let [gen-fn (get opts :gen-fn as-maps)
               gen    (gen-fn rs opts)]
           (loop [rs' (->rs gen) more? (.next rs)]
             (if more?
@@ -301,7 +302,7 @@
                                        opts)]
         (if-let [rs (stmt->result-set stmt opts)]
           (when (.next rs)
-            (datafiable-row (row-builder (map-row-builder rs opts)) this opts))
+            (datafiable-row (row-builder (as-maps rs opts)) this opts))
           {:next.jdbc/update-count (.getUpdateCount stmt)}))))
   (-execute-all [this sql-params opts]
     (with-open [con (p/get-connection this opts)]
@@ -310,7 +311,7 @@
                                        (rest sql-params)
                                        opts)]
         (if-let [rs (stmt->result-set stmt opts)]
-          (let [gen-fn (get opts :gen-fn map-rs-builder)
+          (let [gen-fn (get opts :gen-fn as-maps)
                 gen    (gen-fn rs opts)]
             (loop [rs' (->rs gen) more? (.next rs)]
               (if more?
@@ -331,12 +332,12 @@
   (-execute-one [this _ opts]
     (if-let [rs (stmt->result-set this (assoc opts :return-keys true))]
       (when (.next rs)
-        (datafiable-row (row-builder (map-row-builder rs opts))
+        (datafiable-row (row-builder (as-maps rs opts))
                         (.getConnection this) opts))
       {:next.jdbc/update-count (.getUpdateCount this)}))
   (-execute-all [this sql-params opts]
     (if-let [rs (stmt->result-set this opts)]
-      (let [gen-fn (get opts :gen-fn map-rs-builder)
+      (let [gen-fn (get opts :gen-fn as-maps)
             gen    (gen-fn rs opts)]
         (loop [rs' (->rs gen) more? (.next rs)]
           (if more?
@@ -379,7 +380,7 @@
   in the <table> portion of their name, the key is called 'id', and the
   cardinality is :one.
 
-  Rows are looked up using 'execute!' or 'execute-one!' and the :entities
+  Rows are looked up using 'execute!' or 'execute-one!' and the :table-fn
   function, if provided, is applied to both the assumed table name and the
   assumed foreign key column name."
   [connectable opts]
@@ -390,7 +391,7 @@
                                                       (default-schema k))]
                        (if fk
                          (try
-                           (let [entity-fn (:entities opts identity)
+                           (let [entity-fn (:table-fn opts identity)
                                  exec-fn!  (if (= :many cardinality)
                                              p/-execute-all
                                              p/-execute-one)]
