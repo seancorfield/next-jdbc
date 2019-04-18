@@ -8,7 +8,13 @@
   (insert!, update!, delete!, etc). For anything more complex, use a library
   like HoneySQL https://github.com/jkk/honeysql to generate SQL + parameters.
 
-  This is primarily intended to be an implementation detail."
+  The following options are supported:
+  * :table-fn -- specify a function used to convert table names (strings)
+      to SQL entity names -- see the next.jdbc.quoted namespace for the
+      most common quoting strategy functions,
+  * :column-fn -- specify a function used to convert column names (strings)
+      to SQL entity names -- see the next.jdbc.quoted namespace for the
+      most common quoting strategy functions."
   (:require [clojure.string :as str]
             [next.jdbc :refer [execute! execute-one!]]))
 
@@ -16,9 +22,9 @@
   "Given a hash map of column names and values and a clause type (:set, :where),
   return a vector of a SQL clause and its parameters.
 
-  Applies any :entities function supplied in the options."
+  Applies any :column-fn supplied in the options."
   [key-map clause opts]
-  (let [entity-fn      (:entities opts identity)
+  (let [entity-fn      (:column-fn opts identity)
         [where params] (reduce-kv (fn [[conds params] k v]
                                     (let [e (entity-fn (name k))]
                                       (if (and (= :where clause) (nil? v))
@@ -34,9 +40,9 @@
   "Given a hash map of column names and values, return a string of all the
   column names.
 
-  Applies any :entities function supplied in the options."
+  Applies any :column-fn supplied in the options."
   [key-map opts]
-  (str/join ", " (map (comp (:entities opts identity) name) (keys key-map))))
+  (str/join ", " (map (comp (:column-fn opts identity) name) (keys key-map))))
 
 (defn- as-?
   "Given a hash map of column names and values, or a vector of column names,
@@ -49,9 +55,9 @@
   vector of SQL (where clause) and its parameters, return a vector of the
   full SELECT SQL string and its parameters.
 
-  Applies any :entities function supplied in the options."
+  Applies any :table-fn / :column-fn supplied in the options."
   [table where-params opts]
-  (let [entity-fn    (:entities opts identity)
+  (let [entity-fn    (:table-fn opts identity)
         where-params (if (map? where-params)
                        (by-keys where-params :where opts)
                        (into [(str "WHERE " (first where-params))]
@@ -65,9 +71,9 @@
   vector of SQL (where clause) and its parameters, return a vector of the
   full DELETE SQL string and its parameters.
 
-  Applies any :entities function supplied in the options."
+  Applies any :table-fn / :column-fn supplied in the options."
   [table where-params opts]
-  (let [entity-fn    (:entities opts identity)
+  (let [entity-fn    (:table-fn opts identity)
         where-params (if (map? where-params)
                        (by-keys where-params :where opts)
                        (into [(str "WHERE " (first where-params))]
@@ -82,9 +88,9 @@
   and its parameters, return a vector of the full UPDATE SQL string and its
   parameters.
 
-  Applies any :entities function supplied in the options."
+  Applies any :table-fn / :column-fn supplied in the options."
   [table key-map where-params opts]
-  (let [entity-fn    (:entities opts identity)
+  (let [entity-fn    (:table-fn opts identity)
         set-params   (by-keys key-map :set opts)
         where-params (if (map? where-params)
                        (by-keys where-params :where opts)
@@ -100,9 +106,9 @@
   "Given a table name and a hash map of column names and their values,
   return a vector of the full INSERT SQL string and its parameters.
 
-  Applies any :entities function supplied in the options."
+  Applies any :table-fn / :column-fn supplied in the options."
   [table key-map opts]
-  (let [entity-fn (:entities opts identity)
+  (let [entity-fn (:table-fn opts identity)
         params    (as-keys key-map opts)
         places    (as-? key-map opts)]
     (into [(str "INSERT INTO " (entity-fn (name table))
@@ -115,10 +121,10 @@
   (each row is a vector of its values), return a vector of the full INSERT
   SQL string and its parameters.
 
-  Applies any :entities function supplied in the options."
+  Applies any :table-fn / :column-fn supplied in the options."
   [table cols rows opts]
   (assert (apply = (count cols) (map count rows)))
-  (let [entity-fn (:entities opts identity)
+  (let [entity-fn (:table-fn opts identity)
         params    (str/join ", " (map (comp entity-fn name) cols))
         places    (as-? (first rows) opts)]
     (into [(str "INSERT INTO " (entity-fn (name table))
@@ -222,27 +228,27 @@
   ;=> a, b, c
   (as-? {:a nil :b 42 :c "s"} {})
   ;=> ?, ?, ?
-  (for-query :user {:id 9} {:entities mysql})
+  (for-query :user {:id 9} {:table-fn mysql :column-fn mysql})
   ;=> ["SELECT * FROM `user` WHERE `id` = ?" 9]
-  (for-query :user {:id nil} {:entities mysql})
+  (for-query :user {:id nil} {:table-fn mysql :column-fn mysql})
   ;=> ["SELECT * FROM `user` WHERE `id` IS NULL"]
-  (for-query :user ["id = ? and opt is null" 9] {:entities mysql})
+  (for-query :user ["id = ? and opt is null" 9] {:table-fn mysql :column-fn mysql})
   ;=> ["SELECT * FROM `user` WHERE id = ? and opt is null" 9]
-  (for-delete :user {:opt nil :id 9} {:entities mysql})
+  (for-delete :user {:opt nil :id 9} {:table-fn mysql :column-fn mysql})
   ;=> ["DELETE FROM `user` WHERE `opt` IS NULL AND `id` = ?" 9]
-  (for-delete :user ["id = ? and opt is null" 9] {:entities mysql})
+  (for-delete :user ["id = ? and opt is null" 9] {:table-fn mysql :column-fn mysql})
   ;=> ["DELETE FROM `user` WHERE id = ? and opt is null" 9]
-  (for-update :user {:status 42} {} {:entities mysql})
+  (for-update :user {:status 42} {} {:table-fn mysql :column-fn mysql})
   ;=> ["UPDATE `user` SET `status` = ? WHERE " 42]
-  (for-update :user {:status 42} {:id 9} {:entities mysql})
+  (for-update :user {:status 42} {:id 9} {:table-fn mysql :column-fn mysql})
   ;=> ["UPDATE `user` SET `status` = ? WHERE `id` = ?" 42 9]
-  (for-update :user {:status 42, :opt nil} ["id = ?" 9] {:entities mysql})
+  (for-update :user {:status 42, :opt nil} ["id = ?" 9] {:table-fn mysql :column-fn mysql})
   ;=> ["UPDATE `user` SET `status` = ?, `opt` = ? WHERE id = ?" 42 nil 9]
-  (for-insert :user {:id 9 :status 42 :opt nil} {:entities mysql})
+  (for-insert :user {:id 9 :status 42 :opt nil} {:table-fn mysql :column-fn mysql})
   ;=> ["INSERT INTO `user` (`id`, `status`, `opt`) VALUES (?, ?, ?)" 9 42 nil]
   (for-insert-multi :user [:id :status]
                     [[42 "hello"]
                      [35 "world"]
                      [64 "dollars"]]
-                    {:entities mysql}))
+                    {:table-fn mysql :column-fn mysql}))
   ;=> ["INSERT INTO `user` (`id`, `status`) VALUES (?, ?), (?, ?), (?, ?)" 42 "hello" 35 "world" 64 "dollars"])

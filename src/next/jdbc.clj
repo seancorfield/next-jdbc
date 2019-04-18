@@ -18,15 +18,6 @@
       via a schema definition).
   * with-transaction -- execute a series of SQL operations within a transaction.
 
-  The following options are supported generally:
-  * :entities -- specify a function used to convert strings to SQL entity names
-      (to turn table and column names into appropriate SQL names -- see the
-      next.jdbc.quoted namespace for the most common ones you might need),
-  * :identifiers -- specify a function used to convert SQL entity (column)
-      names to Clojure names (that are then turned into keywords),
-  * :row-fn -- when consuming a ResultSet, apply this function to each row of
-      data; defaults to a function that produces a datafiable hash map.
-
   The following options are supported where a PreparedStatement is created:
   * :concurrency -- :read-only, :updatable,
   * :cursors -- :close, :hold
@@ -36,9 +27,9 @@
   * :return-keys -- either true or a vector of key names to return,
   * :timeout -- the query timeout."
   (:require [next.jdbc.connection] ; used to extend protocols
-            [next.jdbc.prepare :as prepare] ; used to extend protocols
+            [next.jdbc.prepare] ; used to extend protocols
             [next.jdbc.protocols :as p]
-            [next.jdbc.result-set :as rs]
+            [next.jdbc.result-set] ; used to extend protocols
             [next.jdbc.transaction])) ; used to extend protocols
 
 (set! *warn-on-reflection* true)

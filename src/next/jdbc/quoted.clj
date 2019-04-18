@@ -1,9 +1,9 @@
 ;; copyright (c) 2019 Sean Corfield, all rights reserved
 
 (ns next.jdbc.quoted
-  "Provides functions for use with the :entities option that define
-  how SQL entities should be quoted in strings constructed from
-  Clojure data.")
+  "Provides functions for use with the :table-fn and :column-fn options
+  that define how SQL entities should be quoted in strings constructed
+  from Clojure data.")
 
 (defn ansi "ANSI \"quoting\"" [s] (str \" s \"))
 
