@@ -1,9 +1,11 @@
 (ns next.jdbc-test
   "Not exactly a test suite -- more a series of examples."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [clojure.string :as str]
+            [clojure.test :refer [deftest is testing]]
             [next.jdbc :refer :all]
             [next.jdbc.result-set :as rs]
-            [next.jdbc.sql :refer :all]))
+            [next.jdbc.sql :refer :all])
+  (:import (java.sql ResultSet ResultSetMetaData)))
 
 (deftest a-test
   (testing "FIXME, I fail."
@@ -49,9 +51,9 @@
           value (.getObject rs "name")]
       (.close ps)
       value))
-  (quick-bench (select* con)) ; 1.15-1.19 micros
+  (quick-bench (select* con)) ; 1.14 micros
 
-  ;; almost same as the Java example above -- 1.66-1.7 micros -- 1.4x Java
+  ;; almost same as the Java example above -- 1.57 micros -- 1.4x Java
   (quick-bench
    (reduce (fn [rs m] (reduced (:name m)))
            nil
@@ -76,10 +78,41 @@
   (quick-bench
    (jdbc/query {:connection con} ["select * from fruit where appearance = ?" "red"]))
 
-  (quick-bench ; 4.55-4.57
-   (execute! con ["select * from fruit"]))
-  (quick-bench ; 4.34-4.4
+  (quick-bench ; default -- 4.55-4.57
+   (execute! con ["select * from fruit"] {:gen-fn rs/as-maps}))
+  (quick-bench ; arrays -- 4.34-4.4
    (execute! con ["select * from fruit"] {:gen-fn rs/as-arrays}))
+  (quick-bench ; simple keys -- 4.55-4.57
+   (execute! con ["select * from fruit"] {:gen-fn rs/as-unqualified-maps}))
+  (quick-bench ; simple keys, arrays -- 4.34-4.4
+   (execute! con ["select * from fruit"] {:gen-fn rs/as-unqualified-arrays}))
+
+  (defn get-lower-column-names [^java.sql.ResultSetMetaData rsmeta opts]
+    (let [idxs (range 1 (inc (.getColumnCount rsmeta)))]
+      (mapv (fn [^Integer i]
+              (keyword (str/lower-case (.getColumnLabel rsmeta i))))
+            idxs)))
+
+  (defn as-lower-maps [^java.sql.ResultSet rs opts]
+    (let [rsmeta (.getMetaData rs)
+          cols   (get-lower-column-names rsmeta opts)]
+      (next.jdbc.result-set/->MapResultSetBuilder rs rsmeta cols)))
+
+  (quick-bench ; simple keys -- 4.55-4.57
+   (execute! con ["select * from fruit"] {:gen-fn as-lower-maps}))
+
+  (defn lower-case-cols [^ResultSetMetaData rsmeta opts]
+    (mapv (fn [^Integer i]
+            (keyword (str/lower-case (.getColumnLabel rsmeta i))))
+          (range 1 (inc (.getColumnCount rsmeta)))))
+
+  (defn as-lower-case [^ResultSet rs opts]
+    (let [rsmeta (.getMetaData rs)
+          cols   (lower-case-cols rsmeta opts)]
+      (next.jdbc.result-set/->MapResultSetBuilder rs rsmeta cols)))
+
+  (quick-bench
+   (execute! con ["SELECT * FROM fruit"] {:gen-fn as-lower-case}))
 
   (quick-bench ; 9.5 -- 2x
    (jdbc/query {:connection con} ["select * from fruit"]))
