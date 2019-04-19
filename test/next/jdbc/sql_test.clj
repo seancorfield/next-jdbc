@@ -1,6 +1,9 @@
 ;; copyright (c) 2019 Sean Corfield, all rights reserved
 
 (ns next.jdbc.sql-test
+  "Tests for the (private) SQL string building functions in next.jdbc.sql.
+
+  At some future date, tests for the syntactic sugar functions will be added."
   (:require [clojure.test :refer [deftest is testing]]
             [next.jdbc.quoted :refer [mysql sql-server]]
             [next.jdbc.sql :as sql]))

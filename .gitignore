@@ -11,5 +11,5 @@ pom.xml.asc
 /.nrepl-port
 .hgignore
 .hg/
-/clojure_test
+/clojure_test*
 /derby.log

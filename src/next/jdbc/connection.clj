@@ -90,7 +90,14 @@
         db-sep (dbname-separators dbtype "/")
         url (cond (= "h2:mem" dbtype)
                   (str "jdbc:" subprotocol ":" dbname ";DB_CLOSE_DELAY=-1")
-                  (#{"derby" "h2" "hsqldb" "sqlite"} subprotocol)
+                  (#{"h2"} subprotocol)
+                  (str "jdbc:" subprotocol ":"
+                       (if (re-find #"^([A-Za-z]:)?[\./\\]" dbname)
+                         ;; DB name starts with relative or absolute path
+                         dbname
+                         ;; otherwise make it local
+                         (str "./" dbname)))
+                  (#{"derby" "hsqldb" "sqlite"} subprotocol)
                   (str "jdbc:" subprotocol ":" dbname)
                   :else
                   (str "jdbc:" subprotocol ":"
