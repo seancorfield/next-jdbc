@@ -1,3 +1,5 @@
+;; copyright (c) 2019 Sean Corfield, all rights reserved
+
 (ns next.jdbc-test
   "Not exactly a test suite -- more a series of examples."
   (:require [clojure.string :as str]
@@ -7,12 +9,8 @@
             [next.jdbc.sql :refer :all])
   (:import (java.sql ResultSet ResultSetMetaData)))
 
-(deftest a-test
-  (testing "FIXME, I fail."
-    (is (= 0 1))))
-
 (comment
-  (def db-spec {:dbtype "h2:mem" :dbname "perf"})
+  (def db-spec {:dbtype "h2:mem" :dbname "clojure_test_perf"})
   ;; these should be equivalent
   (def con (get-connection (get-datasource db-spec) {}))
   (def con (get-connection db-spec {}))
