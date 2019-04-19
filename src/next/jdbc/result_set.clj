@@ -368,7 +368,7 @@
   If a column name ends with _id or id, it is assumed to be a foreign key
   into the table identified by the first part of the column name."
   [col]
-  (let [[_ table] (re-find #"(?i)^(.+)_?id$" (name col))]
+  (let [[_ table] (re-find #"(?i)^(.+?)_?id$" (name col))]
     (when table
       [(keyword table) :id])))
 
