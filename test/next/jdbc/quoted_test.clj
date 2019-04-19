@@ -1,6 +1,8 @@
 ;; copyright (c) 2019 Sean Corfield, all rights reserved
 
 (ns next.jdbc.quoted-test
+  "Basic tests for quoting strategies. These are also tested indirectly
+  via the next.jdbc.sql tests."
   (:require [clojure.test :refer [deftest are]]
             [next.jdbc.quoted :refer :all]))
 

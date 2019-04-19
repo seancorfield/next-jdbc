@@ -1,6 +1,11 @@
 ;; copyright (c) 2019 Sean Corfield, all rights reserved
 
 (ns next.jdbc.connection-test
+  "Tests for the main hash map spec to JDBC URL logic and the get-datasource
+  and get-connection protocol implementations.
+
+  At some point, the datasource/connection tests should probably be extended
+  to accept EDN specs from an external source (environment variables?)."
   (:require [clojure.string :as str]
             [clojure.test :refer [deftest is testing]]
             [next.jdbc.connection :as c]
