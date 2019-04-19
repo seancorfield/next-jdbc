@@ -124,10 +124,11 @@
   Applies any :table-fn / :column-fn supplied in the options."
   [table cols rows opts]
   (assert (apply = (count cols) (map count rows)))
-  (let [entity-fn (:table-fn opts identity)
-        params    (str/join ", " (map (comp entity-fn name) cols))
+  (let [table-fn  (:table-fn opts identity)
+        column-fn (:column-fn opts identity)
+        params    (str/join ", " (map (comp column-fn name) cols))
         places    (as-? (first rows) opts)]
-    (into [(str "INSERT INTO " (entity-fn (name table))
+    (into [(str "INSERT INTO " (table-fn (name table))
                 " (" params ")"
                 " VALUES "
                 (str/join ", " (repeat (count rows) (str "(" places ")"))))]
@@ -219,36 +220,3 @@
    (delete! connectable table where-params {}))
   ([connectable table where-params opts]
    (execute-one! connectable (for-delete table where-params opts) opts)))
-
-(comment
-  (require '[next.jdbc.quoted :refer [mysql sql-server]])
-  (by-keys {:a nil :b 42 :c "s"} :where {})
-  ;=> ["WHERE a IS NULL AND b = ? AND c = ?" 42 "s"]
-  (as-keys {:a nil :b 42 :c "s"} {})
-  ;=> a, b, c
-  (as-? {:a nil :b 42 :c "s"} {})
-  ;=> ?, ?, ?
-  (for-query :user {:id 9} {:table-fn sql-server :column-fn mysql})
-  ;=> ["SELECT * FROM [user] WHERE `id` = ?" 9]
-  (for-query :user {:id nil} {:table-fn sql-server :column-fn mysql})
-  ;=> ["SELECT * FROM [user] WHERE `id` IS NULL"]
-  (for-query :user ["id = ? and opt is null" 9] {:table-fn sql-server :column-fn mysql})
-  ;=> ["SELECT * FROM [user] WHERE id = ? and opt is null" 9]
-  (for-delete :user {:opt nil :id 9} {:table-fn sql-server :column-fn mysql})
-  ;=> ["DELETE FROM [user] WHERE `opt` IS NULL AND `id` = ?" 9]
-  (for-delete :user ["id = ? and opt is null" 9] {:table-fn sql-server :column-fn mysql})
-  ;=> ["DELETE FROM [user] WHERE id = ? and opt is null" 9]
-  (for-update :user {:status 42} {} {:table-fn sql-server :column-fn mysql})
-  ;=> ["UPDATE [user] SET `status` = ? WHERE " 42]
-  (for-update :user {:status 42} {:id 9} {:table-fn sql-server :column-fn mysql})
-  ;=> ["UPDATE [user] SET `status` = ? WHERE `id` = ?" 42 9]
-  (for-update :user {:status 42, :opt nil} ["id = ?" 9] {:table-fn sql-server :column-fn mysql})
-  ;=> ["UPDATE [user] SET `status` = ?, `opt` = ? WHERE id = ?" 42 nil 9]
-  (for-insert :user {:id 9 :status 42 :opt nil} {:table-fn sql-server :column-fn mysql})
-  ;=> ["INSERT INTO [user] (`id`, `status`, `opt`) VALUES (?, ?, ?)" 9 42 nil]
-  (for-insert-multi :user [:id :status]
-                    [[42 "hello"]
-                     [35 "world"]
-                     [64 "dollars"]]
-                    {:table-fn sql-server :column-fn mysql}))
-  ;=> ["INSERT INTO [user] (`id`, `status`) VALUES (?, ?), (?, ?), (?, ?)" 42 "hello" 35 "world" 64 "dollars"])
