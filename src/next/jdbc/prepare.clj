@@ -37,9 +37,7 @@
 
 (defn set-parameters
   "Given a PreparedStatement and a vector of parameter values, update the
-  PreparedStatement with those parameters and return it.
-
-  Currently uses .setObject with no possibility of an override."
+  PreparedStatement with those parameters and return it."
   ^java.sql.PreparedStatement
   [^PreparedStatement ps params]
   (when (seq params)
