@@ -293,7 +293,7 @@
                        (datafiable-row (row-builder gen) this opts))
                      (.next rs))
               (rs! gen rs'))))
-        {:next.jdbc/update-count (.getUpdateCount stmt)})))
+        [{:next.jdbc/update-count (.getUpdateCount stmt)}])))
 
   javax.sql.DataSource
   (-execute [this sql-params opts]
@@ -332,7 +332,7 @@
                          (datafiable-row (row-builder gen) this opts))
                        (.next rs))
                 (rs! gen rs'))))
-          {:next.jdbc/update-count (.getUpdateCount stmt)}))))
+          [{:next.jdbc/update-count (.getUpdateCount stmt)}]))))
 
   java.sql.PreparedStatement
   ;; we can't tell if this PreparedStatement will return generated
@@ -359,7 +359,7 @@
                                      (.getConnection this) opts))
                    (.next rs))
             (rs! gen rs'))))
-      {:next.jdbc/update-count (.getUpdateCount this)}))
+      [{:next.jdbc/update-count (.getUpdateCount this)}]))
 
   Object
   (-execute [this sql-params opts]
