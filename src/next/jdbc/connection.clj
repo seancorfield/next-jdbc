@@ -139,7 +139,7 @@
     (getConnection [_ username password]
                    (get-driver-connection url
                                           (assoc etc
-                                                 :username username
+                                                 :user username
                                                  :password password)))))
 
 (defn- make-connection
