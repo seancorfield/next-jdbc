@@ -4,9 +4,12 @@
   "Tests for the (private) SQL string building functions in next.jdbc.sql.
 
   At some future date, tests for the syntactic sugar functions will be added."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc.quoted :refer [mysql sql-server]]
-            [next.jdbc.sql :as sql]))
+            [next.jdbc.sql :as sql]
+            [next.jdbc.test-fixtures :refer [with-test-db ds]]))
+
+(use-fixtures :once with-test-db)
 
 (deftest test-by-keys
   (testing ":where clause"
@@ -64,3 +67,72 @@
                               [64 "dollars"]]
                              {:table-fn sql-server :column-fn mysql})
            ["INSERT INTO [user] (`id`, `status`) VALUES (?, ?), (?, ?), (?, ?)" 42 "hello" 35 "world" 64 "dollars"]))))
+
+(deftest test-query
+  (let [rs (sql/query (ds) ["select * from fruit order by id"])]
+    (is (= 4 (count rs)))
+    (is (every? map? rs))
+    (is (every? meta rs))
+    (is (= 1 (:FRUIT/ID (first rs))))
+    (is (= 4 (:FRUIT/ID (last rs))))))
+
+(deftest test-find-by-keys
+  (let [rs (sql/find-by-keys (ds) :fruit {:appearance "yellow"})]
+    (is (= 1 (count rs)))
+    (is (every? map? rs))
+    (is (every? meta rs))
+    (is (= 2 (:FRUIT/ID (first rs))))))
+
+(deftest test-get-by-id
+  (let [row (sql/get-by-id (ds) :fruit 3)]
+    (is (map? row))
+    (is (= "Peach" (:FRUIT/NAME row))))
+  (let [row (sql/get-by-id (ds) :fruit "juicy" :appearance {})]
+    (is (map? row))
+    (is (= 4 (:FRUIT/ID row)))
+    (is (= "Orange" (:FRUIT/NAME row))))
+  (let [row (sql/get-by-id (ds) :fruit "Banana" :FRUIT/NAME {})]
+    (is (map? row))
+    (is (= 2 (:FRUIT/ID row)))))
+
+(deftest test-update!
+  (try
+    (is (= {:next.jdbc/update-count 1}
+           (sql/update! (ds) :fruit {:appearance "brown"} {:id 2})))
+    (is (= "brown" (:FRUIT/APPEARANCE
+                    (sql/get-by-id (ds) :fruit 2))))
+    (finally
+      (sql/update! (ds) :fruit {:appearance "yellow"} {:id 2})))
+  (try
+    (is (= {:next.jdbc/update-count 1}
+           (sql/update! (ds) :fruit {:appearance "green"}
+                        ["name = ?" "Banana"])))
+    (is (= "green" (:FRUIT/APPEARANCE
+                    (sql/get-by-id (ds) :fruit 2))))
+    (finally
+      (sql/update! (ds) :fruit {:appearance "yellow"} {:id 2}))))
+
+(deftest test-insert-delete
+  (testing "single insert/delete"
+    ;; H2 with :return-keys true produces an empty result set
+    (is (nil? (sql/insert! (ds) :fruit
+                           {:id 5 :name "Kiwi" :appearance "green & fuzzy"
+                            :cost 100 :grade 99.9})))
+    (is (= 5 (count (sql/query (ds) ["select * from fruit"]))))
+    (is (= {:next.jdbc/update-count 1}
+           (sql/delete! (ds) :fruit {:id 5})))
+    (is (= 4 (count (sql/query (ds) ["select * from fruit"])))))
+  (testing "multiple insert/delete"
+    ;; H2 with :return-keys true produces an empty result set
+    (is (= [] (sql/insert-multi! (ds) :fruit
+                                 [:id :name :appearance :cost :grade]
+                                 [[5 "Kiwi" "green & fuzzy" 100 99.9]
+                                  [6 "Grape" "black" 10 50]
+                                  [7 "Lemon" "yellow" 20 9.9]])))
+    (is (= 7 (count (sql/query (ds) ["select * from fruit"]))))
+    (is (= {:next.jdbc/update-count 1}
+           (sql/delete! (ds) :fruit {:id 6})))
+    (is (= 6 (count (sql/query (ds) ["select * from fruit"]))))
+    (is (= {:next.jdbc/update-count 2}
+           (sql/delete! (ds) :fruit ["id > ?" 4])))
+    (is (= 4 (count (sql/query (ds) ["select * from fruit"]))))))
