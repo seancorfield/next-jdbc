@@ -3,9 +3,8 @@
 (ns next.jdbc.result-set-test
   "Stub test namespace for the result set functions.
 
-  There's so much that should be tested here:
-  * ReadableColumn protocol extension point
-  * -execute-one and -execute-all implementations"
+  What's left to be tested:
+  * ReadableColumn protocol extension point"
   (:require [clojure.core.protocols :as core-p]
             [clojure.datafy :as d]
             [clojure.string :as str]
@@ -75,7 +74,15 @@
                               {})]
       (is (map? row))
       (is (= 1 (:FRUIT/ID row)))
-      (is (= "Apple" (:FRUIT/NAME row)))))
+      (is (= "Apple" (:FRUIT/NAME row))))
+    (let [rs (p/-execute-all (ds)
+                             ["select * from fruit order by id"]
+                             {})]
+      (is (every? map? rs))
+      (is (= 1 (:FRUIT/ID (first rs))))
+      (is (= "Apple" (:FRUIT/NAME (first rs))))
+      (is (= 4 (:FRUIT/ID (last rs))))
+      (is (= "Orange" (:FRUIT/NAME (last rs))))))
   (testing "unqualified row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 2]
