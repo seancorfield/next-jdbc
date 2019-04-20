@@ -142,3 +142,36 @@
                                  nil
                                  (p/-execute (ds) ["select * from fruit"] {})))
                    `core-p/datafy))))
+
+;; test that we can create a record-based result set builder:
+
+(defrecord Fruit [id name appearance cost grade])
+
+(defn fruit-builder [^ResultSet rs opts]
+  (reify
+    rs/RowBuilder
+    (->row [_] (->Fruit (.getObject rs "id")
+                        (.getObject rs "name")
+                        (.getObject rs "appearance")
+                        (.getObject rs "cost")
+                        (.getObject rs "grade")))
+    (with-column [_ row i] row)
+    (column-count [_] 0) ; no need to iterate over columns
+    (row! [_ row] row)
+    rs/ResultSetBuilder
+    (->rs [_] (transient []))
+    (with-row [_ rs row] (conj! rs row))
+    (rs! [_ rs] (persistent! rs))))
+
+(deftest custom-map-builder
+  (let [row (p/-execute-one (ds)
+                            ["select * from fruit where appearance = ?" "red"]
+                            {:gen-fn fruit-builder})]
+    (is (instance? Fruit row))
+    (is (= 1 (:id row))))
+  (let [rs (p/-execute-all (ds)
+                           ["select * from fruit where appearance = ?" "red"]
+                           {:gen-fn fruit-builder})]
+    (is (every? #(instance? Fruit %) rs))
+    (is (= 1 (count rs)))
+    (is (= 1 (:id (first rs))))))
