@@ -4,17 +4,16 @@
   "Stub test namespace for the result set functions.
 
   There's so much that should be tested here:
-  * column name generation functions
   * ReadableColumn protocol extension point
-  * RowBuilder and ResultSetBuilder machinery
-  * ResultSet-as-map for reducible! / -execute protocol
   * -execute-one and -execute-all implementations"
-  (:require [clojure.datafy :as d]
+  (:require [clojure.core.protocols :as core-p]
+            [clojure.datafy :as d]
             [clojure.string :as str]
             [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc.protocols :as p]
             [next.jdbc.result-set :as rs]
-            [next.jdbc.test-fixtures :refer [with-test-db ds]]))
+            [next.jdbc.test-fixtures :refer [with-test-db ds]])
+  (:import (java.sql ResultSet ResultSetMetaData)))
 
 (use-fixtures :once with-test-db)
 
@@ -59,16 +58,14 @@
         (is (= 3 (:FRUIT/ID (first object))))
         (is (= "Peach" (:FRUIT/NAME (first object))))))))
 
+(defn lower-case-cols [^ResultSetMetaData rsmeta opts]
+  (mapv (fn [^Integer i]
+          (keyword (str/lower-case (.getColumnLabel rsmeta i))))
+        (range 1 (inc (.getColumnCount rsmeta)))))
 
-(defn get-lower-column-names [^java.sql.ResultSetMetaData rsmeta opts]
-  (let [idxs (range 1 (inc (.getColumnCount rsmeta)))]
-    (mapv (fn [^Integer i]
-            (keyword (str/lower-case (.getColumnLabel rsmeta i))))
-          idxs)))
-
-(defn as-lower-maps [^java.sql.ResultSet rs opts]
+(defn as-lower-case [^ResultSet rs opts]
   (let [rsmeta (.getMetaData rs)
-        cols   (get-lower-column-names rsmeta opts)]
+        cols   (lower-case-cols rsmeta opts)]
     (rs/->MapResultSetBuilder rs rsmeta cols)))
 
 (deftest test-map-row-builder
@@ -89,7 +86,52 @@
   (testing "lower-case row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 3]
-                              {:gen-fn as-lower-maps})]
+                              {:gen-fn as-lower-case})]
       (is (map? row))
       (is (= 3 (:id row)))
       (is (= "Peach" (:name row))))))
+
+(deftest test-mapify
+  (testing "no row builder is used"
+    (is (= [false]
+           (into [] (map map?) ; it is not a real map
+                 (p/-execute (ds) ["select * from fruit where id = ?" 1]
+                             {:gen-fn (constantly nil)}))))
+    (is (= ["Apple"]
+           (into [] (map :name) ; but keyword selection works
+                 (p/-execute (ds) ["select * from fruit where id = ?" 1]
+                             {:gen-fn (constantly nil)}))))
+    (is (= [[2 [:name "Banana"]]]
+           (into [] (map (juxt #(get % "id") ; get by string key works
+                               #(find % :name))) ; get MapEntry works
+                 (p/-execute (ds) ["select * from fruit where id = ?" 2]
+                             {:gen-fn (constantly nil)}))))
+    (is (= [{:id 3 :name "Peach"}]
+           (into [] (map #(select-keys % [:id :name])) ; select-keys works
+                 (p/-execute (ds) ["select * from fruit where id = ?" 3]
+                             {:gen-fn (constantly nil)}))))
+    (is (= [[:orange 4]]
+           (into [] (map #(vector (if (contains? % :name) ; contains works
+                                    (keyword (str/lower-case (:name %)))
+                                    :unnamed)
+                                  (get % :id 0))) ; get with not-found works
+                 (p/-execute (ds) ["select * from fruit where id = ?" 4]
+                             {:gen-fn (constantly nil)})))))
+  (testing "assoc and seq build maps"
+    (is (map? (reduce (fn [_ row] (reduced (assoc row :x 1)))
+                      nil
+                      (p/-execute (ds) ["select * from fruit"] {}))))
+    (is (seq? (reduce (fn [_ row] (reduced (seq row)))
+                      nil
+                      (p/-execute (ds) ["select * from fruit"] {}))))
+    (is (every? map-entry? (reduce (fn [_ row] (reduced (seq row)))
+                                   nil
+                                   (p/-execute (ds) ["select * from fruit"] {})))))
+  (testing "datafiable-row builds map; with metadata"
+    (is (map? (reduce (fn [_ row] (reduced (rs/datafiable-row row (ds) {})))
+                      nil
+                      (p/-execute (ds) ["select * from fruit"] {}))))
+    (is (contains? (meta (reduce (fn [_ row] (reduced (rs/datafiable-row row (ds) {})))
+                                 nil
+                                 (p/-execute (ds) ["select * from fruit"] {})))
+                   `core-p/datafy))))

@@ -165,14 +165,19 @@
   map. Note that a result set is mutable and the current row will change behind
   this wrapper so operations need to be eager (and fairly limited).
 
+  In particular, this does not satisfy `map?` because it does not implement
+  all of IPersistentMap.
+
   Supports ILookup (keywords are treated as strings).
 
   Supports Associative (again, keywords are treated as strings). If you assoc,
   a full row will be realized (via `row-builder` above).
 
-  Supports Seqable which realizes a full row of the data."
+  Supports Seqable which realizes a full row of the data.
+
+  Supports DatafiableRow (which realizes a full row of the data)."
   [^ResultSet rs opts]
-  (let [gen (delay ((get :gen-fn opts as-maps) rs opts))]
+  (let [gen (delay ((get opts :gen-fn as-maps) rs opts))]
     (reify
 
       clojure.lang.ILookup
