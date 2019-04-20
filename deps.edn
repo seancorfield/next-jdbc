@@ -1,5 +1,5 @@
-{:paths ["resources" "src"]
- :deps {org.clojure/clojure {:mvn/version "RELEASE"}}
+{:paths ["src"]
+ :deps {org.clojure/clojure {:mvn/version "1.10.0"}}
  :aliases
  {:test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "0.9.0"}
@@ -22,6 +22,6 @@
   :runner
   {:extra-deps {com.cognitect/test-runner
                 {:git/url "https://github.com/cognitect-labs/test-runner"
-                 :sha "76568540e7f40268ad2b646110f237a60295fa3c"}}
+                 :sha "cb96e80f6f3d3b307c59cbeb49bb0dcb3a2a780b"}}
    :main-opts ["-m" "cognitect.test-runner"
                "-d" "test"]}}}

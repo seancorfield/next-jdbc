@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>seancorfield</groupId>
+  <artifactId>next.jdbc</artifactId>
+  <version>1.0.0-alpha1</version>
+  <name>next.jdbc</name>
+
+  <description>The next generation of clojure.java.jdbc: a new low-level Clojure wrapper for JDBC-based access to databases.</description>
+  <url>https://github.com/seancorfield/next-jdbc</url>
+  <licenses>
+    <license>
+      <name>Eclipse Public License</name>
+      <url>http://www.eclipse.org/legal/epl-v10.html</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Sean Corfield</name>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git@github.com:seancorfield/next-jdbc.git</connection>
+    <developerConnection>scm:git:git@github.com:seancorfield/next-jdbc.git</developerConnection>
+    <url>https://github.com/seancorfield/next-jdbc</url>
+    <tag>9b3eeb02d3ed6727ea809a561572990c9d609096</tag>
+  </scm>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.clojure</groupId>
+      <artifactId>clojure</artifactId>
+      <version>1.10.0</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+  </build>
+
+  <repositories>
+    <repository>
+      <id>clojars</id>
+      <url>https://repo.clojars.org/</url>
+    </repository>
+    <repository>
+      <id>sonatype</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    </repository>
+  </repositories>
+
+  <distributionManagement>
+    <repository>
+      <id>clojars</id>
+      <name>Clojars repository</name>
+      <url>https://clojars.org/repo</url>
+    </repository>
+  </distributionManagement>
+
+</project>
