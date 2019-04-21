@@ -4,25 +4,29 @@
   "Some utility functions that make common operations easier by
   providing some syntactic sugar over `execute!`/`execute-one!`.
 
-  This is intended to provide a minimal level of parity with clojure.java.jdbc
-  (insert!, update!, delete!, etc). For anything more complex, use a library
-  like HoneySQL https://github.com/jkk/honeysql to generate SQL + parameters.
+  This is intended to provide a minimal level of parity with
+  `clojure.java.jdbc` (`insert!`, `update!`, `delete!`, etc).
+  For anything more complex, use a library like HoneySQL
+  https://github.com/jkk/honeysql to generate SQL + parameters.
 
   The following options are supported:
-  * :table-fn -- specify a function used to convert table names (strings)
-      to SQL entity names -- see the next.jdbc.quoted namespace for the
+  * `:table-fn` -- specify a function used to convert table names (strings)
+      to SQL entity names -- see the `next.jdbc.quoted` namespace for the
       most common quoting strategy functions,
-  * :column-fn -- specify a function used to convert column names (strings)
-      to SQL entity names -- see the next.jdbc.quoted namespace for the
-      most common quoting strategy functions."
+  * `:column-fn` -- specify a function used to convert column names (strings)
+      to SQL entity names -- see the `next.jdbc.quoted` namespace for the
+      most common quoting strategy functions.
+
+  In addition, `find-by-keys` supports `:order-by` to add an `ORDER BY`
+  clause to the generated SQL."
   (:require [clojure.string :as str]
             [next.jdbc :refer [execute! execute-one!]]))
 
 (defn- by-keys
-  "Given a hash map of column names and values and a clause type (:set, :where),
-  return a vector of a SQL clause and its parameters.
+  "Given a hash map of column names and values and a clause type
+  (`:set`, `:where`), return a vector of a SQL clause and its parameters.
 
-  Applies any :column-fn supplied in the options."
+  Applies any `:column-fn` supplied in the options."
   [key-map clause opts]
   (let [entity-fn      (:column-fn opts identity)
         [where params] (reduce-kv (fn [[conds params] k v]
@@ -40,22 +44,50 @@
   "Given a hash map of column names and values, return a string of all the
   column names.
 
-  Applies any :column-fn supplied in the options."
+  Applies any `:column-fn` supplied in the options."
   [key-map opts]
   (str/join ", " (map (comp (:column-fn opts identity) name) (keys key-map))))
 
 (defn- as-?
   "Given a hash map of column names and values, or a vector of column names,
-  return a string of ? placeholders for them."
+  return a string of `?` placeholders for them."
   [key-map opts]
   (str/join ", " (repeat (count key-map) "?")))
+
+(defn- for-order-col
+  "Given a column name, or a pair of column name and direction,
+  return the sub-clause for addition to `ORDER BY`."
+  [col opts]
+  (let [entity-fn (:column-fn opts identity)]
+    (cond (keyword? col)
+          (entity-fn (name col))
+
+          (and (vector? col) (= 2 (count col)) (keyword? (first col)))
+          (str (entity-fn (name (first col)))
+               " "
+               (or (get {:asc "ASC" :desc "DESC"} (second col))
+                   (throw (IllegalArgumentException.
+                           (str ":order-by " col
+                                " expected :asc or :desc")))))
+          :else
+          (throw (IllegalArgumentException.
+                  (str ":order-by expected keyword or keyword pair,"
+                       " found: " col))))))
+
+(defn- for-order
+  "Given an `:order-by` vector, return an `ORDER BY` clause."
+  [order-by opts]
+  (if (vector? order-by)
+    (str "ORDER BY "
+         (str/join ", " (map #(for-order-col % opts) order-by)))
+    (throw (IllegalArgumentException. ":order-by must be a vector"))))
 
 (defn- for-query
   "Given a table name and either a hash map of column names and values or a
   vector of SQL (where clause) and its parameters, return a vector of the
-  full SELECT SQL string and its parameters.
+  full `SELECT` SQL string and its parameters.
 
-  Applies any :table-fn / :column-fn supplied in the options."
+  Applies any `:table-fn` / `:column-fn` supplied in the options."
   [table where-params opts]
   (let [entity-fn    (:table-fn opts identity)
         where-params (if (map? where-params)
@@ -63,15 +95,17 @@
                        (into [(str "WHERE " (first where-params))]
                              (rest where-params)))]
     (into [(str "SELECT * FROM " (entity-fn (name table))
-                " " (first where-params))]
+                " " (first where-params)
+                (when-let [order-by (:order-by opts)]
+                  (str " " (for-order order-by opts))))]
           (rest where-params))))
 
 (defn- for-delete
   "Given a table name and either a hash map of column names and values or a
   vector of SQL (where clause) and its parameters, return a vector of the
-  full DELETE SQL string and its parameters.
+  full `DELETE` SQL string and its parameters.
 
-  Applies any :table-fn / :column-fn supplied in the options."
+  Applies any `:table-fn` / `:column-fn` supplied in the options."
   [table where-params opts]
   (let [entity-fn    (:table-fn opts identity)
         where-params (if (map? where-params)
@@ -85,10 +119,10 @@
 (defn- for-update
   "Given a table name, a vector of column names to set and their values, and
   either a hash map of column names and values or a vector of SQL (where clause)
-  and its parameters, return a vector of the full UPDATE SQL string and its
+  and its parameters, return a vector of the full `UPDATE` SQL string and its
   parameters.
 
-  Applies any :table-fn / :column-fn supplied in the options."
+  Applies any `:table-fn` / `:column-fn` supplied in the options."
   [table key-map where-params opts]
   (let [entity-fn    (:table-fn opts identity)
         set-params   (by-keys key-map :set opts)
@@ -104,9 +138,9 @@
 
 (defn- for-insert
   "Given a table name and a hash map of column names and their values,
-  return a vector of the full INSERT SQL string and its parameters.
+  return a vector of the full `INSERT` SQL string and its parameters.
 
-  Applies any :table-fn / :column-fn supplied in the options."
+  Applies any `:table-fn` / `:column-fn` supplied in the options."
   [table key-map opts]
   (let [entity-fn (:table-fn opts identity)
         params    (as-keys key-map opts)
@@ -118,10 +152,10 @@
 
 (defn- for-insert-multi
   "Given a table name, a vector of column names, and a vector of row values
-  (each row is a vector of its values), return a vector of the full INSERT
+  (each row is a vector of its values), return a vector of the full `INSERT`
   SQL string and its parameters.
 
-  Applies any :table-fn / :column-fn supplied in the options."
+  Applies any `:table-fn` / `:column-fn` supplied in the options."
   [table cols rows opts]
   (assert (apply = (count cols) (map count rows)))
   (let [table-fn  (:table-fn opts identity)
@@ -136,7 +170,7 @@
           rows)))
 
 (defn insert!
-  "Syntactic sugar over execute-one! to make inserting hash maps easier.
+  "Syntactic sugar over `execute-one!` to make inserting hash maps easier.
 
   Given a connectable object, a table name, and a data hash map, inserts the
   data as a single row in the database and attempts to return a map of generated
@@ -149,7 +183,7 @@
                  (merge {:return-keys true} opts))))
 
 (defn insert-multi!
-  "Syntactic sugar over execute! to make inserting columns/rows easier.
+  "Syntactic sugar over `execute!` to make inserting columns/rows easier.
 
   Given a connectable object, a table name, a sequence of column names, and
   a vector of rows of data (vectors of column values), inserts the data as
@@ -163,7 +197,7 @@
              (merge {:return-keys true} opts))))
 
 (defn query
-  "Syntactic sugar over execute! to provide a query alias.
+  "Syntactic sugar over `execute!` to provide a query alias.
 
   Given a connectable object, and a vector of SQL and its parameters,
   returns a vector of hash maps of rows that match."
@@ -173,10 +207,14 @@
    (execute! connectable sql-params opts)))
 
 (defn find-by-keys
-  "Syntactic sugar over execute! to make certain common queries easier.
+  "Syntactic sugar over `execute!` to make certain common queries easier.
 
   Given a connectable object, a table name, and a hash map of columns and
-  their values, returns a vector of hash maps of rows that match."
+  their values, returns a vector of hash maps of rows that match.
+
+  If the `:order-by` option is present, add `ORDER BY` clause. `:order-by`
+  should be a vector of column names or pairs of column name / direction,
+  which can be `:asc` or `:desc`."
   ([connectable table key-map]
    (find-by-keys connectable table key-map {}))
   ([connectable table key-map opts]

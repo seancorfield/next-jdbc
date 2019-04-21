@@ -29,13 +29,16 @@
 
 (deftest test-for-query
   (testing "by example"
-    (is (= (#'sql/for-query :user {:id 9} {:table-fn sql-server :column-fn mysql})
-           ["SELECT * FROM [user] WHERE `id` = ?" 9]))
+    (is (= (#'sql/for-query :user {:id 9}
+             {:table-fn sql-server :column-fn mysql :order-by [:a [:b :desc]]})
+           ["SELECT * FROM [user] WHERE `id` = ? ORDER BY `a`, `b` DESC" 9]))
     (is (= (#'sql/for-query :user {:id nil} {:table-fn sql-server :column-fn mysql})
            ["SELECT * FROM [user] WHERE `id` IS NULL"])))
   (testing "by where clause"
-    (is (= (#'sql/for-query :user ["id = ? and opt is null" 9] {:table-fn sql-server :column-fn mysql})
-           ["SELECT * FROM [user] WHERE id = ? and opt is null" 9]))))
+    (is (= (#'sql/for-query :user ["id = ? and opt is null" 9]
+             {:table-fn sql-server :column-fn mysql :order-by [:a [:b :desc]]})
+           [(str  "SELECT * FROM [user] WHERE id = ? and opt is null"
+                  " ORDER BY `a`, `b` DESC") 9]))))
 
 (deftest test-for-delete
   (testing "by example"

@@ -101,6 +101,17 @@ Given a table name (as a keyword) and either a hash map of column names and valu
                    "Stella" "stella@artois.beer"])
 ```
 
+`find-by-keys` supports an `:order-by` option which can specify a vector of column names to sort the results by. Elements may be column names or pairs of a column name and the direction to sort: `:asc` or `:desc`:
+
+```clojure
+(sql/find-by-keys ds :address
+                  {:name "Stella" :email "stella@artois.beer"}
+                  {:order-by [[:id :desc]]})
+;; equivalent to
+(jdbc/execute! ds ["SELECT * FROM address WHERE name = ? AND email = ? ORDER BY id DESC"
+                   "Stella" "stella@artois.beer"])
+```
+
 ## `get-by-id`
 
 Given a table name (as a keyword) and a primary key value, with an optional primary key column name, execute a query on the database:

@@ -54,5 +54,4 @@ These are mostly drawn from Issue #5 although most of the bullets in that issue 
 * Keyword options no longer end in `?` -- to reflect the latest best practice on predicates vs. attributes,
 * `with-db-connection` has been replaced by just `with-open` containing a call to `get-connection`,
 * `with-transaction` can take a `:rollback-only` option, but there is no way to change a transaction to rollback _dynamically_; throw an exception instead (all transactions roll back on an exception)
-* `find-by-keys` no longer supports `:order-by` (but this may come back),
 * The extension points for setting parameters and reading columns are now `SettableParameter` and `ReadableColumn` protocols.
