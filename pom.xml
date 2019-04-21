@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>seancorfield</groupId>
   <artifactId>next.jdbc</artifactId>
-  <version>1.0.0-alpha2</version>
+  <version>1.0.0-alpha3</version>
   <name>next.jdbc</name>
 
   <description>The next generation of clojure.java.jdbc: a new low-level Clojure wrapper for JDBC-based access to databases.</description>
@@ -22,9 +22,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git://github.com/seancorfield/next-jdbc.git</connection>
+    <connection>scm:git:git@github.com:seancorfield/next-jdbc.git</connection>
     <developerConnection>scm:git:git@github.com:seancorfield/next-jdbc.git</developerConnection>
-    <url>https://github.com/seancorfield/next-jdbc</url>
+    <url>git@github.com:seancorfield/next-jdbc.git</url>
     <tag>cba8ee7230ad09f173499fdee7e5de6ae4f1eb00</tag>
   </scm>
 
