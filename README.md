@@ -50,27 +50,15 @@ There are three intended usage scenarios that may drive the API to change:
 
 In addition, convenience functions -- "syntactic sugar" -- are provided to insert rows, run queries, update rows, and delete rows, using the same names as in `clojure.java.jdbc`. These are in `next.jdbc.sql` since they involve SQL creation -- they may move into a separate "sibling" library, since they are not part of the intended core API.
 
-## Differences from `clojure.java.jdbc`
+## More Detailed Documentation
 
-In addition to the obvious differences outlined above, there are a number of other smaller differences outlined below and also listed in https://github.com/seancorfield/next-jdbc/issues/5
-
-### The `db-spec` hash map
-
-Whereas `clojure.java.jdbc` supports a wide variety of options to describe how to make a database connection, `next.jdbc` streamlines this to just the `:dbtype`/`:dbname` approach which has been the recommended way to write `db-spec`s for some time in `clojure.java.jdbc`. See the docstring for `get-connection` for the full list of databases supported and options available.
-
-### The `:result-set-fn` and `:row-fn` options
-
-`:result-set-fn` is not supported: either call your function on the result of `execute!` or handle it via reducing the result of `reducible!`.
-
-`:row-fn` is not supported; either `map` your function over the result of `execute!` or handle it via reducing the result of `reducible!`.
-
-### Clojure identifier creation
-
-The `:identifiers` option is not supported. Column names are returned "as-is", rather than `clojure.java.jdbc`'s default behavior of `clojure.string/lower-case`. You can use `as-unqualified-maps`, `as-lower-maps`, `as-unqualified-lower-maps` etc from the `next.jdbc.result-set` namespace, or write your own `get-column-names` and `as-maps` variants to produce whatever behavior you need.
-
-### SQL entity creation
-
-The `:entities` option has been split into two options: `:table-fn` and `:column-fn`. These are used when creating SQL strings from Clojure data structures (the "syntactic sugar" functions in `next.jdbc.sql`). As with `clojure.java.jdbc`'s `:entities` option, they are applied to the string that will be used for the SQL entity (after converting incoming keywords to strings), and the various "quoting" strategies used in specific databases are now functions in the `next.jdbc.quoted` namespace: `ansi`, `mysql`, `postgres` (alias for `ansi`), `oracle` (also an alias for `ansi`), and `sql-server`.
+* [Getting Started](https://github.com/seancorfield/next-jdbc/blob/master/doc/getting_started.md)
+* [Friendly SQL Functions](https://github.com/seancorfield/next-jdbc/blob/master/doc/friendly_sql_fns.md)
+* [Row and Result Set Builders](https://github.com/seancorfield/next-jdbc/blob/master/doc/rs_builders.md)
+* [Prepared Statements](https://github.com/seancorfield/next-jdbc/blob/master/doc/prepared_stmt.md)
+* [Transactions](https://github.com/seancorfield/next-jdbc/blob/master/doc/transactions.md)
+* [All The Options](https://github.com/seancorfield/next-jdbc/blob/master/doc/options.md)
+* [Migration from `clojure.java.jdbc`](https://github.com/seancorfield/next-jdbc/blob/master/doc/differences.md)
 
 ## License
 
