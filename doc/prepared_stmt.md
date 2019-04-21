@@ -18,7 +18,11 @@ If parameters are provided in the vector along with the SQL statement, in the ca
 
 * `(set-parameter v ps i)` -- by default this calls `(.setObject ps i v)` (for `nil` and `Object`)
 
-This can be extended to any Clojure data type, to provide a customized way to add specific types of values as parameters to any `PreparedStatement`.
+This can be extended to any Clojure data type, to provide a customized way to add specific types of values as parameters to any `PreparedStatement`. Note that you can extend this protocol via metadata so you can do it on a per-object basis if you need:
+
+```clojure
+(with-meta obj {'next.jdbc.prepare/set-parameter (fn [v ps i]...)})
+```
 
 `next.jdbc/set-parameters` is available for you to call on any existing `PreparedStatement` to set or update the parameters that will be used when the statement is executed:
 
