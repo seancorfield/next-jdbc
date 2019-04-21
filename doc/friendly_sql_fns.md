@@ -121,13 +121,15 @@ Note that in order to override the default primary key column name (of `:id`), y
 
 By default, `next.jdbc.sql` constructs SQL strings with the entity names exactly matching the (unqualified) keywords provided. If you are trying to use a table name or column name that is a reserved name in SQL for your database, you will need to tell `next.jdbc.sql` to quote those names.
 
-The namespace `next.jdbc.quoted` provides five functions that cover the most common types of entity quoting:
+The namespace `next.jdbc.quoted` provides five functions that cover the most common types of entity quoting, and a modifier function for quoting dot-separated names (e.g., that include schemas):
 
 * `ansi` -- wraps entity names in double quotes,
 * `mysql` -- wraps entity names in back ticks,
 * `sql-server` -- wraps entity names in square brackets,
 * `oracle` -- an alias for `ansi`,
 * `postgres` -- an alias for `ansi`.
+
+* `schema` -- wraps a quoting function to support `dbo.table` style entity names.
 
 These quoting functions can be provided to any of the friendly SQL functions above using the `:table-fn` and `:column-fn` options, in a hash map provided as the (optional) last argument in any call. If you want to provide your own entity naming function, you can do that:
 
@@ -137,6 +139,6 @@ These quoting functions can be provided to any of the friendly SQL functions abo
 (sql/insert! ds :my-table {:some "data"} {:table-fn snake-case})
 ```
 
-Note that the entity naming function is passed a string, the result of calling `name` on the keyword passed in. Also note that the default quoting functions do not handle schema-qualified names, such as `dbo.table_name` -- `sql-server` would produce `[dbo.table_name]` from that [Issue 11](https://github.com/seancorfield/next-jdbc/issues/11).
+Note that the entity naming function is passed a string, the result of calling `name` on the keyword passed in. Also note that the default quoting functions do not handle schema-qualified names, such as `dbo.table_name` -- `sql-server` would produce `[dbo.table_name]` from that. Use the `schema` function to wrap the quoting function if you need that behavior, e.g,. `{:table-fn (schema sql-server)}` which would produce `[dbo].[table_name]`.
 
 [[Prev: Getting Started|getting_started]] [[Next: Row and Result Set Builders|rs_builders]]
