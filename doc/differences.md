@@ -2,6 +2,18 @@
 
 This page attempts to list all of the differences between [clojure.java.jdbc](https://github.com/clojure/java.jdbc) and `next.jdbc`. Some of them are large and obvious, some of them are small and subtle -- all of them are deliberate design choices.
 
+## Conceptually
+
+`clojure.java.jdbc` focuses heavily on a `db-spec` hash map to describe the various ways of interacting with the database and grew from very imperative origins that expose a lot of the JDBC API (multiple type of SQL execution, some operations returned hash maps, others update counts as integers, etc).
+
+`next.jdbc` focuses on using protocols and native Java JDBC types where possible (for performance and simplicity) and strives to present a more modern Clojure API with namespace-qualified keywords in hash maps, reducible SQL operations as part of the primary API, and a streamlined set of SQL execution primitives. Execution always returns a hash map (for one result) or a vector of hash maps (for multiple results) -- even update counts are returned as if they were result sets.
+
+### Rows and Result Sets
+
+`clojure.java.jdbc` returned result sets (and generated keys) as hash maps with simple, lower-case keys by default. `next.jdbc` returns result sets (and generated keys) as hash maps with qualified, as-is keys by default: each key is qualified by the name of table from which it is drawn, if known. The as-is default is chosen to a) improve performance and b) not mess with the data. Using a `:gen-fn` option of `next.jdbc.result-set/as-unqualified-maps` will produce simple, as-is keys. Using a `:gen-fn` option of `next.jdbc.result-set/as-unqualified-lower-maps` will produce simple, lower-case keys -- the most compatible with `clojure.java.jdbc`'s default behavior.
+
+If you used `:as-arrays? true`, you will need to use a `:gen-fn` option of `next.jdbc.result-set/as-arrays` (or the unqualified or lower variant, as appropriate).
+
 ## Primary API
 
 `next.jdbc` has a deliberately narrow primary API that has (almost) no direct overlap with `clojure.java.jdbc`:
@@ -15,7 +27,7 @@ This page attempts to list all of the differences between [clojure.java.jdbc](ht
 * `transact` -- similar to `clojure.java.jdbc/db-transaction*`,
 * `with-transaction` -- similar to `clojure.java.jdbc/with-db-transaction`.
 
-If you were using a bare `db-spec` hash map or JDBC URI string everywhere, that should mostly work with `next.jdbc` since most functions accept a "connectable", but it would be better to create a datasource first, and then pass that around.
+If you were using a bare `db-spec` hash map with `:dbtype`/`:dbname`, or a JDBC URI string everywhere, that should mostly work with `next.jdbc` since most functions accept a "connectable", but it would be better to create a datasource first, and then pass that around.
 
 If you were already creating a pooled connection datasource, as a `{:datasource ds}` hashmap, then passing `(:datasource db-spec)` to the `next.jdbc` functions is the simplest migration path.
 
@@ -31,29 +43,16 @@ The `next.jdbc.sql` namespace contains several functions with similarities to `c
 * `update!` -- similar to `clojure.java.jdbc/update!` but also accepts a hash map of column name/value pairs,
 * `delete!` -- similar to `clojure.java.jdbc/delete!` but also accepts a hash map of column name/value pairs.
 
-If you are using `:identifiers` and/or `:entities`, you will need to change to appropriate `:gen-fn` and/or `:table-fn`/`:column-fn` options.
+If you are using `:identifiers` and/or `:entities`, you will need to change to appropriate `:gen-fn` and/or `:table-fn`/`:column-fn` options. For the latter, instead of the `quoted` function, there is `next.jdbc.quoted` which contains functions for the common quoting strategies.
 
-If you are using `:result-set-fn` and/or `:row-fn`, you will need to change to explicit calls (to the result set function, or to `map` the row function), or to use the `reducible!` approach with `reduce` or various transducing functions.
+If you are using `:result-set-fn` and/or `:row-fn`, you will need to change to explicit calls (to the result set function, or to `map` the row function), or to use the `reducible!` approach with `reduce` or various transducing functions. Note: this means that result sets are never exposed lazily in `next.jdbc` -- in `clojure.java.jdbc` you had to be careful that your `:result-set-fn` was eager, but in `next.jdbc` you either reduce the result set eagerly (via `reducible!`) or you get a fully-realized result set data structure back (from `execute!` and `execute-one!`). As with `clojure.java.jdbc` however, you can still stream result sets from the database and process them via reduction (was `reducible-query`, now `reducible!`).
 
-## Minor differences from Issue #5
+## Further Minor differences
 
-(this section needs to be edited/expanded)
+These are mostly drawn from Issue #5 although most of the bullets in that issue are described in more detail above.
 
-* Use of protocols instead of db-spec / hash map
-* Several legacy db-spec formats are no longer accepted, including Raw, Existing Connection, DriverManager, Factory, DataSource, JNDI, URI.
-* Auto-qualified column names (the qualifier is table from which each column comes, if known)
-* Result sets are never lazy now -- either you reduce over them, or you get an eager vector of hash maps; for streaming, reduce the `reducible!`
-* The `:as-arrays?` option has been replaced by a result set builder function `next.jdbc.result-set/as-arrays` (the new `RowBuilder` and `ResultSetBuilder` protocols allow for a lot more flexibility about how rows and result sets are constructed)
-* There is only one type of SQL execution, using the generic `.execute` -- no worrying about batches and updates and so on
-* No `?` on keyword options
-* Update counts come back as a "result set" for consistency
-* The `:identifiers` option is gone and column names come back as qualified keywords with no additional processing, rather than `clojure.string/lower-case` (partly so the default is faster but also so the default behavior is to "not mess with things") -- the result set builder machinery provides an easy way to provide custom column naming if you need it
-* `:result-set-fn` and `:row-fn` are not supported -- either wrap the call around the query or handle it via a reduction; for `:result-set-fn first` use `execute-one!` instead
-* The `:entities` option has been replaced by `:table-fn` and `:column-fn` and the `quoted` function is gone -- `next.jdbc.quoted` now contains specific functions, named for the database/type of quoting: `ansi`, `mysql`, `sql-server`, with `oracle` and `postgres` as aliases for `ansi`
-* `with-db-connection` is just `with-open` with a call to `get-connection`
+* Keyword options no longer end in `?` -- to reflect the latest best practice on predicates vs. attributes,
+* `with-db-connection` has been replaced by just `with-open` containing a call to `get-connection`,
 * `with-transaction` can take a `:rollback-only` option, but there is no way to change a transaction to rollback _dynamically_; throw an exception instead (all transactions roll back on an exception)
-* The "sugar" functions -- `query`, `insert!`, `insert-multi!`, `update!`, and `delete!` live in `next.jdbc.sql` as they are no longer part of the core API
-* `find-by-keys` no longer supports `:order-by` (but this may come back)
-* Extension points for setting parameters and reading columns are `SettableParameter` and `ReadableColumn`
-
-More will be added...
+* `find-by-keys` no longer supports `:order-by` (but this may come back),
+* The extension points for setting parameters and reading columns are now `SettableParameter` and `ReadableColumn` protocols.
