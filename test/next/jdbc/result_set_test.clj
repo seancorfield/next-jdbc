@@ -57,16 +57,6 @@
         (is (= 3 (:FRUIT/ID (first object))))
         (is (= "Peach" (:FRUIT/NAME (first object))))))))
 
-(defn lower-case-cols [^ResultSetMetaData rsmeta opts]
-  (mapv (fn [^Integer i]
-          (keyword (str/lower-case (.getColumnLabel rsmeta i))))
-        (range 1 (inc (.getColumnCount rsmeta)))))
-
-(defn as-lower-case [^ResultSet rs opts]
-  (let [rsmeta (.getMetaData rs)
-        cols   (lower-case-cols rsmeta opts)]
-    (rs/->MapResultSetBuilder rs rsmeta cols)))
-
 (deftest test-map-row-builder
   (testing "default row builder"
     (let [row (p/-execute-one (ds)
@@ -93,7 +83,7 @@
   (testing "lower-case row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 3]
-                              {:gen-fn as-lower-case})]
+                              {:gen-fn rs/as-lower-maps})]
       (is (map? row))
       (is (= 3 (:id row)))
       (is (= "Peach" (:name row))))))

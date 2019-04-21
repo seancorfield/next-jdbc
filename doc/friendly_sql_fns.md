@@ -1,6 +1,8 @@
 # Friendly SQL Functions
 
-In [[Getting Started|getting_started]], we used `execute!` and `execute-one!` for all our SQL operations, except when we are reducing a result set. These functions (and `reducible!`) all expect a vector containing a SQL string followed by any parameter values required.
+In [[Getting Started|getting_started]], we used `execute!` and `execute-one!` for all our SQL operations, except when we were reducing a result set. These functions (and `reducible!`) all expect a "connectable" and a vector containing a SQL string followed by any parameter values required.
+
+A "connectable" can be a `javax.sql.DataSource`, a `java.sql.Connection`, or something that can produce a datasource (when `get-datasource` is called on it). It can also be a `java.sql.PreparedStatement` but we'll cover that a bit later...
 
 Because string-building isn't always much fun, `next.jdbc.sql` also provides some "friendly" functions for basic CRUD operations:
 
@@ -11,7 +13,7 @@ Because string-building isn't always much fun, `next.jdbc.sql` also provides som
 
 as well as these more specific "read" operations:
 
-* `find-by-keys` -- a query on or more column values, specified as a hash map,
+* `find-by-keys` -- a query on one or more column values, specified as a hash map,
 * `get-by-id` -- a query to return a single row, based on a single column value, usually the primary key.
 
 These functions are described in more detail below. They are intended to cover the most common, simple SQL operations. If you need more expressiveness, consider one of the following libraries to build SQL/parameter vectors, or run queries:
@@ -27,10 +29,8 @@ Given a table name (as a keyword) and a hash map of column names and values, thi
 ```clojure
 (sql/insert! ds :address {:name "A. Person" :email "albert@person.org"})`
 ;; equivalent to
-(jdbc/execute-one! ds ["
-  INSERT INTO address (name,email)
-    VALUES (?,?)
-" "A.Person" "albert@person.org"] {:return-keys true})
+(jdbc/execute-one! ds ["INSERT INTO address (name,email) VALUES (?,?)"
+                       "A.Person" "albert@person.org"] {:return-keys true})
 ```
 
 ## `insert-multi!`
@@ -44,12 +44,10 @@ Given a table name (as a keyword), a vector of column names, and a vector row va
    ["Waldo" "waldo@lagunitas.beer"]
    ["Aunt Sally" "sour@lagunitas.beer"]])`
 ;; equivalent to
-(jdbc/execute! ds ["
-  INSERT INTO address (name,email)
-    VALUES (?,?), (?,?), (?,?)
-" "Stella" "stella@artois.beer"
-  "Waldo" "waldo@lagunitas.beer"
-  "Aunt Sally" "sour@lagunitas.beer"] {:return-keys true})
+(jdbc/execute! ds ["INSERT INTO address (name,email) VALUES (?,?), (?,?), (?,?)"
+                   "Stella" "stella@artois.beer"
+                   "Waldo" "waldo@lagunitas.beer"
+                   "Aunt Sally" "sour@lagunitas.beer"] {:return-keys true})
 ```
 
 ## `query`
@@ -140,3 +138,5 @@ These quoting functions can be provided to any of the friendly SQL functions abo
 ```
 
 Note that the entity naming function is passed a string, the result of calling `name` on the keyword passed in. Also note that the default quoting functions do not handle schema-qualified names, such as `dbo.table_name` -- `sql-server` would produce `[dbo.table_name]` from that [Issue 11](https://github.com/seancorfield/next-jdbc/issues/11).
+
+[[Prev: Getting Started|getting_started]] [[Next: Row and Result Set Builders|rs_builders]]

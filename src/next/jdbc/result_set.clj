@@ -12,6 +12,7 @@
   Also provides the default implemenations for Executable and
   the default datafy/nav behavior for rows from a result set."
   (:require [clojure.core.protocols :as core-p]
+            [clojure.string :as str]
             [next.jdbc.prepare :as prepare]
             [next.jdbc.protocols :as p])
   (:import (java.sql PreparedStatement
@@ -32,6 +33,23 @@
   "Given ResultSetMetaData, return a vector of unqualified column names."
   [^ResultSetMetaData rsmeta opts]
   (mapv (fn [^Integer i] (keyword (.getColumnLabel rsmeta i)))
+        (range 1 (inc (.getColumnCount rsmeta)))))
+
+(defn get-lower-column-names
+  "Given ResultSetMetaData, return a vector of lower-case column names, each
+  qualified by the table from which it came."
+  [^ResultSetMetaData rsmeta opts]
+  (mapv (fn [^Integer i] (keyword (some-> (.getTableName rsmeta i)
+                                          (not-empty)
+                                          (str/lower-case))
+                                  (-> (.getColumnLabel rsmeta i)
+                                      (str/lower-case))))
+        (range 1 (inc (.getColumnCount rsmeta)))))
+
+(defn get-unqualified-lower-column-names
+  "Given ResultSetMetaData, return a vector of unqualified column names."
+  [^ResultSetMetaData rsmeta opts]
+  (mapv (fn [^Integer i] (keyword (str/lower-case (.getColumnLabel rsmeta i))))
         (range 1 (inc (.getColumnCount rsmeta)))))
 
 (defprotocol ReadableColumn
@@ -114,6 +132,22 @@
         cols   (get-unqualified-column-names rsmeta opts)]
     (->MapResultSetBuilder rs rsmeta cols)))
 
+(defn as-lower-maps
+  "Given a ResultSet and options, return a RowBuilder / ResultSetBuilder
+  that produces bare vectors of hash map rows, with lower-case keys."
+  [^ResultSet rs opts]
+  (let [rsmeta (.getMetaData rs)
+        cols   (get-lower-column-names rsmeta opts)]
+    (->MapResultSetBuilder rs rsmeta cols)))
+
+(defn as-unqualified-lower-maps
+  "Given a ResultSet and options, return a RowBuilder / ResultSetBuilder
+  that produces bare vectors of hash map rows, with simple, lower-case keys."
+  [^ResultSet rs opts]
+  (let [rsmeta (.getMetaData rs)
+        cols   (get-unqualified-lower-column-names rsmeta opts)]
+    (->MapResultSetBuilder rs rsmeta cols)))
+
 (defrecord ArrayResultSetBuilder [^ResultSet rs rsmeta cols]
   RowBuilder
   (->row [this] (transient []))
@@ -142,6 +176,24 @@
   [^ResultSet rs opts]
   (let [rsmeta (.getMetaData rs)
         cols   (get-unqualified-column-names rsmeta opts)]
+    (->ArrayResultSetBuilder rs rsmeta cols)))
+
+(defn as-lower-arrays
+  "Given a ResultSet and options, return a RowBuilder / ResultSetBuilder
+  that produces a vector of lower-case column names followed by vectors of
+  row values."
+  [^ResultSet rs opts]
+  (let [rsmeta (.getMetaData rs)
+        cols   (get-lower-column-names rsmeta opts)]
+    (->ArrayResultSetBuilder rs rsmeta cols)))
+
+(defn as-unqualified-lower-arrays
+  "Given a ResultSet and options, return a RowBuilder / ResultSetBuilder
+  that produces a vector of simple, lower-case column names followed by
+  vectors of row values."
+  [^ResultSet rs opts]
+  (let [rsmeta (.getMetaData rs)
+        cols   (get-unqualified-lower-column-names rsmeta opts)]
     (->ArrayResultSetBuilder rs rsmeta cols)))
 
 (declare navize-row)
