@@ -7,8 +7,8 @@ The next generation of `clojure.java.jdbc`: a new low-level Clojure wrapper for 
 [![Clojars Project](https://clojars.org/seancorfield/next.jdbc/latest-version.svg)](https://clojars.org/seancorfield/next.jdbc) [![cljdoc badge](https://cljdoc.org/badge/seancorfield/next.jdbc)](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT)
 
 
-* [Getting Started](https://github.com/seancorfield/next-jdbc/blob/master/doc/getting_started.md)
-* [Migrating from `clojure.java.jdbc`](https://github.com/seancorfield/next-jdbc/blob/master/doc/differences.md)
+* [Getting Started](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started)
+* [Migrating from `clojure.java.jdbc`](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/differences)
 * Feedback via [issues](https://github.com/seancorfield/next-jdbc/issues) or in the [`#sql` channel on the Clojurians Slack](https://clojurians.slack.com/messages/C1Q164V29/details/) or the [`#sql` stream on the Clojurians Zulip](https://clojurians.zulipchat.com/#narrow/stream/152063-sql).
 
 ## Motivation

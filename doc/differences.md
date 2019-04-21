@@ -55,3 +55,5 @@ These are mostly drawn from Issue #5 although most of the bullets in that issue 
 * `with-db-connection` has been replaced by just `with-open` containing a call to `get-connection`,
 * `with-transaction` can take a `:rollback-only` option, but there is no way to change a transaction to rollback _dynamically_; throw an exception instead (all transactions roll back on an exception)
 * The extension points for setting parameters and reading columns are now `SettableParameter` and `ReadableColumn` protocols.
+
+[<: All The Options](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/options)

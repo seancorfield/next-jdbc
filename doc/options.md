@@ -60,4 +60,4 @@ The `transact` function and `with-transaction` macro accept the following option
 * `:read-only` -- a `Boolean` that indicates whether the transaction should be read-only or not (the default),
 * `:rollback-only` -- a `Boolean` that indicates whether the transaction should commit on success (the default) or rollback.
 
-[[Prev: Transactions|transactions]] [[Next: Migration from `clojure.java.jdbc`|differences]]
+[<: Transaction](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/transactions) | [Migration from `clojure.java.jdbc` :>](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/differences)

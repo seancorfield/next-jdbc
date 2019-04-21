@@ -1,6 +1,6 @@
 # RowBuilder and ResultSetBuilder
 
-In [[Getting Started|getting_started]], it was noted that, by default, `execute!` and `execute-one!` return result sets as (vectors of) hash maps with namespace-qualified keys as-is. If your database naturally produces uppercase column names from the JDBC driver, that's what you'll get. If it produces mixed-case names, that's what you'll get.
+In [Getting Started](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started), it was noted that, by default, `execute!` and `execute-one!` return result sets as (vectors of) hash maps with namespace-qualified keys as-is. If your database naturally produces uppercase column names from the JDBC driver, that's what you'll get. If it produces mixed-case names, that's what you'll get.
 
 The default builder for rows and result sets creates qualified keywords that match whatever case the JDBC driver produces. That builder is `next.jdbc.result-set/as-maps` but there are several options available:
 
@@ -48,6 +48,6 @@ The default implementation of this protocol is for these two functions to return
 
 Common extensions here could include converting `java.sql.Timestamp` to `java.time.Instant` for example but `next.jdbc` makes no assumptions beyond `nil` and `Boolean`.
 
-Note that the converse, converting Clojure values to database-specific types is handled by the `SettableParameters`, discussed in the section on [[prepared statements|prepared_stmt#prepared-statement-parameters]]
+Note that the converse, converting Clojure values to database-specific types is handled by the `SettableParameters`, discussed in the next section (Prepared Statements).
 
-[[Prev: Friendly SQL Functions|friendly_sql_fns]] [[Next: Prepared Statements|prepared_stmt]]
+[<: Friendly SQL Functions](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/friendly-sql-functions) | [Prepared Statements :>](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/prepared-stmt)
