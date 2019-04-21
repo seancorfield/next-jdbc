@@ -3,52 +3,52 @@
 (ns next.jdbc.protocols
   "This is the extensible core of the next generation java.jdbc library.
 
-  Sourceable protocol:
-  get-datasource -- turn something into a javax.sql.DataSource; implementations
-      are provided for strings, hash maps (db-spec structures), and also a
-      DataSource (which just returns itself).
+  `Sourceable` protocol:
+  `get-datasource` -- turn something into a `javax.sql.DataSource`; implementations
+      are provided for strings, hash maps (`db-spec` structures), and also a
+      `DataSource` (which just returns itself).
 
-  Connectable protocol:
-  get-connection -- create a new JDBC connection that should be closed when you
-      are finished with it; implementations are provided for DataSource and
-      Object, on the assumption that an Object can possibly be turned into a
-      DataSource.
+  `Connectable` protocol:
+  `get-connection` -- create a new JDBC connection that should be closed when you
+      are finished with it; implementations are provided for `DataSource`,
+      `PreparedStatement`, and `Object`, on the assumption that an `Object`
+      can possibly be turned into a `DataSource`.
 
-  Executable protocol:
-  -execute -- given SQL and parameters, produce a 'reducible' that, when
-      reduced, executes the SQL and produces a ResultSet that can be processed;
-      implementations are provided for Connection, DataSource,
-      PreparedStatement, and Object (on the assumption that an Object can be
-      turned into a DataSource and therefore used to get a Connection).
+  `Executable` protocol:
+  `-execute` -- given SQL and parameters, produce a 'reducible' that, when
+      reduced, executes the SQL and produces a `ResultSet` that can be processed;
+      implementations are provided for `Connection`, `DataSource`,
+      `PreparedStatement`, and `Object` (on the assumption that an `Object` can be
+      turned into a `DataSource` and therefore used to get a `Connection`).
 
-  -execute-one -- given SQL and parameters, executes the SQL and produces
-      the first row of the ResultSet as a datafiable hash map (by default);
-      implementations are provided for Connection, DataSource,
-      PreparedStatement, and Object (on the assumption that an Object can be
-      turned into a DataSource and therefore used to get a Connection).
+  `-execute-one` -- given SQL and parameters, executes the SQL and produces
+      the first row of the `ResultSet` as a datafiable hash map (by default);
+      implementations are provided for `Connection`, `DataSource`,
+      `PreparedStatement`, and `Object` (on the assumption that an `Object` can be
+      turned into a `DataSource` and therefore used to get a `Connection`).
 
-  -execute-all -- given SQL and parameters, executes the SQL and produces
-      either a vector of datafiable hash maps from the ResultSet (default)
+  `-execute-all` -- given SQL and parameters, executes the SQL and produces
+      either a vector of datafiable hash maps from the `ResultSet` (default)
       or a vector of column names followed by vectors of row values;
-      implementations are provided for Connection, DataSource,
-      PreparedStatement, and Object (on the assumption that an Object can be
-      turned into a DataSource and therefore used to get a Connection).
+      implementations are provided for `Connection`, `DataSource`,
+      `PreparedStatement`, and `Object` (on the assumption that an `Object` can be
+      turned into a `DataSource` and therefore used to get a `Connection`).
 
-  Preparable protocol:
-  prepare -- given SQL and parameters, produce a PreparedStatement that can
+  `Preparable` protocol:
+  `prepare` -- given SQL and parameters, produce a `PreparedStatement` that can
       be executed (by -execute above); implementation is provided for
-      Connection.
+      `Connection` only.
 
-  Transactable protocol:
-  -transact -- given a function (presumably containing SQL operations),
+  `Transactable` protocol:
+  `-transact` -- given a function (presumably containing SQL operations),
       run the function inside a SQL transaction; implementations are provided
-      for Connection, DataSource, and Object (on the assumption that an Object
-      can be turned into a DataSource).")
+      for `Connection`, `DataSource`, and `Object` (on the assumption that an
+      `Object` can be turned into a `DataSource`).")
 
 (set! *warn-on-reflection* true)
 
 (defprotocol Sourceable :extend-via-metadata true
-  (get-datasource ^javax.sql.DataSource [this] "Turn this into a javax.sql.DataSource."))
+  (get-datasource ^javax.sql.DataSource [this]))
 (defprotocol Connectable
   (get-connection ^java.lang.AutoCloseable [this opts]))
 (defprotocol Executable

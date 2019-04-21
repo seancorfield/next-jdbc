@@ -1,7 +1,7 @@
 ;; copyright (c) 2018-2019 Sean Corfield, all rights reserved
 
 (ns next.jdbc.connection
-  "Standard implementations of get-datasource and get-connection."
+  "Standard implementations of `get-datasource` and `get-connection`."
   (:require [next.jdbc.protocols :as p])
   (:import (java.sql Connection DriverManager)
            (javax.sql DataSource)
@@ -10,9 +10,9 @@
 (set! *warn-on-reflection* true)
 
 (def ^:private classnames
-  "Map of subprotocols to classnames. dbtype specifies one of these keys.
+  "Map of subprotocols to classnames. `:dbtype` specifies one of these keys.
 
-  The subprotocols map below provides aliases for dbtype.
+  The subprotocols map below provides aliases for `:dbtype`.
 
   Most databases have just a single class name for their driver but we
   support a sequence of class names to try in order to allow for drivers
@@ -33,7 +33,7 @@
    "sqlserver"      "com.microsoft.sqlserver.jdbc.SQLServerDriver"})
 
 (def ^:private aliases
-  "Map of schemes to subprotocols. Used to provide aliases for dbtype."
+  "Map of schemes to subprotocols. Used to provide aliases for `:dbtype`."
   {"hsql"       "hsqldb"
    "jtds"       "jtds:sqlserver"
    "mssql"      "sqlserver"
@@ -43,7 +43,7 @@
 
 (def ^:private host-prefixes
   "Map of subprotocols to non-standard host-prefixes.
-  Anything not listed is assumed to use //."
+  Anything not listed is assumed to use `//`."
   {"oracle:oci"  "@"
    "oracle:thin" "@"})
 
@@ -58,14 +58,13 @@
    "sqlserver"      1433})
 
 (def ^:private dbname-separators
-  "Map of schemes to separators. The default is / but a couple are different."
+  "Map of schemes to separators. The default is `/` but a couple are different."
   {"mssql"      ";DATABASENAME="
    "sqlserver"  ";DATABASENAME="
    "oracle:sid" ":"})
 
 (defn- ^Properties as-properties
-  "Convert any seq of pairs to a java.util.Properties instance.
-   Uses as-sql-name to convert both keys and values into strings."
+  "Convert any seq of pairs to a `java.util.Properties` instance."
   [m]
   (let [p (Properties.)]
     (doseq [[k v] m]
@@ -73,8 +72,8 @@
     p))
 
 (defn- get-driver-connection
-  "Common logic for loading the DriverManager and the designed JDBC driver
-  class and obtaining the appropriate Connection object."
+  "Common logic for loading the `DriverManager` and the designed JDBC driver
+  class and obtaining the appropriate `Connection` object."
   [url etc]
   ;; force DriverManager to be loaded
   (DriverManager/getLoginTimeout)
@@ -130,7 +129,7 @@
   [s {}])
 
 (defn- url+etc->datasource
-  "Given a JDBC URL and a map of options, return a DataSource that can be
+  "Given a JDBC URL and a map of options, return a `DataSource` that can be
   used to obtain a new database connection."
   [[url etc]]
   (reify DataSource
@@ -143,13 +142,13 @@
                                                  :password password)))))
 
 (defn- make-connection
-  "Given a DataSource and a map of options, get a connection and update it
+  "Given a `DataSource` and a map of options, get a connection and update it
   as specified by the options.
 
   The options supported are:
-  * :auto-commit -- whether the connection should be set to auto-commit or not;
-      without this option, the defaut is true -- connections will auto-commit,
-  * :read-only -- whether the connection should be set to read-only mode."
+  * `:auto-commit` -- whether the connection should be set to auto-commit or not;
+      without this option, the defaut is `true` -- connections will auto-commit,
+  * `:read-only` -- whether the connection should be set to read-only mode."
   ^Connection
   [^DataSource datasource opts]
   (let [^Connection connection (.getConnection datasource)]

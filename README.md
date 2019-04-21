@@ -42,7 +42,7 @@ In addition, there are API functions to create `PreparedStatement`s (`prepare`) 
 
 Since `next.jdbc` uses raw Java JDBC types, you can use `with-open` directly to reuse connections and ensure they are cleaned up correctly:
 
-```
+```clojure
   (let [my-datasource (get-datasource {:dbtype "..." :dbname "..." ...})]
     (with-open [connection (get-connection my-datasource)]
       (execute! connection [...])
@@ -61,13 +61,13 @@ In addition, convenience functions -- "syntactic sugar" -- are provided to inser
 
 ## More Detailed Documentation
 
-* [Getting Started](https://github.com/seancorfield/next-jdbc/blob/master/doc/getting_started.md)
-* [Friendly SQL Functions](https://github.com/seancorfield/next-jdbc/blob/master/doc/friendly_sql_fns.md)
-* [Row and Result Set Builders](https://github.com/seancorfield/next-jdbc/blob/master/doc/rs_builders.md)
-* [Prepared Statements](https://github.com/seancorfield/next-jdbc/blob/master/doc/prepared_stmt.md)
-* [Transactions](https://github.com/seancorfield/next-jdbc/blob/master/doc/transactions.md)
-* [All The Options](https://github.com/seancorfield/next-jdbc/blob/master/doc/options.md)
-* [Migration from `clojure.java.jdbc`](https://github.com/seancorfield/next-jdbc/blob/master/doc/differences.md)
+* [Getting Started](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started)
+* [Friendly SQL Functions](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/friendly-sql-fns)
+* [Row and Result Set Builders](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/rs-builders)
+* [Prepared Statements](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/prepared-stmt)
+* [Transactions](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/transactions)
+* [All The Options](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/options)
+* [Migration from `clojure.java.jdbc`](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/differences)
 
 ## License
 

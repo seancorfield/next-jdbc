@@ -221,12 +221,12 @@
    (execute! connectable (for-query table key-map opts) opts)))
 
 (defn get-by-id
-  "Syntactic sugar over execute-one! to make certain common queries easier.
+  "Syntactic sugar over `execute-one!` to make certain common queries easier.
 
   Given a connectable object, a table name, and a primary key value, returns
   a hash map of the first row that matches.
 
-  By default, the primary key is assumed to be 'id' but that can be overridden
+  By default, the primary key is assumed to be `id` but that can be overridden
   in the five-argument call."
   ([connectable table pk]
    (get-by-id connectable table pk :id {}))
@@ -236,7 +236,7 @@
    (execute-one! connectable (for-query table {pk-name pk} opts) opts)))
 
 (defn update!
-  "Syntactic sugar over execute-one! to make certain common updates easier.
+  "Syntactic sugar over `execute-one!` to make certain common updates easier.
 
   Given a connectable object, a table name, a hash map of columns and values
   to set, and either a hash map of columns and values to search on or a vector
@@ -249,7 +249,7 @@
                  opts)))
 
 (defn delete!
-  "Syntactic sugar over execute-one! to make certain common deletes easier.
+  "Syntactic sugar over `execute-one!` to make certain common deletes easier.
 
   Given a connectable object, a table name, and either a hash map of columns
   and values to search on or a vector of a SQL where clause and parameters,
