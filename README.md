@@ -2,6 +2,14 @@
 
 The next generation of `clojure.java.jdbc`: a new low-level Clojure wrapper for JDBC-based access to databases.
 
+## TL;DR
+
+[![Clojars Project](https://clojars.org/seancorfield/next.jdbc/latest-version.svg)](https://clojars.org/seancorfield/next.jdbc)
+
+* [Getting Started](https://github.com/seancorfield/next-jdbc/blob/master/doc/getting_started.md)
+* [Migrating from `clojure.java.jdbc`](https://github.com/seancorfield/next-jdbc/blob/master/doc/differences.md)
+* Feedback via [issues](https://github.com/seancorfield/next-jdbc/issues) or in the [`#sql` channel on the Clojurians Slack](https://clojurians.slack.com/messages/C1Q164V29/details/) or the [`#sql` stream on the Clojurians Zulip](https://clojurians.zulipchat.com/#narrow/stream/152063-sql).
+
 ## Motivation
 
 Why another JDBC library? Why a different API from `clojure.java.jdbc`?
@@ -12,9 +20,9 @@ Why another JDBC library? Why a different API from `clojure.java.jdbc`?
 
 Those are my three primary drivers. In addition, the `db-spec`-as-hash-map approach in `clojure.java.jdbc` has caused a lot of frustration and confusion in the past, especially with the wide range of conflicting options that are supported. `next.jdbc` is heavily protocol-based so it's easier to mix'n'match how you use it with direct Java JDBC code (and the protocol-based approach contributes to the improved performance overall). There's a much clearer path of `db-spec` -> `DataSource` -> `Connection` now, which should steer people toward more connection reuse and better performing apps.
 
-I also wanted `datafy`/`nav` support baked right in (it was added to `clojure.java.jdbc` back in December 2018 as an undocumented, experimental API in a separate namespace). It is the default behavior for `execute!` and `execute!`. The protocol `next.jdbc.result-set/datafiable-row` can be used with `reducible!` if you need to add `datafy`/`nav` support to rows you are creating in your reduction.
+I also wanted `datafy`/`nav` support baked right in (it was added to `clojure.java.jdbc` back in December 2018 as an undocumented, experimental API in a separate namespace). It is the default behavior for `execute!` and `execute!`. The protocol-based function `next.jdbc.result-set/datafiable-row` can be used with `reducible!` if you need to add `datafy`/`nav` support to rows you are creating in your reduction.
 
-At this point, I would consider the API to be fairly stable (2019-04-18). The "syntactic sugar" SQL functions (`insert!`, `query`, `update!`, and `delete!`) go beyond what I  wanted to include in the core API so they are in `next.jdbc.sql`. I know that their equivalents in `clojure.java.jdbc` are heavily used (based on the number of questions and JIRA issues I get).
+At this point, I would consider the API to be fairly stable and [alpha builds are now available on Clojars](https://clojars.org/seancorfield/next.jdbc) (2019-04-20). The "syntactic sugar" SQL functions (`insert!`, `query`, `update!`, and `delete!`) go beyond what I  wanted to include in the core API so they are in `next.jdbc.sql`. I know that their equivalents in `clojure.java.jdbc` are heavily used (based on the number of questions and JIRA issues I get).
 
 I am still [considering whether this should go into Contrib](https://github.com/seancorfield/next-jdbc/issues/3) as new namespaces in `clojure.java.jdbc` or whether it will continue to live standalone so I'm not accepting Pull Requests yet (but I can't disable them on GitHub!). There are pros and cons to both choices, in my mind.
 
@@ -26,7 +34,7 @@ From a `DataSource`, either you or `next.jdbc` can create a `java.sql.Connection
 
 The primary SQL execution API in `next.jdbc` is:
 * `reducible!` -- yields an `IReduceInit` that, when reduced, executes the SQL statement and then reduces over the `ResultSet` with as little overhead as possible.
-* `execute!` -- executes the SQL statement and produces a vector of realized hash maps, that use qualified keywords for the column names, of the form `:<table>/<column>`. If you join across multiple tables, the qualified keywords will reflect the originating tables for each of the columns. If the SQL produces named values that do not come from an associated table, a simple, unqualified keyword will be used. The realized hash maps returned by `execute!` are `Datafiable` and thus `Navigable` (see Clojure 1.10's `datafy` and `nav` functions, and tools like Cognitect's REBL). Alternatively, you can specify `{:gen-fn rs/as-arrays}` and produce a vector with column names followed by vectors of row values. `rs/as-maps` is the default for `:gen-fn` but there are also `rs/as-unqualified-maps` and `rs/as-unqualified-arrays` if you want unqualified `:<column>` column names.
+* `execute!` -- executes the SQL statement and produces a vector of realized hash maps, that use qualified keywords for the column names, of the form `:<table>/<column>`. If you join across multiple tables, the qualified keywords will reflect the originating tables for each of the columns. If the SQL produces named values that do not come from an associated table, a simple, unqualified keyword will be used. The realized hash maps returned by `execute!` are `Datafiable` and thus `Navigable` (see Clojure 1.10's `datafy` and `nav` functions, and tools like Cognitect's REBL). Alternatively, you can specify `{:gen-fn rs/as-arrays}` and produce a vector with column names followed by vectors of row values. `rs/as-maps` is the default for `:gen-fn` but there are also `rs/as-unqualified-maps` and `rs/as-unqualified-arrays` if you want unqualified `:<column>` column names (and there are also lower-case variants of all of these).
 * `execute-one!` -- executes the SQL statement and produces a single realized hash map. The realized hash map returned by `execute-one!` is `Datafiable` and thus `Navigable`.
 
 In addition, there are API functions to create `PreparedStatement`s (`prepare`) from `Connection`s, which can be passed to `reducible!`, `execute!`, or `execute-one!`, and to run code inside a transaction (the `transact` function and the `with-transaction` macro).
