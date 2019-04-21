@@ -184,4 +184,4 @@
   * :read-only -- true / false,
   * :rollback-only -- true / false."
   [[sym connectable opts] & body]
-  `(transact ~connectable (fn [~sym] ~@body) ~opts))
+  `(transact ~connectable (^{:once true} fn* [~sym] ~@body) ~opts))

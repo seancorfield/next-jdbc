@@ -66,21 +66,7 @@ Whereas `clojure.java.jdbc` supports a wide variety of options to describe how t
 
 ### Clojure identifier creation
 
-The `:identifiers` option is not supported. Column names are returned "as-is", rather than `clojure.java.jdbc`'s default behavior of `clojure.string/lower-case`. You can write your own `get-column-names` and `as-maps` variants to produce whatever behavior you need:
-
-```
-(defn lower-case-cols [^ResultSetMetaData rsmeta opts]
-  (mapv (fn [^Integer i]
-          (keyword (str/lower-case (.getColumnLabel rsmeta i))))
-        (range 1 (inc (.getColumnCount rsmeta)))))
-
-(defn as-lower-case [^ResultSet rs opts]
-  (let [rsmeta (.getMetaData rs)
-        cols   (lower-case-cols rsmeta opts)]
-    (next.jdbc.result-set/->MapResultSetBuilder rs rsmeta cols)))
-
-(execute! con ["SELECT * FROM fruit"] {:gen-fn as-lower-case})
-```
+The `:identifiers` option is not supported. Column names are returned "as-is", rather than `clojure.java.jdbc`'s default behavior of `clojure.string/lower-case`. You can use `as-unqualified-maps`, `as-lower-maps`, `as-unqualified-lower-maps` etc from the `next.jdbc.result-set` namespace, or write your own `get-column-names` and `as-maps` variants to produce whatever behavior you need.
 
 ### SQL entity creation
 
