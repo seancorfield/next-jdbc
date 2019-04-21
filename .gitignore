@@ -11,4 +11,5 @@ pom.xml.asc
 .hgignore
 .hg/
 /clojure_test*
+/example*db
 /derby.log
