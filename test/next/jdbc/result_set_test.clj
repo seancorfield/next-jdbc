@@ -85,8 +85,15 @@
                               ["select * from fruit where id = ?" 3]
                               {:gen-fn rs/as-lower-maps})]
       (is (map? row))
-      (is (= 3 (:id row)))
-      (is (= "Peach" (:name row))))))
+      (is (= 3 (:fruit/id row)))
+      (is (= "Peach" (:fruit/name row)))))
+  (testing "lower-case row builder"
+    (let [row (p/-execute-one (ds)
+                              ["select * from fruit where id = ?" 4]
+                              {:gen-fn rs/as-unqualified-lower-maps})]
+      (is (map? row))
+      (is (= 4 (:id row)))
+      (is (= "Orange" (:name row))))))
 
 (deftest test-mapify
   (testing "no row builder is used"

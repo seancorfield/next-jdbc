@@ -27,8 +27,8 @@
       (catch Exception _))
     (jdbc/execute-one! con ["
 CREATE TABLE fruit (
-  id int default 0,
-  name varchar(32) primary key,
+  id int auto_increment primary key,
+  name varchar(32),
   appearance varchar(32),
   cost int,
   grade real

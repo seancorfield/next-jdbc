@@ -114,21 +114,21 @@
 
 (deftest test-insert-delete
   (testing "single insert/delete"
-    ;; H2 with :return-keys true produces an empty result set
-    (is (nil? (sql/insert! (ds) :fruit
-                           {:id 5 :name "Kiwi" :appearance "green & fuzzy"
-                            :cost 100 :grade 99.9})))
+    (is (= {:FRUIT/ID 5}
+           (sql/insert! (ds) :fruit
+                        {:name "Kiwi" :appearance "green & fuzzy"
+                         :cost 100 :grade 99.9})))
     (is (= 5 (count (sql/query (ds) ["select * from fruit"]))))
     (is (= {:next.jdbc/update-count 1}
            (sql/delete! (ds) :fruit {:id 5})))
     (is (= 4 (count (sql/query (ds) ["select * from fruit"])))))
   (testing "multiple insert/delete"
-    ;; H2 with :return-keys true produces an empty result set
-    (is (= [] (sql/insert-multi! (ds) :fruit
-                                 [:id :name :appearance :cost :grade]
-                                 [[5 "Kiwi" "green & fuzzy" 100 99.9]
-                                  [6 "Grape" "black" 10 50]
-                                  [7 "Lemon" "yellow" 20 9.9]])))
+    (is (= [{:FRUIT/ID 6} {:FRUIT/ID 7} {:FRUIT/ID 8}]
+           (sql/insert-multi! (ds) :fruit
+                              [:name :appearance :cost :grade]
+                              [["Kiwi" "green & fuzzy" 100 99.9]
+                               ["Grape" "black" 10 50]
+                               ["Lemon" "yellow" 20 9.9]])))
     (is (= 7 (count (sql/query (ds) ["select * from fruit"]))))
     (is (= {:next.jdbc/update-count 1}
            (sql/delete! (ds) :fruit {:id 6})))
