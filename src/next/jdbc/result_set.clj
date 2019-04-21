@@ -400,7 +400,7 @@
         (datafiable-row (row-builder (as-maps rs opts))
                         (.getConnection this) opts))
       {:next.jdbc/update-count (.getUpdateCount this)}))
-  (-execute-all [this sql-params opts]
+  (-execute-all [this _ opts]
     (if-let [rs (stmt->result-set this opts)]
       (let [gen-fn (get opts :gen-fn as-maps)
             gen    (gen-fn rs opts)]

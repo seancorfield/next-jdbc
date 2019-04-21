@@ -24,7 +24,7 @@ This protocol defines four functions and is used whenever `next.jdbc` needs to m
 * `(with-column builder row i)` -- given the row so far, fetches column `i` from the current row of the `ResultSet`, converts it to a Clojure value, and adds it to the row (for `as-maps` this is a call to `.getObject`, a call to `read-column-by-index` -- see the `ReadableColumn` protocol below, and a call to `assoc!`),
 * `(row! builder row)` -- completes the row (a `(persistent! row)` call by default).
 
-## ResulSet Protocol
+## ResultSet Protocol
 
 This protocol defines three functions and is used whenever `next.jdbc` needs to materialize a result set (multiple rows) from a `ResultSet` as a Clojure data structure:
 
@@ -48,6 +48,6 @@ The default implementation of this protocol is for these two functions to return
 
 Common extensions here could include converting `java.sql.Timestamp` to `java.time.Instant` for example but `next.jdbc` makes no assumptions beyond `nil` and `Boolean`.
 
-Note that the converse, converting Clojure values to database-specific types is handled by the `SettableParameters`, discussed in the section on [[prepared statements|prepared_stmt]]
+Note that the converse, converting Clojure values to database-specific types is handled by the `SettableParameters`, discussed in the section on [[prepared statements|prepared_stmt#prepared-statement-parameters]]
 
 [[Prev: Friendly SQL Functions|friendly_sql_fns]] [[Next: Prepared Statements|prepared_stmt]]
