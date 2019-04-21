@@ -22,7 +22,7 @@ In addition, you will need to add dependencies for the JDBC drivers you wish to 
 
 ## An Example REPL Session
 
-To start using `next.jdbc`, you need to create a datasource (an instance of `javax.sql.DataSource`). You can use `next.jdbc/get-connection` with either a "db-spec" -- a hash map describing the database you wish to connect to -- or a JDBC URI string. Or you can construct a datasource from one of the connection pooling libraries out there, such as [HikariCP](https://brettwooldridge.github.io/HikariCP/) or [c3p0](https://www.mchange.com/projects/c3p0/).
+To start using `next.jdbc`, you need to create a datasource (an instance of `javax.sql.DataSource`). You can use `next.jdbc/get-datasource` with either a "db-spec" -- a hash map describing the database you wish to connect to -- or a JDBC URI string. Or you can construct a datasource from one of the connection pooling libraries out there, such as [HikariCP](https://brettwooldridge.github.io/HikariCP/) or [c3p0](https://www.mchange.com/projects/c3p0/).
 
 For the examples in this documentation, we will use a local H2 database on disk, and we'll use the [Clojure CLI tools](https://clojure.org/guides/deps_and_cli) and `deps.edn`:
 
@@ -60,6 +60,8 @@ user=> (jdbc/execute! ds ["select * from address"])
 user=>
 ```
 We described the database with just `:dbtype` and `:dbname` because it is created as a local file and needs no authentication. For most databases, you would need `:user` and `:password` for authentication, and if the database is running on a remote machine you would need `:host` and possibly `:port` (`next.jdbc` tries to guess the correct port based on the `:dbtype`).
+
+> Note: You can see the full list of `:dbtype` values supported in [[next.jdbc/get-datasource]].
 
 We used `execute!` to create the `address` table, to insert a new row into it, and to query it. In all three cases, `execute!` returns a vector of hash maps with namespace-qualified keys, representing the result set from the operation, if available. When no result set is produced, `next.jdbc` returns a "result set" containing the "update count" from the operation (which is usually the number of rows affected). By default, H2 uses uppercase names and `next.jdbc` returns these as-is.
 
