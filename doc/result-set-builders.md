@@ -50,4 +50,4 @@ Common extensions here could include converting `java.sql.Timestamp` to `java.ti
 
 Note that the converse, converting Clojure values to database-specific types is handled by the `SettableParameters`, discussed in the next section (Prepared Statements).
 
-[<: Friendly SQL Functions](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/friendly-sql-functions) | [Prepared Statements :>](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/prepared-stmt)
+[<: Friendly SQL Functions](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/friendly-sql-functions) | [Prepared Statements :>](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/prepared-statements)

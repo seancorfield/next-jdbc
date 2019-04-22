@@ -56,4 +56,4 @@ These are mostly drawn from Issue #5 although most of the bullets in that issue 
 * `with-transaction` can take a `:rollback-only` option, but there is no way to change a transaction to rollback _dynamically_; throw an exception instead (all transactions roll back on an exception)
 * The extension points for setting parameters and reading columns are now `SettableParameter` and `ReadableColumn` protocols.
 
-[<: All The Options](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/options)
+[<: All The Options](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/all-the-options)

@@ -1,8 +1,8 @@
 {:cljdoc.doc/tree [["Readme" {:file "README.md"}]
                    ["Getting Started" {:file "doc/getting-started.md"}
-                    ["Friendly SQL Functions" {:file "doc/friendly-sql-fns.md"}]
-                    ["Result Set Builders" {:file "doc/rs-builders.md"}]
-                    ["Prepared Statements" {:file "doc/prepared-stmt.md"}]
+                    ["Friendly SQL Functions" {:file "doc/friendly-sql-functions.md"}]
+                    ["Result Set Builders" {:file "doc/result-set-builders.md"}]
+                    ["Prepared Statements" {:file "doc/prepared-statements.md"}]
                     ["Transactions" {:file "doc/transactions.md"}]]
-                   ["All The Options" {:file "doc/options.md"}]
-                   ["Migration from clojure.java.jdbc" {:file "doc/differences.md"}]]}
+                   ["All The Options" {:file "doc/all-the-options.md"}]
+                   ["Migration from clojure.java.jdbc" {:file "doc/migration-from-clojure-java-jdbc.md"}]]}

@@ -152,4 +152,4 @@ These quoting functions can be provided to any of the friendly SQL functions abo
 
 Note that the entity naming function is passed a string, the result of calling `name` on the keyword passed in. Also note that the default quoting functions do not handle schema-qualified names, such as `dbo.table_name` -- `sql-server` would produce `[dbo.table_name]` from that. Use the `schema` function to wrap the quoting function if you need that behavior, e.g,. `{:table-fn (schema sql-server)}` which would produce `[dbo].[table_name]`.
 
-[<: Getting Started](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started) | [Row and Result Set Builders :>](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/rs-builders)
+[<: Getting Started](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started) | [Row and Result Set Builders :>](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/result-set-builders)

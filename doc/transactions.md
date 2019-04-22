@@ -18,10 +18,10 @@ It is possible to tell `next.jdbc` to create connections that do not automatical
 
 You can also provide an options map as the third element of the binding vector (or the third argument to the `transact` function). The following options are supported:
 
-* `:isolation` -- the isolation level for this transaction (see [All The Options](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/options) for specifics),
+* `:isolation` -- the isolation level for this transaction (see [All The Options](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/all-the-options) for specifics),
 * `:read-only` -- set the transaction into read-only mode (if `true`),
 * `:rollback-only` -- set the transaction to always rollback, even on success (if `true`).
 
 The latter can be particularly useful in tests, to run a series of SQL operations during a test and then roll them all back at the end.
 
-[<: Prepared Statements](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/prepared-stmt) | [All The Options :>](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/options)
+[<: Prepared Statements](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/prepared-statements) | [All The Options :>](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/all-the-options)
