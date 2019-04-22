@@ -63,7 +63,7 @@ In addition, convenience functions -- "syntactic sugar" -- are provided to inser
 
 * [Getting Started](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started)
 * [Friendly SQL Functions](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/friendly-sql-functions)
-* [Row and Result Set Builders](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/result-set-builders)
+* [Result Set Builders](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/result-set-builders)
 * [Prepared Statements](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/prepared-statements)
 * [Transactions](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/transactions)
 * [All The Options](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/all-the-options)

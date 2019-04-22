@@ -1,3 +1,3 @@
-# Hammock Space
+# Change Log
 
-This project is still in "hammock" mode and hasn't come close to even a preliminary pre-alpha release.
+2019-04-21 -- 1.0.0-alpha7 -- Initial publicly announced release.
