@@ -25,7 +25,7 @@
     <url>https://github.com/seancorfield/next-jdbc</url>
     <connection>scm:git:git://github.com/seancorfield/next-jdbc.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/seancorfield/next-jdbc.git</developerConnection>
-    <tag>f4573f5f956da8e29aa1029f00bc153edc673f2f</tag>
+    <tag>e091321696fd98b6d9949f6759403475e8dd2ae4</tag>
   </scm>
 
   <dependencies>
