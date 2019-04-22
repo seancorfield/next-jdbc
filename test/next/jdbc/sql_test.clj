@@ -7,7 +7,8 @@
   (:require [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc.quoted :refer [mysql sql-server]]
             [next.jdbc.sql :as sql]
-            [next.jdbc.test-fixtures :refer [with-test-db ds]]))
+            [next.jdbc.test-fixtures
+             :refer [with-test-db ds derby? sqlite?]]))
 
 (use-fixtures :once with-test-db)
 
@@ -117,7 +118,12 @@
 
 (deftest test-insert-delete
   (testing "single insert/delete"
-    (is (= {:FRUIT/ID 5}
+    (is (= (cond (derby?)
+                 {:1 5M}
+                 (sqlite?)
+                 {(keyword "last_insert_rowid()") 5}
+                 :else
+                 {:FRUIT/ID 5})
            (sql/insert! (ds) :fruit
                         {:name "Kiwi" :appearance "green & fuzzy"
                          :cost 100 :grade 99.9})))
@@ -126,7 +132,12 @@
            (sql/delete! (ds) :fruit {:id 5})))
     (is (= 4 (count (sql/query (ds) ["select * from fruit"])))))
   (testing "multiple insert/delete"
-    (is (= [{:FRUIT/ID 6} {:FRUIT/ID 7} {:FRUIT/ID 8}]
+    (is (= (cond (derby?)
+                 [{:1 nil}] ; WTF Apache Derby?
+                 (sqlite?)
+                 [{(keyword "last_insert_rowid()") 8}]
+                 :else
+                 [{:FRUIT/ID 6} {:FRUIT/ID 7} {:FRUIT/ID 8}])
            (sql/insert-multi! (ds) :fruit
                               [:name :appearance :cost :grade]
                               [["Kiwi" "green & fuzzy" 100 99.9]

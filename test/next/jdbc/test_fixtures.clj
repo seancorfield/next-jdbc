@@ -4,7 +4,23 @@
   (:require [next.jdbc :as jdbc]
             [next.jdbc.sql :as sql]))
 
-(def ^:private test-db-spec {:dbtype "h2:mem" :dbname "clojure_test_fixture"})
+(def ^:private test-derby {:dbtype "derby" :dbname "clojure_test_derby" :create true})
+
+(def ^:private test-h2-mem {:dbtype "h2:mem" :dbname "clojure_test_h2_mem"})
+
+(def ^:private test-h2 {:dbtype "h2" :dbname "clojure_test_h2"})
+
+(def ^:private test-hsql {:dbtype "hsqldb" :dbname "clojure_test_hsqldb"})
+
+(def ^:private test-sqlite {:dbtype "sqlite" :dbname "clojure_test_sqlite"})
+
+(def ^:private test-db-specs [test-derby test-h2-mem test-h2 test-hsql test-sqlite])
+
+(def ^:private test-db-spec (atom nil))
+
+(defn derby? [] (= "derby" (:dbtype @test-db-spec)))
+
+(defn sqlite? [] (= "sqlite" (:dbtype @test-db-spec)))
 
 (def ^:private test-datasource (atom nil))
 
@@ -20,24 +36,35 @@
   Tests can reach into here and call ds (above) to get a DataSource for use
   in test functions (that operate inside this fixture)."
   [t]
-  (reset! test-datasource (jdbc/get-datasource test-db-spec))
-  (with-open [con (jdbc/get-connection (ds))]
-    (try
-      (jdbc/execute-one! con ["DROP TABLE fruit"])
-      (catch Exception _))
-    (jdbc/execute-one! con ["
-CREATE TABLE fruit (
-  id int auto_increment primary key,
-  name varchar(32),
-  appearance varchar(32),
-  cost int,
-  grade real
-)"])
-    (sql/insert-multi! con :fruit
-                       [:id :name :appearance :cost :grade]
-                       [[1 "Apple" "red" 59 87]
-                        [2,"Banana","yellow",29,92.2]
-                        [3,"Peach","fuzzy",139,90.0]
-                        [4,"Orange","juicy",89,88.6]]
-                       {:return-keys false})
-    (t)))
+  (doseq [db test-db-specs]
+    (reset! test-db-spec db)
+    (reset! test-datasource (jdbc/get-datasource db))
+    (let [auto-inc-pk
+          (cond (or (derby?) (= "hsqldb" (:dbtype db)))
+                (str "GENERATED ALWAYS AS IDENTITY"
+                     " (START WITH 1, INCREMENT BY 1)"
+                     " PRIMARY KEY")
+                (sqlite?)
+                "PRIMARY KEY AUTOINCREMENT"
+                :else
+                "AUTO_INCREMENT PRIMARY KEY")]
+      (with-open [con (jdbc/get-connection (ds))]
+        (try
+          (jdbc/execute-one! con ["DROP TABLE FRUIT"])
+          (catch Exception _))
+        (jdbc/execute-one! con [(str "
+CREATE TABLE FRUIT (
+  ID INTEGER " auto-inc-pk ",
+  NAME VARCHAR(32),
+  APPEARANCE VARCHAR(32),
+  COST INT,
+  GRADE REAL
+)")])
+        (sql/insert-multi! con :fruit
+                           [:name :appearance :cost :grade]
+                           [["Apple" "red" 59 87]
+                            ["Banana","yellow",29,92.2]
+                            ["Peach","fuzzy",139,90.0]
+                            ["Orange","juicy",89,88.6]]
+                           {:return-keys false})
+        (t)))))

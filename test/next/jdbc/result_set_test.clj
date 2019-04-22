@@ -19,9 +19,9 @@
 (deftest test-datafy-nav
   (testing "default schema"
     (let [connectable (ds)
-          test-row (rs/datafiable-row {:table/fruit_id 1} connectable {})
+          test-row (rs/datafiable-row {:TABLE/FRUIT_ID 1} connectable {})
           data (d/datafy test-row)
-          v (get data :table/fruit_id)]
+          v (get data :TABLE/FRUIT_ID)]
       ;; check datafication is sane
       (is (= 1 v))
       (let [object (d/nav data :table/fruit_id v)]

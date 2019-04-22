@@ -98,8 +98,8 @@
     (is (= [{:next.jdbc/update-count 1}]
            (jdbc/transact (ds)
                           (fn [t] (jdbc/execute! t ["
-INSERT INTO fruit (id, name, appearance, cost, grade)
-VALUES (5, 'Pear', 'green', 49, 47)
+INSERT INTO fruit (name, appearance, cost, grade)
+VALUES ('Pear', 'green', 49, 47)
 "]))
                           {:rollback-only true})))
     (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
@@ -107,7 +107,7 @@ VALUES (5, 'Pear', 'green', 49, 47)
     (is (= [{:next.jdbc/update-count 1}]
            (jdbc/with-transaction [t (ds) {:rollback-only true}]
              (jdbc/execute! t ["
-INSERT INTO fruit (id, name, appearance, cost, grade)
-VALUES (5, 'Pear', 'green', 49, 47)
+INSERT INTO fruit (name, appearance, cost, grade)
+VALUES ('Pear', 'green', 49, 47)
 "]))))
     (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))))
