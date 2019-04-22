@@ -1,4 +1,4 @@
-# next.jdbc
+# Contributing to `next.jdbc`
 
 The next generation of [`clojure.java.jdbc`](https://github.com/clojure/java.jdbc)
 is *still not accepting contributions* because it I have not yet decided

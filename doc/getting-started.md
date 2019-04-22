@@ -9,12 +9,12 @@ It is designed to work with Clojure 1.10 or later, supports `datafy`/`nav`, and 
 You can add `next.jdbc` to your project with either:
 
 ```clojure
-{next.jdbc {:mvn/version "1.0.0-alpha7"}}
+{seancorfield/next.jdbc {:mvn/version "1.0.0-alpha7"}}
 ```
 for `deps.edn` or:
 
 ```clojure
-[next.jdbc "1.0.0-alpha7"]
+[seancorfield/next.jdbc "1.0.0-alpha7"]
 ```
 for `project.clj` or `build.boot`.
 
@@ -29,7 +29,7 @@ For the examples in this documentation, we will use a local H2 database on disk,
 ```clojure
 ;; deps.edn
 {:deps {org.clojure/clojure {:mvn/version "1.10.0"}
-        next.jdbc {:mvn/version "1.0.0-alpha7"}
+        seancorfield/next.jdbc {:mvn/version "1.0.0-alpha7"}
         com.h2database/h2 {:mvn/version "1.4.197"}}}
 ```
 
