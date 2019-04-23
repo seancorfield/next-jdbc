@@ -136,4 +136,4 @@ If `with-transaction` is given a datasource, it will create and close the connec
   (jdbc/execute! con ...)) ; committed
 ```
 
-[Friendly SQL Functions :>](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/friendly-sql-functions)
+[Friendly SQL Functions :>](/doc/friendly-sql-functions.md)

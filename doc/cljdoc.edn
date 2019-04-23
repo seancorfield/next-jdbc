@@ -1,4 +1,5 @@
 {:cljdoc.doc/tree [["Readme" {:file "README.md"}]
+                   ["Changes" {:file "CHANGELOG.md"}]
                    ["Getting Started" {:file "doc/getting-started.md"}
                     ["Friendly SQL Functions" {:file "doc/friendly-sql-functions.md"}]
                     ["Result Set Builders" {:file "doc/result-set-builders.md"}]

@@ -1,6 +1,6 @@
 # Transactions
 
-The `transact` function and `with-transaction` macro were briefly mentioned in the [Getting Started](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started) section but we'll go into more detail here.
+The `transact` function and `with-transaction` macro were briefly mentioned in the [Getting Started](/doc/getting-started.md) section but we'll go into more detail here.
 
 Although `(transact connectable thunk)` is available, it is expected that you will mostly use `(with-transaction [tx connectable] body...)` when you want to execute multiple SQL operations in the context of a single transaction so that is what this section focuses on.
 
@@ -18,10 +18,10 @@ It is possible to tell `next.jdbc` to create connections that do not automatical
 
 You can also provide an options map as the third element of the binding vector (or the third argument to the `transact` function). The following options are supported:
 
-* `:isolation` -- the isolation level for this transaction (see [All The Options](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/all-the-options) for specifics),
+* `:isolation` -- the isolation level for this transaction (see [All The Options](/doc/all-the-options.md) for specifics),
 * `:read-only` -- set the transaction into read-only mode (if `true`),
 * `:rollback-only` -- set the transaction to always rollback, even on success (if `true`).
 
 The latter can be particularly useful in tests, to run a series of SQL operations during a test and then roll them all back at the end.
 
-[<: Prepared Statements](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/prepared-statements) | [All The Options :>](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/all-the-options)
+[<: Prepared Statements](/doc/prepared-statements.md) | [All The Options :>](/doc/all-the-options.md)

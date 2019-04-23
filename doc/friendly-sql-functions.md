@@ -1,6 +1,6 @@
 # Friendly SQL Functions
 
-In [Getting Started](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started), we used `execute!` and `execute-one!` for all our SQL operations, except when we were reducing a result set. These functions (and `reducible!`) all expect a "connectable" and a vector containing a SQL string followed by any parameter values required.
+In [Getting Started](/doc/getting-started.md), we used `execute!` and `execute-one!` for all our SQL operations, except when we were reducing a result set. These functions (and `reducible!`) all expect a "connectable" and a vector containing a SQL string followed by any parameter values required.
 
 A "connectable" can be a `javax.sql.DataSource`, a `java.sql.Connection`, or something that can produce a datasource (when `get-datasource` is called on it). It can also be a `java.sql.PreparedStatement` but we'll cover that a bit later...
 
@@ -152,4 +152,4 @@ These quoting functions can be provided to any of the friendly SQL functions abo
 
 Note that the entity naming function is passed a string, the result of calling `name` on the keyword passed in. Also note that the default quoting functions do not handle schema-qualified names, such as `dbo.table_name` -- `sql-server` would produce `[dbo.table_name]` from that. Use the `schema` function to wrap the quoting function if you need that behavior, e.g,. `{:table-fn (schema sql-server)}` which would produce `[dbo].[table_name]`.
 
-[<: Getting Started](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started) | [Result Set Builders :>](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/result-set-builders)
+[<: Getting Started](/doc/getting-started.md) | [Result Set Builders :>](/doc/result-set-builders.md)
