@@ -20,8 +20,9 @@
 (defprotocol SettableParameter :extend-via-metadata true
   "Protocol for setting SQL parameters in statement objects, which
   can convert from Clojure values. The default implementation just
-  calls `.setObject` on the parameter value. It can be extended to use other
-  methods of `PreparedStatement` to convert and set parameter values."
+  calls `.setObject` on the parameter value. It can be extended to
+  use other methods of `PreparedStatement` to convert and set parameter
+  values. Extension via metadata is supported."
   (set-parameter [val stmt ix]
     "Convert a Clojure value into a SQL value and store it as the ix'th
     parameter in the given SQL statement object."))

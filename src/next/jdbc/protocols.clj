@@ -3,59 +3,61 @@
 (ns next.jdbc.protocols
   "This is the extensible core of the next generation java.jdbc library.
 
-  `Sourceable` protocol:
-  `get-datasource` -- turn something into a `javax.sql.DataSource`; implementations
-      are provided for strings, hash maps (`db-spec` structures), and also a
-      `DataSource` (which just returns itself).
-
-  `Connectable` protocol:
-  `get-connection` -- create a new JDBC connection that should be closed when you
-      are finished with it; implementations are provided for `DataSource`,
-      `PreparedStatement`, and `Object`, on the assumption that an `Object`
-      can possibly be turned into a `DataSource`.
-
-  `Executable` protocol:
-  `-execute` -- given SQL and parameters, produce a 'reducible' that, when
-      reduced, executes the SQL and produces a `ResultSet` that can be processed;
-      implementations are provided for `Connection`, `DataSource`,
-      `PreparedStatement`, and `Object` (on the assumption that an `Object` can be
-      turned into a `DataSource` and therefore used to get a `Connection`).
-
-  `-execute-one` -- given SQL and parameters, executes the SQL and produces
-      the first row of the `ResultSet` as a datafiable hash map (by default);
-      implementations are provided for `Connection`, `DataSource`,
-      `PreparedStatement`, and `Object` (on the assumption that an `Object` can be
-      turned into a `DataSource` and therefore used to get a `Connection`).
-
-  `-execute-all` -- given SQL and parameters, executes the SQL and produces
-      either a vector of datafiable hash maps from the `ResultSet` (default)
-      or a vector of column names followed by vectors of row values;
-      implementations are provided for `Connection`, `DataSource`,
-      `PreparedStatement`, and `Object` (on the assumption that an `Object` can be
-      turned into a `DataSource` and therefore used to get a `Connection`).
-
-  `Preparable` protocol:
-  `prepare` -- given SQL and parameters, produce a `PreparedStatement` that can
-      be executed (by -execute above); implementation is provided for
-      `Connection` only.
-
-  `Transactable` protocol:
-  `-transact` -- given a function (presumably containing SQL operations),
-      run the function inside a SQL transaction; implementations are provided
-      for `Connection`, `DataSource`, and `Object` (on the assumption that an
-      `Object` can be turned into a `DataSource`).")
+  `Sourceable` -- for producing `javax.sql.DataSource` objects,
+  `Connectable` -- for producing new `java.sql.Connection` objects,
+  `Executable` -- for executing SQL operations,
+  `Preparable` -- for producing new `java.sql.PreparedStatement` objects,
+  `Transactable` -- for executing SQL operations transactionally.")
 
 (set! *warn-on-reflection* true)
 
 (defprotocol Sourceable :extend-via-metadata true
-  (get-datasource ^javax.sql.DataSource [this]))
+  "Protocol for producing a `javax.sql.DataSource`.
+
+  Implementations are provided for strings, hash maps (`db-spec` structures),
+  and also a `DataSource` (which just returns itself).
+
+  Extension via metadata is supported."
+  (get-datasource ^javax.sql.DataSource [this]
+                  "Produce a `javax.sql.DataSource`."))
+
 (defprotocol Connectable
-  (get-connection ^java.lang.AutoCloseable [this opts]))
+  "Protocol for producing a new JDBC connection that should be closed when you
+  are finished with it.
+
+  Implementations are provided for `DataSource`, `PreparedStatement`, and
+  `Object`, on the assumption that an `Object` can be turned into a `DataSource`."
+  (get-connection ^java.lang.AutoCloseable [this opts]
+    "Produce a new `java.sql.Connection` for use with `with-open`."))
+
 (defprotocol Executable
-  (-execute ^clojure.lang.IReduceInit [this sql-params opts])
-  (-execute-one [this sql-params opts])
-  (-execute-all [this sql-params opts]))
+  "Protocol for executing SQL operations.
+
+  Implementations are provided for `Connection`, `DataSource`,
+  `PreparedStatement`, and `Object`, on the assumption that an `Object` can be
+  turned into a `DataSource` and therefore used to get a `Connection`."
+  (-execute ^clojure.lang.IReduceInit [this sql-params opts]
+    "Produce a 'reducible' that, when reduced, executes the SQL and
+    processes the rows of the `ResultSet` directly.")
+  (-execute-one [this sql-params opts]
+    "Executes the SQL and produces the first row of the `ResultSet`
+    as a fully-realized, datafiable hash map (by default).")
+  (-execute-all [this sql-params opts]
+    "Executes the SQL and produces (by default) a vector of
+    fully-realized, datafiable hash maps from the `ResultSet`."))
+
 (defprotocol Preparable
-  (prepare ^java.sql.PreparedStatement [this sql-params opts]))
+  "Protocol for producing a new `java.sql.PreparedStatement` that should
+  be closed after use. Can be used by `Executable` functions.
+
+  Implementation is provided for `Connection` only."
+  (prepare ^java.sql.PreparedStatement [this sql-params opts]
+    "Produce a new `java.sql.PreparedStatement` for use with `with-open`."))
+
 (defprotocol Transactable
-  (-transact [this body-fn opts]))
+  "Protocol for running SQL operations in a transaction.
+
+  Implementations are provided for `Connection`, `DataSource`, and `Object`
+  (on the assumption that an `Object` can be turned into a `DataSource`)."
+  (-transact [this body-fn opts]
+    "Run the `body-fn` inside a transaction."))

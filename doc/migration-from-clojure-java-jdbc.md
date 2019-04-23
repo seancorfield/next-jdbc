@@ -4,7 +4,7 @@ This page attempts to list all of the differences between [clojure.java.jdbc](ht
 
 ## Conceptually
 
-`clojure.java.jdbc` focuses heavily on a `db-spec` hash map to describe the various ways of interacting with the database and grew from very imperative origins that expose a lot of the JDBC API (multiple type of SQL execution, some operations returned hash maps, others update counts as integers, etc).
+`clojure.java.jdbc` focuses heavily on a `db-spec` hash map to describe the various ways of interacting with the database and grew from very imperative origins that expose a lot of the JDBC API (multiple types of SQL execution, some operations returned hash maps, others update counts as integers, etc).
 
 `next.jdbc` focuses on using protocols and native Java JDBC types where possible (for performance and simplicity) and strives to present a more modern Clojure API with namespace-qualified keywords in hash maps, reducible SQL operations as part of the primary API, and a streamlined set of SQL execution primitives. Execution always returns a hash map (for one result) or a vector of hash maps (for multiple results) -- even update counts are returned as if they were result sets.
 

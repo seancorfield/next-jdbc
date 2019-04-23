@@ -76,30 +76,30 @@
   (read-column-by-index [_1 _2 _3] nil))
 
 (defprotocol RowBuilder
-  "Protocol for building rows in various representations:
-  `->row`        -- called once per row to create the basis of each row
-  `column-count` -- return the number of columns in each row
-  `with-column`  -- called with the row and the index of the column to be added;
-                  this is expected to read the column value from the `ResultSet`!
-  `row!`         -- called once per row to finalize each row once it is complete
+  "Protocol for building rows in various representations.
 
   The default implementation for building hash maps: `MapResultSetBuilder`"
-  (->row [_])
-  (column-count [_])
-  (with-column [_ row i])
-  (row! [_ row]))
+  (->row [_]
+    "Called once per row to create the basis of each row.")
+  (column-count [_]
+    "Return the number of columns in each row.")
+  (with-column [_ row i]
+    "Called with the row and the index of the column to be added;
+    this is expected to read the column value from the `ResultSet`!")
+  (row! [_ row]
+    "Called once per row to finalize each row once it is complete."))
 
 (defprotocol ResultSetBuilder
-  "Protocol for building result sets in various representations:
-  `->rs`         -- called to create the basis of the result set
-  `with-row`     -- called with the result set and the row to be added
-  `rs!`          -- called to finalize the result set once it is complete
+  "Protocol for building result sets in various representations.
 
-  Default implementations for building vectors of hash maps and vectors
-  of column names and row values: `MapResultSetBuilder` & `ArrayResultSetBuilder`"
-  (->rs [_])
-  (with-row [_ rs row])
-  (rs! [_ rs]))
+  Default implementations for building vectors of hash maps and vectors of
+  column names and row values: `MapResultSetBuilder` & `ArrayResultSetBuilder`"
+  (->rs [_]
+    "Called to create the basis of the result set.")
+  (with-row [_ rs row]
+    "Called with the result set and the row to be added.")
+  (rs! [_ rs]
+    "Called to finalize the result set once it is complete."))
 
 (defrecord MapResultSetBuilder [^ResultSet rs rsmeta cols]
   RowBuilder
@@ -199,9 +199,17 @@
 (declare navize-row)
 
 (defprotocol DatafiableRow
-  "Given a connectable object, return a function that knows how to turn a row
-  into a datafiable object that can be `nav`igated."
-  (datafiable-row [this connectable opts]))
+  "Protocol for making rows datafiable and therefore navigable.
+
+  The default implementation just adds metadata so that `datafy` can be
+  called on the row, which will produce something that `nav` can be called
+  on, to lazily navigate through foreign key relationships into other tables.
+
+  If `datafiable-row` is called when reducing the result set produced by
+  `next.jdbc/reducible!`, the row is fully-realized from the `ResultSet`
+  first."
+  (datafiable-row [this connectable opts]
+    "Produce a datafiable representation of a row from a `ResultSet`."))
 
 (defn- row-builder
   "Given a `RowBuilder` -- a row materialization strategy -- produce a fully
@@ -396,9 +404,11 @@
               (reduce-stmt this f init (assoc opts :return-keys true)))))
   (-execute-one [this _ opts]
     (if-let [rs (stmt->result-set this (assoc opts :return-keys true))]
-      (when (.next rs)
-        (datafiable-row (row-builder (as-maps rs opts))
-                        (.getConnection this) opts))
+      (let [gen-fn (get opts :gen-fn as-maps)
+            gen    (gen-fn rs opts)]
+        (when (.next rs)
+          (datafiable-row (row-builder gen)
+                          (.getConnection this) opts)))
       {:next.jdbc/update-count (.getUpdateCount this)}))
   (-execute-all [this _ opts]
     (if-let [rs (stmt->result-set this opts)]
