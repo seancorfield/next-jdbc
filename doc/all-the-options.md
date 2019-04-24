@@ -60,4 +60,4 @@ The `transact` function and `with-transaction` macro accept the following option
 * `:read-only` -- a `Boolean` that indicates whether the transaction should be read-only or not (the default),
 * `:rollback-only` -- a `Boolean` that indicates whether the transaction should commit on success (the default) or rollback.
 
-[<: Transactions](/doc/transactions.md) | [Migration from `clojure.java.jdbc` :>](/doc/migration-from-clojure-java-jdbc.md)
+[<: Transactions](/doc/transactions.md) | [`datafy`, `nav`, and `:schema` :>](/doc/datafy-nav-and-schema.md)

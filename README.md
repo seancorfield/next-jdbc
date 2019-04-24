@@ -70,6 +70,7 @@ In addition, convenience functions -- "syntactic sugar" -- are provided to inser
 * [Prepared Statements](/doc/prepared-statements.md)
 * [Transactions](/doc/transactions.md)
 * [All The Options](/doc/all-the-options.md)
+* [`datafy`, `nav`, and `:schema`](/doc/datafy-nav-and-schema.md)
 * [Migration from `clojure.java.jdbc`](/doc/migration-from-clojure-java-jdbc.md)
 
 ## License
