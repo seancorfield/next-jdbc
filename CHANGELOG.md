@@ -1,7 +1,7 @@
 # Change Log
 
-* 2019-04-24 -- 1.0.0-alpha10 -- Rename `:gen-fn` to `:builder-fn` (**BREAKING CHANGE!**); Fix #13 by adding documentation for `datafy`/`nav`/`:schema`; Fix #15 by automatically adding `:next.jdbc/sql-string` into the options hash map, so custom builders can depend on the SQL string.
-* 2019-04-22 -- 1.0.0-alpha9 -- Fix #14 by respecting `:gen-fn` (as of 1.0.0-alpha10: `:builder-fn`) in `execute-one` for `PreparedStatement`.
+* 2019-04-24 -- 1.0.0-alpha11 -- Rename `:gen-fn` to `:builder-fn` (**BREAKING CHANGE!**); Fix #13 by adding documentation for `datafy`/`nav`/`:schema`; Fix #15 by automatically adding `:next.jdbc/sql-string` into the options hash map, so custom builders can depend on the SQL string.
+* 2019-04-22 -- 1.0.0-alpha9 -- Fix #14 by respecting `:gen-fn` (as of 1.0.0-alpha11: `:builder-fn`) in `execute-one` for `PreparedStatement`.
 * 2019-04-21 -- 1.0.0-alpha8 -- Initial publicly announced release.
 
 ## Unreleased Changes
