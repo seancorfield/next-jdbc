@@ -4,8 +4,11 @@ The next generation of `clojure.java.jdbc`: a new low-level Clojure wrapper for 
 
 ## TL;DR
 
+The latest versions on Clojars and on cljdoc:
+
 [![Clojars Project](https://clojars.org/seancorfield/next.jdbc/latest-version.svg)](https://clojars.org/seancorfield/next.jdbc) [![cljdoc badge](https://cljdoc.org/badge/seancorfield/next.jdbc)](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT)
 
+This documentation is for 1.0.0-alpha9.
 
 * [Getting Started](/doc/getting-started.md)
 * [Migrating from `clojure.java.jdbc`](/doc/migration-from-clojure-java-jdbc.md)
@@ -35,7 +38,7 @@ From a `DataSource`, either you or `next.jdbc` can create a `java.sql.Connection
 
 The primary SQL execution API in `next.jdbc` is:
 * `reducible!` -- yields an `IReduceInit` that, when reduced, executes the SQL statement and then reduces over the `ResultSet` with as little overhead as possible.
-* `execute!` -- executes the SQL statement and produces a vector of realized hash maps, that use qualified keywords for the column names, of the form `:<table>/<column>`. If you join across multiple tables, the qualified keywords will reflect the originating tables for each of the columns. If the SQL produces named values that do not come from an associated table, a simple, unqualified keyword will be used. The realized hash maps returned by `execute!` are `Datafiable` and thus `Navigable` (see Clojure 1.10's `datafy` and `nav` functions, and tools like Cognitect's REBL). Alternatively, you can specify `{:gen-fn rs/as-arrays}` and produce a vector with column names followed by vectors of row values. `rs/as-maps` is the default for `:gen-fn` but there are also `rs/as-unqualified-maps` and `rs/as-unqualified-arrays` if you want unqualified `:<column>` column names (and there are also lower-case variants of all of these).
+* `execute!` -- executes the SQL statement and produces a vector of realized hash maps, that use qualified keywords for the column names, of the form `:<table>/<column>`. If you join across multiple tables, the qualified keywords will reflect the originating tables for each of the columns. If the SQL produces named values that do not come from an associated table, a simple, unqualified keyword will be used. The realized hash maps returned by `execute!` are `Datafiable` and thus `Navigable` (see Clojure 1.10's `datafy` and `nav` functions, and tools like Cognitect's REBL). Alternatively, you can specify `{:builder-fn rs/as-arrays}` and produce a vector with column names followed by vectors of row values. `rs/as-maps` is the default for `:builder-fn` but there are also `rs/as-unqualified-maps` and `rs/as-unqualified-arrays` if you want unqualified `:<column>` column names (and there are also lower-case variants of all of these).
 * `execute-one!` -- executes the SQL statement and produces a single realized hash map. The realized hash map returned by `execute-one!` is `Datafiable` and thus `Navigable`.
 
 In addition, there are API functions to create `PreparedStatement`s (`prepare`) from `Connection`s, which can be passed to `reducible!`, `execute!`, or `execute-one!`, and to run code inside a transaction (the `transact` function and the `with-transaction` macro).

@@ -36,7 +36,7 @@ The "friendly" SQL functions all accept the following options:
 
 Any function that might realize a row or a result set will accept:
 
-* `:gen-fn` -- a function that implements the `RowBuilder` and `ResultSetBuilder` protocols; strictly speaking, `reducible!` and `execute-one!` only need `RowBuilder` to be implemented (and `reducible!` only needs that if it actually has to realize a row) but most generation functions will implement both for ease of use.
+* `:builder-fn` -- a function that implements the `RowBuilder` and `ResultSetBuilder` protocols; strictly speaking, `reducible!` and `execute-one!` only need `RowBuilder` to be implemented (and `reducible!` only needs that if it actually has to realize a row) but most generation functions will implement both for ease of use.
 
 ## Prepared Statements
 

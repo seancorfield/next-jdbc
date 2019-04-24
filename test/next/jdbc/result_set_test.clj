@@ -76,21 +76,21 @@
   (testing "unqualified row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 2]
-                              {:gen-fn rs/as-unqualified-maps})]
+                              {:builder-fn rs/as-unqualified-maps})]
       (is (map? row))
       (is (= 2 (:ID row)))
       (is (= "Banana" (:NAME row)))))
   (testing "lower-case row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 3]
-                              {:gen-fn rs/as-lower-maps})]
+                              {:builder-fn rs/as-lower-maps})]
       (is (map? row))
       (is (= 3 (:fruit/id row)))
       (is (= "Peach" (:fruit/name row)))))
   (testing "lower-case row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 4]
-                              {:gen-fn rs/as-unqualified-lower-maps})]
+                              {:builder-fn rs/as-unqualified-lower-maps})]
       (is (map? row))
       (is (= 4 (:id row)))
       (is (= "Orange" (:name row))))))
@@ -100,27 +100,27 @@
     (is (= [false]
            (into [] (map map?) ; it is not a real map
                  (p/-execute (ds) ["select * from fruit where id = ?" 1]
-                             {:gen-fn (constantly nil)}))))
+                             {:builder-fn (constantly nil)}))))
     (is (= ["Apple"]
            (into [] (map :name) ; but keyword selection works
                  (p/-execute (ds) ["select * from fruit where id = ?" 1]
-                             {:gen-fn (constantly nil)}))))
+                             {:builder-fn (constantly nil)}))))
     (is (= [[2 [:name "Banana"]]]
            (into [] (map (juxt #(get % "id") ; get by string key works
                                #(find % :name))) ; get MapEntry works
                  (p/-execute (ds) ["select * from fruit where id = ?" 2]
-                             {:gen-fn (constantly nil)}))))
+                             {:builder-fn (constantly nil)}))))
     (is (= [{:id 3 :name "Peach"}]
            (into [] (map #(select-keys % [:id :name])) ; select-keys works
                  (p/-execute (ds) ["select * from fruit where id = ?" 3]
-                             {:gen-fn (constantly nil)}))))
+                             {:builder-fn (constantly nil)}))))
     (is (= [[:orange 4]]
            (into [] (map #(vector (if (contains? % :name) ; contains works
                                     (keyword (str/lower-case (:name %)))
                                     :unnamed)
                                   (get % :id 0))) ; get with not-found works
                  (p/-execute (ds) ["select * from fruit where id = ?" 4]
-                             {:gen-fn (constantly nil)})))))
+                             {:builder-fn (constantly nil)})))))
   (testing "assoc and seq build maps"
     (is (map? (reduce (fn [_ row] (reduced (assoc row :x 1)))
                       nil
@@ -163,12 +163,12 @@
 (deftest custom-map-builder
   (let [row (p/-execute-one (ds)
                             ["select * from fruit where appearance = ?" "red"]
-                            {:gen-fn fruit-builder})]
+                            {:builder-fn fruit-builder})]
     (is (instance? Fruit row))
     (is (= 1 (:id row))))
   (let [rs (p/-execute-all (ds)
                            ["select * from fruit where appearance = ?" "red"]
-                           {:gen-fn fruit-builder})]
+                           {:builder-fn fruit-builder})]
     (is (every? #(instance? Fruit %) rs))
     (is (= 1 (count rs)))
     (is (= 1 (:id (first rs))))))

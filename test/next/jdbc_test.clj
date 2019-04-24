@@ -31,7 +31,7 @@
     (let [rs (jdbc/execute!
               (ds)
               ["select * from fruit order by id"]
-              {:gen-fn rs/as-maps})]
+              {:builder-fn rs/as-maps})]
       (is (every? map? rs))
       (is (every? meta rs))
       (is (= 4 (count rs)))
@@ -40,7 +40,7 @@
     (let [rs (jdbc/execute!
               (ds)
               ["select * from fruit order by id"]
-              {:gen-fn rs/as-arrays})]
+              {:builder-fn rs/as-arrays})]
       (is (every? vector? rs))
       (is (= 5 (count rs)))
       (is (every? #(= 5 (count %)) rs))
@@ -54,7 +54,7 @@
     (let [rs (jdbc/execute!
               (ds)
               ["select * from fruit order by id"]
-              {:gen-fn rs/as-unqualified-maps})]
+              {:builder-fn rs/as-unqualified-maps})]
       (is (every? map? rs))
       (is (every? meta rs))
       (is (= 4 (count rs)))
@@ -63,7 +63,7 @@
     (let [rs (jdbc/execute!
               (ds)
               ["select * from fruit order by id"]
-              {:gen-fn rs/as-unqualified-arrays})]
+              {:builder-fn rs/as-unqualified-arrays})]
       (is (every? vector? rs))
       (is (= 5 (count rs)))
       (is (every? #(= 5 (count %)) rs))

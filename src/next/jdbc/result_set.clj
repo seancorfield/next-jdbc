@@ -214,11 +214,11 @@
 (defn- row-builder
   "Given a `RowBuilder` -- a row materialization strategy -- produce a fully
   materialized row from it."
-  [gen]
-  (->> (reduce (fn [r i] (with-column gen r i))
-               (->row gen)
-               (range 1 (inc (column-count gen))))
-       (row! gen)))
+  [builder]
+  (->> (reduce (fn [r i] (with-column builder r i))
+               (->row builder)
+               (range 1 (inc (column-count builder))))
+       (row! builder)))
 
 (defn- mapify-result-set
   "Given a `ResultSet`, return an object that wraps the current row as a hash
@@ -237,7 +237,7 @@
 
   Supports `DatafiableRow` (which realizes a full row of the data)."
   [^ResultSet rs opts]
-  (let [gen (delay ((get opts :gen-fn as-maps) rs opts))]
+  (let [builder (delay ((get opts :builder-fn as-maps) rs opts))]
     (reify
 
       clojure.lang.ILookup
@@ -265,16 +265,16 @@
                                             (name k)))
                  (catch SQLException _)))
       (assoc [this k v]
-             (assoc (row-builder @gen) k v))
+             (assoc (row-builder @builder) k v))
 
       clojure.lang.Seqable
       (seq [this]
-           (seq (row-builder @gen)))
+           (seq (row-builder @builder)))
 
       DatafiableRow
       (datafiable-row [this connectable opts]
                       (with-meta
-                        (row-builder @gen)
+                        (row-builder @builder)
                         {`core-p/datafy (navize-row connectable opts)})))))
 
 (extend-protocol
@@ -334,10 +334,10 @@
                                      (rest sql-params)
                                      opts)]
       (if-let [rs (stmt->result-set stmt opts)]
-        (let [gen-fn (get opts :gen-fn as-maps)
-              gen    (gen-fn rs opts)]
+        (let [builder-fn (get opts :builder-fn as-maps)
+              builder    (builder-fn rs opts)]
           (when (.next rs)
-            (datafiable-row (row-builder gen) this opts)))
+            (datafiable-row (row-builder builder) this opts)))
         {:next.jdbc/update-count (.getUpdateCount stmt)})))
   (-execute-all [this sql-params opts]
     (with-open [stmt (prepare/create this
@@ -345,14 +345,14 @@
                                      (rest sql-params)
                                      opts)]
       (if-let [rs (stmt->result-set stmt opts)]
-        (let [gen-fn (get opts :gen-fn as-maps)
-              gen    (gen-fn rs opts)]
-          (loop [rs' (->rs gen) more? (.next rs)]
+        (let [builder-fn (get opts :builder-fn as-maps)
+              builder    (builder-fn rs opts)]
+          (loop [rs' (->rs builder) more? (.next rs)]
             (if more?
-              (recur (with-row gen rs'
-                       (datafiable-row (row-builder gen) this opts))
+              (recur (with-row builder rs'
+                       (datafiable-row (row-builder builder) this opts))
                      (.next rs))
-              (rs! gen rs'))))
+              (rs! builder rs'))))
         [{:next.jdbc/update-count (.getUpdateCount stmt)}])))
 
   javax.sql.DataSource
@@ -372,10 +372,10 @@
                                        (rest sql-params)
                                        opts)]
         (if-let [rs (stmt->result-set stmt opts)]
-          (let [gen-fn (get opts :gen-fn as-maps)
-                gen    (gen-fn rs opts)]
+          (let [builder-fn (get opts :builder-fn as-maps)
+                builder    (builder-fn rs opts)]
             (when (.next rs)
-                  (datafiable-row (row-builder gen) this opts)))
+                  (datafiable-row (row-builder builder) this opts)))
           {:next.jdbc/update-count (.getUpdateCount stmt)}))))
   (-execute-all [this sql-params opts]
     (with-open [con (p/get-connection this opts)]
@@ -384,14 +384,14 @@
                                        (rest sql-params)
                                        opts)]
         (if-let [rs (stmt->result-set stmt opts)]
-          (let [gen-fn (get opts :gen-fn as-maps)
-                gen    (gen-fn rs opts)]
-            (loop [rs' (->rs gen) more? (.next rs)]
+          (let [builder-fn (get opts :builder-fn as-maps)
+                builder    (builder-fn rs opts)]
+            (loop [rs' (->rs builder) more? (.next rs)]
               (if more?
-                (recur (with-row gen rs'
-                         (datafiable-row (row-builder gen) this opts))
+                (recur (with-row builder rs'
+                         (datafiable-row (row-builder builder) this opts))
                        (.next rs))
-                (rs! gen rs'))))
+                (rs! builder rs'))))
           [{:next.jdbc/update-count (.getUpdateCount stmt)}]))))
 
   java.sql.PreparedStatement
@@ -404,23 +404,23 @@
               (reduce-stmt this f init (assoc opts :return-keys true)))))
   (-execute-one [this _ opts]
     (if-let [rs (stmt->result-set this (assoc opts :return-keys true))]
-      (let [gen-fn (get opts :gen-fn as-maps)
-            gen    (gen-fn rs opts)]
+      (let [builder-fn (get opts :builder-fn as-maps)
+            builder    (builder-fn rs opts)]
         (when (.next rs)
-          (datafiable-row (row-builder gen)
+          (datafiable-row (row-builder builder)
                           (.getConnection this) opts)))
       {:next.jdbc/update-count (.getUpdateCount this)}))
   (-execute-all [this _ opts]
     (if-let [rs (stmt->result-set this opts)]
-      (let [gen-fn (get opts :gen-fn as-maps)
-            gen    (gen-fn rs opts)]
-        (loop [rs' (->rs gen) more? (.next rs)]
+      (let [builder-fn (get opts :builder-fn as-maps)
+            builder    (builder-fn rs opts)]
+        (loop [rs' (->rs builder) more? (.next rs)]
           (if more?
-            (recur (with-row gen rs'
-                     (datafiable-row (row-builder gen)
+            (recur (with-row builder rs'
+                     (datafiable-row (row-builder builder)
                                      (.getConnection this) opts))
                    (.next rs))
-            (rs! gen rs'))))
+            (rs! builder rs'))))
       [{:next.jdbc/update-count (.getUpdateCount this)}]))
 
   Object

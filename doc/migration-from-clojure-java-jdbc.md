@@ -10,9 +10,9 @@ This page attempts to list all of the differences between [clojure.java.jdbc](ht
 
 ### Rows and Result Sets
 
-`clojure.java.jdbc` returned result sets (and generated keys) as hash maps with simple, lower-case keys by default. `next.jdbc` returns result sets (and generated keys) as hash maps with qualified, as-is keys by default: each key is qualified by the name of table from which it is drawn, if known. The as-is default is chosen to a) improve performance and b) not mess with the data. Using a `:gen-fn` option of `next.jdbc.result-set/as-unqualified-maps` will produce simple, as-is keys. Using a `:gen-fn` option of `next.jdbc.result-set/as-unqualified-lower-maps` will produce simple, lower-case keys -- the most compatible with `clojure.java.jdbc`'s default behavior.
+`clojure.java.jdbc` returned result sets (and generated keys) as hash maps with simple, lower-case keys by default. `next.jdbc` returns result sets (and generated keys) as hash maps with qualified, as-is keys by default: each key is qualified by the name of table from which it is drawn, if known. The as-is default is chosen to a) improve performance and b) not mess with the data. Using a `:builder-fn` option of `next.jdbc.result-set/as-unqualified-maps` will produce simple, as-is keys. Using a `:builder-fn` option of `next.jdbc.result-set/as-unqualified-lower-maps` will produce simple, lower-case keys -- the most compatible with `clojure.java.jdbc`'s default behavior.
 
-If you used `:as-arrays? true`, you will need to use a `:gen-fn` option of `next.jdbc.result-set/as-arrays` (or the unqualified or lower variant, as appropriate).
+If you used `:as-arrays? true`, you will need to use a `:builder-fn` option of `next.jdbc.result-set/as-arrays` (or the unqualified or lower variant, as appropriate).
 
 ## Primary API
 
@@ -43,7 +43,7 @@ The `next.jdbc.sql` namespace contains several functions with similarities to `c
 * `update!` -- similar to `clojure.java.jdbc/update!` but also accepts a hash map of column name/value pairs,
 * `delete!` -- similar to `clojure.java.jdbc/delete!` but also accepts a hash map of column name/value pairs.
 
-If you are using `:identifiers` and/or `:entities`, you will need to change to appropriate `:gen-fn` and/or `:table-fn`/`:column-fn` options. For the latter, instead of the `quoted` function, there is `next.jdbc.quoted` which contains functions for the common quoting strategies.
+If you are using `:identifiers` and/or `:entities`, you will need to change to appropriate `:builder-fn` and/or `:table-fn`/`:column-fn` options. For the latter, instead of the `quoted` function, there is `next.jdbc.quoted` which contains functions for the common quoting strategies.
 
 If you are using `:result-set-fn` and/or `:row-fn`, you will need to change to explicit calls (to the result set function, or to `map` the row function), or to use the `reducible!` approach with `reduce` or various transducing functions. Note: this means that result sets are never exposed lazily in `next.jdbc` -- in `clojure.java.jdbc` you had to be careful that your `:result-set-fn` was eager, but in `next.jdbc` you either reduce the result set eagerly (via `reducible!`) or you get a fully-realized result set data structure back (from `execute!` and `execute-one!`). As with `clojure.java.jdbc` however, you can still stream result sets from the database and process them via reduction (was `reducible-query`, now `reducible!`). Remember that you can terminate a reduction early by using the `reduced` function to wrap the final value you produce.
 
