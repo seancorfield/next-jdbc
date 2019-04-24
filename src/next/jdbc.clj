@@ -138,9 +138,11 @@
   ([stmt]
    (p/-execute stmt [] {}))
   ([connectable sql-params]
-   (p/-execute connectable sql-params {}))
+   (p/-execute connectable sql-params
+               {:next.jdbc/sql-string (first sql-params)}))
   ([connectable sql-params opts]
-   (p/-execute connectable sql-params opts)))
+   (p/-execute connectable sql-params
+               (assoc opts :next.jdbc/sql-string (first sql-params)))))
 
 (defn execute!
   "General SQL execution function.
@@ -152,9 +154,11 @@
   ([stmt]
    (p/-execute-all stmt [] {}))
   ([connectable sql-params]
-   (p/-execute-all connectable sql-params {}))
+   (p/-execute-all connectable sql-params
+                   {:next.jdbc/sql-string (first sql-params)}))
   ([connectable sql-params opts]
-   (p/-execute-all connectable sql-params opts)))
+   (p/-execute-all connectable sql-params
+                   (assoc opts :next.jdbc/sql-string (first sql-params)))))
 
 (defn execute-one!
   "General SQL execution function that returns just the first row of a result.
@@ -164,9 +168,11 @@
   ([stmt]
    (p/-execute-one stmt [] {}))
   ([connectable sql-params]
-   (p/-execute-one connectable sql-params {}))
+   (p/-execute-one connectable sql-params
+                   {:next.jdbc/sql-string (first sql-params)}))
   ([connectable sql-params opts]
-   (p/-execute-one connectable sql-params opts)))
+   (p/-execute-one connectable sql-params
+                   (assoc opts :next.jdbc/sql-string (first sql-params)))))
 
 (defn transact
   "Given a connectable object and a function (taking a `Connection`),

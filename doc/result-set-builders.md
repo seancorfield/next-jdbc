@@ -24,6 +24,8 @@ This protocol defines four functions and is used whenever `next.jdbc` needs to m
 * `(with-column builder row i)` -- given the row so far, fetches column `i` from the current row of the `ResultSet`, converts it to a Clojure value, and adds it to the row (for `as-maps` this is a call to `.getObject`, a call to `read-column-by-index` -- see the `ReadableColumn` protocol below, and a call to `assoc!`),
 * `(row! builder row)` -- completes the row (a `(persistent! row)` call by default).
 
+`execute!` and `execute-one!` call these functions for each row they need to build. `reducible!` _may_ call these functions if the reducing function causes a row to be materialized.
+
 ## ResultSet Protocol
 
 This protocol defines three functions and is used whenever `next.jdbc` needs to materialize a result set (multiple rows) from a `ResultSet` as a Clojure data structure:
@@ -32,11 +34,15 @@ This protocol defines three functions and is used whenever `next.jdbc` needs to 
 * `(with-row builder rs row)` -- given the result set so far and a new row, returns the updated result set (a `(conj! rs row)` call by default),
 * `(rs! builder rs)` -- completes the result set (a `(persistent! rs)` call by default).
 
+Only `execute!` expects this protocol to be implemented. `execute-one!` and `reducible!` do not call these functions.
+
 ## Result Set Builder Functions
 
-The `as-*` functions described above are all implemented in terms of these protocols. They are passed the `ResultSet` object and the options hash map (as passed into various `next.jdbc` functions). They return an implementation of the protocols that is then used to build rows and the result set. Note that the `ResultSet` passed in is _mutable_ and is advanced from row to row by the SQL execution function, so each time `->row` is called, the underlying `ResultSet` object points at each new row in turn. By contrast, `->rs` (which is only called by `execute-all!`) is invoked _before_ the `ResultSet` is advanced to the first row.
+The `as-*` functions described above are all implemented in terms of these protocols. They are passed the `ResultSet` object and the options hash map (as passed into various `next.jdbc` functions). They return an implementation of the protocols that is then used to build rows and the result set. Note that the `ResultSet` passed in is _mutable_ and is advanced from row to row by the SQL execution function, so each time `->row` is called, the underlying `ResultSet` object points at each new row in turn. By contrast, `->rs` (which is only called by `execute!`) is invoked _before_ the `ResultSet` is advanced to the first row.
 
 The options hash map for any `next.jdbc` function can contain a `:gen-fn` key and the value is used at the row/result set builder function. The tests for `next.jdbc.result-set` include a [record-based builder function](https://github.com/seancorfield/next-jdbc/blob/master/test/next/jdbc/result_set_test.clj#L148-L164) as an example of how you can extend this to satisfy your needs.
+
+The options hash map passed to the builder function will contain a `:next.jdbc/sql-string` key, whose value is the SQL string passed into the
 
 # ReadableColumn
 
