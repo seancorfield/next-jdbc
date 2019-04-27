@@ -3,11 +3,11 @@
 (ns next.jdbc.protocols
   "This is the extensible core of the next generation java.jdbc library.
 
-  `Sourceable` -- for producing `javax.sql.DataSource` objects,
-  `Connectable` -- for producing new `java.sql.Connection` objects,
-  `Executable` -- for executing SQL operations,
-  `Preparable` -- for producing new `java.sql.PreparedStatement` objects,
-  `Transactable` -- for executing SQL operations transactionally.")
+  * `Sourceable` -- for producing `javax.sql.DataSource` objects,
+  * `Connectable` -- for producing new `java.sql.Connection` objects,
+  * `Executable` -- for executing SQL operations,
+  * `Preparable` -- for producing new `java.sql.PreparedStatement` objects,
+  * `Transactable` -- for executing SQL operations transactionally.")
 
 (set! *warn-on-reflection* true)
 

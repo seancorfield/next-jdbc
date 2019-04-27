@@ -209,10 +209,11 @@
 (defn find-by-keys
   "Syntactic sugar over `execute!` to make certain common queries easier.
 
-  Given a connectable object, a table name, and a hash map of columns and
-  their values, returns a vector of hash maps of rows that match.
+  Given a connectable object, a table name, and either a hash map of
+  columns and values to search on or a vector of a SQL where clause and
+  parameters, returns a vector of hash maps of rows that match.
 
-  If the `:order-by` option is present, add `ORDER BY` clause. `:order-by`
+  If the `:order-by` option is present, add an `ORDER BY` clause. `:order-by`
   should be a vector of column names or pairs of column name / direction,
   which can be `:asc` or `:desc`."
   ([connectable table key-map]

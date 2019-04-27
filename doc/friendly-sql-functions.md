@@ -27,7 +27,7 @@ These functions are described in more detail below. They are intended to cover t
 Given a table name (as a keyword) and a hash map of column names and values, this performs a single row insertion into the database:
 
 ```clojure
-(sql/insert! ds :address {:name "A. Person" :email "albert@person.org"})`
+(sql/insert! ds :address {:name "A. Person" :email "albert@person.org"})
 ;; equivalent to
 (jdbc/execute-one! ds ["INSERT INTO address (name,email) VALUES (?,?)"
                        "A.Person" "albert@person.org"] {:return-keys true})
@@ -42,7 +42,7 @@ Given a table name (as a keyword), a vector of column names, and a vector row va
   [:name :email]
   [["Stella" "stella@artois.beer"]
    ["Waldo" "waldo@lagunitas.beer"]
-   ["Aunt Sally" "sour@lagunitas.beer"]])`
+   ["Aunt Sally" "sour@lagunitas.beer"]])
 ;; equivalent to
 (jdbc/execute! ds ["INSERT INTO address (name,email) VALUES (?,?), (?,?), (?,?)"
                    "Stella" "stella@artois.beer"
@@ -130,7 +130,7 @@ Note that in order to override the default primary key column name (of `:id`), y
 
 ## Table & Column Entity Names
 
-By default, `next.jdbc.sql` constructs SQL strings with the entity names exactly matching the (unqualified) keywords provided. If you are trying to use a table name or column name that is a reserved name in SQL for your database, you will need to tell `next.jdbc.sql` to quote those names.
+By default, `next.jdbc.sql` functions construct SQL strings with the entity names exactly matching the (unqualified) keywords provided. If you are trying to use a table name or column name that is a reserved name in SQL for your database, you will need to tell those functions to quote those names.
 
 The namespace `next.jdbc.quoted` provides five functions that cover the most common types of entity quoting, and a modifier function for quoting dot-separated names (e.g., that include schemas):
 

@@ -47,7 +47,7 @@ Any function that creates a `PreparedStatement` will accept the following option
 * `:fetch-size` -- an integer that guides the JDBC driver in terms of how many rows to fetch at once; it is common to set `:fetch-size` to a negative value in order to trigger streaming of result sets -- some JDBC drivers require additional options to be set on the connection _as well_,
 * `:max-rows` -- an integer that tells the JDBC driver to limit result sets to this many rows,
 * `:result-type` -- a keyword that affects how the `ResultSet` can be traversed: `:forward-only`, `:scroll-insensitive`, `:scroll-sensitive`,
-* `:return-keys` -- a truthy value asks that the JDBC driver return any generated keys created by the operation; it can be `true` or it can be a vector of keywords identifying column names that should be returned,
+* `:return-keys` -- a truthy value asks that the JDBC driver to return any generated keys created by the operation; it can be `true` or it can be a vector of keywords identifying column names that should be returned,
 * `:timeout` -- an integer that specifies the timeout allowed for SQL operations.
 
 Not all databases or drivers support all of these options, or all values for any given option. If `:return-keys` is a vector of column names and that is not supported, `next.jdbc` will attempt a generic "return generated keys" option instead. If that is not supported, `next.jdbc` will fall back to a regular SQL operation. If other options are not supported, you may get a `SQLException`.

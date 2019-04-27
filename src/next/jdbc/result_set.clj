@@ -117,8 +117,10 @@
   (rs! [this mrs] (persistent! mrs)))
 
 (defn as-maps
-  "Given a `ResultSet` and options, return a `RowBuilder` / R`esultSetBuilder`
-  that produces bare vectors of hash map rows."
+  "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
+  that produces bare vectors of hash map rows.
+
+  This is the default `:builder-fn` option."
   [^ResultSet rs opts]
   (let [rsmeta (.getMetaData rs)
         cols   (get-column-names rsmeta opts)]

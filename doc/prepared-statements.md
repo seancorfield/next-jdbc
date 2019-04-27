@@ -24,7 +24,7 @@ This can be extended to any Clojure data type, to provide a customized way to ad
 (with-meta obj {'next.jdbc.prepare/set-parameter (fn [v ps i]...)})
 ```
 
-`next.jdbc/set-parameters` is available for you to call on any existing `PreparedStatement` to set or update the parameters that will be used when the statement is executed:
+`next.jdbc.prepare/set-parameters` is available for you to call on any existing `PreparedStatement` to set or update the parameters that will be used when the statement is executed:
 
 * `(set-parameters ps params)` -- loops over a sequence of parameter values and calls `set-parameter` for each one, as above.
 
