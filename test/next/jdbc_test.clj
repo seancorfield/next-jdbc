@@ -2,12 +2,14 @@
 
 (ns next.jdbc-test
   "Not exactly a test suite -- more a series of examples."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc :as jdbc]
             [next.jdbc.test-fixtures :refer [with-test-db ds]]
             [next.jdbc.prepare :as prep]
             [next.jdbc.result-set :as rs])
   (:import (java.sql ResultSet ResultSetMetaData)))
+
+(use-fixtures :once with-test-db)
 
 (deftest basic-tests
   (testing "reducible!"
