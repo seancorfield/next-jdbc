@@ -104,7 +104,7 @@
                        host
                        (when port (str ":" port))
                        db-sep dbname))
-        etc (dissoc db-spec :dbtype :dbname)]
+        etc (dissoc db-spec :dbtype :dbname :host :port :classname)]
     ;; verify the datasource is loadable
     (if-let [class-name (or classname (classnames subprotocol))]
       (do
