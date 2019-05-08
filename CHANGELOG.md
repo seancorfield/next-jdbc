@@ -10,4 +10,4 @@
 
 The following changes have been committed to the **master** branch and will be in the next release:
 
-* None at this time.
+* Fix #19 by caching loaded database driver classes.

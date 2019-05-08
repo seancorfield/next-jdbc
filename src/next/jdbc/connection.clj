@@ -72,12 +72,15 @@
     p))
 
 (defn- get-driver-connection
-  "Common logic for loading the `DriverManager` and the designed JDBC driver
-  class and obtaining the appropriate `Connection` object."
+  "Common logic for loading the designated JDBC driver class and
+  obtaining the appropriate `Connection` object."
   [url etc]
-  ;; force DriverManager to be loaded
-  (DriverManager/getLoginTimeout)
   (DriverManager/getConnection url (as-properties etc)))
+
+(def ^:private driver-cache
+  "An optimization for repeated calls to get-datasource, or for get-connection
+  called on a db-spec hash map, so that we only try to load the classes once."
+  (atom {}))
 
 (defn- spec->url+etc
   "Given a database spec, return a JDBC URL and a map of any additional options."
@@ -107,22 +110,27 @@
         etc (dissoc db-spec :dbtype :dbname :host :port :classname)]
     ;; verify the datasource is loadable
     (if-let [class-name (or classname (classnames subprotocol))]
-      (do
-        (if (string? class-name)
-          (clojure.lang.RT/loadClassForName class-name)
-          (loop [[clazz & more] class-name]
-            (when-let [load-failure
-                       (try
-                         (clojure.lang.RT/loadClassForName clazz)
-                         nil
-                         (catch Exception e
-                           e))]
-              (if (seq more)
-                (recur more)
-                (throw load-failure))))))
+      (swap! driver-cache update class-name
+             #(if % %
+                (do
+                  ;; force DriverManager to be loaded
+                  (DriverManager/getLoginTimeout)
+                  (if (string? class-name)
+                    (clojure.lang.RT/loadClassForName class-name)
+                    (loop [[clazz & more] class-name]
+                      (let [loaded
+                            (try
+                              (clojure.lang.RT/loadClassForName clazz)
+                              (catch Exception e
+                                e))]
+                        (if (instance? Throwable loaded)
+                          (if (seq more)
+                            (recur more)
+                            (throw loaded))
+                          loaded)))))))
       (throw (ex-info (str "Unknown dbtype: " dbtype) db-spec)))
     [url etc]))
-
+(def class-name "java.lang.String")
 (defn- string->url+etc
   "Given a JDBC URL, return it with an empty set of options with no parsing."
   [s]
