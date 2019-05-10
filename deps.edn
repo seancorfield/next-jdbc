@@ -14,6 +14,10 @@
                       org.xerial/sqlite-jdbc {:mvn/version "3.23.1"}
                       ;; Note: Assumes Java 8; there's a .jre7 version as well
                       com.microsoft.sqlserver/mssql-jdbc {:mvn/version "6.2.2.jre8"}}}
+  :runner-ci ; to get deps cached on CircleCI
+  {:extra-deps {com.cognitect/test-runner
+                {:git/url "https://github.com/cognitect-labs/test-runner"
+                 :sha "cb96e80f6f3d3b307c59cbeb49bb0dcb3a2a780b"}}}
   :runner
   {:extra-deps {com.cognitect/test-runner
                 {:git/url "https://github.com/cognitect-labs/test-runner"
