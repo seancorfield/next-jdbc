@@ -8,6 +8,7 @@
 
 ## Unreleased Changes
 
-The following changes have been committed to the **master** branch and will be in the next release:
+The following changes have been committed to the **master** branch and will be in the next release (Beta 1):
 
+* Set up CircleCI testing (just local DBs for now).
 * Fix #19 by caching loaded database driver classes.

@@ -8,13 +8,13 @@ The most general options are described first, followed by more specific options 
 
 Although `get-datasource` does not accept options, the "db spec" hash map passed in may contain the following options:
 
-* `dbtype` -- a string that identifies the type of JDBC database being used,
-* `dbname` -- a string that identifies the name of the actual database being used,
-* `host` -- an optional string that identifies the IP address or hostname of the server on which the database is running; the default is `"127.0.0.1"`,
-* `port` -- an optional integer that identifies the port on which the database is running; for common database types, `next.jdbc` knows the default so this should only be needed for non-standard setups or "exotic" database types,
-* `classname` -- an optional string that identifies the name of the JDBC driver class to be used for the connection; for common database types, `next.jdbc` knows the default so this should only be needed for "exotic" database types,
-* `user` -- an optional string that identifies the database username to be used when authenticating,
-* `password` -- an optional string that identifies the database password to be used when authenticating.
+* `:dbtype` -- a string that identifies the type of JDBC database being used,
+* `:dbname` -- a string that identifies the name of the actual database being used,
+* `:host` -- an optional string that identifies the IP address or hostname of the server on which the database is running; the default is `"127.0.0.1"`,
+* `:port` -- an optional integer that identifies the port on which the database is running; for common database types, `next.jdbc` knows the default so this should only be needed for non-standard setups or "exotic" database types,
+* `:classname` -- an optional string that identifies the name of the JDBC driver class to be used for the connection; for common database types, `next.jdbc` knows the default so this should only be needed for "exotic" database types,
+* `:user` -- an optional string that identifies the database username to be used when authenticating,
+* `:password` -- an optional string that identifies the database password to be used when authenticating.
 
 Any additional keys provided in the "db spec" will be passed to the JDBC driver as `Properties` when each connection is made.
 

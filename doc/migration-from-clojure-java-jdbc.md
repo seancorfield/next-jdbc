@@ -51,7 +51,7 @@ If you are using `:result-set-fn` and/or `:row-fn`, you will need to change to e
 
 These are mostly drawn from [Issue #5](https://github.com/seancorfield/next-jdbc/issues/5) although most of the bullets in that issue are described in more detail above.
 
-* Keyword options no longer end in `?` -- to reflect the latest best practice on predicates vs. attributes,
+* Keyword options no longer end in `?` -- for consistency (in `clojure.java.jdbc`, some flag options ended in `?` and some did not; also some options that ended in `?` accepted non-`Boolean` values, e.g., `:as-arrays?` and `:explain?`),
 * `with-db-connection` has been replaced by just `with-open` containing a call to `get-connection`,
 * `with-transaction` can take a `:rollback-only` option, but there is no way to change a transaction to rollback _dynamically_; throw an exception instead (all transactions roll back on an exception)
 * The extension points for setting parameters and reading columns are now `SettableParameter` and `ReadableColumn` protocols.
