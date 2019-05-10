@@ -1,4 +1,4 @@
-# next.jdbc
+# next.jdbc [![CircleCI](https://circleci.com/gh/seancorfield/next-jdbc/tree/master.svg?style=svg)](https://circleci.com/gh/seancorfield/next-jdbc/tree/master)
 
 The next generation of `clojure.java.jdbc`: a new low-level Clojure wrapper for JDBC-based access to databases.
 
