@@ -14,3 +14,4 @@ The following changes have been committed to the **master** branch and will be i
 * Address #21 by adding `next.jdbc.specs` and documenting basic usage.
 * Fix #19 by caching loaded database driver classes.
 * Address #16 by renaming `reducible!` to `plan` (**BREAKING CHANGE!**).
+* Address #3 by deciding to maintain this library outside Clojure Contrib.
