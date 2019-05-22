@@ -136,4 +136,22 @@ If `with-transaction` is given a datasource, it will create and close the connec
   (jdbc/execute! con ...)) ; committed
 ```
 
+## Support from Specs
+
+_Coming in Beta 1!_
+
+As you are developing with `next.jdbc`, it can be useful to have assistance from `clojure.spec` in checking calls to `next.jdbc`'s functions, to provide explicit argument checking and/or better error messages for some common mistakes, e.g., trying to pass a plain SQL string where a vector (containing a SQL string, and no parameters) is expected.
+
+You can enable argument checking for functions in both `next.jdbc` and `next.jdbc.sql` by requiring the `next.jdbc.specs` namespace and instrumenting the functions. A convenience function is provided:
+
+```clojure
+(require '[next.jdbc.specs :as specs])
+(specs/instrument) ; instruments all next.jdbc functions
+
+(jdbc/execute! ds "SELECT * FROM fruit")
+Call to #'next.jdbc/execute! did not conform to spec.
+```
+
+In the `:problems` output, you'll see the `:path [:sql :sql-params]` and `:pred vector?` for the `:val "SELECT * FROM fruit"`. Without the specs' assistance, this mistake would produce a more cryptic error, a `ClassCastException`, that a `Character` cannot be cast to a `String`, from inside `next.jdbc.prepare`.
+
 [Friendly SQL Functions :>](/doc/friendly-sql-functions.md)
