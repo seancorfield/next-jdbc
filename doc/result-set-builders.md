@@ -24,7 +24,7 @@ This protocol defines four functions and is used whenever `next.jdbc` needs to m
 * `(with-column builder row i)` -- given the row so far, fetches column `i` from the current row of the `ResultSet`, converts it to a Clojure value, and adds it to the row (for `as-maps` this is a call to `.getObject`, a call to `read-column-by-index` -- see the `ReadableColumn` protocol below, and a call to `assoc!`),
 * `(row! builder row)` -- completes the row (a `(persistent! row)` call by default).
 
-`execute!` and `execute-one!` call these functions for each row they need to build. `reducible!` _may_ call these functions if the reducing function causes a row to be materialized.
+`execute!` and `execute-one!` call these functions for each row they need to build. `plan` _may_ call these functions if the reducing function causes a row to be materialized.
 
 ## ResultSet Protocol
 
@@ -34,7 +34,7 @@ This protocol defines three functions and is used whenever `next.jdbc` needs to 
 * `(with-row builder rs row)` -- given the result set so far and a new row, returns the updated result set (a `(conj! rs row)` call by default),
 * `(rs! builder rs)` -- completes the result set (a `(persistent! rs)` call by default).
 
-Only `execute!` expects this protocol to be implemented. `execute-one!` and `reducible!` do not call these functions.
+Only `execute!` expects this protocol to be implemented. `execute-one!` and `plan` do not call these functions.
 
 ## Result Set Builder Functions
 
@@ -42,13 +42,13 @@ The `as-*` functions described above are all implemented in terms of these proto
 
 The options hash map for any `next.jdbc` function can contain a `:builder-fn` key and the value is used as the row/result set builder function. The tests for `next.jdbc.result-set` include a [record-based builder function](https://github.com/seancorfield/next-jdbc/blob/master/test/next/jdbc/result_set_test.clj#L148-L164) as an example of how you can extend this to satisfy your needs.
 
-The options hash map passed to the builder function will contain a `:next.jdbc/sql-params` key, whose value is the SQL + parameters vector passed into the top-level `next.jdbc` functions (`reducible!`, `execute!`, and `execute-one!`).
+The options hash map passed to the builder function will contain a `:next.jdbc/sql-params` key, whose value is the SQL + parameters vector passed into the top-level `next.jdbc` functions (`plan`, `execute!`, and `execute-one!`).
 
 # ReadableColumn
 
 As mentioned above, when `with-column` is called, the expectation is that the row builder will call `.getObject` on the current state of the `ResultSet` object with the column index and will then call `read-column-by-index`, passing the column value, the `ResultSetMetaData`, and the column index. That function is part of the `ReadableColumn` protocol that you can extend to handle conversion of arbitrary database-specific types to Clojure values.
 
-In addition, inside `reducible!`, as each value is looked up by name in the current state of the `ResultSet` object, the `read-column-by-label` function is called, again passing the column value and the column label (the name used in the SQL to identify that column). This function is also part of the `ReadableColumn` protocol.
+In addition, inside `plan`, as each value is looked up by name in the current state of the `ResultSet` object, the `read-column-by-label` function is called, again passing the column value and the column label (the name used in the SQL to identify that column). This function is also part of the `ReadableColumn` protocol.
 
 The default implementation of this protocol is for these two functions to return `nil` as `nil`, a `Boolean` value as a canonical `true` or `false` value (unfortunately, JDBC drivers cannot be relied on to return unique values here!), and for all other objects to be returned as-is.
 

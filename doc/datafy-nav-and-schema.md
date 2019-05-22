@@ -43,6 +43,6 @@ When called (`datafy` on a row), it adds metadata to the row with a key of `cloj
 
 When that is called (`nav` on a row, column name, and column value), if a `:schema` entry exists for that column or it matches the default convention described above, then it will fetch row(s) using `next.jdbc`'s `Executable` functions `-execute-one` or `-execute-all`, passing in the connectable and options closed over.
 
-The protocol `next.jdbc.result-set/DatafiableRow` has a default implementation of `datafiable-row` for `clojure.lang.IObj` that just adds the metadata to support `datafy`. There is also an implementation baked into the result set handling behind `reducible!` so that you can call `datafiable-row` directly during reduction and get a fully-realized row that can be `datafy`'d (and then `nav`igated).
+The protocol `next.jdbc.result-set/DatafiableRow` has a default implementation of `datafiable-row` for `clojure.lang.IObj` that just adds the metadata to support `datafy`. There is also an implementation baked into the result set handling behind `plan` so that you can call `datafiable-row` directly during reduction and get a fully-realized row that can be `datafy`'d (and then `nav`igated).
 
 [<: All The Options](/doc/all-the-options.md) | [Migration from `clojure.java.jdbc` :>](/doc/migration-from-clojure-java-jdbc.md)

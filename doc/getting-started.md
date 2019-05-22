@@ -85,7 +85,7 @@ While these functions are fine for retrieving result sets as data, most of the t
 ```clojure
 user=> (into #{}
              (map :ADDRESS/NAME)
-             (jdbc/reducible! ds ["select * from address"]))
+             (jdbc/plan ds ["select * from address"]))
 #{"Sean Corfield" "Someone Else"}
 user=>
 ```
@@ -95,7 +95,7 @@ This produces a set of all the unique names in the `address` table, directly fro
 ```clojure
 user=> (into #{}
              (map :name)
-             (jdbc/reducible! ds ["select * from address"]))
+             (jdbc/plan ds ["select * from address"]))
 #{"Sean Corfield" "Someone Else"}
 user=>
 ```
@@ -112,7 +112,7 @@ If you want to run multiple SQL operations without that overhead each time, you 
 (with-open [con (jdbc/get-connection ds)]
   (jdbc/execute! con ...)
   (jdbc/execute! con ...)
-  (into [] (map :column) (jdbc/reducible! con ...)))
+  (into [] (map :column) (jdbc/plan con ...)))
 ```
 
 If any of these operations throws an exception, the connection will still be closed but operations prior to the exception will have already been committed to the database. If you want to reuse a connection across multiple operations but have them all rollback if an exception occurs, you can use `next.jdbc/with-transaction`:
@@ -121,7 +121,7 @@ If any of these operations throws an exception, the connection will still be clo
 (jdbc/with-transaction [tx ds]
   (jdbc/execute! tx ...)
   (jdbc/execute! tx ...)
-  (into [] (map :column) (jdbc/reducible! tx ...)))
+  (into [] (map :column) (jdbc/plan tx ...)))
 ```
 
 If `with-transaction` is given a datasource, it will create and close the connection for you. If you pass in an existing connection, `with-transaction` will set up a transaction on that connection and, after either committing or rolling back the transaction, will restore the state of the connection and leave it open:
@@ -132,7 +132,7 @@ If `with-transaction` is given a datasource, it will create and close the connec
   (jdbc/with-transaction [tx con] ; will commit or rollback this group:
     (jdbc/execute! tx ...)
     (jdbc/execute! tx ...)
-    (into [] (map :column) (jdbc/reducible! tx ...)))
+    (into [] (map :column) (jdbc/plan tx ...)))
   (jdbc/execute! con ...)) ; committed
 ```
 

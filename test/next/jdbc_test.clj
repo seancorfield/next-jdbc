@@ -15,11 +15,11 @@
 (specs/instrument)
 
 (deftest basic-tests
-  (testing "reducible!"
+  (testing "plan"
     (is (= "Apple"
            (reduce (fn [_ row] (reduced (:name row)))
                    nil
-                   (jdbc/reducible!
+                   (jdbc/plan
                     (ds)
                     ["select * from fruit where appearance = ?" "red"])))))
   (testing "execute-one!"

@@ -21,7 +21,7 @@ If you used `:as-arrays? true`, you will need to use a `:builder-fn` option of `
 * `get-datasource` -- has no equivalent in `clojure.java.jdbc` but is intended to emphasize `javax.sql.DataSource` as a starting point,
 * `get-connection` -- overlaps with `clojure.java.jdbc` (and returns a `java.sql.Connection`) but accepts only a subset of the options (`:dbtype`/`:dbname` hash map, `String` JDBC URI); `clojure.java.jdbc/get-connection` accepts `{:datasource ds}` whereas `next.jdbc/get-connection` accepts the `javax.sql.DataSource` object directly,
 * `prepare` -- somewhat similar to `clojure.java.jdbc/prepare-statement` but it accepts a vector of SQL and parameters (compared to just a raw SQL string),
-* `reducible!` -- somewhat similar to `clojure.java.jdbc/reducible-query` but accepts arbitrary SQL statements for execution,
+* `plan` -- somewhat similar to `clojure.java.jdbc/reducible-query` but accepts arbitrary SQL statements for execution,
 * `execute!` -- has no direct equivalent in `clojure.java.jdbc` (but it can replace most uses of both `query` and `db-do-commands`),
 * `execute-one!` -- has no equivalent in `clojure.java.jdbc` (but it can replace most uses of `query` that currently use `:result-set-fn first`),
 * `transact` -- similar to `clojure.java.jdbc/db-transaction*`,
@@ -45,7 +45,7 @@ The `next.jdbc.sql` namespace contains several functions with similarities to `c
 
 If you are using `:identifiers` and/or `:entities`, you will need to change to appropriate `:builder-fn` and/or `:table-fn`/`:column-fn` options. For the latter, instead of the `quoted` function, there is the `next.jdbc.quoted` namespace which contains functions for the common quoting strategies.
 
-If you are using `:result-set-fn` and/or `:row-fn`, you will need to change to explicit calls (to the result set function, or to `map` the row function), or to use the `reducible!` approach with `reduce` or various transducing functions. Note: this means that result sets are never exposed lazily in `next.jdbc` -- in `clojure.java.jdbc` you had to be careful that your `:result-set-fn` was eager, but in `next.jdbc` you either reduce the result set eagerly (via `reducible!`) or you get a fully-realized result set data structure back (from `execute!` and `execute-one!`). As with `clojure.java.jdbc` however, you can still stream result sets from the database and process them via reduction (was `reducible-query`, now `reducible!`). Remember that you can terminate a reduction early by using the `reduced` function to wrap the final value you produce.
+If you are using `:result-set-fn` and/or `:row-fn`, you will need to change to explicit calls (to the result set function, or to `map` the row function), or to use the `plan` approach with `reduce` or various transducing functions. Note: this means that result sets are never exposed lazily in `next.jdbc` -- in `clojure.java.jdbc` you had to be careful that your `:result-set-fn` was eager, but in `next.jdbc` you either reduce the result set eagerly (via `plan`) or you get a fully-realized result set data structure back (from `execute!` and `execute-one!`). As with `clojure.java.jdbc` however, you can still stream result sets from the database and process them via reduction (was `reducible-query`, now `plan`). Remember that you can terminate a reduction early by using the `reduced` function to wrap the final value you produce.
 
 ## Further Minor differences
 

@@ -9,7 +9,7 @@
   * `PreparedStatement` -- SQL and parameters combined, from a connection,
 
   and the following functions and a macro:
-  * `reducible!` -- given a connectable and SQL + parameters or a statement,
+  * `plan` -- given a connectable and SQL + parameters or a statement,
       return a reducible that, when reduced will execute the SQL and consume
       the `ResultSet` produced,
   * `execute!` -- given a connectable and SQL + parameters or a statement,
@@ -128,7 +128,7 @@
   ([connection sql-params opts]
    (p/prepare connection sql-params opts)))
 
-(defn reducible!
+(defn plan
   "General SQL execution function.
 
   Returns a reducible that, when reduced, runs the SQL and yields the result.

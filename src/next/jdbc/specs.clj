@@ -59,7 +59,7 @@
                      :sql-params ::sql-params
                      :opts (s/? ::opts-map)))
 
-(s/fdef jdbc/reducible!
+(s/fdef jdbc/plan
         :args (s/alt :prepared (s/cat :stmt ::prepared-statement)
                      :sql (s/cat :connectable ::connectable
                                  :sql-params ::sql-params
@@ -146,7 +146,7 @@
   (st/instrument [`jdbc/get-datasource
                   `jdbc/get-connection
                   `jdbc/prepare
-                  `jdbc/reducible!
+                  `jdbc/plan
                   `jdbc/execute!
                   `jdbc/execute-one!
                   `jdbc/transact

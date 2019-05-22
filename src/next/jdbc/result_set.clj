@@ -208,7 +208,7 @@
   on, to lazily navigate through foreign key relationships into other tables.
 
   If `datafiable-row` is called when reducing the result set produced by
-  `next.jdbc/reducible!`, the row is fully-realized from the `ResultSet`
+  `next.jdbc/plan`, the row is fully-realized from the `ResultSet`
   first."
   (datafiable-row [this connectable opts]
     "Produce a datafiable representation of a row from a `ResultSet`."))
