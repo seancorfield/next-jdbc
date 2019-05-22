@@ -1,0 +1,149 @@
+;; copyright (c) 2019 Sean Corfield, all rights reserved
+
+(ns next.jdbc.specs
+  (:require [clojure.spec.alpha :as s]
+            [clojure.spec.test.alpha :as st]
+            [next.jdbc :as jdbc]
+            [next.jdbc.sql :as sql])
+  (:import (java.sql Connection PreparedStatement)
+           (javax.sql DataSource)))
+
+(s/def ::dbtype string?)
+(s/def ::dbname string?)
+(s/def ::classname string?)
+(s/def ::user string?)
+(s/def ::password string?)
+(s/def ::host string?)
+(s/def ::port pos-int?)
+(s/def ::db-spec-map (s/keys :req-un [::dbtype ::dbname]
+                             :opt-un [::classname
+                                      ::user ::password
+                                      ::host ::port]))
+
+(s/def ::connection #(instance? Connection %))
+(s/def ::datasource #(instance? DataSource %))
+(s/def ::prepared-statement #(instance? PreparedStatement %))
+
+(s/def ::db-spec (s/or :db-spec ::db-spec-map
+                       :string  string?
+                       :ds      ::datasource))
+
+(s/def ::connectable any?)
+(s/def ::key-map (s/map-of keyword? any?))
+(s/def ::opts-map (s/map-of keyword? any?))
+
+(s/def ::sql-params (s/and vector?
+                           (s/cat :sql string?
+                                  :params (s/* any?))))
+
+(s/fdef jdbc/get-datasource
+        :args (s/cat :spec ::db-spec))
+
+(s/fdef jdbc/get-connection
+        :args (s/cat :spec ::db-spec
+                     :opts (s/? ::opts-map)))
+
+(s/fdef jdbc/prepare
+        :args (s/cat :connection ::connection
+                     :sql-params ::sql-params
+                     :opts (s/? ::opts-map)))
+
+(s/fdef jdbc/reducible!
+        :args (s/alt :prepared (s/cat :stmt ::prepared-statement)
+                     :sql (s/cat :connectable ::connectable
+                                 :sql-params ::sql-params
+                                 :opts (s/? ::opts-map))))
+
+(s/fdef jdbc/execute!
+        :args (s/alt :prepared (s/cat :stmt ::prepared-statement)
+                     :sql (s/cat :connectable ::connectable
+                                 :sql-params ::sql-params
+                                 :opts (s/? ::opts-map))))
+
+(s/fdef jdbc/execute-one!
+        :args (s/alt :prepared (s/cat :stmt ::prepared-statement)
+                     :sql (s/cat :connectable ::connectable
+                                 :sql-params ::sql-params
+                                 :opts (s/? ::opts-map))))
+
+(s/fdef jdbc/transact
+        :args (s/cat :connectable ::connectable
+                     :f fn?
+                     :opts (s/? ::opts-map)))
+
+(s/fdef jdbc/with-transaction
+        :args (s/cat :binding (s/and vector?
+                                     (s/cat :sym simple-symbol?
+                                            :connectable ::connectable
+                                            :opts ::opts-map))
+                     :body (s/* any?)))
+
+(s/fdef sql/insert!
+        :args (s/cat :connectable ::connectable
+                     :table keyword?
+                     :key-map ::key-map
+                     :opts (s/? ::opts-map)))
+
+(s/fdef sql/insert-multi!
+        :args (s/and (s/cat :connectable ::connectable
+                            :table keyword?
+                            :cols (s/coll-of keyword? :kind vector?)
+                            :rows (s/coll-of (s/coll-of any? :kind vector?) :kind vector?)
+                            :opts (s/? ::opts-map))
+                     #(apply = (count (:cols %))
+                        (map count (:rows %)))))
+
+(s/fdef sql/query
+        :args (s/cat :connectable ::connectable
+                     :sql-params ::sql-params
+                     :opts (s/? ::opts-map)))
+
+(s/fdef sql/find-by-keys
+        :args (s/cat :connectable ::connectable
+                     :table keyword?
+                     :key-map (s/or :example ::key-map
+                                    :where ::sql-params)
+                     :opts (s/? ::opts-map)))
+
+(s/fdef sql/get-by-id
+        :args (s/alt :with-id (s/cat :connectable ::connectable
+                                     :table keyword?
+                                     :pk any?
+                                     :opts (s/? ::opts-map))
+                     :pk-name (s/cat :connectable ::connectable
+                                     :table keyword?
+                                     :pk any?
+                                     :pk-name keyword?
+                                     :opts ::opts-map)))
+
+(s/fdef sql/update!
+        :args (s/cat :connectable ::connectable
+                     :table keyword?
+                     :key-map ::key-map
+                     :where-params (s/or :example ::key-map
+                                         :where ::sql-params)
+                     :opts (s/? ::opts-map)))
+
+(s/fdef sql/delete!
+        :args (s/cat :connectable ::connectable
+                     :table keyword?
+                     :where-params (s/or :example ::key-map
+                                         :where ::sql-params)
+                     :opts (s/? ::opts-map)))
+
+(defn instrument []
+  (st/instrument [`jdbc/get-datasource
+                  `jdbc/get-connection
+                  `jdbc/prepare
+                  `jdbc/reducible!
+                  `jdbc/execute!
+                  `jdbc/execute-one!
+                  `jdbc/transact
+                  `jdbc/with-transaction
+                  `sql/insert!
+                  `sql/insert-multi!
+                  `sql/query
+                  `sql/find-by-keys
+                  `sql/get-by-id
+                  `sql/update!
+                  `sql/delete!]))

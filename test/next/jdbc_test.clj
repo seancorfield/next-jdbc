@@ -6,10 +6,13 @@
             [next.jdbc :as jdbc]
             [next.jdbc.test-fixtures :refer [with-test-db ds]]
             [next.jdbc.prepare :as prep]
-            [next.jdbc.result-set :as rs])
+            [next.jdbc.result-set :as rs]
+            [next.jdbc.specs :as specs])
   (:import (java.sql ResultSet ResultSetMetaData)))
 
 (use-fixtures :once with-test-db)
+
+(specs/instrument)
 
 (deftest basic-tests
   (testing "reducible!"

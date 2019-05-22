@@ -6,11 +6,14 @@
   At some future date, tests for the syntactic sugar functions will be added."
   (:require [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc.quoted :refer [mysql sql-server]]
+            [next.jdbc.specs :as specs]
             [next.jdbc.sql :as sql]
             [next.jdbc.test-fixtures
              :refer [with-test-db ds derby? sqlite?]]))
 
 (use-fixtures :once with-test-db)
+
+(specs/instrument)
 
 (deftest test-by-keys
   (testing ":where clause"

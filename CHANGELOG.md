@@ -11,4 +11,5 @@
 The following changes have been committed to the **master** branch and will be in the next release (Beta 1):
 
 * Set up CircleCI testing (just local DBs for now).
+* Address #21 by adding `next.jdbc.specs` -- still need to update the docs!
 * Fix #19 by caching loaded database driver classes.
