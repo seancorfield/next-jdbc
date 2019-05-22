@@ -1,6 +1,17 @@
 ;; copyright (c) 2019 Sean Corfield, all rights reserved
 
 (ns next.jdbc.specs
+  "Specs for the core API of next.jdbc.
+
+  The functions from `next.jdbc` and `next.jdbc.sql` have specs here.
+  Just `:args` are spec'd. These specs are intended to aid development
+  with `next.jdbc` by catching simple errors in calling the library.
+  The `connectable` argument is currently just `any?` but both
+  `get-datasource` and `get-connection` have stricter specs. If you
+  extend `Sourceable` or `Connectable`, those specs will likely be too strict.
+
+  In addition, there is an `instrument` function that provides a simple
+  way to instrument all of the `next.jdbc` functions."
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.test.alpha :as st]
             [next.jdbc :as jdbc]
