@@ -130,7 +130,7 @@
                           loaded)))))))
       (throw (ex-info (str "Unknown dbtype: " dbtype) db-spec)))
     [url etc]))
-(def class-name "java.lang.String")
+
 (defn- string->url+etc
   "Given a JDBC URL, return it with an empty set of options with no parsing."
   [s]
