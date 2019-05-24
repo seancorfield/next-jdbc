@@ -8,7 +8,7 @@ The latest versions on Clojars and on cljdoc:
 
 [![Clojars Project](https://clojars.org/seancorfield/next.jdbc/latest-version.svg)](https://clojars.org/seancorfield/next.jdbc) [![cljdoc badge](https://cljdoc.org/badge/seancorfield/next.jdbc)](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT)
 
-This documentation is for the upcoming 1.0.0-beta1 release.
+This documentation is for the 1.0.0-beta1 release.
 
 * [Getting Started](/doc/getting-started.md)
 * [Migrating from `clojure.java.jdbc`](/doc/migration-from-clojure-java-jdbc.md)
@@ -18,17 +18,17 @@ This documentation is for the upcoming 1.0.0-beta1 release.
 
 Why another JDBC library? Why a different API from `clojure.java.jdbc`?
 
-* Performance: there's a surprising amount of overhead in how `ResultSet` objects are converted to sequences of hash maps – which can be really noticeable for large result sets – so I want a better way to handle that. There's also quite a bit of overhead and complexity in all the conditional logic and parsing that is associated with `db-spec`-as-hash-map.
+* Performance: there's a surprising amount of overhead in how `ResultSet` objects are converted to sequences of hash maps in `clojure.java.jdbc` – which can be really noticeable for large result sets – so I wanted a better way to handle that. There's also quite a bit of overhead and complexity in all the conditional logic and parsing that is associated with `db-spec`-as-hash-map.
 * A more modern API, based on using qualified keywords and transducers etc: `:qualifier` and `reducible-query` in recent `clojure.java.jdbc` versions were steps toward that but there's a lot of "legacy" API in the library and I want to present a more focused, more streamlined API so folks naturally use the `IReduceInit` / transducer approach from day one and benefit from qualified keywords.
 * Simplicity: `clojure.java.jdbc` uses a variety of ways to execute SQL which can lead to inconsistencies and surprises – `query`, `execute!`, and `db-do-commands` are all different ways to execute different types of SQL statement so you have to remember which is which and you often have to watch out for restrictions in the underlying JDBC API.
 
-Those are my three primary drivers. In addition, the `db-spec`-as-hash-map approach in `clojure.java.jdbc` has caused a lot of frustration and confusion in the past, especially with the wide range of conflicting options that are supported. `next.jdbc` is heavily protocol-based so it's easier to mix'n'match how you use it with direct Java JDBC code (and the protocol-based approach contributes to the improved performance overall). There's a much clearer path of `db-spec` -> `DataSource` -> `Connection` now, which should steer people toward more connection reuse and better performing apps.
+Those were my three primary drivers. In addition, the `db-spec`-as-hash-map approach in `clojure.java.jdbc` has caused a lot of frustration and confusion in the past, especially with the wide range of conflicting options that are supported. `next.jdbc` is heavily protocol-based so it's easier to mix'n'match how you use it with direct Java JDBC code (and the protocol-based approach contributes to the improved performance overall). There's a much clearer path of `db-spec` -> `DataSource` -> `Connection` now, which should steer people toward more connection reuse and better performing apps.
 
 I also wanted `datafy`/`nav` support baked right in (it was added to `clojure.java.jdbc` back in December 2018 as an undocumented, experimental API in a separate namespace). It is the default behavior for `execute!` and `execute!`. The protocol-based function `next.jdbc.result-set/datafiable-row` can be used with `plan` if you need to add `datafy`/`nav` support to rows you are creating in your reduction.
 
-As `next.jdbc` moves from alpha to beta, the last breaking change has been made (renaming `reducible!` to `plan`) and the API should be considered stable. Only accretive and fixative changes will be made from now on.
+As `next.jdbc` moved from alpha to beta, the last breaking change was made (renaming `reducible!` to `plan`) and the API should now be considered stable. Only accretive and fixative changes will be made from now on.
 
-[Alpha builds have been available on Clojars](https://clojars.org/seancorfield/next.jdbc) for over a month (as of 2019-05-22). The first beta build will be available shortly. The "syntactic sugar" SQL functions (`insert!`, `query`, `update!`, and `delete!`) go beyond what I  wanted to include in the core API so they are in `next.jdbc.sql`. I know that their equivalents in `clojure.java.jdbc` are heavily used (based on the number of questions and JIRA issues I get).
+After a month of alpha builds being available for testing, the first [beta build is available on Clojars](https://clojars.org/seancorfield/next.jdbc) (as of 2019-05-24). In addition to the small, core API in `next.jdbc`, there are "syntactic sugar" SQL functions (`insert!`, `query`, `update!`, and `delete!`) available in `next.jdbc.sql` that are similar to the main API in `clojure.java.jdbc`. See [Migrating from `clojure.java.jdbc`](/doc/migration-from-clojure-java-jdbc.md) for more detail about the differences.
 
 ## Usage
 
@@ -55,12 +55,12 @@ Since `next.jdbc` uses raw Java JDBC types, you can use `with-open` directly to 
 
 ### Usage scenarios
 
-There are three intended usage scenarios that may drive the API to change:
-* Execute a SQL statement to obtain a single, fully-realized, `Datafiable` hash map that represents either the first row from a `ResultSet`, the first generated keys result (again, from a `ResultSet`), or the first result where neither of those are available (`next.jdbc` yields `{:next.jdbc/update-count N}` when it can only return an update count). This usage is currently supported by `execute-one!`.
+There are three intended usage scenarios that have driven the design of the API:
+* Execute a SQL statement and process it in a single eager operation, which may allow for the results to be streamed from the database (how to persuade JDBC to do that is database-specific!), and which cleans up resources before returning the result -- even if the reduction is short-circuited via `reduced`. This usage is supported by `plan`. This is likely to be the fastest approach and should be the first option you consider for SQL queries.
+* Execute a SQL statement to obtain a single, fully-realized, `Datafiable` hash map that represents either the first row from a `ResultSet`, the first generated keys result (again, from a `ResultSet`), or the first result where neither of those are available (`next.jdbc` yields `{:next.jdbc/update-count N}` when it can only return an update count). This usage is supported by `execute-one!`. This is probably your best choice for most non-query operations.
 * Execute a SQL statement to obtain a fully-realized, `Datafiable` result set -- a vector of hash maps. This usage is supported by `execute!`. You can also produce a vector of column names/row values (`next.jdbc.result-set/as-arrays`).
-* Execute a SQL statement and process it in a single eager operation, which may allow for the results to be streamed from the database (how to persuade JDBC to do that is database-specific!), and which cleans up resources before returning the result -- even if the reduction is short-circuited via `reduced`. This usage is supported by `plan`.
 
-In addition, convenience functions -- "syntactic sugar" -- are provided to insert rows, run queries, update rows, and delete rows, using the same names as in `clojure.java.jdbc`. These are in `next.jdbc.sql` since they involve SQL creation -- they may move into a separate "sibling" library, since they are not part of the intended core API.
+In addition, convenience functions -- "syntactic sugar" -- are provided to insert rows, run queries, update rows, and delete rows, using the same names as in `clojure.java.jdbc`. These are in `next.jdbc.sql` since they involve SQL creation -- they are not considered part of the core API.
 
 ## More Detailed Documentation
 

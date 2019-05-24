@@ -2,23 +2,23 @@
 
 The `next.jdbc` library provides a simpler, faster alternative to the [`clojure.java.jdbc`](https://github.com/clojure/java.jdbc) Contrib library and is the next step in the evolution of that library.
 
-It is designed to work with Clojure 1.10 or later, supports `datafy`/`nav`, and by default produces hash maps with automatically qualified keywords, indicating source tables and column names.
+It is designed to work with Clojure 1.10 or later, supports `datafy`/`nav`, and by default produces hash maps with automatically qualified keywords, indicating source tables and column names (labels).
 
 ## Installation
 
 You can add `next.jdbc` to your project with either:
 
 ```clojure
-{seancorfield/next.jdbc {:mvn/version "1.0.0-alpha13"}}
+{seancorfield/next.jdbc {:mvn/version "1.0.0-beta1"}}
 ```
 for `deps.edn` or:
 
 ```clojure
-[seancorfield/next.jdbc "1.0.0-alpha13"]
+[seancorfield/next.jdbc "1.0.0-beta1"]
 ```
 for `project.clj` or `build.boot`.
 
-In addition, you will need to add dependencies for the JDBC drivers you wish to use for whatever databases you are using. You can see the drivers and versions that `next.jdbc` is tested against in [the project's `deps.edn` file](https://github.com/seancorfield/next-jdbc/blob/master/deps.edn#L6-L16), but many other JDBC drivers for other databases should also work (e.g., Oracle, Red Shift).
+In addition, you will need to add dependencies for the JDBC drivers you wish to use for whatever databases you are using. You can see the drivers and versions that `next.jdbc` is tested against in [the project's `deps.edn` file](https://github.com/seancorfield/next-jdbc/blob/master/deps.edn#L6-L14), but many other JDBC drivers for other databases should also work (e.g., Oracle, Red Shift).
 
 ## An Example REPL Session
 
@@ -29,7 +29,7 @@ For the examples in this documentation, we will use a local H2 database on disk,
 ```clojure
 ;; deps.edn
 {:deps {org.clojure/clojure {:mvn/version "1.10.0"}
-        seancorfield/next.jdbc {:mvn/version "1.0.0-alpha13"}
+        seancorfield/next.jdbc {:mvn/version "1.0.0-beta1"}
         com.h2database/h2 {:mvn/version "1.4.197"}}}
 ```
 
@@ -137,8 +137,6 @@ If `with-transaction` is given a datasource, it will create and close the connec
 ```
 
 ## Support from Specs
-
-_Coming in Beta 1!_
 
 As you are developing with `next.jdbc`, it can be useful to have assistance from `clojure.spec` in checking calls to `next.jdbc`'s functions, to provide explicit argument checking and/or better error messages for some common mistakes, e.g., trying to pass a plain SQL string where a vector (containing a SQL string, and no parameters) is expected.
 

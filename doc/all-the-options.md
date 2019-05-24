@@ -44,7 +44,7 @@ Any function that creates a `PreparedStatement` will accept the following option
 
 * `:concurrency` -- a keyword that specifies the concurrency level: `:read-only`, `:updatable`,
 * `:cursors` -- a keyword that specifies whether cursors should be closed or held over a commit: `:close`, `:hold`,
-* `:fetch-size` -- an integer that guides the JDBC driver in terms of how many rows to fetch at once; it is common to set `:fetch-size` to a negative value in order to trigger streaming of result sets -- some JDBC drivers require additional options to be set on the connection _as well_,
+* `:fetch-size` -- an integer that guides the JDBC driver in terms of how many rows to fetch at once; it is common to set `:fetch-size` to zero or a negative value in order to trigger streaming of result sets -- some JDBC drivers require additional options to be set on the connection _as well_,
 * `:max-rows` -- an integer that tells the JDBC driver to limit result sets to this many rows,
 * `:result-type` -- a keyword that affects how the `ResultSet` can be traversed: `:forward-only`, `:scroll-insensitive`, `:scroll-sensitive`,
 * `:return-keys` -- a truthy value asks that the JDBC driver to return any generated keys created by the operation; it can be `true` or it can be a vector of keywords identifying column names that should be returned,
