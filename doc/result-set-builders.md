@@ -44,6 +44,10 @@ The options hash map for any `next.jdbc` function can contain a `:builder-fn` ke
 
 The options hash map passed to the builder function will contain a `:next.jdbc/sql-params` key, whose value is the SQL + parameters vector passed into the top-level `next.jdbc` functions (`plan`, `execute!`, and `execute-one!`).
 
+## `next.jdbc.optional`
+
+This namespace contains variants of the four `as-maps`-style builders above that omit keys from the row hash maps if the corresponding column is `NULL`. This is in keeping with Clojure's views of "optionality" -- that optional elements should simply be omitted -- and is provided as an "opt-in" style of rows and result sets.
+
 # ReadableColumn
 
 As mentioned above, when `with-column` is called, the expectation is that the row builder will call `.getObject` on the current state of the `ResultSet` object with the column index and will then call `read-column-by-index`, passing the column value, the `ResultSetMetaData`, and the column index. That function is part of the `ReadableColumn` protocol that you can extend to handle conversion of arbitrary database-specific types to Clojure values.

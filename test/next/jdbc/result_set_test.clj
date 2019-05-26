@@ -1,7 +1,7 @@
 ;; copyright (c) 2019 Sean Corfield, all rights reserved
 
 (ns next.jdbc.result-set-test
-  "Stub test namespace for the result set functions.
+  "Test namespace for the result set functions.
 
   What's left to be tested:
   * ReadableColumn protocol extension point"
@@ -63,6 +63,8 @@
                               ["select * from fruit where id = ?" 1]
                               {})]
       (is (map? row))
+      (is (contains? row :FRUIT/GRADE))
+      (is (nil? (:FRUIT/GRADE row)))
       (is (= 1 (:FRUIT/ID row)))
       (is (= "Apple" (:FRUIT/NAME row))))
     (let [rs (p/-execute-all (ds)
@@ -78,6 +80,8 @@
                               ["select * from fruit where id = ?" 2]
                               {:builder-fn rs/as-unqualified-maps})]
       (is (map? row))
+      (is (contains? row :COST))
+      (is (nil? (:COST row)))
       (is (= 2 (:ID row)))
       (is (= "Banana" (:NAME row)))))
   (testing "lower-case row builder"
@@ -85,6 +89,8 @@
                               ["select * from fruit where id = ?" 3]
                               {:builder-fn rs/as-lower-maps})]
       (is (map? row))
+      (is (contains? row :fruit/appearance))
+      (is (nil? (:fruit/appearance row)))
       (is (= 3 (:fruit/id row)))
       (is (= "Peach" (:fruit/name row)))))
   (testing "lower-case row builder"
