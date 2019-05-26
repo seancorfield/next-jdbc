@@ -10,7 +10,7 @@ jobs:
       - checkout
       - restore_cache:
           key: next-jdbc-{{ checksum "deps.edn" }}
-      - run: clojure -A:test:runner-ci -Spath
+      - run: clojure -R:test:runner -Spath
       - save_cache:
           paths:
             - ~/.m2
