@@ -1,6 +1,7 @@
 ;; copyright (c) 2019 Sean Corfield, all rights reserved
 
 (ns next.jdbc.test-fixtures
+  "Multi-database testing fixtures."
   (:require [next.jdbc :as jdbc]
             [next.jdbc.sql :as sql]))
 
@@ -56,15 +57,15 @@
 CREATE TABLE FRUIT (
   ID INTEGER " auto-inc-pk ",
   NAME VARCHAR(32),
-  APPEARANCE VARCHAR(32),
-  COST INT,
-  GRADE REAL
+  APPEARANCE VARCHAR(32) DEFAULT NULL,
+  COST INT DEFAULT NULL,
+  GRADE REAL DEFAULT NULL
 )")])
         (sql/insert-multi! con :fruit
                            [:name :appearance :cost :grade]
-                           [["Apple" "red" 59 87]
-                            ["Banana","yellow",29,92.2]
-                            ["Peach","fuzzy",139,90.0]
-                            ["Orange","juicy",89,88.6]]
+                           [["Apple" "red" 59 nil]
+                            ["Banana" "yellow" nil 92.2]
+                            ["Peach" nil 139 90.0]
+                            ["Orange" "juicy" 89 88.6]]
                            {:return-keys false})
         (t)))))

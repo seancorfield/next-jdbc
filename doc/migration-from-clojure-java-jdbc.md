@@ -12,7 +12,7 @@ This page attempts to list all of the differences between [clojure.java.jdbc](ht
 
 `clojure.java.jdbc` returned result sets (and generated keys) as hash maps with simple, lower-case keys by default. `next.jdbc` returns result sets (and generated keys) as hash maps with qualified, as-is keys by default: each key is qualified by the name of table from which it is drawn, if known. The as-is default is chosen to a) improve performance and b) not mess with the data. Using a `:builder-fn` option of `next.jdbc.result-set/as-unqualified-maps` will produce simple, as-is keys. Using a `:builder-fn` option of `next.jdbc.result-set/as-unqualified-lower-maps` will produce simple, lower-case keys -- the most compatible with `clojure.java.jdbc`'s default behavior.
 
-If you used `:as-arrays? true`, you will need to use a `:builder-fn` option of `next.jdbc.result-set/as-arrays` (or the unqualified or lower variant, as appropriate).
+If you used `:as-arrays? true`, you will most likely want to use a `:builder-fn` option of `next.jdbc.result-set/as-unqualified-lower-arrays`.
 
 ## Primary API
 
