@@ -19,6 +19,8 @@
   (:import (java.sql Connection PreparedStatement)
            (javax.sql DataSource)))
 
+(set! *warn-on-reflection* true)
+
 (s/def ::dbtype string?)
 (s/def ::dbname string?)
 (s/def ::classname string?)

@@ -9,3 +9,5 @@
   actually work they way they're supposed to!"
   (:require [clojure.test :refer [deftest is testing]]
             [next.jdbc.prepare :refer :all]))
+
+(set! *warn-on-reflection* true)

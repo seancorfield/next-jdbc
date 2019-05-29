@@ -10,6 +10,8 @@
             [next.jdbc.specs :as specs])
   (:import (java.sql ResultSet ResultSetMetaData)))
 
+(set! *warn-on-reflection* true)
+
 (use-fixtures :once with-test-db)
 
 (specs/instrument)

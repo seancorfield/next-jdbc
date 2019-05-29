@@ -8,6 +8,8 @@
             [next.jdbc.protocols :as p]
             [next.jdbc.test-fixtures :refer [with-test-db ds]]))
 
+(set! *warn-on-reflection* true)
+
 (use-fixtures :once with-test-db)
 
 (deftest test-map-row-builder

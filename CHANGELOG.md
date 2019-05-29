@@ -23,4 +23,5 @@ Only accretive/fixative changes will be made from now on (Beta 1).
 
 The following changes have been committed to the **master** branch and will be in the next release:
 
+* Fix #24 by adding return type hints to `next.jdbc` functions.
 * Fix #22 by adding `next.jdbc.optional` with four map builders that omit `NULL` columns from the row hash maps.

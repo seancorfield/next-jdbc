@@ -4,3 +4,5 @@
   "Stub test namespace for transaction handling."
   (:require [clojure.test :refer [deftest is testing]]
             [next.jdbc.transaction :refer :all]))
+
+(set! *warn-on-reflection* true)

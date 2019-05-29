@@ -6,6 +6,8 @@
   from Clojure data."
   (:require [clojure.string :as str]))
 
+(set! *warn-on-reflection* true)
+
 (defn ansi "ANSI \"quoting\"" [s] (str \" s \"))
 
 (defn mysql "MySQL `quoting`" [s] (str \` s \`))

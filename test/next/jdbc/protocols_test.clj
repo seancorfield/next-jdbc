@@ -5,3 +5,5 @@
   at this level tho'..."
   (:require [clojure.test :refer [deftest is testing]]
             [next.jdbc.protocols :refer :all]))
+
+(set! *warn-on-reflection* true)

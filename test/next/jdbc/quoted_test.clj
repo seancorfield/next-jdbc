@@ -7,6 +7,8 @@
             [next.jdbc.quoted :refer [ansi mysql sql-server oracle postgres
                                       schema]]))
 
+(set! *warn-on-reflection* true)
+
 (deftest basic-quoting
   (are [quote-fn quoted] (= (quote-fn "x") quoted)
     ansi       "\"x\""
