@@ -27,7 +27,7 @@
 
   Implementations are provided for `DataSource`, `PreparedStatement`, and
   `Object`, on the assumption that an `Object` can be turned into a `DataSource`."
-  (get-connection ^java.lang.AutoCloseable [this opts]
+  (get-connection ^java.sql.Connection [this opts]
     "Produce a new `java.sql.Connection` for use with `with-open`."))
 
 (defprotocol Executable

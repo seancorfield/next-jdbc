@@ -87,6 +87,7 @@
   * `redshift` -- `com.amazon.redshift.jdbc.Driver` -- no default port
   * `sqlite` -- `org.sqlite.JDBC`
   * `sqlserver`, `mssql` -- `com.microsoft.sqlserver.jdbc.SQLServerDriver` -- `1433`"
+  ^javax.sql.DataSource
   [spec]
   (p/get-datasource spec))
 
@@ -105,10 +106,12 @@
 
   If you call `get-connection` on anything else, it will call `get-datasource`
   first to try to get a `DataSource`, and then call `get-connection` on that."
-  ([spec]
-   (p/get-connection spec {}))
-  ([spec opts]
-   (p/get-connection spec opts)))
+  (^java.sql.Connection
+    [spec]
+    (p/get-connection spec {}))
+  (^java.sql.Connection
+    [spec opts]
+    (p/get-connection spec opts)))
 
 (defn prepare
   "Given a connection to a database, and a vector containing SQL and any
@@ -123,10 +126,12 @@
 
   See the list of options above (in the namespace docstring) for what can
   be passed to prepare."
-  ([connection sql-params]
-   (p/prepare connection sql-params {}))
-  ([connection sql-params opts]
-   (p/prepare connection sql-params opts)))
+  (^java.sql.PreparedStatement
+    [connection sql-params]
+    (p/prepare connection sql-params {}))
+  (^java.sql.PreparedStatement
+    [connection sql-params opts]
+    (p/prepare connection sql-params opts)))
 
 (defn plan
   "General SQL execution function.
@@ -135,14 +140,17 @@
 
   Can be called on a `PreparedStatement`, a `Connection`, or something that can
   produce a `Connection` via a `DataSource`."
-  ([stmt]
-   (p/-execute stmt [] {}))
-  ([connectable sql-params]
-   (p/-execute connectable sql-params
-               {:next.jdbc/sql-params sql-params}))
-  ([connectable sql-params opts]
-   (p/-execute connectable sql-params
-               (assoc opts :next.jdbc/sql-params sql-params))))
+  (^clojure.lang.IReduceInit
+    [stmt]
+    (p/-execute stmt [] {}))
+  (^clojure.lang.IReduceInit
+    [connectable sql-params]
+    (p/-execute connectable sql-params
+                {:next.jdbc/sql-params sql-params}))
+  (^clojure.lang.IReduceInit
+    [connectable sql-params opts]
+    (p/-execute connectable sql-params
+                (assoc opts :next.jdbc/sql-params sql-params))))
 
 (defn execute!
   "General SQL execution function.
