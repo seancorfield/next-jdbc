@@ -5,6 +5,8 @@
   (:require [next.jdbc :as jdbc]
             [next.jdbc.sql :as sql]))
 
+(set! *warn-on-reflection* true)
+
 (def ^:private test-derby {:dbtype "derby" :dbname "clojure_test_derby" :create true})
 
 (def ^:private test-h2-mem {:dbtype "h2:mem" :dbname "clojure_test_h2_mem"})

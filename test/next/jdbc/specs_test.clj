@@ -7,3 +7,5 @@
   next.jdbc and next.jdbc.sql namespaces."
   (:require [clojure.test :refer [deftest is testing]]
             [next.jdbc.specs :refer :all]))
+
+(set! *warn-on-reflection* true)

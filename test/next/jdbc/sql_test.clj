@@ -11,6 +11,8 @@
             [next.jdbc.test-fixtures
              :refer [with-test-db ds derby? sqlite?]]))
 
+(set! *warn-on-reflection* true)
+
 (use-fixtures :once with-test-db)
 
 (specs/instrument)

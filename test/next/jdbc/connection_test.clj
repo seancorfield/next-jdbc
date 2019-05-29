@@ -11,6 +11,8 @@
             [next.jdbc.connection :as c]
             [next.jdbc.protocols :as p]))
 
+(set! *warn-on-reflection* true)
+
 (def ^:private db-name "clojure_test")
 
 (deftest test-aliases-and-defaults

@@ -14,6 +14,8 @@
             [next.jdbc.test-fixtures :refer [with-test-db ds]])
   (:import (java.sql ResultSet ResultSetMetaData)))
 
+(set! *warn-on-reflection* true)
+
 (use-fixtures :once with-test-db)
 
 (deftest test-datafy-nav

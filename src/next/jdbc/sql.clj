@@ -22,6 +22,8 @@
   (:require [clojure.string :as str]
             [next.jdbc :refer [execute! execute-one!]]))
 
+(set! *warn-on-reflection* true)
+
 (defn- by-keys
   "Given a hash map of column names and values and a clause type
   (`:set`, `:where`), return a vector of a SQL clause and its parameters.
