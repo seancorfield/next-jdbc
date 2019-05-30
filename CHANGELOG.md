@@ -1,8 +1,8 @@
 # Change Log
 
-Only accretive/fixative changes will be made from now on (Beta 1).
+Only accretive/fixative changes will be made from now on.
 
-## Beta Builds (Stable)
+## Stable Builds
 
 * 2019-05-24 -- 1.0.0-beta1:
   * Set up CircleCI testing (just local DBs for now).
