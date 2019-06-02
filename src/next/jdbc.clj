@@ -183,17 +183,17 @@
                    (assoc opts :next.jdbc/sql-params sql-params))))
 
 (defn transact
-  "Given a connectable object and a function (taking a `Connection`),
-  execute the function on a new connection in a transactional manner.
+  "Given a transactable object and a function (taking a `Connection`),
+  execute the function over the connection in a transactional manner.
 
   See `with-transaction` for supported options."
-  ([connectable f]
-   (p/-transact connectable f {}))
-  ([connectable f opts]
-   (p/-transact connectable f opts)))
+  ([transactable f]
+   (p/-transact transactable f {}))
+  ([transactable f opts]
+   (p/-transact transactable f opts)))
 
 (defmacro with-transaction
-  "Given a connectable object, gets a new connection and binds it to `sym`,
+  "Given a transactable object, gets a connection and binds it to `sym`,
   then executes the `body` in that context, committing any changes if the body
   completes successfully, otherwise rolling back any changes made.
 
@@ -202,5 +202,5 @@
       `:repeatable-read`, `:serializable`,
   * `:read-only` -- `true` / `false`,
   * `:rollback-only` -- `true` / `false`."
-  [[sym connectable opts] & body]
-  `(transact ~connectable (^{:once true} fn* [~sym] ~@body) ~opts))
+  [[sym transactable opts] & body]
+  `(transact ~transactable (^{:once true} fn* [~sym] ~@body) ~opts))

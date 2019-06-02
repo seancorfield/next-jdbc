@@ -45,6 +45,8 @@
 (s/def ::key-map (s/map-of keyword? any?))
 (s/def ::opts-map (s/map-of keyword? any?))
 
+(s/def ::transactable any?)
+
 (s/def ::sql-params (s/and vector?
                            (s/cat :sql string?
                                   :params (s/* any?))))
@@ -80,14 +82,14 @@
                                  :opts (s/? ::opts-map))))
 
 (s/fdef jdbc/transact
-        :args (s/cat :connectable ::connectable
+        :args (s/cat :transactable ::transactable
                      :f fn?
                      :opts (s/? ::opts-map)))
 
 (s/fdef jdbc/with-transaction
         :args (s/cat :binding (s/and vector?
                                      (s/cat :sym simple-symbol?
-                                            :connectable ::connectable
+                                            :transactable ::transactable
                                             :opts ::opts-map))
                      :body (s/* any?)))
 
