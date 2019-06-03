@@ -2,7 +2,7 @@
 
 The `transact` function and `with-transaction` macro were briefly mentioned in the [Getting Started](/doc/getting-started.md) section but we'll go into more detail here.
 
-Although `(transact connectable thunk)` is available, it is expected that you will mostly use `(with-transaction [tx connectable] body...)` when you want to execute multiple SQL operations in the context of a single transaction so that is what this section focuses on.
+Although `(transact transactable thunk)` is available, it is expected that you will mostly use `(with-transaction [tx transactable] body...)` when you want to execute multiple SQL operations in the context of a single transaction so that is what this section focuses on.
 
 By default, all connections that `next.jdbc` creates are automatically committable, i.e., as each operation is performed, the effect is committed to the database directly before the next operation is performed. Any exceptions only cause the current operation to be aborted -- any prior operations have already been committed.
 
