@@ -1,4 +1,4 @@
-# `next.jbc` Options
+# `next.jdbc` Options
 
 This section documents all of the options that are supported by all of the functions in `next.jdbc`. Nearly every function accepts an optional hash map as the last argument, that can control many of the behaviors of the library.
 
