@@ -8,6 +8,7 @@ The following changes have been committed to the **master** branch and will be i
 
 * Fix #24 by adding return type hints to `next.jdbc` functions.
 * Fix #22 by adding `next.jdbc.optional` with four map builders that omit `NULL` columns from the row hash maps.
+* Documentation improvements (#27, #28, and #29), including changing "connectable" to "transactable" for the `transact` function and the `with-transaction` macro (for consistency with the name of the underlying protocol).
 
 ## Stable Builds
 
