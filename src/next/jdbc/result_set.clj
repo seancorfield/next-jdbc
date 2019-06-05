@@ -35,22 +35,44 @@
   (mapv (fn [^Integer i] (keyword (.getColumnLabel rsmeta i)))
         (range 1 (inc (.getColumnCount rsmeta)))))
 
+(defn get-modified-column-names
+  "Given `ResultSetMetaData`, return a vector of modified column names, each
+  qualified by the table from which it came.
+
+  Requires both the `:qualifier-fn` and `:label-fn` options."
+  [^ResultSetMetaData rsmeta opts]
+  (assert (:qualifier-fn opts) ":qualifier-fn is required")
+  (assert (:label-fn opts) ":label-fn is required")
+  (mapv (fn [^Integer i] (keyword (some-> (.getTableName rsmeta i)
+                                          (not-empty)
+                                          ((:qualifier-fn opts)))
+                                  (-> (.getColumnLabel rsmeta i)
+                                      ((:label-fn opts)))))
+        (range 1 (inc (.getColumnCount rsmeta)))))
+
+(defn get-unqualified-modified-column-names
+  "Given `ResultSetMetaData`, return a vector of unqualified modified column
+  names.
+
+  Requires the `:label-fn` option."
+  [^ResultSetMetaData rsmeta opts]
+  (assert (:label-fn opts) ":label-fn is required")
+  (mapv (fn [^Integer i] (keyword ((:label-fn opts) (.getColumnLabel rsmeta i))))
+        (range 1 (inc (.getColumnCount rsmeta)))))
+
 (defn get-lower-column-names
   "Given `ResultSetMetaData`, return a vector of lower-case column names, each
   qualified by the table from which it came."
-  [^ResultSetMetaData rsmeta opts]
-  (mapv (fn [^Integer i] (keyword (some-> (.getTableName rsmeta i)
-                                          (not-empty)
-                                          (str/lower-case))
-                                  (-> (.getColumnLabel rsmeta i)
-                                      (str/lower-case))))
-        (range 1 (inc (.getColumnCount rsmeta)))))
+  [rsmeta opts]
+  (get-modified-column-names rsmeta (assoc opts
+                                           :qualifier-fn str/lower-case
+                                           :label-fn str/lower-case)))
 
 (defn get-unqualified-lower-column-names
   "Given `ResultSetMetaData`, return a vector of unqualified column names."
-  [^ResultSetMetaData rsmeta opts]
-  (mapv (fn [^Integer i] (keyword (str/lower-case (.getColumnLabel rsmeta i))))
-        (range 1 (inc (.getColumnCount rsmeta)))))
+  [rsmeta opts]
+  (get-unqualified-modified-column-names rsmeta
+                                         (assoc opts :label-fn str/lower-case)))
 
 (defprotocol ReadableColumn
   "Protocol for reading objects from the `java.sql.ResultSet`. Default
@@ -134,21 +156,42 @@
         cols   (get-unqualified-column-names rsmeta opts)]
     (->MapResultSetBuilder rs rsmeta cols)))
 
+(defn as-modified-maps
+  "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
+  that produces bare vectors of hash map rows, with modified keys.
+
+  Requires both the `:qualifier-fn` and `:label-fn` options."
+  [^ResultSet rs opts]
+  (assert (:qualifier-fn opts) ":qualifier-fn is required")
+  (assert (:label-fn opts) ":label-fn is required")
+  (let [rsmeta (.getMetaData rs)
+        cols   (get-modified-column-names rsmeta opts)]
+    (->MapResultSetBuilder rs rsmeta cols)))
+
+(defn as-unqualified-modified-maps
+  "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
+  that produces bare vectors of hash map rows, with simple, modified keys.
+
+  Requires the `:label-fn` option."
+  [^ResultSet rs opts]
+  (assert (:label-fn opts) ":label-fn is required")
+  (let [rsmeta (.getMetaData rs)
+        cols   (get-unqualified-modified-column-names rsmeta opts)]
+    (->MapResultSetBuilder rs rsmeta cols)))
+
 (defn as-lower-maps
   "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
   that produces bare vectors of hash map rows, with lower-case keys."
-  [^ResultSet rs opts]
-  (let [rsmeta (.getMetaData rs)
-        cols   (get-lower-column-names rsmeta opts)]
-    (->MapResultSetBuilder rs rsmeta cols)))
+  [rs opts]
+  (as-modified-maps rs (assoc opts
+                              :qualifier-fn str/lower-case
+                              :label-fn str/lower-case)))
 
 (defn as-unqualified-lower-maps
   "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
   that produces bare vectors of hash map rows, with simple, lower-case keys."
-  [^ResultSet rs opts]
-  (let [rsmeta (.getMetaData rs)
-        cols   (get-unqualified-lower-column-names rsmeta opts)]
-    (->MapResultSetBuilder rs rsmeta cols)))
+  [rs opts]
+  (as-unqualified-modified-maps rs (assoc opts :label-fn str/lower-case)))
 
 (defrecord ArrayResultSetBuilder [^ResultSet rs rsmeta cols]
   RowBuilder
@@ -180,23 +223,46 @@
         cols   (get-unqualified-column-names rsmeta opts)]
     (->ArrayResultSetBuilder rs rsmeta cols)))
 
+(defn as-modified-arrays
+  "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
+  that produces a vector of modified column names followed by vectors of
+  row values.
+
+  Requires both the `:qualifier-fn` and `:label-fn` options."
+  [^ResultSet rs opts]
+  (assert (:qualifier-fn opts) ":qualifier-fn is required")
+  (assert (:label-fn opts) ":label-fn is required")
+  (let [rsmeta (.getMetaData rs)
+        cols   (get-modified-column-names rsmeta opts)]
+    (->ArrayResultSetBuilder rs rsmeta cols)))
+
+(defn as-unqualified-modified-arrays
+  "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
+  that produces a vector of simple, modified column names followed by
+  vectors of row values.
+
+  Requires the `:label-fn` option."
+  [^ResultSet rs opts]
+  (assert (:label-fn opts) ":label-fn is required")
+  (let [rsmeta (.getMetaData rs)
+        cols   (get-unqualified-modified-column-names rsmeta opts)]
+    (->ArrayResultSetBuilder rs rsmeta cols)))
+
 (defn as-lower-arrays
   "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
   that produces a vector of lower-case column names followed by vectors of
   row values."
-  [^ResultSet rs opts]
-  (let [rsmeta (.getMetaData rs)
-        cols   (get-lower-column-names rsmeta opts)]
-    (->ArrayResultSetBuilder rs rsmeta cols)))
+  [rs opts]
+  (as-modified-arrays rs (assoc opts
+                                :qualifier-fn str/lower-case
+                                :label-fn str/lower-case)))
 
 (defn as-unqualified-lower-arrays
   "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
   that produces a vector of simple, lower-case column names followed by
   vectors of row values."
-  [^ResultSet rs opts]
-  (let [rsmeta (.getMetaData rs)
-        cols   (get-unqualified-lower-column-names rsmeta opts)]
-    (->ArrayResultSetBuilder rs rsmeta cols)))
+  [rs opts]
+  (as-unqualified-modified-arrays rs (assoc opts :label-fn str/lower-case)))
 
 (declare navize-row)
 

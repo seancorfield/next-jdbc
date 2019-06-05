@@ -37,10 +37,20 @@
       (is (not (contains? row :fruit/appearance)))
       (is (= 3 (:fruit/id row)))
       (is (= "Peach" (:fruit/name row)))))
-  (testing "lower-case row builder"
+  (testing "unqualified lower-case row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 4]
                               {:builder-fn opt/as-unqualified-lower-maps})]
       (is (map? row))
       (is (= 4 (:id row)))
-      (is (= "Orange" (:name row))))))
+      (is (= "Orange" (:name row)))))
+  (testing "custom row builder"
+    (let [row (p/-execute-one (ds)
+                              ["select * from fruit where id = ?" 3]
+                              {:builder-fn opt/as-modified-maps
+                               :label-fn str/lower-case
+                               :qualifier-fn identity})]
+      (is (map? row))
+      (is (not (contains? row :FRUIT/appearance)))
+      (is (= 3 (:FRUIT/id row)))
+      (is (= "Peach" (:FRUIT/name row))))))

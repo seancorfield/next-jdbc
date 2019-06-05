@@ -7,13 +7,20 @@ The default builder for rows and result sets creates qualified keywords that mat
 * `as-maps` -- table-qualified keywords as-is, the default, e.g., `:ADDRESS/ID`, `:myTable/firstName`,
 * `as-unqualified-maps` -- simple keywords as-is, e.g., `:ID`, `:firstName`,
 * `as-lower-maps` -- table-qualified lower-case keywords, e.g., `:address/id`, `:mytable/firstname`,
-* `as-unqualified-lower-maps` -- simple lower-case keywords as-is, e.g., `:id`, `:firstname`,
+* `as-unqualified-lower-maps` -- simple lower-case keywords, e.g., `:id`, `:firstname`,
 * `as-arrays` -- table-qualified keywords as-is (vector of column names, followed by vectors of row values),
 * `as-unqualified-arrays` -- simple keywords as-is,
 * `as-lower-arrays` -- table-qualified lower-case keywords,
 * `as-unqualified-lower-arrays` -- simple lower-case keywords.
 
 The reason behind the default is to a) be a simple transform, b) produce qualified keys in keeping with Clojure's direction (with `clojure.spec` etc), and c) not mess with the data. `as-arrays` is (slightly) faster than `as-maps` since it produces less data (vectors of values instead of vectors of hash maps), but the `lower` options will be slightly slower since they include (conditional) logic to convert strings to lower-case. The `unqualified` options may be slightly faster than their qualified equivalents but make no attempt to keep column names unique if your SQL joins across multiple tables.
+
+In addition, the following generic builders can take `:label-fn` and `:qualifier-fn` options to control how the label and qualified are processed. The `lower` variants above are implemented in terms of these, passing `clojure.string/lower-case` for both of those options.
+
+* `as-modified-maps` -- table-qualified keywords,
+* `as-unqualified-modified-maps` -- simple keywords,
+* `as-modified-arrays` -- table-qualified keywords,
+* `as-unqualified-modified-arrays` -- simple keywords.
 
 ## RowBuilder Protocol
 
@@ -46,7 +53,7 @@ The options hash map passed to the builder function will contain a `:next.jdbc/s
 
 ## `next.jdbc.optional`
 
-This namespace contains variants of the four `as-maps`-style builders above that omit keys from the row hash maps if the corresponding column is `NULL`. This is in keeping with Clojure's views of "optionality" -- that optional elements should simply be omitted -- and is provided as an "opt-in" style of rows and result sets.
+This namespace contains variants of the six `as-maps`-style builders above that omit keys from the row hash maps if the corresponding column is `NULL`. This is in keeping with Clojure's views of "optionality" -- that optional elements should simply be omitted -- and is provided as an "opt-in" style of rows and result sets.
 
 # ReadableColumn
 

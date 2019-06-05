@@ -3,7 +3,8 @@
 (ns next.jdbc.optional
   "Builders that treat NULL SQL values as 'optional' and omit the
   corresponding keys from the Clojure hash maps for the rows."
-  (:require [next.jdbc.result-set :as rs])
+  (:require [clojure.string :as str]
+            [next.jdbc.result-set :as rs])
   (:import (java.sql ResultSet)))
 
 (set! *warn-on-reflection* true)
@@ -43,20 +44,43 @@
         cols   (rs/get-unqualified-column-names rsmeta opts)]
     (->MapResultSetOptionalBuilder rs rsmeta cols)))
 
+(defn as-modified-maps
+  "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
+  that produces bare vectors of hash map rows, with modified keys and nil
+  columns omitted.
+
+  Requires both the `:qualifier-fn` and `:label-fn` options."
+  [^ResultSet rs opts]
+  (assert (:qualifier-fn opts) ":qualifier-fn is required")
+  (assert (:label-fn opts) ":label-fn is required")
+  (let [rsmeta (.getMetaData rs)
+        cols   (rs/get-modified-column-names rsmeta opts)]
+    (->MapResultSetOptionalBuilder rs rsmeta cols)))
+
+(defn as-unqualified-modified-maps
+  "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
+  that produces bare vectors of hash map rows, with simple, modified keys
+  and nil columns omitted.
+
+  Requires the `:label-fn` option."
+  [^ResultSet rs opts]
+  (assert (:label-fn opts) ":label-fn is required")
+  (let [rsmeta (.getMetaData rs)
+        cols   (rs/get-unqualified-modified-column-names rsmeta opts)]
+    (->MapResultSetOptionalBuilder rs rsmeta cols)))
+
 (defn as-lower-maps
   "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
   that produces bare vectors of hash map rows, with lower-case keys and nil
   columns omitted."
-  [^ResultSet rs opts]
-  (let [rsmeta (.getMetaData rs)
-        cols   (rs/get-lower-column-names rsmeta opts)]
-    (->MapResultSetOptionalBuilder rs rsmeta cols)))
+  [rs opts]
+  (as-modified-maps rs (assoc opts
+                              :qualifier-fn str/lower-case
+                              :label-fn str/lower-case)))
 
 (defn as-unqualified-lower-maps
   "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
   that produces bare vectors of hash map rows, with simple, lower-case keys
   and nil columns omitted."
-  [^ResultSet rs opts]
-  (let [rsmeta (.getMetaData rs)
-        cols   (rs/get-unqualified-lower-column-names rsmeta opts)]
-    (->MapResultSetOptionalBuilder rs rsmeta cols)))
+  [rs opts]
+  (as-unqualified-modified-maps rs (assoc opts :label-fn str/lower-case)))

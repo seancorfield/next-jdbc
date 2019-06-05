@@ -7,8 +7,9 @@ Only accretive/fixative changes will be made from now on.
 The following changes have been committed to the **master** branch and will be in the next release:
 
 * Fix #24 by adding return type hints to `next.jdbc` functions.
-* Fix #22 by adding `next.jdbc.optional` with four map builders that omit `NULL` columns from the row hash maps.
+* Fix #22 by adding `next.jdbc.optional` with six map builders that omit `NULL` columns from the row hash maps.
 * Documentation improvements (#27, #28, and #29), including changing "connectable" to "transactable" for the `transact` function and the `with-transaction` macro (for consistency with the name of the underlying protocol).
+* Fix #30 by adding `modified` variants of column name functions and builders. The `lower` variants have been rewritten in terms of these new `modified` variants. This adds `:label-fn` and `:qualifier-fn` options that mirror `:column-fn` and `:table-fn` for row builders.
 
 ## Stable Builds
 
