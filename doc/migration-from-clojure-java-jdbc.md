@@ -49,9 +49,23 @@ The `next.jdbc.sql` namespace contains several functions with similarities to `c
 * `update!` -- similar to `clojure.java.jdbc/update!` but will also accept a hash map of column name/value pairs instead of a partial where clause (vector),
 * `delete!` -- similar to `clojure.java.jdbc/delete!` but will also accept a hash map of column name/value pairs instead of a partial where clause (vector).
 
-If you are using `:identifiers` and/or `:entities`, you will need to change to appropriate `:builder-fn` and/or `:table-fn`/`:column-fn` options. For the latter, instead of the `quoted` function, there is the `next.jdbc.quoted` namespace which contains functions for the common quoting strategies.
+### `:identifiers` and `:qualifier`
 
-If you are using `:result-set-fn` and/or `:row-fn`, you will need to change to explicit calls (to the result set function, or to `map` the row function), or to use the `plan` approach with `reduce` or various transducing functions. Note: this means that result sets are never exposed lazily in `next.jdbc` -- in `clojure.java.jdbc` you had to be careful that your `:result-set-fn` was eager, but in `next.jdbc` you either reduce the result set eagerly (via `plan`) or you get a fully-realized result set data structure back (from `execute!` and `execute-one!`). As with `clojure.java.jdbc` however, you can still stream result sets from the database and process them via reduction (was `reducible-query`, now `plan`). Remember that you can terminate a reduction early by using the `reduced` function to wrap the final value you produce.
+If you are using `:identifiers`, you will need to change to the appropriate `:builder-fn` option with one of `next.jdbc.result-set`'s `as-*` functions.
+
+`clojure.java.jdbc`'s default is the equivalent of `as-unqualified-lower-maps`. If you specified `:identifiers identity`, you can use `as-unqualified-maps`. If you provided your own string transformation function, you probably want `as-unqualified-modified-maps` and also pass your transformation function as the `:label-fn` option.
+
+If you used `:qualifier`, you may be able to get the same effect with `as-maps`, `as-lower-maps`, or `as-modified-maps`. Otherwise, you may need to specify `:qualifier-fn` as `(constantly "my-qualifier")` with one of the `modified` builder variants.
+
+### `:entities`
+
+If you are using `:entities`, you will need to change to the appropriate `:table-fn`/`:column-fn` options. Table naming and column naming can be controlled separately in `next.jdbc`. Instead of the `quoted` function, there is the `next.jdbc.quoted` namespace which contains functions for the common quoting strategies.
+
+### `:result-set-fn` and `:row-fn`
+
+If you are using `:result-set-fn` and/or `:row-fn`, you will need to change to explicit calls (to the result set function, or to `map` the row function), or to use the `plan` approach with `reduce` or various transducing functions.
+
+Note: this means that result sets are never exposed lazily in `next.jdbc` -- in `clojure.java.jdbc` you had to be careful that your `:result-set-fn` was eager, but in `next.jdbc` you either reduce the result set eagerly (via `plan`) or you get a fully-realized result set data structure back (from `execute!` and `execute-one!`). As with `clojure.java.jdbc` however, you can still stream result sets from the database and process them via reduction (was `reducible-query`, now `plan`). Remember that you can terminate a reduction early by using the `reduced` function to wrap the final value you produce.
 
 ## Further Minor differences
 
