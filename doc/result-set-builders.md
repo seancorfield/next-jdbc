@@ -22,6 +22,14 @@ In addition, the following generic builders can take `:label-fn` and `:qualifier
 * `as-modified-arrays` -- table-qualified keywords,
 * `as-unqualified-modified-arrays` -- simple keywords.
 
+An example builder that converts `snake_case` database table/column names to `kebab-case` keywords:
+
+```clojure
+(defn as-kebab-maps [rs opts]
+  (let [kebab #(str/replace % #"_" "-")]
+    (result-set/as-modified-maps rs (assoc opts :qualifier-fn kebab :label-fn kebab))))
+```
+
 ## RowBuilder Protocol
 
 This protocol defines four functions and is used whenever `next.jdbc` needs to materialize a row from a `ResultSet` as a Clojure data structure:
