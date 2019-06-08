@@ -1,1 +1,5 @@
-{:known-macros [next.jdbc/with-transaction]}
+{:known-macros [next.jdbc/with-transaction]
+ :ignored-unused-namespaces [next.jdbc.connection
+                             next.jdbc.prepare
+                             next.jdbc.result-set
+                             next.jdbc.transaction]}

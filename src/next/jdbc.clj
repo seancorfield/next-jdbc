@@ -42,11 +42,11 @@
   * `:result-type` -- `:forward-only`, `:scroll-insensitive`, `:scroll-sensitive`,
   * `:return-keys` -- either `true` or a vector of key names to return,
   * `:timeout` -- the query timeout."
-  (:require [next.jdbc.connection] ; used to extend protocols
-            [next.jdbc.prepare] ; used to extend protocols
+  (:require [next.jdbc.connection]
+            [next.jdbc.prepare]
             [next.jdbc.protocols :as p]
-            [next.jdbc.result-set] ; used to extend protocols
-            [next.jdbc.transaction])) ; used to extend protocols
+            [next.jdbc.result-set]
+            [next.jdbc.transaction]))
 
 (set! *warn-on-reflection* true)
 
