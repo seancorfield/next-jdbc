@@ -354,6 +354,22 @@
                   (with-meta this
                     {`core-p/datafy (navize-row connectable opts)})))
 
+(defn datafiable-result-set
+  "Given a ResultSet, a connectable, and an options hash map, return a fully
+  realized, datafiable result set per the `:builder-fn` option passed in.
+  If no `:builder-fn` option is provided, `as-maps` is used as the default.
+
+  This can be used to process regular result sets or metadata result sets."
+  [^java.sql.ResultSet rs connectable opts]
+  (let [builder-fn (get opts :builder-fn as-maps)
+        builder    (builder-fn rs opts)]
+    (loop [rs' (->rs builder) more? (.next rs)]
+      (if more?
+        (recur (with-row builder rs'
+                 (datafiable-row (row-builder builder) connectable opts))
+               (.next rs))
+        (rs! builder rs')))))
+
 (defn- stmt->result-set
   "Given a `PreparedStatement` and options, execute it and return a `ResultSet`
   if possible."
@@ -413,14 +429,7 @@
                                      (rest sql-params)
                                      opts)]
       (if-let [rs (stmt->result-set stmt opts)]
-        (let [builder-fn (get opts :builder-fn as-maps)
-              builder    (builder-fn rs opts)]
-          (loop [rs' (->rs builder) more? (.next rs)]
-            (if more?
-              (recur (with-row builder rs'
-                       (datafiable-row (row-builder builder) this opts))
-                     (.next rs))
-              (rs! builder rs'))))
+        (datafiable-result-set rs this opts)
         [{:next.jdbc/update-count (.getUpdateCount stmt)}])))
 
   javax.sql.DataSource
@@ -452,14 +461,7 @@
                                        (rest sql-params)
                                        opts)]
         (if-let [rs (stmt->result-set stmt opts)]
-          (let [builder-fn (get opts :builder-fn as-maps)
-                builder    (builder-fn rs opts)]
-            (loop [rs' (->rs builder) more? (.next rs)]
-              (if more?
-                (recur (with-row builder rs'
-                         (datafiable-row (row-builder builder) this opts))
-                       (.next rs))
-                (rs! builder rs'))))
+          (datafiable-result-set rs this opts)
           [{:next.jdbc/update-count (.getUpdateCount stmt)}]))))
 
   java.sql.PreparedStatement
@@ -480,15 +482,7 @@
       {:next.jdbc/update-count (.getUpdateCount this)}))
   (-execute-all [this _ opts]
     (if-let [rs (stmt->result-set this opts)]
-      (let [builder-fn (get opts :builder-fn as-maps)
-            builder    (builder-fn rs opts)]
-        (loop [rs' (->rs builder) more? (.next rs)]
-          (if more?
-            (recur (with-row builder rs'
-                     (datafiable-row (row-builder builder)
-                                     (.getConnection this) opts))
-                   (.next rs))
-            (rs! builder rs'))))
+      (datafiable-result-set rs (.getConnection this) opts)
       [{:next.jdbc/update-count (.getUpdateCount this)}]))
 
   Object

@@ -191,3 +191,18 @@
     (is (every? #(instance? Fruit %) rs))
     (is (= 1 (count rs)))
     (is (= 1 (:id (first rs))))))
+
+(deftest metadata-result-set
+  (let [metadata (with-open [con (p/get-connection (ds) {})]
+                   (-> (.getMetaData con)
+                       (.getTables nil nil nil (into-array ["TABLE" "VIEW"]))
+                       (rs/datafiable-result-set (ds) {})))]
+    (is (vector? metadata))
+    (is (map? (first metadata)))
+    ;; we should find :something/table_name with a value of "fruit"
+    ;; may be upper/lower-case, could have any qualifier
+    (is (some (fn [row]
+                (some #(and (= "table_name" (-> % key name str/lower-case))
+                            (= "fruit" (-> % val name str/lower-case)))
+                      row))
+              metadata))))

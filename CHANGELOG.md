@@ -6,7 +6,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch and will be in the next release:
 
-* None.
+* Fix #26 by exposing `next.jdbc.result-set/datafiable-result-set` so that various `java.sql.DatabaseMetaData` methods that result metadata information in `ResultSet`s can be easily turned into a fully realized result set.
 
 ## Stable Builds
 

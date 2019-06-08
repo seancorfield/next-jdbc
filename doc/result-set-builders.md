@@ -59,6 +59,8 @@ The options hash map for any `next.jdbc` function can contain a `:builder-fn` ke
 
 The options hash map passed to the builder function will contain a `:next.jdbc/sql-params` key, whose value is the SQL + parameters vector passed into the top-level `next.jdbc` functions (`plan`, `execute!`, and `execute-one!`).
 
+There is also a convenience function, `datafiable-result-set`, that accepts a `ResultSet` object (and a connectable and an options hash map) and returns a fully realized result set, per the `:builder-fn` option (or `as-maps` if that option is omitted).
+
 ## `next.jdbc.optional`
 
 This namespace contains variants of the six `as-maps`-style builders above that omit keys from the row hash maps if the corresponding column is `NULL`. This is in keeping with Clojure's views of "optionality" -- that optional elements should simply be omitted -- and is provided as an "opt-in" style of rows and result sets.

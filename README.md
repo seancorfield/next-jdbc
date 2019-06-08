@@ -8,7 +8,7 @@ The latest versions on Clojars and on cljdoc:
 
 [![Clojars Project](https://clojars.org/seancorfield/next.jdbc/latest-version.svg)](https://clojars.org/seancorfield/next.jdbc) [![cljdoc badge](https://cljdoc.org/badge/seancorfield/next.jdbc)](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT)
 
-This documentation is for the 1.0.0-rc1 release -- [see the CHANGELOG](CHANGELOG.md).
+This documentation is for the upcoming 1.0.0 release -- [see the CHANGELOG](CHANGELOG.md).
 
 * [Getting Started](/doc/getting-started.md)
 * [Migrating from `clojure.java.jdbc`](/doc/migration-from-clojure-java-jdbc.md)

@@ -67,6 +67,19 @@ If you are using `:result-set-fn` and/or `:row-fn`, you will need to change to e
 
 Note: this means that result sets are never exposed lazily in `next.jdbc` -- in `clojure.java.jdbc` you had to be careful that your `:result-set-fn` was eager, but in `next.jdbc` you either reduce the result set eagerly (via `plan`) or you get a fully-realized result set data structure back (from `execute!` and `execute-one!`). As with `clojure.java.jdbc` however, you can still stream result sets from the database and process them via reduction (was `reducible-query`, now `plan`). Remember that you can terminate a reduction early by using the `reduced` function to wrap the final value you produce.
 
+### Processing Database Metadata
+
+There are no metadata-specific functions in `next.jdbc` but those in `clojure.java.jdbc` are only a very thin layer over the raw Java calls. Here's how metadata can be handled in `next.jdbc`:
+
+```clojure
+(with-open [con (p/get-connection ds opts)]
+  (-> (.getMetaData con) ; produces java.sql.DatabaseMetaData
+      (.getTables nil nil nil (into-array ["TABLE" "VIEW"]))
+      (rs/datafiable-result-set ds opts)))
+```
+
+Several methods on `DatabaseMetaData` return a `ResultSet` object. All of those can be handled similarly.
+
 ## Further Minor differences
 
 These are mostly drawn from [Issue #5](https://github.com/seancorfield/next-jdbc/issues/5) although most of the bullets in that issue are described in more detail above.
