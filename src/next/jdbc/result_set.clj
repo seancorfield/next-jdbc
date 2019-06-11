@@ -343,7 +343,9 @@
       (datafiable-row [this connectable opts]
                       (with-meta
                         (row-builder @builder)
-                        {`core-p/datafy (navize-row connectable opts)})))))
+                        {`core-p/datafy (navize-row connectable opts)}))
+
+      (toString [_] "{row} from `plan` -- missing `map` or `reduce`?"))))
 
 (extend-protocol
   DatafiableRow
@@ -411,7 +413,8 @@
                                                (first sql-params)
                                                (rest sql-params)
                                                opts)]
-                (reduce-stmt stmt f init opts)))))
+                (reduce-stmt stmt f init opts)))
+      (toString [_] "`IReduceInit` from `plan` -- missing reduction?")))
   (-execute-one [this sql-params opts]
     (with-open [stmt (prepare/create this
                                      (first sql-params)
@@ -441,7 +444,8 @@
                                                  (first sql-params)
                                                  (rest sql-params)
                                                  opts)]
-                  (reduce-stmt stmt f init opts))))))
+                  (reduce-stmt stmt f init opts))))
+      (toString [_] "`IReduceInit` from `plan` -- missing reduction?")))
   (-execute-one [this sql-params opts]
     (with-open [con (p/get-connection this opts)]
       (with-open [stmt (prepare/create con
@@ -471,7 +475,8 @@
   (-execute [this _ opts]
     (reify clojure.lang.IReduceInit
       (reduce [_ f init]
-              (reduce-stmt this f init (assoc opts :return-keys true)))))
+              (reduce-stmt this f init (assoc opts :return-keys true)))
+      (toString [_] "`IReduceInit` from `plan` -- missing reduction?")))
   (-execute-one [this _ opts]
     (if-let [rs (stmt->result-set this (assoc opts :return-keys true))]
       (let [builder-fn (get opts :builder-fn as-maps)

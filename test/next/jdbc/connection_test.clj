@@ -66,6 +66,7 @@
     (testing "datasource via Associative"
       (let [ds (p/get-datasource db)]
         (is (instance? javax.sql.DataSource ds))
+        (is (str/index-of (pr-str ds) (str "jdbc:" (:dbtype db))))
         ;; checks get-datasource on a DataSource is identity
         (is (identical? ds (p/get-datasource ds)))
         (with-open [con (p/get-connection ds {})]
@@ -74,6 +75,7 @@
       (let [[url _] (#'c/spec->url+etc db)
             ds (p/get-datasource url)]
         (is (instance? javax.sql.DataSource ds))
+        (is (str/index-of (pr-str ds) url))
         (with-open [con (p/get-connection ds {})]
           (is (instance? java.sql.Connection con)))))
     (testing "connection via map (Object)"

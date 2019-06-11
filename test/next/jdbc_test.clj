@@ -118,3 +118,13 @@ INSERT INTO fruit (name, appearance, cost, grade)
 VALUES ('Pear', 'green', 49, 47)
 "]))))
     (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))))
+
+(deftest plan-misuse
+  (let [s (pr-str (jdbc/plan (ds) ["select * from fruit"]))]
+    (is (re-find #"missing reduction" s)))
+  (let [s (pr-str (into [] (jdbc/plan (ds) ["select * from fruit"])))]
+    (is (re-find #"missing `map` or `reduce`" s)))
+  (let [s (pr-str (into [] (take 3) (jdbc/plan (ds) ["select * from fruit"])))]
+    (is (re-find #"missing `map` or `reduce`" s)))
+  (is (thrown? IllegalArgumentException
+               (doall (take 3 (jdbc/plan (ds) ["select * from fruit"]))))))

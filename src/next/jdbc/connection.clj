@@ -147,7 +147,8 @@
                    (get-driver-connection url
                                           (assoc etc
                                                  :user username
-                                                 :password password)))))
+                                                 :password password)))
+    (toString [_] url)))
 
 (defn- make-connection
   "Given a `DataSource` and a map of options, get a connection and update it
