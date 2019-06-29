@@ -190,7 +190,12 @@
   Given a connectable object, a table name, a sequence of column names, and
   a vector of rows of data (vectors of column values), inserts the data as
   multiple rows in the database and attempts to return a vector of maps of
-  generated keys."
+  generated keys.
+
+  Note: some database drivers need to be told to rewrite the SQL for this to
+  be performed as a single, batched operation. In particular, PostgreSQL
+  requires the `:reWriteBatchedInserts true` option and MySQL requires
+  `:rewriteBatchedStatement true` (both non-standard JDBC options, of course!)."
   ([connectable table cols rows]
    (insert-multi! connectable table cols rows {}))
   ([connectable table cols rows opts]

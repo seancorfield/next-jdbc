@@ -6,7 +6,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch since the 1.0.0 release:
 
-* None.
+* Fix #35 by explaining the database-specific options needed to ensure `insert-multi!` performs a single, batched operation.
 
 ## Stable Builds
 
