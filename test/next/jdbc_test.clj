@@ -110,13 +110,32 @@ VALUES ('Pear', 'green', 49, 47)
 "]))
                           {:rollback-only true})))
     (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
-  (testing "with-transaction"
+  (testing "with-transaction rollback-only"
     (is (= [{:next.jdbc/update-count 1}]
            (jdbc/with-transaction [t (ds) {:rollback-only true}]
              (jdbc/execute! t ["
 INSERT INTO fruit (name, appearance, cost, grade)
 VALUES ('Pear', 'green', 49, 47)
 "]))))
+    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
+  (testing "with-transaction exception"
+    (is (thrown? Throwable
+           (jdbc/with-transaction [t (ds)]
+             (jdbc/execute! t ["
+INSERT INTO fruit (name, appearance, cost, grade)
+VALUES ('Pear', 'green', 49, 47)
+"])
+             (throw (ex-info "abort" {})))))
+    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
+  (testing "with-transaction call rollback"
+    (is (= [{:next.jdbc/update-count 1}]
+           (jdbc/with-transaction [t (ds)]
+             (let [result (jdbc/execute! t ["
+INSERT INTO fruit (name, appearance, cost, grade)
+VALUES ('Pear', 'green', 49, 47)
+"])]
+               (.rollback t)
+               result))))
     (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))))
 
 (deftest plan-misuse

@@ -203,4 +203,5 @@
   * `:read-only` -- `true` / `false`,
   * `:rollback-only` -- `true` / `false`."
   [[sym transactable opts] & body]
-  `(transact ~transactable (^{:once true} fn* [~sym] ~@body) ~opts))
+  (let [con (vary-meta sym assoc :tag 'java.sql.Connection)]
+   `(transact ~transactable (^{:once true} fn* [~con] ~@body) (or ~opts {}))))

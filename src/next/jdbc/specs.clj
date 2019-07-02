@@ -90,7 +90,7 @@
         :args (s/cat :binding (s/and vector?
                                      (s/cat :sym simple-symbol?
                                             :transactable ::transactable
-                                            :opts ::opts-map))
+                                            :opts (s/? ::opts-map)))
                      :body (s/* any?)))
 
 (s/fdef sql/insert!

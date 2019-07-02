@@ -3,8 +3,7 @@
 (ns next.jdbc.transaction
   "SQL Transaction logic."
   (:require [next.jdbc.protocols :as p])
-  (:import (java.sql Connection
-                     SQLException)))
+  (:import (java.sql Connection)))
 
 (set! *warn-on-reflection* true)
 
