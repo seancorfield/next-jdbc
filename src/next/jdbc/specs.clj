@@ -43,6 +43,7 @@
 
 (s/def ::connectable any?)
 (s/def ::key-map (s/map-of keyword? any?))
+(s/def ::example-map (s/map-of keyword? any? :min-count 1))
 (s/def ::opts-map (s/map-of keyword? any?))
 
 (s/def ::transactable any?)
@@ -116,7 +117,7 @@
 (s/fdef sql/find-by-keys
         :args (s/cat :connectable ::connectable
                      :table keyword?
-                     :key-map (s/or :example ::key-map
+                     :key-map (s/or :example ::example-map
                                     :where ::sql-params)
                      :opts (s/? ::opts-map)))
 
@@ -135,14 +136,14 @@
         :args (s/cat :connectable ::connectable
                      :table keyword?
                      :key-map ::key-map
-                     :where-params (s/or :example ::key-map
+                     :where-params (s/or :example ::example-map
                                          :where ::sql-params)
                      :opts (s/? ::opts-map)))
 
 (s/fdef sql/delete!
         :args (s/cat :connectable ::connectable
                      :table keyword?
-                     :where-params (s/or :example ::key-map
+                     :where-params (s/or :example ::example-map
                                          :where ::sql-params)
                      :opts (s/? ::opts-map)))
 

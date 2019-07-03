@@ -155,3 +155,11 @@
     (is (= {:next.jdbc/update-count 2}
            (sql/delete! (ds) :fruit ["id > ?" 4])))
     (is (= 4 (count (sql/query (ds) ["select * from fruit"]))))))
+
+(deftest no-empty-example-maps
+  (is (thrown? clojure.lang.ExceptionInfo
+               (sql/find-by-keys (ds) :fruit {})))
+  (is (thrown? clojure.lang.ExceptionInfo
+               (sql/update! (ds) :fruit {} {})))
+  (is (thrown? clojure.lang.ExceptionInfo
+               (sql/delete! (ds) :fruit {}))))
