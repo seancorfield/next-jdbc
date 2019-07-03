@@ -9,6 +9,7 @@ The following changes have been committed to the **master** branch since the 1.0
 * Fix #37 by adjusting the spec for `with-transaction` to "require less" of the `:binding` vector.
 * Fix #36 by adding type hint in `with-transaction` macro.
 * Fix #35 by explaining the database-specific options needed to ensure `insert-multi!` performs a single, batched operation.
+* Fix #34 by explaining save points (in the Transactions documentation).
 
 ## Stable Builds
 

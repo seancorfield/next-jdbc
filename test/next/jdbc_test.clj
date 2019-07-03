@@ -136,6 +136,28 @@ VALUES ('Pear', 'green', 49, 47)
 "])]
                (.rollback t)
                result))))
+    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
+  (testing "with-transaction with unnamed save point"
+    (is (= [{:next.jdbc/update-count 1}]
+           (jdbc/with-transaction [t (ds)]
+             (let [save-point (.setSavepoint t)
+                   result (jdbc/execute! t ["
+INSERT INTO fruit (name, appearance, cost, grade)
+VALUES ('Pear', 'green', 49, 47)
+"])]
+               (.rollback t save-point)
+               result))))
+    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
+  (testing "with-transaction with named save point"
+    (is (= [{:next.jdbc/update-count 1}]
+           (jdbc/with-transaction [t (ds)]
+             (let [save-point (.setSavepoint t (name (gensym)))
+                   result (jdbc/execute! t ["
+INSERT INTO fruit (name, appearance, cost, grade)
+VALUES ('Pear', 'green', 49, 47)
+"])]
+               (.rollback t save-point)
+               result))))
     (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))))
 
 (deftest plan-misuse
