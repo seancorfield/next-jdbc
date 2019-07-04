@@ -4,15 +4,18 @@ Only accretive/fixative changes will be made from now on.
 
 ## Unreleased Changes
 
-The following changes have been committed to the **master** branch since the 1.0.0 release:
+The following changes have been committed to the **master** branch since the 1.0.1 release:
 
-* Fix #37 by adjusting the spec for `with-transaction` to "require less" of the `:binding` vector.
-* Fix #36 by adding type hint in `with-transaction` macro.
-* Fix #35 by explaining the database-specific options needed to ensure `insert-multi!` performs a single, batched operation.
-* Fix #34 by explaining save points (in the Transactions documentation).
-* Fix #33 by updating the spec for the example `key-map` in `find-by-keys`, `update!`, and `delete!` to reflect that you cannot pass an empty map to these functions (and added tests to ensure the calls fail with spec errors).
+* None.
 
 ## Stable Builds
+
+* 2019-07-03 -- 1.0.1
+  * Fix #37 by adjusting the spec for `with-transaction` to "require less" of the `:binding` vector.
+  * Fix #36 by adding type hint in `with-transaction` macro.
+  * Fix #35 by explaining the database-specific options needed to ensure `insert-multi!` performs a single, batched operation.
+  * Fix #34 by explaining save points (in the Transactions documentation).
+  * Fix #33 by updating the spec for the example `key-map` in `find-by-keys`, `update!`, and `delete!` to reflect that you cannot pass an empty map to these functions (and added tests to ensure the calls fail with spec errors).
 
 * 2019-06-12 -- 1.0.0 "gold"
   * Address #31 by making `reify`'d objects produce a more informative string representation if they are printed (e.g., misusing `plan` by not reducing it or not mapping an operation over the rows).
