@@ -24,7 +24,7 @@ Why another JDBC library? Why a different API from `clojure.java.jdbc`?
 
 Those were my three primary drivers. In addition, the `db-spec`-as-hash-map approach in `clojure.java.jdbc` has caused a lot of frustration and confusion in the past, especially with the wide range of conflicting options that are supported. `next.jdbc` is heavily protocol-based so it's easier to mix'n'match how you use it with direct Java JDBC code (and the protocol-based approach contributes to the improved performance overall). There's a much clearer path of `db-spec` -> `DataSource` -> `Connection` now, which should steer people toward more connection reuse and better performing apps.
 
-I also wanted `datafy`/`nav` support baked right in (it was added to `clojure.java.jdbc` back in December 2018 as an undocumented, experimental API in a separate namespace). It is the default behavior for `execute!` and `execute!`. The protocol-based function `next.jdbc.result-set/datafiable-row` can be used with `plan` if you need to add `datafy`/`nav` support to rows you are creating in your reduction.
+I also wanted `datafy`/`nav` support baked right in (it was added to `clojure.java.jdbc` back in December 2018 as an undocumented, experimental API in a separate namespace). It is the default behavior for `execute!` and `execute-one!`. The protocol-based function `next.jdbc.result-set/datafiable-row` can be used with `plan` if you need to add `datafy`/`nav` support to rows you are creating in your reduction.
 
 As `next.jdbc` moved from alpha to beta, the last breaking change was made (renaming `reducible!` to `plan`) and the API should now be considered stable. Only accretive and fixative changes will be made from now on.
 
