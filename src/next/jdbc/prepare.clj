@@ -72,7 +72,9 @@
   (into-array String return-keys))
 
 (defn create
-  "Given a `Connection`, a SQL string, some parameters, and some options,
+  "This is an implementation detail -- use `next.jdbc/prepare` instead.
+
+  Given a `Connection`, a SQL string, some parameters, and some options,
   return a `PreparedStatement` representing that."
   ^java.sql.PreparedStatement
   [^Connection con ^String sql params
