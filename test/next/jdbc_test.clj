@@ -82,21 +82,21 @@
       (is (every? int? (map first (rest rs))))
       (is (every? string? (map second (rest rs))))))
   (testing "prepare"
-    (let [rs (with-open [con (jdbc/get-connection (ds))]
-               (with-open [ps (jdbc/prepare
-                               con
-                               ["select * from fruit order by id"])]
-                 (jdbc/execute! ps)))]
+    (let [rs (with-open [con (jdbc/get-connection (ds))
+                         ps  (jdbc/prepare
+                              con
+                              ["select * from fruit order by id"])]
+                 (jdbc/execute! ps))]
       (is (every? map? rs))
       (is (every? meta rs))
       (is (= 4 (count rs)))
       (is (= 1 (:FRUIT/ID (first rs))))
       (is (= 4 (:FRUIT/ID (last rs)))))
-    (let [rs (with-open [con (jdbc/get-connection (ds))]
-               (with-open [ps (jdbc/prepare
-                               con
-                               ["select * from fruit where id = ?"])]
-                 (jdbc/execute! (prep/set-parameters ps [4]))))]
+    (let [rs (with-open [con (jdbc/get-connection (ds))
+                         ps  (jdbc/prepare
+                              con
+                              ["select * from fruit where id = ?"])]
+                 (jdbc/execute! (prep/set-parameters ps [4])))]
       (is (every? map? rs))
       (is (every? meta rs))
       (is (= 1 (count rs)))

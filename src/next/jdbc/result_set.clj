@@ -439,34 +439,34 @@
   (-execute [this sql-params opts]
     (reify clojure.lang.IReduceInit
       (reduce [_ f init]
-              (with-open [con (p/get-connection this opts)]
-                (with-open [stmt (prepare/create con
-                                                 (first sql-params)
-                                                 (rest sql-params)
-                                                 opts)]
-                  (reduce-stmt stmt f init opts))))
+              (with-open [con  (p/get-connection this opts)
+                          stmt (prepare/create con
+                                               (first sql-params)
+                                               (rest sql-params)
+                                               opts)]
+                  (reduce-stmt stmt f init opts)))
       (toString [_] "`IReduceInit` from `plan` -- missing reduction?")))
   (-execute-one [this sql-params opts]
-    (with-open [con (p/get-connection this opts)]
-      (with-open [stmt (prepare/create con
-                                       (first sql-params)
-                                       (rest sql-params)
-                                       opts)]
+    (with-open [con  (p/get-connection this opts)
+                stmt (prepare/create con
+                                     (first sql-params)
+                                     (rest sql-params)
+                                     opts)]
         (if-let [rs (stmt->result-set stmt opts)]
           (let [builder-fn (get opts :builder-fn as-maps)
                 builder    (builder-fn rs opts)]
             (when (.next rs)
                   (datafiable-row (row-builder builder) this opts)))
-          {:next.jdbc/update-count (.getUpdateCount stmt)}))))
+          {:next.jdbc/update-count (.getUpdateCount stmt)})))
   (-execute-all [this sql-params opts]
-    (with-open [con (p/get-connection this opts)]
-      (with-open [stmt (prepare/create con
-                                       (first sql-params)
-                                       (rest sql-params)
-                                       opts)]
+    (with-open [con  (p/get-connection this opts)
+                stmt (prepare/create con
+                                     (first sql-params)
+                                     (rest sql-params)
+                                     opts)]
         (if-let [rs (stmt->result-set stmt opts)]
           (datafiable-result-set rs this opts)
-          [{:next.jdbc/update-count (.getUpdateCount stmt)}]))))
+          [{:next.jdbc/update-count (.getUpdateCount stmt)}])))
 
   java.sql.PreparedStatement
   ;; we can't tell if this PreparedStatement will return generated

@@ -46,11 +46,11 @@ In addition, there are API functions to create `PreparedStatement`s (`prepare`) 
 Since `next.jdbc` uses raw Java JDBC types, you can use `with-open` directly to reuse connections and ensure they are cleaned up correctly:
 
 ```clojure
-  (let [my-datasource (get-datasource {:dbtype "..." :dbname "..." ...})]
-    (with-open [connection (get-connection my-datasource)]
-      (execute! connection [...])
-      (reduce my-fn init-value (plan connection [...]))
-      (execute! connection [...])
+  (let [my-datasource (jdbc/get-datasource {:dbtype "..." :dbname "..." ...})]
+    (with-open [connection (jdbc/get-connection my-datasource)]
+      (jdbc/execute! connection [...])
+      (reduce my-fn init-value (jdbc/plan connection [...]))
+      (jdbc/execute! connection [...])))
 ```
 
 ### Usage scenarios

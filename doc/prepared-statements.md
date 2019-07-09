@@ -9,7 +9,16 @@ If you need to pass an option map to `plan`, `execute!`, or `execute-one!` when 
 ```clojure
 (with-open [con (jdbc/get-connection ds)]
   (with-open [ps (jdbc/prepare con ["..." ...])]
-    (execute-one! ps nil {...})))
+    (jdbc/execute-one! ps nil {...})))
+```
+
+You can provide the parameters in the `prepare` call or you can provide them via a call to `set-parameters` (discussed in more detail below).
+
+```clojure
+;; assuming require next.jdbc.prepare :as p
+(with-open [con (jdbc/get-connection ds)
+            ps  (jdbc/prepare con ["..."])]
+  (jdbc/execute-one! (p/set-parameters ps [...])))
 ```
 
 ## Prepared Statement Parameters
@@ -24,10 +33,42 @@ This can be extended to any Clojure data type, to provide a customized way to ad
 (with-meta obj {'next.jdbc.prepare/set-parameter (fn [v ps i]...)})
 ```
 
-`next.jdbc.prepare/set-parameters` is available for you to call on any existing `PreparedStatement` to set or update the parameters that will be used when the statement is executed:
+As noted above, `next.jdbc.prepare/set-parameters` is available for you to call on any existing `PreparedStatement` to set or update the parameters that will be used when the statement is executed:
 
 * `(set-parameters ps params)` -- loops over a sequence of parameter values and calls `set-parameter` for each one, as above.
 
 If you need more specialized parameter handling than the protocol can provide, then you can create prepared statements explicitly, instead of letting `next.jdbc` do it for you, and then calling your own variant of `set-parameters` to install those parameters.
+
+## Batched Parameters
+
+By default, `next.jdbc` assumes that you are providing a single set of parameter values and then executing the prepared statement. If you want to run a single prepared statement with multiple sets of parameters, you might want to take advantage of the increased performance that may come from using JDBC's batching machinery.
+
+```clojure
+(with-open [con (jdbc/get-connection ds)
+            ps  (jdbc/prepare con ["insert into status (id,name) values (?,?)"])]
+  (p/set-parameters ps [1 "Approved"])
+  (.addBatch ps)
+  (p/set-parameters ps [2 "Rejected"])
+  (.addBatch ps)
+  (p/set-parameters ps [3 "New"])
+  (.addBatch ps)
+  (.executeBatch ps))
+```
+
+Here we set parameters and add them in batches to the prepared statement, then we execute the prepared statement in batch mode. You could also do the above like this, assuming you have those sets of parameters in a sequence:
+
+```clojure
+(with-open [con (jdbc/get-connection ds)
+            ps  (jdbc/prepare con ["insert into status (id,name) values (?,?)"])]
+  (run! #(.addBatch (p/set-parameters ps %))
+        [[1 "Approved"] [2 "Rejected"] [3 "New"]])
+  (.executeBatch ps))
+```
+
+There are several caveats around using batched parameters. Some JDBC drivers need a "hint" in order to perform the batch operation as a single command for the database. In particular, PostgreSQL requires the `:reWriteBatchedInserts true` option and MySQL requires `:rewriteBatchedStatement true` (both non-standard JDBC options, of course!).
+
+In addition, if the batch operation fails for one of the sets of parameters, it is database-specific whether the remaining sets of parameters are used, i.e., whether the operation is performed for any further sets of parameters after the one that failed. The result of calling `.executeBatch` is an array of integers (specifically a Java array `int[]`). Each element of the array is the number of rows affected by the operation for each set of parameters. `.executeBatch` may throw a `BatchUpdateException` and calling `.getUpdatedCounts` on the exception may return an array containing a mix of update counts and error values. Some databases don't always return an update count but instead a value indicating the number of rows is not known (but sometimes you can still get the update counts).
+
+Finally, some database drivers don't do batched operations at all -- they accept `.executeBatch` but they run the operation as separate commands for the database rather than a single batched command.
 
 [<: Result Set Builders](/doc/result-set-builders.md) | [Transactions :>](/doc/transactions.md)

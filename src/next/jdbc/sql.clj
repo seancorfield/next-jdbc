@@ -203,15 +203,6 @@
              (for-insert-multi table cols rows opts)
              (merge {:return-keys true} opts))))
 
-(comment
-  ;; removed this caveat from insert-multi! because it doesn't apply --
-  ;; these DB-specific options are only needed when you have batched
-  ;; parameters and the driver needs a "hint" to perform an actual batch op!
-  "Note: some database drivers need to be told to rewrite the SQL for this to
-  be performed as a single, batched operation. In particular, PostgreSQL
-  requires the `:reWriteBatchedInserts true` option and MySQL requires
-  `:rewriteBatchedStatement true` (both non-standard JDBC options, of course!).")
-
 (defn query
   "Syntactic sugar over `execute!` to provide a query alias.
 
