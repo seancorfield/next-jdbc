@@ -50,10 +50,10 @@ Given a table name (as a keyword), a vector of column names, and a vector row va
                    "Aunt Sally" "sour@lagunitas.beer"] {:return-keys true})
 ```
 
-Note: some database drivers need to be told to rewrite the SQL for this to
-be performed as a single, batched operation. In particular, PostgreSQL
-requires the `:reWriteBatchedInserts true` option and MySQL requires
-`:rewriteBatchedStatement true` (both non-standard JDBC options, of course!).
+Note: this expands to a single SQL statement with placeholders for every
+value being inserted -- for large sets of rows, this may exceed the limits
+on SQL string size and/or number of parameters for your JDBC driver or your
+database!
 
 ## `query`
 
