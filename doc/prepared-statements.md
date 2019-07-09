@@ -41,9 +41,10 @@ If you need more specialized parameter handling than the protocol can provide, t
 
 ## Batched Parameters
 
-By default, `next.jdbc` assumes that you are providing a single set of parameter values and then executing the prepared statement. If you want to run a single prepared statement with multiple sets of parameters, you might want to take advantage of the increased performance that may come from using JDBC's batching machinery.
+By default, `next.jdbc` assumes that you are providing a single set of parameter values and then executing the prepared statement. If you want to run a single prepared statement with multiple groups of parameters, you might want to take advantage of the increased performance that may come from using JDBC's batching machinery.
 
 ```clojure
+;; assuming require next.jdbc.prepare :as p
 (with-open [con (jdbc/get-connection ds)
             ps  (jdbc/prepare con ["insert into status (id,name) values (?,?)"])]
   (p/set-parameters ps [1 "Approved"])
@@ -52,22 +53,32 @@ By default, `next.jdbc` assumes that you are providing a single set of parameter
   (.addBatch ps)
   (p/set-parameters ps [3 "New"])
   (.addBatch ps)
-  (.executeBatch ps))
+  (.executeBatch ps)) ; returns int[]
 ```
 
-Here we set parameters and add them in batches to the prepared statement, then we execute the prepared statement in batch mode. You could also do the above like this, assuming you have those sets of parameters in a sequence:
+Here we set parameters and add them in batches to the prepared statement, then we execute the prepared statement in batch mode. You could also do the above like this, assuming you have those groups of parameters in a sequence:
 
 ```clojure
 (with-open [con (jdbc/get-connection ds)
             ps  (jdbc/prepare con ["insert into status (id,name) values (?,?)"])]
   (run! #(.addBatch (p/set-parameters ps %))
         [[1 "Approved"] [2 "Rejected"] [3 "New"]])
-  (.executeBatch ps))
+  (.executeBatch ps)) ; returns int[]
 ```
+
+A helper function is provided in `next.jdbc.prepare` to automate the execution of batched parameters:
+
+```clojure
+(with-open [con (jdbc/get-connection ds)
+            ps  (jdbc/prepare con ["insert into status (id,name) values (?,?)"])]
+  (p/execute-batch! ps [[1 "Approved"] [2 "Rejected"] [3 "New"]]))
+```
+
+By default, this adds all the parameter groups and executes one batched command. It returns a (Clojure) vector of update counts (rather than `int[]`). If you provide an options hash map, you can specify a `:batch-size` and the parameter groups will be partitioned and executed as multiple batched commands. This is intended to allow very large sequences of parameter groups to be executed without running into limitations that may apply to a single batched command. If you expect the update counts to be very large (more than `Integer/MAX_VALUE`), you can specify `:large true` so that `.executeLargeBatch` is called instead of `.executeBatch`. Note: not all databases support `.executeLargeBatch`.
 
 There are several caveats around using batched parameters. Some JDBC drivers need a "hint" in order to perform the batch operation as a single command for the database. In particular, PostgreSQL requires the `:reWriteBatchedInserts true` option and MySQL requires `:rewriteBatchedStatement true` (both non-standard JDBC options, of course!).
 
-In addition, if the batch operation fails for one of the sets of parameters, it is database-specific whether the remaining sets of parameters are used, i.e., whether the operation is performed for any further sets of parameters after the one that failed. The result of calling `.executeBatch` is an array of integers (specifically a Java array `int[]`). Each element of the array is the number of rows affected by the operation for each set of parameters. `.executeBatch` may throw a `BatchUpdateException` and calling `.getUpdatedCounts` on the exception may return an array containing a mix of update counts and error values. Some databases don't always return an update count but instead a value indicating the number of rows is not known (but sometimes you can still get the update counts).
+In addition, if the batch operation fails for a group of parameters, it is database-specific whether the remaining groups of parameters are used, i.e., whether the operation is performed for any further groups of parameters after the one that failed. The result of calling `execute-batch!` is a vector of integers. Each element of the vector is the number of rows affected by the operation for each group of parameters. `execute-batch!` may throw a `BatchUpdateException` and calling `.getUpdateCounts` (or `.getLargeUpdateCounts`) on the exception may return an array containing a mix of update counts and error values (a Java `int[]` or `long[]`). Some databases don't always return an update count but instead a value indicating the number of rows is not known (but sometimes you can still get the update counts).
 
 Finally, some database drivers don't do batched operations at all -- they accept `.executeBatch` but they run the operation as separate commands for the database rather than a single batched command.
 

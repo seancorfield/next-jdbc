@@ -7,6 +7,9 @@
   `set-parameters` is public and may be useful if you have a `PreparedStatement`
   that you wish to reuse and (re)set the parameters on it.
 
+  `execute-batch!` provides a way to add batches of parameters to a
+  `PreparedStatement` and then execute it in batch mode (via `.executeBatch`).
+
   Defines the `SettableParameter` protocol for converting Clojure values
   to database-specific values."
   (:require [next.jdbc.protocols :as p])
@@ -133,3 +136,38 @@
   java.sql.Connection
   (prepare [this sql-params opts]
            (create this (first sql-params) (rest sql-params) opts)))
+
+(defn execute-batch!
+  "Given a `PreparedStatement` and a vector containing parameter groups,
+  i.e., a vector of vector of parameters, use `.addBatch` to add each group
+  of parameters to the prepared statement and then call `.executeBatch`.
+  A vector of update counts is returned.
+
+  An options hash map may also be provided, containing `:batch-size` which
+  determines how to partition the parameter groups for submission to the
+  database. If omitted, all groups will be submitted as a single command.
+  If you expect the update counts to be larger than `Integer/MAX_VALUE`,
+  you can specify `:large true` and `.executeLargeBatch` will be called
+  instead.
+
+  Returns a Clojure vector of update counts.
+
+  May throw `java.sql.BatchUpdateException` if any part of the batch fails.
+  You may be able to call `.getUpdateCounts` on that exception object to
+  get more information about which parts succeeded and which failed."
+  ([ps param-groups]
+   (execute-batch! ps param-groups {}))
+  ([^PreparedStatement ps param-groups opts]
+   (let [params (if-let [n (:batch-size opts)]
+                  (if (and (number? n) (pos? n))
+                    (partition-all n param-groups)
+                    (throw (IllegalArgumentException.
+                            ":batch-size must be positive")))
+                  [param-groups])]
+     (into []
+           (mapcat (fn [group]
+                     (run! #(.addBatch (set-parameters ps %)) group)
+                     (if (:large opts)
+                       (.executeLargeBatch ps)
+                       (.executeBatch ps))))
+           params))))
