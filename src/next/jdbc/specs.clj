@@ -3,7 +3,9 @@
 (ns next.jdbc.specs
   "Specs for the core API of next.jdbc.
 
-  The functions from `next.jdbc` and `next.jdbc.sql` have specs here.
+  The functions from `next.jdbc`, `next.jdbc.sql`, and `next.jdbc.prepare`
+  have specs here.
+
   Just `:args` are spec'd. These specs are intended to aid development
   with `next.jdbc` by catching simple errors in calling the library.
   The `connectable` argument is currently just `any?` but both
@@ -15,6 +17,7 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.test.alpha :as st]
             [next.jdbc :as jdbc]
+            [next.jdbc.prepare :as prepare]
             [next.jdbc.sql :as sql])
   (:import (java.sql Connection PreparedStatement)
            (javax.sql DataSource)))
@@ -51,6 +54,11 @@
 (s/def ::sql-params (s/and vector?
                            (s/cat :sql string?
                                   :params (s/* any?))))
+(s/def ::params (s/coll-of any? :kind sequential?))
+
+(s/def ::batch-size pos-int?)
+(s/def ::large boolean?)
+(s/def ::batch-opts (s/keys :opt-un [::batch-size ::large]))
 
 (s/fdef jdbc/get-datasource
         :args (s/cat :spec ::db-spec))
@@ -93,6 +101,15 @@
                                             :transactable ::transactable
                                             :opts (s/? ::opts-map)))
                      :body (s/* any?)))
+
+(s/fdef prepare/execute-batch!
+        :args (s/cat :ps ::prepared-statement
+                     :param-groups (s/coll-of ::params :kind sequential?)
+                     :opts (s/? ::batch-opts)))
+
+(s/fdef prepare/set-parameters
+        :args (s/cat :ps ::prepared-statement
+                     :params ::params))
 
 (s/fdef sql/insert!
         :args (s/cat :connectable ::connectable
@@ -156,6 +173,8 @@
                   `jdbc/execute-one!
                   `jdbc/transact
                   `jdbc/with-transaction
+                  `prepare/execute-batch!
+                  `prepare/set-parameters
                   `sql/insert!
                   `sql/insert-multi!
                   `sql/query

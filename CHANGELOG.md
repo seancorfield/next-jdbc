@@ -6,6 +6,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch since the 1.0.1 release:
 
+* Fix #42 by adding specs for `execute-batch!` and `set-parameters` in `next.jdbc.prepare`.
 * Fix #40 by adding `next.jdbc.prepare/execute-batch!`.
 * Expose `next.jdbc.connect/dbtypes` as a table of known database types and aliases, along with their class name(s), port, and other JDBC string components.
 * Improved docstrings and documentation, especially around prepared statement handling.
