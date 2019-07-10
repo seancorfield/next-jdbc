@@ -61,7 +61,7 @@ user=>
 ```
 We described the database with just `:dbtype` and `:dbname` because it is created as a local file and needs no authentication. For most databases, you would need `:user` and `:password` for authentication, and if the database is running on a remote machine you would need `:host` and possibly `:port` (`next.jdbc` tries to guess the correct port based on the `:dbtype`).
 
-> Note: You can see the full list of `:dbtype` values supported in [next.jdbc/get-datasource](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc#get-datasource).
+> Note: You can see the full list of `:dbtype` values supported in [next.jdbc/get-datasource](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc#get-datasource)'s docstring. If you need this programmatically, you can get it from the [next.jdbc.connection/dbtypes](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.connection#dbtypes) hash map. If those lists differ, the hash map is the definitive list (and I'll need to fix the docstring!). The docstring of that Var explains how to tell `next.jdbc` about additional databases.
 
 We used `execute!` to create the `address` table, to insert a new row into it, and to query it. In all three cases, `execute!` returns a vector of hash maps with namespace-qualified keys, representing the result set from the operation, if available. When no result set is produced, `next.jdbc` returns a "result set" containing the "update count" from the operation (which is usually the number of rows affected). By default, H2 uses uppercase names and `next.jdbc` returns these as-is.
 

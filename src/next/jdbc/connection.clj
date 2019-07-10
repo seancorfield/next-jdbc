@@ -63,6 +63,45 @@
    "sqlserver"  ";DATABASENAME="
    "oracle:sid" ":"})
 
+(def dbtypes
+  "A map of all known database types (including aliases) to the class name(s)
+  and port that `next.jdbc` supports out of the box. Just for completeness,
+  this also includes the prefixes used in the JDBC string for the `:host`
+  and `:dbname` (which are `//` and `/` respectively for nearly all types).
+
+  For known database types, you can use `:dbtype` (and omit `:classname`).
+
+  If you want to use a database that is not in this list, you can specify
+  a new `:dbtype` along with the class name of the JDBC driver in `:classname`.
+  You will also need to specify `:port`. For example:
+
+     `{:dbtype \"acme\" :classname \"com.acme.JdbcDriver\" ...}`
+
+  JDBC drivers are not provided by `next.jdbc` -- you need to specify the
+  driver(s) you need as additional dependencies in your project. For
+  example:
+
+     `[com.acme/jdbc \"1.2.3\"] ; lein/boot`
+  or:
+     `{com.acme/jdbc {:mvn/version \"1.2.3\"}} ; CLI/deps.edn`
+
+  Note: the `:classname` value can be a string or a vector of strings. If
+  a vector of strings is provided, an attempt will be made to load each
+  named class in order, until one succeeds. This allows for a given `:dbtype`
+  to be used with different versions of a JDBC driver, if the class name
+  has changed over time (such as with MySQL)."
+  (let [dbs (merge (zipmap (keys classnames) (keys classnames)) aliases)]
+    (reduce-kv (fn [m k v]
+                 (assoc m
+                        k
+                        (cond-> {:classname        (classnames v)
+                                 :host-prefix      (host-prefixes v "//")
+                                 :dbname-separator (dbname-separators v "/")}
+                          (ports v)
+                          (assoc :port (ports v)))))
+               {}
+               dbs)))
+
 (defn- ^Properties as-properties
   "Convert any seq of pairs to a `java.util.Properties` instance."
   [m]
