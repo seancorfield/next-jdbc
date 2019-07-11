@@ -33,6 +33,8 @@ For the examples in this documentation, we will use a local H2 database on disk,
         com.h2database/h2 {:mvn/version "1.4.197"}}}
 ```
 
+### Create & Populate a Database
+
 In this REPL session, we'll define an H2 datasource, create a database with a simple table, and then add some data and query it:
 
 ```clojure
@@ -59,9 +61,14 @@ user=> (jdbc/execute! ds ["select * from address"])
 [#:ADDRESS{:ID 1, :NAME "Sean Corfield", :EMAIL "sean@corfield.org"}]
 user=>
 ```
+
+### The "db-spec" hash map
+
 We described the database with just `:dbtype` and `:dbname` because it is created as a local file and needs no authentication. For most databases, you would need `:user` and `:password` for authentication, and if the database is running on a remote machine you would need `:host` and possibly `:port` (`next.jdbc` tries to guess the correct port based on the `:dbtype`).
 
 > Note: You can see the full list of `:dbtype` values supported in [next.jdbc/get-datasource](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc#get-datasource)'s docstring. If you need this programmatically, you can get it from the [next.jdbc.connection/dbtypes](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.connection#dbtypes) hash map. If those lists differ, the hash map is the definitive list (and I'll need to fix the docstring!). The docstring of that Var explains how to tell `next.jdbc` about additional databases.
+
+### `execute!` & `execute-one!`
 
 We used `execute!` to create the `address` table, to insert a new row into it, and to query it. In all three cases, `execute!` returns a vector of hash maps with namespace-qualified keys, representing the result set from the operation, if available. When no result set is produced, `next.jdbc` returns a "result set" containing the "update count" from the operation (which is usually the number of rows affected). By default, H2 uses uppercase names and `next.jdbc` returns these as-is.
 
@@ -79,6 +86,8 @@ user=>
 ```
 
 Since we used `execute-one!`, we get just one row back (a hash map). This also shows how you provide parameters to SQL statements -- with `?` in the SQL and then the corresponding parameter values in the vector after the SQL string.
+
+### `plan` & Reducing Result Sets
 
 While these functions are fine for retrieving result sets as data, most of the time you want to process that data efficiently, so `next.jdbc` provides a SQL execution function that works with `reduce` and with transducers to consume the result set without the intermediate overhead of creating Clojure data structures for every row:
 
@@ -140,11 +149,11 @@ If `with-transaction` is given a datasource, it will create and close the connec
 
 As you are developing with `next.jdbc`, it can be useful to have assistance from `clojure.spec` in checking calls to `next.jdbc`'s functions, to provide explicit argument checking and/or better error messages for some common mistakes, e.g., trying to pass a plain SQL string where a vector (containing a SQL string, and no parameters) is expected.
 
-You can enable argument checking for functions in both `next.jdbc` and `next.jdbc.sql` by requiring the `next.jdbc.specs` namespace and instrumenting the functions. A convenience function is provided:
+You can enable argument checking for functions in `next.jdbc`, `next.jdbc.sql`, and `next.jdbc.prepare` by requiring the `next.jdbc.specs` namespace and instrumenting the functions. A convenience function is provided:
 
 ```clojure
 (require '[next.jdbc.specs :as specs])
-(specs/instrument) ; instruments all next.jdbc functions
+(specs/instrument) ; instruments all next.jdbc API functions
 
 (jdbc/execute! ds "SELECT * FROM fruit")
 Call to #'next.jdbc/execute! did not conform to spec.
