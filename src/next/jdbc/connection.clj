@@ -144,6 +144,8 @@
                          (str "./" dbname)))
                   (#{"derby" "hsqldb" "sqlite"} subprotocol)
                   (str "jdbc:" subprotocol ":" dbname)
+                  (#{"timesten:direct"} subprotocol)
+                  (str "jdbc:" subprotocol db-sep dbname)
                   :else
                   (str "jdbc:" subprotocol ":"
                        (host-prefixes subprotocol "//")
