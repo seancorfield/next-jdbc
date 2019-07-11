@@ -187,6 +187,10 @@
   (is (thrown? clojure.lang.ExceptionInfo
                (sql/delete! (ds) :fruit {}))))
 
+(deftest no-empty-columns
+  (is (thrown? clojure.lang.ExceptionInfo
+               (sql/insert-multi! (ds) :fruit [] [[] [] []]))))
+
 (deftest no-empty-order-by
   (is (thrown? clojure.lang.ExceptionInfo
                (sql/find-by-keys (ds) :fruit

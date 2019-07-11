@@ -165,6 +165,7 @@
   (assert (apply = (count cols) (map count rows))
           "column counts are not consistent across cols and rows")
   ;; to avoid generating bad SQL
+  (assert (seq cols) "cols may not be empty")
   (assert (seq rows) "rows may not be empty")
   (let [table-fn  (:table-fn opts identity)
         column-fn (:column-fn opts identity)
