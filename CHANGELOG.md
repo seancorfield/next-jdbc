@@ -7,9 +7,12 @@ Only accretive/fixative changes will be made from now on.
 The following changes have been committed to the **master** branch since the 1.0.1 release:
 
 * Fix #45 by adding TimesTen driver support.
+* Fix #44 so that `insert-multi!` with an empty `rows` vector returns `[]`.
 * Fix #42 by adding specs for `execute-batch!` and `set-parameters` in `next.jdbc.prepare`.
 * Fix #41 by improving docstrings and documentation, especially around prepared statement handling.
 * Fix #40 by adding `next.jdbc.prepare/execute-batch!`.
+* Added `assert`s in `next.jdbc.sql` as more informative errors for cases that would generate SQL exceptions (from malformed SQL).
+* Added spec for `:order-by` to reflect what is actually permitted.
 * Expose `next.jdbc.connect/dbtypes` as a table of known database types and aliases, along with their class name(s), port, and other JDBC string components.
 
 ## Stable Builds

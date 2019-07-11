@@ -55,9 +55,9 @@
            ["DELETE FROM [user] WHERE id = ? and opt is null" 9]))))
 
 (deftest test-for-update
-  (testing "empty example (SQL error)"
-    (is (= (#'sql/for-update :user {:status 42} {} {:table-fn sql-server :column-fn mysql})
-           ["UPDATE [user] SET `status` = ? WHERE " 42])))
+  (testing "empty example (would be a SQL error)"
+    (is (thrown? AssertionError ; changed in #44
+                 (#'sql/for-update :user {:status 42} {} {:table-fn sql-server :column-fn mysql}))))
   (testing "by example"
     (is (= (#'sql/for-update :user {:status 42} {:id 9} {:table-fn sql-server :column-fn mysql})
            ["UPDATE [user] SET `status` = ? WHERE `id` = ?" 42 9])))
@@ -154,7 +154,11 @@
     (is (= 6 (count (sql/query (ds) ["select * from fruit"]))))
     (is (= {:next.jdbc/update-count 2}
            (sql/delete! (ds) :fruit ["id > ?" 4])))
-    (is (= 4 (count (sql/query (ds) ["select * from fruit"]))))))
+    (is (= 4 (count (sql/query (ds) ["select * from fruit"])))))
+  (testing "empty insert-multi!" ; per #44
+    (is (= [] (sql/insert-multi! (ds) :fruit
+                                 [:name :appearance :cost :grade]
+                                 [])))))
 
 (deftest no-empty-example-maps
   (is (thrown? clojure.lang.ExceptionInfo
@@ -163,3 +167,9 @@
                (sql/update! (ds) :fruit {} {})))
   (is (thrown? clojure.lang.ExceptionInfo
                (sql/delete! (ds) :fruit {}))))
+
+(deftest no-empty-order-by
+  (is (thrown? clojure.lang.ExceptionInfo
+               (sql/find-by-keys (ds) :fruit
+                                 {:name "Apple"}
+                                 {:order-by []}))))

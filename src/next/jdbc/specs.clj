@@ -47,7 +47,13 @@
 (s/def ::connectable any?)
 (s/def ::key-map (s/map-of keyword? any?))
 (s/def ::example-map (s/map-of keyword? any? :min-count 1))
-(s/def ::opts-map (s/map-of keyword? any?))
+
+(s/def ::order-by-col (s/or :col keyword?
+                            :dir (s/cat :col keyword?
+                                        :dir #{:asc :desc})))
+(s/def ::order-by (s/coll-of ::order-by-col :kind vector? :min-count 1))
+(s/def ::opts-map (s/and (s/map-of keyword? any?)
+                         (s/keys :opt-un [::order-by])))
 
 (s/def ::transactable any?)
 
