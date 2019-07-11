@@ -6,6 +6,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch since the 1.0.1 release:
 
+* Fix #45 by adding TimesTen driver support.
 * Fix #42 by adding specs for `execute-batch!` and `set-parameters` in `next.jdbc.prepare`.
 * Fix #41 by improving docstrings and documentation, especially around prepared statement handling.
 * Fix #40 by adding `next.jdbc.prepare/execute-batch!`.

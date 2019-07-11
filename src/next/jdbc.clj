@@ -86,7 +86,9 @@
   * `pgsql` -- `com.impossibl.postgres.jdbc.PGDriver` -- no default port
   * `redshift` -- `com.amazon.redshift.jdbc.Driver` -- no default port
   * `sqlite` -- `org.sqlite.JDBC`
-  * `sqlserver`, `mssql` -- `com.microsoft.sqlserver.jdbc.SQLServerDriver` -- `1433`"
+  * `sqlserver`, `mssql` -- `com.microsoft.sqlserver.jdbc.SQLServerDriver` -- `1433`
+  * `timesten:client` -- `com.timesten.jdbc.TimesTenClientDriver`
+  * `timesten:direct` -- `com.timesten.jdbc.TimesTenDriver`"
   ^javax.sql.DataSource
   [spec]
   (p/get-datasource spec))

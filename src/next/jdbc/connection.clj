@@ -30,7 +30,9 @@
    "pgsql"          "com.impossibl.postgres.jdbc.PGDriver"
    "redshift"       "com.amazon.redshift.jdbc.Driver"
    "sqlite"         "org.sqlite.JDBC"
-   "sqlserver"      "com.microsoft.sqlserver.jdbc.SQLServerDriver"})
+   "sqlserver"      "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+   "timesten:client" "com.timesten.jdbc.TimesTenClientDriver"
+   "timesten:direct" "com.timesten.jdbc.TimesTenDriver"})
 
 (def ^:private aliases
   "Map of schemes to subprotocols. Used to provide aliases for `:dbtype`."
@@ -61,7 +63,8 @@
   "Map of schemes to separators. The default is `/` but a couple are different."
   {"mssql"      ";DATABASENAME="
    "sqlserver"  ";DATABASENAME="
-   "oracle:sid" ":"})
+   "oracle:sid" ":"
+   "timesten:direct" ":dsn="})
 
 (def dbtypes
   "A map of all known database types (including aliases) to the class name(s)
