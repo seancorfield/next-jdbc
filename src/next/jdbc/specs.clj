@@ -26,15 +26,20 @@
 
 (s/def ::dbtype string?)
 (s/def ::dbname string?)
+(s/def ::dbname-separator string?)
 (s/def ::classname string?)
 (s/def ::user string?)
 (s/def ::password string?)
-(s/def ::host string?)
+(s/def ::host (s/or :name string?
+                    :none #{:none}))
+(s/def ::host-prefix string?)
 (s/def ::port pos-int?)
 (s/def ::db-spec-map (s/keys :req-un [::dbtype ::dbname]
                              :opt-un [::classname
                                       ::user ::password
-                                      ::host ::port]))
+                                      ::host ::port
+                                      ::dbname-separator
+                                      ::host-prefix]))
 
 (s/def ::connection #(instance? Connection %))
 (s/def ::datasource #(instance? DataSource %))

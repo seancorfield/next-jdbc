@@ -67,6 +67,14 @@
   * `:classname` -- if you need to override the default for the `:dbtype`
       (or you want to use a database that next.jdbc does not know about!)
 
+  The following optional keys can be used to control how JDBC URLs are
+  assembled. This may be needed for `:dbtype` values that `next.jdbc`
+  does not recognize:
+  * `:dbname-separator` -- override the `/` or `:` that normally precedes
+      the database name in the JDBC URL
+  * `:host-prefix` -- override the `//` that normally precedes the IP
+      address or hostname in the JDBC URL
+
   Any additional options provided will be passed to the JDBC driver's
   `.getConnection` call as a `java.util.Properties` structure.
 

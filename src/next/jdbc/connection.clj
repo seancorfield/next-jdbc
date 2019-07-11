@@ -71,7 +71,8 @@
   "A map of all known database types (including aliases) to the class name(s)
   and port that `next.jdbc` supports out of the box. Just for completeness,
   this also includes the prefixes used in the JDBC string for the `:host`
-  and `:dbname` (which are `//` and `/` respectively for nearly all types).
+  and `:dbname` (which are `//` and either `/` or `:` respectively for
+  nearly all types).
 
   For known database types, you can use `:dbtype` (and omit `:classname`).
 
@@ -80,6 +81,24 @@
   You will also need to specify `:port`. For example:
 
      `{:dbtype \"acme\" :classname \"com.acme.JdbcDriver\" ...}`
+
+  The value of `:dbtype` should be the string that the driver is associated
+  with in the JDBC URL, i.e., the value that comes between the `jdbc:`
+  prefix and the `://<host>...` part. In the above example, the JDBC URL
+  that would be generated would be `jdbc:acme://<host>:<port>/<dbname>`.
+
+  If you want `next.jdbc` to omit the host/port part of the URL, specify
+  `:host :none`, which would produce a URL like: `jdbc:acme:<dbname>`,
+  which allows you to work with local databases (or drivers that do not
+  need host/port information).
+
+  The default prefix for the host name (or IP address) is `//`. You
+  can override this via the `:host-prefix` option.
+
+  The default separator between the host/port and the database name is `/`.
+  The default separator between the subprotocol and the database name,
+  for local databases with no host/port, is `:`. You can override this
+  via the `:dbname-separator` option.
 
   JDBC drivers are not provided by `next.jdbc` -- you need to specify the
   driver(s) you need as additional dependencies in your project. For
@@ -127,32 +146,44 @@
 
 (defn- spec->url+etc
   "Given a database spec, return a JDBC URL and a map of any additional options."
-  [{:keys [dbtype dbname host port classname] :as db-spec}]
+  [{:keys [dbtype dbname host port classname
+           dbname-separator host-prefix]
+    :as db-spec}]
   (let [;; allow aliases for dbtype
         subprotocol (aliases dbtype dbtype)
-        host (or host "127.0.0.1")
-        port (or port (ports subprotocol))
-        db-sep (dbname-separators dbtype "/")
-        url (cond (= "h2:mem" dbtype)
-                  (str "jdbc:" subprotocol ":" dbname ";DB_CLOSE_DELAY=-1")
+        host        (or host "127.0.0.1")
+        port        (or port (ports subprotocol))
+        db-sep      (or dbname-separator (dbname-separators dbtype "/"))
+        local-sep   (or dbname-separator (dbname-separators dbtype ":"))
+        url (cond (#{"derby" "hsqldb" "sqlite"} subprotocol)
+                  (str "jdbc:" subprotocol local-sep dbname)
+
                   (#{"h2"} subprotocol)
-                  (str "jdbc:" subprotocol ":"
+                  (str "jdbc:" subprotocol local-sep
                        (if (re-find #"^([A-Za-z]:)?[\./\\]" dbname)
                          ;; DB name starts with relative or absolute path
                          dbname
                          ;; otherwise make it local
                          (str "./" dbname)))
-                  (#{"derby" "hsqldb" "sqlite"} subprotocol)
-                  (str "jdbc:" subprotocol ":" dbname)
-                  (#{"timesten:direct"} subprotocol)
-                  (str "jdbc:" subprotocol db-sep dbname)
+
+                  (#{"h2:mem"} subprotocol)
+                  (str "jdbc:" subprotocol local-sep dbname ";DB_CLOSE_DELAY=-1")
+
+                  (#{"timesten:client" "timesten:direct"} subprotocol)
+                  (str "jdbc:" subprotocol local-sep dbname)
+
+                  (= :none host)
+                  (str "jdbc:" subprotocol local-sep dbname)
+
                   :else
                   (str "jdbc:" subprotocol ":"
-                       (host-prefixes subprotocol "//")
+                       (or host-prefix (host-prefixes subprotocol "//"))
                        host
                        (when port (str ":" port))
                        db-sep dbname))
-        etc (dissoc db-spec :dbtype :dbname :host :port :classname)]
+        etc (dissoc db-spec
+                    :dbtype :dbname :host :port :classname
+                    :dbname-separator :host-prefix)]
     ;; verify the datasource is loadable
     (if-let [class-name (or classname (classnames subprotocol))]
       (swap! driver-cache update class-name
