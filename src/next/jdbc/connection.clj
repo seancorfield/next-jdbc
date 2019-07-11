@@ -64,6 +64,7 @@
   {"mssql"      ";DATABASENAME="
    "sqlserver"  ";DATABASENAME="
    "oracle:sid" ":"
+   "timesten:client" ":dsn="
    "timesten:direct" ":dsn="})
 
 (def dbtypes
