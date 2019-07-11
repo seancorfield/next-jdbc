@@ -155,6 +155,25 @@
     (is (= {:next.jdbc/update-count 2}
            (sql/delete! (ds) :fruit ["id > ?" 4])))
     (is (= 4 (count (sql/query (ds) ["select * from fruit"])))))
+  (testing "multiple insert/delete with sequential cols/rows" ; per #43
+    (is (= (cond (derby?)
+                 [{:1 nil}] ; WTF Apache Derby?
+                 (sqlite?)
+                 [{(keyword "last_insert_rowid()") 11}]
+                 :else
+                 [{:FRUIT/ID 9} {:FRUIT/ID 10} {:FRUIT/ID 11}])
+           (sql/insert-multi! (ds) :fruit
+                              '(:name :appearance :cost :grade)
+                              '(("Kiwi" "green & fuzzy" 100 99.9)
+                                ("Grape" "black" 10 50)
+                                ("Lemon" "yellow" 20 9.9)))))
+    (is (= 7 (count (sql/query (ds) ["select * from fruit"]))))
+    (is (= {:next.jdbc/update-count 1}
+           (sql/delete! (ds) :fruit {:id 9})))
+    (is (= 6 (count (sql/query (ds) ["select * from fruit"]))))
+    (is (= {:next.jdbc/update-count 2}
+           (sql/delete! (ds) :fruit ["id > ?" 4])))
+    (is (= 4 (count (sql/query (ds) ["select * from fruit"])))))
   (testing "empty insert-multi!" ; per #44
     (is (= [] (sql/insert-multi! (ds) :fruit
                                  [:name :appearance :cost :grade]

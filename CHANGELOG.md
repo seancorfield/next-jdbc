@@ -6,8 +6,9 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch since the 1.0.1 release:
 
-* Fix #45 by adding TimesTen driver support.
+* Fix #45 by adding [TimesTen](https://www.oracle.com/database/technologies/related/timesten.html) driver support.
 * Fix #44 so that `insert-multi!` with an empty `rows` vector returns `[]`.
+* Fix #43 by adjusting the spec for `insert-multi!` to "require less" of the `cols` and `rows` arguments.
 * Fix #42 by adding specs for `execute-batch!` and `set-parameters` in `next.jdbc.prepare`.
 * Fix #41 by improving docstrings and documentation, especially around prepared statement handling.
 * Fix #40 by adding `next.jdbc.prepare/execute-batch!`.
