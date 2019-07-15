@@ -11,7 +11,7 @@ Although `get-datasource` does not accept options, the "db spec" hash map passed
 * `:dbtype` -- a string that identifies the type of JDBC database being used,
 * `:dbname` -- a string that identifies the name of the actual database being used,
 * `:dbname-separator` -- an optional string that can be used to override the `/` or `:` that is normally placed in front of the database name in the JDBC URL,
-* `:host` -- an optional string that identifies the IP address or hostname of the server on which the database is running; the default is `"127.0.0.1"`,
+* `:host` -- an optional string that identifies the IP address or hostname of the server on which the database is running; the default is `"127.0.0.1"`; if `:none` is specified, `next.jdbc` will assume this is for a local database and will omit the host/port segment of the JDBC URL,
 * `:host-prefix` -- an optional string that can be used to override the `//` that is normally placed in front of the IP address or hostname in the JDBC URL,
 * `:port` -- an optional integer that identifies the port on which the database is running; for common database types, `next.jdbc` knows the default so this should only be needed for non-standard setups or "exotic" database types,
 * `:classname` -- an optional string that identifies the name of the JDBC driver class to be used for the connection; for common database types, `next.jdbc` knows the default so this should only be needed for "exotic" database types,

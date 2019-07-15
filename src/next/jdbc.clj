@@ -61,7 +61,9 @@
   The following optional keys are commonly used:
   * `:user` -- the username to authenticate with
   * `:password` -- the password to authenticate with
-  * `:host` -- the hostname or IP address of the database (default: `127.0.0.1`)
+  * `:host` -- the hostname or IP address of the database (default: `127.0.0.1`);
+      can be `:none` which means the host/port segment of the JDBC URL should
+      be omitted entirely (for 'local' databases)
   * `:port` -- the port for the database connection (the default is database-
       specific -- see below)
   * `:classname` -- if you need to override the default for the `:dbtype`
