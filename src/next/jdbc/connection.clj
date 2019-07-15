@@ -9,65 +9,7 @@
 
 (set! *warn-on-reflection* true)
 
-(def ^:private classnames
-  "Map of subprotocols to classnames. `:dbtype` specifies one of these keys.
-
-  The subprotocols map below provides aliases for `:dbtype`.
-
-  Most databases have just a single class name for their driver but we
-  support a sequence of class names to try in order to allow for drivers
-  that change their names over time (e.g., MySQL)."
-  {"derby"          "org.apache.derby.jdbc.EmbeddedDriver"
-   "h2"             "org.h2.Driver"
-   "h2:mem"         "org.h2.Driver"
-   "hsqldb"         "org.hsqldb.jdbcDriver"
-   "jtds:sqlserver" "net.sourceforge.jtds.jdbc.Driver"
-   "mysql"          ["com.mysql.cj.jdbc.Driver"
-                     "com.mysql.jdbc.Driver"]
-   "oracle:oci"     "oracle.jdbc.OracleDriver"
-   "oracle:thin"    "oracle.jdbc.OracleDriver"
-   "postgresql"     "org.postgresql.Driver"
-   "pgsql"          "com.impossibl.postgres.jdbc.PGDriver"
-   "redshift"       "com.amazon.redshift.jdbc.Driver"
-   "sqlite"         "org.sqlite.JDBC"
-   "sqlserver"      "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-   "timesten:client" "com.timesten.jdbc.TimesTenClientDriver"
-   "timesten:direct" "com.timesten.jdbc.TimesTenDriver"})
-
-(def ^:private aliases
-  "Map of schemes to subprotocols. Used to provide aliases for `:dbtype`."
-  {"hsql"       "hsqldb"
-   "jtds"       "jtds:sqlserver"
-   "mssql"      "sqlserver"
-   "oracle"     "oracle:thin"
-   "oracle:sid" "oracle:thin"
-   "postgres"   "postgresql"})
-
-(def ^:private host-prefixes
-  "Map of subprotocols to non-standard host-prefixes.
-  Anything not listed is assumed to use `//`."
-  {"oracle:oci"  "@"
-   "oracle:thin" "@"})
-
-(def ^:private ports
-  "Map of subprotocols to ports."
-  {"jtds:sqlserver" 1433
-   "mysql"          3306
-   "oracle:oci"     1521
-   "oracle:sid"     1521
-   "oracle:thin"    1521
-   "postgresql"     5432
-   "sqlserver"      1433})
-
-(def ^:private dbname-separators
-  "Map of schemes to separators. The default is `/` but a couple are different."
-  {"mssql"      ";DATABASENAME="
-   "sqlserver"  ";DATABASENAME="
-   "oracle:sid" ":"
-   "timesten:client" ":dsn="
-   "timesten:direct" ":dsn="})
-
-(def dbtypes
+(def ^:private dbtypes
   "A map of all known database types (including aliases) to the class name(s)
   and port that `next.jdbc` supports out of the box. Just for completeness,
   this also includes the prefixes used in the JDBC string for the `:host`
@@ -113,17 +55,54 @@
   named class in order, until one succeeds. This allows for a given `:dbtype`
   to be used with different versions of a JDBC driver, if the class name
   has changed over time (such as with MySQL)."
-  (let [dbs (merge (zipmap (keys classnames) (keys classnames)) aliases)]
-    (reduce-kv (fn [m k v]
-                 (assoc m
-                        k
-                        (cond-> {:classname        (classnames v)
-                                 :host-prefix      (host-prefixes v "//")
-                                 :dbname-separator (dbname-separators v "/")}
-                          (ports v)
-                          (assoc :port (ports v)))))
-               {}
-               dbs)))
+  {"derby"           {:classname "org.apache.derby.jdbc.EmbeddedDriver"}
+   "h2"              {:classname "org.h2.Driver"}
+   "h2:mem"          {:classname "org.h2.Driver"}
+   "hsql"            {:classname "org.hsqldb.jdbcDriver"
+                      :alias-for "hsqldb"}
+   "hsqldb"          {:classname "org.hsqldb.jdbcDriver"}
+   "jtds"            {:classname "net.sourceforge.jtds.jdbc.Driver"
+                      :port 1433
+                      :alias-for "jtds:sqlserver"}
+   "jtds:sqlserver"  {:classname "net.sourceforge.jtds.jdbc.Driver"
+                      :port 1433}
+   "mssql"           {:classname "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+                      :port 1433
+                      :alias-for "sqlserver"
+                      :dbname-separator ";DATABASENAME="}
+   "mysql"           {:classname ["com.mysql.cj.jdbc.Driver"
+                                  "com.mysql.jdbc.Driver"]
+                      :port 3306}
+   "oracle"          {:classname "oracle.jdbc.OracleDriver"
+                      :port 1521
+                      :alias-for "oracle:thin"
+                      :host-prefix "@"}
+   "oracle:oci"      {:classname "oracle.jdbc.OracleDriver"
+                      :port 1521
+                      :host-prefix "@"}
+   "oracle:sid"      {:classname "oracle.jdbc.OracleDriver"
+                      :port 1521
+                      :alias-for "oracle:thin"
+                      :dbname-separator ":"
+                      :host-prefix "@"}
+   "oracle:thin"     {:classname "oracle.jdbc.OracleDriver"
+                      :port 1521
+                      :host-prefix "@"}
+   "postgres"        {:classname "org.postgresql.Driver"
+                      :port 5432
+                      :alias-for "postgresql"}
+   "postgresql"      {:classname "org.postgresql.Driver"
+                      :port 5432}
+   "pgsql"           {:classname "com.impossibl.postgres.jdbc.PGDriver"}
+   "redshift"        {:classname "com.amazon.redshift.jdbc.Driver"}
+   "sqlite"          {:classname "org.sqlite.JDBC"}
+   "sqlserver"       {:classname "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+                      :port 1433
+                      :dbname-separator ";DATABASENAME="}
+   "timesten:client" {:classname "com.timesten.jdbc.TimesTenClientDriver"
+                      :dbname-separator ":dsn="}
+   "timesten:direct" {:classname "com.timesten.jdbc.TimesTenDriver"
+                      :dbname-separator ":dsn="}})
 
 (defn- ^Properties as-properties
   "Convert any seq of pairs to a `java.util.Properties` instance."
@@ -150,11 +129,11 @@
            dbname-separator host-prefix]
     :as db-spec}]
   (let [;; allow aliases for dbtype
-        subprotocol (aliases dbtype dbtype)
+        subprotocol (-> dbtype dbtypes :alias-for (or dbtype))
         host        (or host "127.0.0.1")
-        port        (or port (ports subprotocol))
-        db-sep      (or dbname-separator (dbname-separators dbtype "/"))
-        local-sep   (or dbname-separator (dbname-separators dbtype ":"))
+        port        (or port (-> dbtype dbtypes :port))
+        db-sep      (or dbname-separator (-> dbtype dbtypes :dbname-separator (or "/")))
+        local-sep   (or dbname-separator (-> dbtype dbtypes :dbname-separator (or ":")))
         url (cond (#{"derby" "hsqldb" "sqlite"} subprotocol)
                   (str "jdbc:" subprotocol local-sep dbname)
 
@@ -177,7 +156,7 @@
 
                   :else
                   (str "jdbc:" subprotocol ":"
-                       (or host-prefix (host-prefixes subprotocol "//"))
+                       (or host-prefix (-> dbtype dbtypes :host-prefix (or "//")))
                        host
                        (when port (str ":" port))
                        db-sep dbname))
@@ -185,7 +164,7 @@
                     :dbtype :dbname :host :port :classname
                     :dbname-separator :host-prefix)]
     ;; verify the datasource is loadable
-    (if-let [class-name (or classname (classnames subprotocol))]
+    (if-let [class-name (or classname (-> dbtype dbtypes :classname))]
       (swap! driver-cache update class-name
              #(if % %
                 (do

@@ -6,6 +6,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch since the 1.0.1 release:
 
+* Fix #47 by refactoring database specs to be a single hash map instead of pouring multiple maps into one.
 * Fix #46 by allowing `:host` to be `:none` which tells `next.jdbc` to omit the host/port section of the JDBC URL, so that local databases can be used with `:dbtype`/`:classname` for database types that `next.jdbc` does not know. Also added `:dbname-separator` and `:host-prefix` to the "db-spec" to allow fine-grained control over how the JDBC URL is assembled.
 * Fix #45 by adding [TimesTen](https://www.oracle.com/database/technologies/related/timesten.html) driver support.
 * Fix #44 so that `insert-multi!` with an empty `rows` vector returns `[]`.
