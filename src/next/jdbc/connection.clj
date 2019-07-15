@@ -9,12 +9,14 @@
 
 (set! *warn-on-reflection* true)
 
-(def ^:private dbtypes
+(def dbtypes
   "A map of all known database types (including aliases) to the class name(s)
-  and port that `next.jdbc` supports out of the box. Just for completeness,
-  this also includes the prefixes used in the JDBC string for the `:host`
-  and `:dbname` (which are `//` and either `/` or `:` respectively for
-  nearly all types).
+  and port that `next.jdbc` supports out of the box. For databases that have
+  non-standard prefixes for the `:dbname` and/or `:host` values in the JDBC
+  string, this table includes `:dbname-separator` and/or `:host-prefix`. The
+  default prefix for `:dbname` is either `/` or `:` and for `:host` it is `//`.
+  For local databases, with no `:host`/`:port` segment in their JDBC URL, a
+  value of `:none` is provided for `:host` in this table.
 
   For known database types, you can use `:dbtype` (and omit `:classname`).
 
@@ -55,54 +57,61 @@
   named class in order, until one succeeds. This allows for a given `:dbtype`
   to be used with different versions of a JDBC driver, if the class name
   has changed over time (such as with MySQL)."
-  {"derby"           {:classname "org.apache.derby.jdbc.EmbeddedDriver"}
-   "h2"              {:classname "org.h2.Driver"}
+  {"derby"           {:classname "org.apache.derby.jdbc.EmbeddedDriver"
+                      :host :none}
+   "h2"              {:classname "org.h2.Driver"
+                      :host :none}
    "h2:mem"          {:classname "org.h2.Driver"}
    "hsql"            {:classname "org.hsqldb.jdbcDriver"
-                      :alias-for "hsqldb"}
-   "hsqldb"          {:classname "org.hsqldb.jdbcDriver"}
+                      :alias-for "hsqldb"
+                      :host :none}
+   "hsqldb"          {:classname "org.hsqldb.jdbcDriver"
+                      :host :none}
    "jtds"            {:classname "net.sourceforge.jtds.jdbc.Driver"
-                      :port 1433
-                      :alias-for "jtds:sqlserver"}
+                      :alias-for "jtds:sqlserver"
+                      :port 1433}
    "jtds:sqlserver"  {:classname "net.sourceforge.jtds.jdbc.Driver"
                       :port 1433}
    "mssql"           {:classname "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-                      :port 1433
                       :alias-for "sqlserver"
-                      :dbname-separator ";DATABASENAME="}
+                      :dbname-separator ";DATABASENAME="
+                      :port 1433}
    "mysql"           {:classname ["com.mysql.cj.jdbc.Driver"
                                   "com.mysql.jdbc.Driver"]
                       :port 3306}
    "oracle"          {:classname "oracle.jdbc.OracleDriver"
-                      :port 1521
                       :alias-for "oracle:thin"
-                      :host-prefix "@"}
+                      :host-prefix "@"
+                      :port 1521}
    "oracle:oci"      {:classname "oracle.jdbc.OracleDriver"
-                      :port 1521
-                      :host-prefix "@"}
+                      :host-prefix "@"
+                      :port 1521}
    "oracle:sid"      {:classname "oracle.jdbc.OracleDriver"
-                      :port 1521
                       :alias-for "oracle:thin"
                       :dbname-separator ":"
-                      :host-prefix "@"}
+                      :host-prefix "@"
+                      :port 1521}
    "oracle:thin"     {:classname "oracle.jdbc.OracleDriver"
-                      :port 1521
-                      :host-prefix "@"}
+                      :host-prefix "@"
+                      :port 1521}
    "postgres"        {:classname "org.postgresql.Driver"
-                      :port 5432
-                      :alias-for "postgresql"}
+                      :alias-for "postgresql"
+                      :port 5432}
    "postgresql"      {:classname "org.postgresql.Driver"
                       :port 5432}
    "pgsql"           {:classname "com.impossibl.postgres.jdbc.PGDriver"}
    "redshift"        {:classname "com.amazon.redshift.jdbc.Driver"}
-   "sqlite"          {:classname "org.sqlite.JDBC"}
+   "sqlite"          {:classname "org.sqlite.JDBC"
+                      :host :none}
    "sqlserver"       {:classname "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-                      :port 1433
-                      :dbname-separator ";DATABASENAME="}
+                      :dbname-separator ";DATABASENAME="
+                      :port 1433}
    "timesten:client" {:classname "com.timesten.jdbc.TimesTenClientDriver"
-                      :dbname-separator ":dsn="}
+                      :dbname-separator ":dsn="
+                      :host :none}
    "timesten:direct" {:classname "com.timesten.jdbc.TimesTenDriver"
-                      :dbname-separator ":dsn="}})
+                      :dbname-separator ":dsn="
+                      :host :none}})
 
 (defn- ^Properties as-properties
   "Convert any seq of pairs to a `java.util.Properties` instance."
@@ -130,14 +139,11 @@
     :as db-spec}]
   (let [;; allow aliases for dbtype
         subprotocol (-> dbtype dbtypes :alias-for (or dbtype))
-        host        (or host "127.0.0.1")
+        host        (or host (-> dbtype dbtypes :host) "127.0.0.1")
         port        (or port (-> dbtype dbtypes :port))
         db-sep      (or dbname-separator (-> dbtype dbtypes :dbname-separator (or "/")))
         local-sep   (or dbname-separator (-> dbtype dbtypes :dbname-separator (or ":")))
-        url (cond (#{"derby" "hsqldb" "sqlite"} subprotocol)
-                  (str "jdbc:" subprotocol local-sep dbname)
-
-                  (#{"h2"} subprotocol)
+        url (cond (#{"h2"} subprotocol)
                   (str "jdbc:" subprotocol local-sep
                        (if (re-find #"^([A-Za-z]:)?[\./\\]" dbname)
                          ;; DB name starts with relative or absolute path
@@ -147,9 +153,6 @@
 
                   (#{"h2:mem"} subprotocol)
                   (str "jdbc:" subprotocol local-sep dbname ";DB_CLOSE_DELAY=-1")
-
-                  (#{"timesten:client" "timesten:direct"} subprotocol)
-                  (str "jdbc:" subprotocol local-sep dbname)
 
                   (= :none host)
                   (str "jdbc:" subprotocol local-sep dbname)
