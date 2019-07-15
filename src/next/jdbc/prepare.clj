@@ -1,7 +1,7 @@
 ;; copyright (c) 2018-2019 Sean Corfield, all rights reserved
 
 (ns next.jdbc.prepare
-  "Mostly an implementation namespace for how `PreparedStatement objects` are
+  "Mostly an implementation namespace for how `PreparedStatement` objects are
   created by the next generation java.jdbc library.
 
   `set-parameters` is public and may be useful if you have a `PreparedStatement`
