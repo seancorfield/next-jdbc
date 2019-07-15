@@ -26,15 +26,20 @@
 
 (s/def ::dbtype string?)
 (s/def ::dbname string?)
+(s/def ::dbname-separator string?)
 (s/def ::classname string?)
 (s/def ::user string?)
 (s/def ::password string?)
-(s/def ::host string?)
+(s/def ::host (s/or :name string?
+                    :none #{:none}))
+(s/def ::host-prefix string?)
 (s/def ::port pos-int?)
 (s/def ::db-spec-map (s/keys :req-un [::dbtype ::dbname]
                              :opt-un [::classname
                                       ::user ::password
-                                      ::host ::port]))
+                                      ::host ::port
+                                      ::dbname-separator
+                                      ::host-prefix]))
 
 (s/def ::connection #(instance? Connection %))
 (s/def ::datasource #(instance? DataSource %))
@@ -47,7 +52,13 @@
 (s/def ::connectable any?)
 (s/def ::key-map (s/map-of keyword? any?))
 (s/def ::example-map (s/map-of keyword? any? :min-count 1))
-(s/def ::opts-map (s/map-of keyword? any?))
+
+(s/def ::order-by-col (s/or :col keyword?
+                            :dir (s/cat :col keyword?
+                                        :dir #{:asc :desc})))
+(s/def ::order-by (s/coll-of ::order-by-col :kind vector? :min-count 1))
+(s/def ::opts-map (s/and (s/map-of keyword? any?)
+                         (s/keys :opt-un [::order-by])))
 
 (s/def ::transactable any?)
 
@@ -120,8 +131,11 @@
 (s/fdef sql/insert-multi!
         :args (s/and (s/cat :connectable ::connectable
                             :table keyword?
-                            :cols (s/coll-of keyword? :kind vector?)
-                            :rows (s/coll-of (s/coll-of any? :kind vector?) :kind vector?)
+                            :cols (s/coll-of keyword?
+                                             :kind sequential?
+                                             :min-count 1)
+                            :rows (s/coll-of (s/coll-of any? :kind sequential?)
+                                             :kind sequential?)
                             :opts (s/? ::opts-map))
                      #(apply = (count (:cols %))
                         (map count (:rows %)))))

@@ -51,6 +51,29 @@
     (is (= (#'c/spec->url+etc {:dbtype "sqlserver" :dbname db-name})
            (#'c/spec->url+etc {:dbtype "sqlserver" :dbname db-name :port 1433})))))
 
+(deftest custom-dbtypes
+  (is (= ["jdbc:acme:my-db" {}]
+         (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
+                             :dbname "my-db" :host :none})))
+  (is (= ["jdbc:acme://127.0.0.1/my-db" {}]
+         (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
+                             :dbname "my-db"})))
+  (is (= ["jdbc:acme://12.34.56.70:1234/my-db" {}]
+         (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
+                             :dbname "my-db" :host "12.34.56.70" :port 1234})))
+  (is (= ["jdbc:acme:dsn=my-db" {}]
+         (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
+                             :dbname "my-db" :host :none
+                             :dbname-separator ":dsn="})))
+  (is (= ["jdbc:acme:(*)127.0.0.1/my-db" {}]
+         (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
+                             :dbname "my-db"
+                             :host-prefix "(*)"})))
+  (is (= ["jdbc:acme:(*)12.34.56.70:1234/my-db" {}]
+         (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
+                             :dbname "my-db" :host "12.34.56.70" :port 1234
+                             :host-prefix "(*)"}))))
+
 ;; these are the 'local' databases that we can always test against
 (def test-db-type ["derby" "h2" "h2:mem" "hsqldb" "sqlite"])
 

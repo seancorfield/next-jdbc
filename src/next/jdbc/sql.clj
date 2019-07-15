@@ -38,6 +38,7 @@
                                         [(conj conds (str e " = ?")) (conj params v)])))
                                   [[] []]
                                   key-map)]
+    (assert (seq where) "key-map may not be empty")
     (into [(str (str/upper-case (name clause)) " "
                 (str/join (if (= :where clause) " AND " ", ") where))]
           params)))
@@ -79,10 +80,11 @@
 (defn- for-order
   "Given an `:order-by` vector, return an `ORDER BY` clause."
   [order-by opts]
-  (if (vector? order-by)
-    (str "ORDER BY "
-         (str/join ", " (map #(for-order-col % opts) order-by)))
-    (throw (IllegalArgumentException. ":order-by must be a vector"))))
+  (when-not (vector? order-by)
+    (throw (IllegalArgumentException. ":order-by must be a vector")))
+  (assert (seq order-by) ":order-by may not be empty")
+  (str "ORDER BY "
+       (str/join ", " (map #(for-order-col % opts) order-by))))
 
 (defn- for-query
   "Given a table name and either a hash map of column names and values or a
@@ -147,6 +149,7 @@
   (let [entity-fn (:table-fn opts identity)
         params    (as-keys key-map opts)
         places    (as-? key-map opts)]
+    (assert (seq key-map) "key-map may not be empty")
     (into [(str "INSERT INTO " (entity-fn (name table))
                 " (" params ")"
                 " VALUES (" places ")")]
@@ -159,7 +162,11 @@
 
   Applies any `:table-fn` / `:column-fn` supplied in the options."
   [table cols rows opts]
-  (assert (apply = (count cols) (map count rows)))
+  (assert (apply = (count cols) (map count rows))
+          "column counts are not consistent across cols and rows")
+  ;; to avoid generating bad SQL
+  (assert (seq cols) "cols may not be empty")
+  (assert (seq rows) "rows may not be empty")
   (let [table-fn  (:table-fn opts identity)
         column-fn (:column-fn opts identity)
         params    (str/join ", " (map (comp column-fn name) cols))
@@ -199,9 +206,11 @@
   ([connectable table cols rows]
    (insert-multi! connectable table cols rows {}))
   ([connectable table cols rows opts]
-   (execute! connectable
-             (for-insert-multi table cols rows opts)
-             (merge {:return-keys true} opts))))
+   (if (seq rows)
+     (execute! connectable
+               (for-insert-multi table cols rows opts)
+               (merge {:return-keys true} opts))
+     [])))
 
 (defn query
   "Syntactic sugar over `execute!` to provide a query alias.
