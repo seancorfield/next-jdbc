@@ -86,7 +86,7 @@ These are mostly drawn from [Issue #5](https://github.com/seancorfield/next-jdbc
 
 * Keyword options no longer end in `?` -- for consistency (in `clojure.java.jdbc`, some flag options ended in `?` and some did not; also some options that ended in `?` accepted non-`Boolean` values, e.g., `:as-arrays?` and `:explain?`),
 * `with-db-connection` has been replaced by just `with-open` containing a call to `get-connection`,
-* `with-transaction` can take a `:rollback-only` option, but there is no way to change a transaction to rollback _dynamically_; throw an exception instead (all transactions roll back on an exception)
+* `with-transaction` can take a `:rollback-only` option, but there is no built-in way to change a transaction to rollback _dynamically_; either throw an exception (all transactions roll back on an exception) or call `.rollback` directly on the `java.sql.Connection` object (see [Manual Rollback Inside a Transactions](/doc/transactions.md#manual-rollback-inside-a-transaction) and the following section about save points),
 * The extension points for setting parameters and reading columns are now `SettableParameter` and `ReadableColumn` protocols.
 
 [<: `datafy`, `nav`, and `:schema`](/doc/datafy-nav-and-schema.md)
