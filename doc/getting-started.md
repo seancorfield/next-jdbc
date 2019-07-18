@@ -22,7 +22,7 @@ In addition, you will need to add dependencies for the JDBC drivers you wish to 
 
 ## An Example REPL Session
 
-To start using `next.jdbc`, you need to create a datasource (an instance of `javax.sql.DataSource`). You can use `next.jdbc/get-datasource` with either a "db-spec" -- a hash map describing the database you wish to connect to -- or a JDBC URI string. Or you can construct a datasource from one of the connection pooling libraries out there, such as [HikariCP](https://brettwooldridge.github.io/HikariCP/) or [c3p0](https://www.mchange.com/projects/c3p0/).
+To start using `next.jdbc`, you need to create a datasource (an instance of `javax.sql.DataSource`). You can use `next.jdbc/get-datasource` with either a "db-spec" -- a hash map describing the database you wish to connect to -- or a JDBC URI string. Or you can construct a datasource from one of the connection pooling libraries out there, such as [HikariCP](https://brettwooldridge.github.io/HikariCP/) or [c3p0](https://www.mchange.com/projects/c3p0/) -- see [Connection Pooling](#connection-pooling) below.
 
 For the examples in this documentation, we will use a local H2 database on disk, and we'll use the [Clojure CLI tools](https://clojure.org/guides/deps_and_cli) and `deps.edn`:
 
@@ -113,7 +113,7 @@ Any operation that can perform key-based lookup can be used here without creatin
 
 ## Datasources, Connections & Transactions
 
-In the examples above, we created a datasource and then passed it into each function call. When `next.jdbc` is given a datasource, it creates a `java.sql.Connection` from it, uses it for the SQL operation, and then closes it. If you're not using a connection pooling datasource, that can be quite an overhead: setting up database connections to remote servers is not cheap!
+In the examples above, we created a datasource and then passed it into each function call. When `next.jdbc` is given a datasource, it creates a `java.sql.Connection` from it, uses it for the SQL operation, and then closes it. If you're not using a connection pooling datasource (see below), that can be quite an overhead: setting up database connections to remote servers is not cheap!
 
 If you want to run multiple SQL operations without that overhead each time, you can create the connection yourself and reuse it across several operations using `with-open` and `next.jdbc/get-connection`:
 
@@ -144,6 +144,47 @@ If `with-transaction` is given a datasource, it will create and close the connec
     (into [] (map :column) (jdbc/plan tx ...)))
   (jdbc/execute! con ...)) ; committed
 ```
+
+## Connection Pooling
+
+`next.jdbc` makes it easy to use either HikariCP or c3p0 for connection pooling.
+
+First, you need to add the connection pooling library as a dependency, e.g.,
+
+```clojure
+com.zaxxer/HikariCP {:mvn/version "3.3.1"}
+;; or:
+com.mchange/c3p0 {:mvn/version "0.9.5.4"}
+```
+
+_Check those libraries' documentation for the latest version to use!_
+
+Then import the appropriate classes into your code:
+
+```clojure
+(ns my.main
+  (:require [next.jdbc :as jdbc]
+            [next.jdbc.connection :as connection])
+  (:import (com.zaxxer.hikari HikariDataSource)
+           ;; or:
+           (com.mchange.v2.c3p0 ComboPooledDataSource PooledDataSource)))
+```
+
+Finally, create the connection pooled datasource. `db-spec` here contains the regular `next.jdbc` options (`:dbtype`, `:dbname`, and maybe `:host`, `:port`, `:classname` etc). Those are used to construct the JDBC URL that is passed into the datasource object (by calling `.setJdbcUrl` on it). You can also specify any of the connection pooling library's options, as mixed case keywords corresponding to any simple setter methods on the class being passed in, e.g., `:connectionTestQuery`, `:maximumPoolSize` (HikariCP), `:maxPoolSize`, `:preferredTestQuery` (c3p0).
+
+```clojure
+(let [^HikariDataSource ds (connection/->pool HikariDataSource db-spec)]
+  (jdbc/execute! ds ...)
+  (jdbc/execute! ds ...)
+  (into [] (map :column) (jdbc/plan ds ...)))
+;; or:
+(let [^PooledDataSource ds (connection/->pool ComboPooledDataSource db-spec)]
+  (jdbc/execute! ds ...)
+  (jdbc/execute! ds ...)
+  (into [] (map :column) (jdbc/plan ds ...)))
+```
+
+You only need the type hints on `ds` if you plan to call methods on it via Java interop, such as `.close` (or using `with-open` instead of `let` to auto-close it) and you want to avoid reflection.
 
 ## Support from Specs
 

@@ -193,11 +193,28 @@
     [url etc]))
 
 (defn ->pool
-  "Given a connection pooling class and a database spec, return an connection
-  pool object built from the database spec."
+  "Given a (connection pooled datasource) class and a database spec, return a
+  connection pool object built from that class and the database spec.
+
+  Assumes the `clazz` has a `.setJdbcUrl` method (which HikariCP and c3p0 do).
+
+  If you already have a JDBC URL and want to use this method, pass `:jdbcUrl`
+  in the database spec (instead of `:dbtype`, `:dbname`, etc).
+
+  Properties for the connection pool object can be passed as mixed case
+  keywords that correspond to setter methods (just as `:jdbcUrl` maps to
+  `.setJdbcUrl`). `clojure.java.data/to-java` is used to construct the
+  object and call the setters.
+
+  Note that the result is not type-hinted (because there's no common base
+  class or interface that can be assumed). In particular, connection pooled
+  datasource object may need to be closed but they don't necessarily implement
+  `java.io.Closeable` (HikariCP does, c3p0 does not)."
   [clazz db-spec]
-  (let [[url etc] (spec->url+etc db-spec)]
-    (to-java clazz (assoc etc :jdbcUrl url))))
+  (if (:jdbcUrl db-spec)
+    (to-java clazz db-spec)
+    (let [[url etc] (spec->url+etc db-spec)]
+      (to-java clazz (assoc etc :jdbcUrl url)))))
 
 (defn- string->url+etc
   "Given a JDBC URL, return it with an empty set of options with no parsing."
