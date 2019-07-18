@@ -6,11 +6,12 @@
 
   At some point, the datasource/connection tests should probably be extended
   to accept EDN specs from an external source (environment variables?)."
-  (:require [clojure.java.data :refer [to-java]]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [clojure.test :refer [deftest is testing]]
             [next.jdbc.connection :as c]
-            [next.jdbc.protocols :as p]))
+            [next.jdbc.protocols :as p])
+  (:import (com.zaxxer.hikari HikariDataSource)
+           (com.mchange.v2.c3p0 ComboPooledDataSource PooledDataSource)))
 
 (set! *warn-on-reflection* true)
 
@@ -102,14 +103,22 @@
         (is (str/index-of (pr-str ds) url))
         (with-open [con (p/get-connection ds {})]
           (is (instance? java.sql.Connection con)))))
+    (testing "datasource via HikariCP"
+      ;; the type hint is only needed because we want to call .close
+      (with-open [^HikariDataSource ds (c/->pool HikariDataSource db)]
+        (is (instance? javax.sql.DataSource ds))
+        ;; checks get-datasource on a DataSource is identity
+        (is (identical? ds (p/get-datasource ds)))
+        (with-open [con (p/get-connection ds {})]
+          (is (instance? java.sql.Connection con)))))
+    (testing "datasource via c3p0"
+      ;; the type hint is only needed because we want to call .close
+      (with-open [^PooledDataSource ds (c/->pool ComboPooledDataSource db)]
+        (is (instance? javax.sql.DataSource ds))
+        ;; checks get-datasource on a DataSource is identity
+        (is (identical? ds (p/get-datasource ds)))
+        (with-open [con (p/get-connection ds {})]
+          (is (instance? java.sql.Connection con)))))
     (testing "connection via map (Object)"
       (with-open [con (p/get-connection db {})]
-        (is (instance? java.sql.Connection con))))
-    (testing "connection via HikariCP"
-      (with-open [con (p/get-connection (c/->pool com.zaxxer.hikari.HikariDataSource db)
-                                        {})]
-        (is (instance? java.sql.Connection con))))
-    (testing "connection via c3p0"
-      (with-open [con (p/get-connection (c/->pool com.mchange.v2.c3p0.ComboPooledDataSource db)
-                                        {})]
         (is (instance? java.sql.Connection con))))))
