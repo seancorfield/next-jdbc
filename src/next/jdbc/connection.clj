@@ -192,7 +192,7 @@
       (throw (ex-info (str "Unknown dbtype: " dbtype) db-spec)))
     [url etc]))
 
-(defn jdbc-url
+(defn ->pool
   "Given a connection pooling class and a database spec, return an connection
   pool object built from the database spec."
   [clazz db-spec]

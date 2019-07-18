@@ -114,7 +114,7 @@
                                             :opts (s/? ::opts-map)))
                      :body (s/* any?)))
 
-(s/fdef connection/jdbc-url
+(s/fdef connection/->pool
         :args (s/cat :clazz #(instance? Class %)
                      :db-spec ::db-spec-map))
 
@@ -192,7 +192,7 @@
                   `jdbc/execute-one!
                   `jdbc/transact
                   `jdbc/with-transaction
-                  `connection/jdbc-url
+                  `connection/->pool
                   `prepare/execute-batch!
                   `prepare/set-parameters
                   `sql/insert!

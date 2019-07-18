@@ -106,10 +106,10 @@
       (with-open [con (p/get-connection db {})]
         (is (instance? java.sql.Connection con))))
     (testing "connection via HikariCP"
-      (with-open [con (p/get-connection (c/jdbc-url com.zaxxer.hikari.HikariDataSource db)
+      (with-open [con (p/get-connection (c/->pool com.zaxxer.hikari.HikariDataSource db)
                                         {})]
         (is (instance? java.sql.Connection con))))
     (testing "connection via c3p0"
-      (with-open [con (p/get-connection (c/jdbc-url com.mchange.v2.c3p0.ComboPooledDataSource db)
+      (with-open [con (p/get-connection (c/->pool com.mchange.v2.c3p0.ComboPooledDataSource db)
                                         {})]
         (is (instance? java.sql.Connection con))))))
