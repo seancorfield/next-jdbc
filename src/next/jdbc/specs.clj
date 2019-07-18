@@ -17,6 +17,7 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.test.alpha :as st]
             [next.jdbc :as jdbc]
+            [next.jdbc.connection :as connection]
             [next.jdbc.prepare :as prepare]
             [next.jdbc.sql :as sql])
   (:import (java.sql Connection PreparedStatement)
@@ -113,6 +114,10 @@
                                             :opts (s/? ::opts-map)))
                      :body (s/* any?)))
 
+(s/fdef connection/jdbc-url
+        :args (s/cat :clazz #(instance? Class %)
+                     :db-spec ::db-spec-map))
+
 (s/fdef prepare/execute-batch!
         :args (s/cat :ps ::prepared-statement
                      :param-groups (s/coll-of ::params :kind sequential?)
@@ -187,6 +192,7 @@
                   `jdbc/execute-one!
                   `jdbc/transact
                   `jdbc/with-transaction
+                  `connection/jdbc-url
                   `prepare/execute-batch!
                   `prepare/set-parameters
                   `sql/insert!

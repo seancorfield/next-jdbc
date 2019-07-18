@@ -6,7 +6,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch since the 1.0.2 release:
 
-* None.
+* Address #48 by adding `next.jdbc.connection/jdbc-url` and showing HikariCP and c3p0 connection pooling (so far it's just tests).
 
 ## Stable Builds
 

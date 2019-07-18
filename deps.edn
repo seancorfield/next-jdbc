@@ -1,8 +1,13 @@
 {:paths ["src"]
- :deps {org.clojure/clojure {:mvn/version "1.10.1"}}
+ :deps {org.clojure/clojure {:mvn/version "1.10.1"}
+        org.clojure/java.data {:mvn/version "0.1.1"}}
  :aliases
  {:test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "0.9.0"}
+                      ;; connection pooling
+                      com.zaxxer/HikariCP {:mvn/version "3.3.1"}
+                      com.mchange/c3p0 {:mvn/version "0.9.5.4"}
+                      ;; JDBC drivers
                       org.apache.derby/derby {:mvn/version "10.14.2.0"}
                       org.hsqldb/hsqldb {:mvn/version "2.4.1"}
                       com.h2database/h2 {:mvn/version "1.4.197"}

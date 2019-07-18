@@ -2,7 +2,8 @@
 
 (ns next.jdbc.connection
   "Standard implementations of `get-datasource` and `get-connection`."
-  (:require [next.jdbc.protocols :as p])
+  (:require [clojure.java.data :refer [to-java]]
+            [next.jdbc.protocols :as p])
   (:import (java.sql Connection DriverManager)
            (javax.sql DataSource)
            (java.util Properties)))
@@ -190,6 +191,13 @@
                           loaded)))))))
       (throw (ex-info (str "Unknown dbtype: " dbtype) db-spec)))
     [url etc]))
+
+(defn jdbc-url
+  "Given a connection pooling class and a database spec, return an connection
+  pool object built from the database spec."
+  [clazz db-spec]
+  (let [[url etc] (spec->url+etc db-spec)]
+    (to-java clazz (assoc etc :jdbcUrl url))))
 
 (defn- string->url+etc
   "Given a JDBC URL, return it with an empty set of options with no parsing."
