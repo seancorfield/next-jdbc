@@ -18,7 +18,7 @@ for `deps.edn` or:
 ```
 for `project.clj` or `build.boot`.
 
-In addition, you will need to add dependencies for the JDBC drivers you wish to use for whatever databases you are using. You can see the drivers and versions that `next.jdbc` is tested against in [the project's `deps.edn` file](https://github.com/seancorfield/next-jdbc/blob/master/deps.edn#L6-L14), but many other JDBC drivers for other databases should also work (e.g., Oracle, Red Shift).
+In addition, you will need to add dependencies for the JDBC drivers you wish to use for whatever databases you are using. You can see the drivers and versions that `next.jdbc` is tested against in [the project's `deps.edn` file](https://github.com/seancorfield/next-jdbc/blob/master/deps.edn#L11-L19), but many other JDBC drivers for other databases should also work (e.g., Oracle, Red Shift).
 
 ## An Example REPL Session
 
@@ -146,6 +146,8 @@ If `with-transaction` is given a datasource, it will create and close the connec
 ```
 
 ## Connection Pooling
+
+(Coming soon in version 1.0.3!)
 
 `next.jdbc` makes it easy to use either HikariCP or c3p0 for connection pooling.
 
