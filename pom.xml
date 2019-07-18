@@ -34,6 +34,11 @@
       <artifactId>clojure</artifactId>
       <version>1.10.1</version>
     </dependency>
+    <dependency>
+      <groupId>org.clojure</groupId>
+      <artifactId>java.data</artifactId>
+      <version>0.1.1</version>
+    </dependency>
   </dependencies>
 
   <build>
