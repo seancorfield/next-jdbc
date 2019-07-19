@@ -3,20 +3,20 @@
         org.clojure/java.data {:mvn/version "0.1.1"}}
  :aliases
  {:test {:extra-paths ["test"]
-         :extra-deps {org.clojure/test.check {:mvn/version "0.9.0"}
+         :extra-deps {org.clojure/test.check {:mvn/version "0.10.0-RC1"}
                       ;; connection pooling
                       com.zaxxer/HikariCP {:mvn/version "3.3.1"}
                       com.mchange/c3p0 {:mvn/version "0.9.5.4"}
                       ;; JDBC drivers
-                      org.apache.derby/derby {:mvn/version "10.14.2.0"}
-                      org.hsqldb/hsqldb {:mvn/version "2.4.1"}
-                      com.h2database/h2 {:mvn/version "1.4.197"}
+                      org.apache.derby/derby {:mvn/version "10.14.2.0"} ; behind
+                      org.hsqldb/hsqldb {:mvn/version "2.5.0"}
+                      com.h2database/h2 {:mvn/version "1.4.199"}
                       net.sourceforge.jtds/jtds {:mvn/version "1.3.1"}
-                      mysql/mysql-connector-java {:mvn/version "5.1.41"}
-                      org.postgresql/postgresql {:mvn/version "42.2.2.jre7"}
-                      com.impossibl.pgjdbc-ng/pgjdbc-ng {:mvn/version "0.7.1"}
-                      org.xerial/sqlite-jdbc {:mvn/version "3.23.1"}
-                      com.microsoft.sqlserver/mssql-jdbc {:mvn/version "6.2.2.jre8"}}}
+                      mysql/mysql-connector-java {:mvn/version "5.1.41"} ; behind
+                      org.postgresql/postgresql {:mvn/version "42.2.6"}
+                      com.impossibl.pgjdbc-ng/pgjdbc-ng {:mvn/version "0.8.2"}
+                      org.xerial/sqlite-jdbc {:mvn/version "3.28.0"}
+                      com.microsoft.sqlserver/mssql-jdbc {:mvn/version "7.2.2.jre8"}}}
   :runner
   {:extra-deps {com.cognitect/test-runner
                 {:git/url "https://github.com/cognitect-labs/test-runner"

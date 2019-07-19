@@ -147,8 +147,6 @@ If `with-transaction` is given a datasource, it will create and close the connec
 
 ## Connection Pooling
 
-(Coming soon in version 1.0.3!)
-
 `next.jdbc` makes it easy to use either HikariCP or c3p0 for connection pooling.
 
 First, you need to add the connection pooling library as a dependency, e.g.,

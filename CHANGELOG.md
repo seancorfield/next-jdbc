@@ -7,6 +7,7 @@ Only accretive/fixative changes will be made from now on.
 The following changes have been committed to the **master** branch since the 1.0.2 release:
 
 * Fix #48 by adding `next.jdbc.connection/->pool` and documenting how to use HikariCP and c3p0 in the Getting Started docs (as well as adding tests for both libraries).
+* Updated test dependencies (testing against more recent versions of several drivers).
 
 ## Stable Builds
 

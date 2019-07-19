@@ -8,7 +8,7 @@ The latest versions on Clojars and on cljdoc:
 
 [![Clojars Project](https://clojars.org/seancorfield/next.jdbc/latest-version.svg)](https://clojars.org/seancorfield/next.jdbc) [![cljdoc badge](https://cljdoc.org/badge/seancorfield/next.jdbc)](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT)
 
-This documentation is for the 1.0.2 release -- [see the CHANGELOG](CHANGELOG.md).
+This documentation is for **master** after the 1.0.2 release -- [see the CHANGELOG](CHANGELOG.md).
 
 * [Getting Started](/doc/getting-started.md)
 * [Migrating from `clojure.java.jdbc`](/doc/migration-from-clojure-java-jdbc.md)
@@ -26,7 +26,7 @@ Those were my three primary drivers. In addition, the `db-spec`-as-hash-map appr
 
 I also wanted `datafy`/`nav` support baked right in (it was added to `clojure.java.jdbc` back in December 2018 as an undocumented, experimental API in a separate namespace). It is the default behavior for `execute!` and `execute-one!`. The protocol-based function `next.jdbc.result-set/datafiable-row` can be used with `plan` if you need to add `datafy`/`nav` support to rows you are creating in your reduction.
 
-As `next.jdbc` moved from alpha to beta, the last breaking change was made (renaming `reducible!` to `plan`) and the API should now be considered stable. Only accretive and fixative changes will be made from now on.
+As `next.jdbc` moved from alpha to beta, the last breaking change was made (renaming `reducible!` to `plan`) and the API should be considered stable. Only accretive and fixative changes will be made from now on.
 
 After a month of alpha builds being available for testing, the first beta build was released on May 24th, 2019. A release candidate followed on June 4th and the "gold" (1.0.0) release was on June 12th. In addition to the small, core API in `next.jdbc`, there are "syntactic sugar" SQL functions (`insert!`, `query`, `update!`, and `delete!`) available in `next.jdbc.sql` that are similar to the main API in `clojure.java.jdbc`. See [Migrating from `clojure.java.jdbc`](/doc/migration-from-clojure-java-jdbc.md) for more detail about the differences.
 
