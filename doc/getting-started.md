@@ -99,7 +99,7 @@ user=> (into #{}
 user=>
 ```
 
-This produces a set of all the unique names in the `address` table, directly from the `java.sql.ResultSet` object returned by the JDBC driver, without creating any Clojure hash maps. That means you can use either the qualified keyword that would be produced by `execute!` or `execute-one!` or you can use a simple keyword that mirrors the column name directly:
+This produces a set of all the unique names in the `address` table, directly from the `java.sql.ResultSet` object returned by the JDBC driver, without creating any Clojure hash maps. That means you can use either the qualified keyword that would be produced by `execute!` or `execute-one!` or you can use a simple keyword that mirrors the column name (label) directly:
 
 ```clojure
 user=> (into #{}
@@ -145,6 +145,8 @@ If `with-transaction` is given a datasource, it will create and close the connec
   (jdbc/execute! con ...)) ; committed
 ```
 
+You can read more about [working with transactions](/doc/transactions.md) further on in the documentation.
+
 ## Connection Pooling
 
 `next.jdbc` makes it easy to use either HikariCP or c3p0 for connection pooling.
@@ -173,24 +175,24 @@ Then import the appropriate classes into your code:
 Finally, create the connection pooled datasource. `db-spec` here contains the regular `next.jdbc` options (`:dbtype`, `:dbname`, and maybe `:host`, `:port`, `:classname` etc). Those are used to construct the JDBC URL that is passed into the datasource object (by calling `.setJdbcUrl` on it). You can also specify any of the connection pooling library's options, as mixed case keywords corresponding to any simple setter methods on the class being passed in, e.g., `:connectionTestQuery`, `:maximumPoolSize` (HikariCP), `:maxPoolSize`, `:preferredTestQuery` (c3p0).
 
 ```clojure
-(let [^HikariDataSource ds (connection/->pool HikariDataSource db-spec)]
+(with-open [^HikariDataSource ds (connection/->pool HikariDataSource db-spec)]
   (jdbc/execute! ds ...)
   (jdbc/execute! ds ...)
   (into [] (map :column) (jdbc/plan ds ...)))
 ;; or:
-(let [^PooledDataSource ds (connection/->pool ComboPooledDataSource db-spec)]
+(with-open [^PooledDataSource ds (connection/->pool ComboPooledDataSource db-spec)]
   (jdbc/execute! ds ...)
   (jdbc/execute! ds ...)
   (into [] (map :column) (jdbc/plan ds ...)))
 ```
 
-You only need the type hints on `ds` if you plan to call methods on it via Java interop, such as `.close` (or using `with-open` instead of `let` to auto-close it) and you want to avoid reflection.
+You only need the type hints on `ds` if you plan to call methods on it via Java interop, such as `.close` (or using `with-open` to auto-close it) and you want to avoid reflection.
 
 ## Support from Specs
 
 As you are developing with `next.jdbc`, it can be useful to have assistance from `clojure.spec` in checking calls to `next.jdbc`'s functions, to provide explicit argument checking and/or better error messages for some common mistakes, e.g., trying to pass a plain SQL string where a vector (containing a SQL string, and no parameters) is expected.
 
-You can enable argument checking for functions in `next.jdbc`, `next.jdbc.sql`, and `next.jdbc.prepare` by requiring the `next.jdbc.specs` namespace and instrumenting the functions. A convenience function is provided:
+You can enable argument checking for functions in `next.jdbc`, `next.jdbc.connection`, `next.jdbc.prepare`, and `next.jdbc.sql` by requiring the `next.jdbc.specs` namespace and instrumenting the functions. A convenience function is provided:
 
 ```clojure
 (require '[next.jdbc.specs :as specs])
