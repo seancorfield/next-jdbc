@@ -13,7 +13,7 @@ Because string-building isn't always much fun, `next.jdbc.sql` also provides som
 
 as well as these more specific "read" operations:
 
-* `find-by-keys` -- a query on one or more column values, specified as a hash map,
+* `find-by-keys` -- a query on one or more column values, specified as a hash map or `WHERE` clause,
 * `get-by-id` -- a query to return a single row, based on a single column value, usually the primary key.
 
 These functions are described in more detail below. They are intended to cover the most common, simple SQL operations. If you need more expressiveness, consider one of the following libraries to build SQL/parameter vectors, or run queries:
@@ -35,7 +35,7 @@ Given a table name (as a keyword) and a hash map of column names and values, thi
 
 ## `insert-multi!`
 
-Given a table name (as a keyword), a vector of column names, and a vector row values, this performs a multi-row insertion into the database:
+Given a table name (as a keyword), a vector of column names, and a vector of row value vectors, this performs a multi-row insertion into the database:
 
 ```clojure
 (sql/insert-multi! ds :address
@@ -53,7 +53,7 @@ Given a table name (as a keyword), a vector of column names, and a vector row va
 Note: this expands to a single SQL statement with placeholders for every
 value being inserted -- for large sets of rows, this may exceed the limits
 on SQL string size and/or number of parameters for your JDBC driver or your
-database!
+database! You should look at [`next.jdbc.prepare/execute-batch!'](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.prepare#execute-batch!) for an alternative approach.
 
 ## `query`
 
