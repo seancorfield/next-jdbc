@@ -27,7 +27,19 @@ If parameters are provided in the vector along with the SQL statement, in the ca
 
 * `(set-parameter v ps i)` -- by default this calls `(.setObject ps i v)` (for `nil` and `Object`)
 
-This can be extended to any Clojure data type, to provide a customized way to add specific types of values as parameters to any `PreparedStatement`. Note that you can extend this protocol via metadata so you can do it on a per-object basis if you need:
+This can be extended to any Clojure data type, to provide a customized way to add specific types of values as parameters to any `PreparedStatement`. For example, to have all `java.time.LocalDate` and `java.time.LocalDateTime` objects converted to `java.sql.Timestamp` automatically:
+
+```clojure
+(extend-protocol p/SettableParameter
+  java.time.LocalDate
+  (set-parameter [^java.time.LocalDate v ^PreparedStatement s ^long i]
+    (.setTimestamp ps i (java.sql.Timestamp/valueOf (.atStartOfDay v))))
+  java.time.LocalDateTime
+  (set-parameter [^java.time.LocalDateTime v ^PreparedStatement s ^long i]
+    (.setTimestamp ps i (java.sql.Timestamp/valueOf v))))
+```
+
+Note that you can extend this protocol via metadata so you can do it on a per-object basis if you need:
 
 ```clojure
 (with-meta obj {'next.jdbc.prepare/set-parameter (fn [v ps i]...)})
