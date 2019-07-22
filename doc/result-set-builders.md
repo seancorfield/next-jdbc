@@ -73,7 +73,18 @@ In addition, inside `plan`, as each value is looked up by name in the current st
 
 The default implementation of this protocol is for these two functions to return `nil` as `nil`, a `Boolean` value as a canonical `true` or `false` value (unfortunately, JDBC drivers cannot be relied on to return unique values here!), and for all other objects to be returned as-is.
 
-Common extensions here could include converting `java.sql.Timestamp` to `java.time.Instant` for example but `next.jdbc` makes no assumptions beyond `nil` and `Boolean`.
+`next.jdbc` makes no assumptions beyond `nil` and `Boolean`, but common extensions here could include converting `java.sql.Timestamp` to `java.time.Instant` for example:
+
+```clojure
+(extend-protocol rs/ReadableColumn
+  java.sql.Timestamp
+  (read-column-by-label ^java.time.Instant [^java.sql.Timestamp v _]
+    (.toInstant v))
+  (read-column-by-index ^java.time.Instant [^java.sql.Timestamp v _2 _3]
+    (.toInstant v)))
+```
+
+Remember that a protocol extension will apply to all code running in your application so with the above code **all** timestamp values coming from the database will be converted to `java.time.Instant` for all queries.
 
 Note that the converse, converting Clojure values to database-specific types is handled by the `SettableParameters`, discussed in the next section (Prepared Statements).
 

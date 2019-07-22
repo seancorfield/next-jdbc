@@ -23,14 +23,17 @@ You can provide the parameters in the `prepare` call or you can provide them via
 
 ## Prepared Statement Parameters
 
-If parameters are provided in the vector along with the SQL statement, in the call to `prepare`, then `set-parameter` is called for each of them. This is part of the `SettableParameter` protocol:
+If parameters are provided in the vector along with the SQL statement, in the call to `prepare`, then `set-parameter` is behind the scenes called for each of them. This is part of the `SettableParameter` protocol:
 
 * `(set-parameter v ps i)` -- by default this calls `(.setObject ps i v)` (for `nil` and `Object`)
 
-This can be extended to any Clojure data type, to provide a customized way to add specific types of values as parameters to any `PreparedStatement`. For example, to have all `java.time.LocalDate` and `java.time.LocalDateTime` objects converted to `java.sql.Timestamp` automatically:
+This can be extended to any Clojure data type, to provide a customized way to add specific types of values as parameters to any `PreparedStatement`. For example, to have all `java.time.Instant`, `java.time.LocalDate` and `java.time.LocalDateTime` objects converted to `java.sql.Timestamp` automatically:
 
 ```clojure
 (extend-protocol p/SettableParameter
+  java.time.Instant
+  (set-parameter [^java.time.Instant v ^PreparedStatement s ^long i]
+    (.setTimestamp ps i (java.sql.Timestamp/from v)))
   java.time.LocalDate
   (set-parameter [^java.time.LocalDate v ^PreparedStatement s ^long i]
     (.setTimestamp ps i (java.sql.Timestamp/valueOf (.atStartOfDay v))))
@@ -55,6 +58,8 @@ If you need more specialized parameter handling than the protocol can provide, t
 
 By default, `next.jdbc` assumes that you are providing a single set of parameter values and then executing the prepared statement. If you want to run a single prepared statement with multiple groups of parameters, you might want to take advantage of the increased performance that may come from using JDBC's batching machinery.
 
+You could do this manually:
+
 ```clojure
 ;; assuming require next.jdbc.prepare :as p
 (with-open [con (jdbc/get-connection ds)
@@ -78,7 +83,7 @@ Here we set parameters and add them in batches to the prepared statement, then w
   (.executeBatch ps)) ; returns int[]
 ```
 
-A helper function is provided in `next.jdbc.prepare` to automate the execution of batched parameters:
+Both of those are somewhat ugly and contain a fair bit of boilerplate and Java interop, so a helper function is provided in `next.jdbc.prepare` to automate the execution of batched parameters:
 
 ```clojure
 (with-open [con (jdbc/get-connection ds)
