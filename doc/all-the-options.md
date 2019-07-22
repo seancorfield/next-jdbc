@@ -18,7 +18,7 @@ Although `get-datasource` does not accept options, the "db spec" hash map passed
 * `:user` -- an optional string that identifies the database username to be used when authenticating,
 * `:password` -- an optional string that identifies the database password to be used when authenticating.
 
-Any additional keys provided in the "db spec" will be passed to the JDBC driver as `Properties` when each connection is made.
+Any additional keys provided in the "db spec" will be passed to the JDBC driver as `Properties` when each connection is made. Alternatively, when used with `next.jdbc.connection/->pool`, additional keys correspond to setters called on the pooled connection object.
 
 Any path that calls `get-connection` will accept the following options:
 
@@ -55,6 +55,11 @@ Any function that creates a `PreparedStatement` will accept the following option
 * `:timeout` -- an integer that specifies the timeout allowed for SQL operations.
 
 Not all databases or drivers support all of these options, or all values for any given option. If `:return-keys` is a vector of column names and that is not supported, `next.jdbc` will attempt a generic "return generated keys" option instead. If that is not supported, `next.jdbc` will fall back to a regular SQL operation. If other options are not supported, you may get a `SQLException`.
+
+In addition, `next.jdbc.prepare/execute-batch!` accepts an options hash map that can contain the following:
+
+* `:batch-size` -- an integer that determines how to partition the parameter groups for submitting to the database in batches,
+* `:large` -- a Boolean flag that indicates whether the batch will produce large update counts (`long` rather than `int` values).
 
 ## Transactions
 
