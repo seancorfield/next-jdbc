@@ -32,13 +32,13 @@ This can be extended to any Clojure data type, to provide a customized way to ad
 ```clojure
 (extend-protocol p/SettableParameter
   java.time.Instant
-  (set-parameter [^java.time.Instant v ^PreparedStatement s ^long i]
+  (set-parameter [^java.time.Instant v ^PreparedStatement ps ^long i]
     (.setTimestamp ps i (java.sql.Timestamp/from v)))
   java.time.LocalDate
-  (set-parameter [^java.time.LocalDate v ^PreparedStatement s ^long i]
+  (set-parameter [^java.time.LocalDate v ^PreparedStatement ps ^long i]
     (.setTimestamp ps i (java.sql.Timestamp/valueOf (.atStartOfDay v))))
   java.time.LocalDateTime
-  (set-parameter [^java.time.LocalDateTime v ^PreparedStatement s ^long i]
+  (set-parameter [^java.time.LocalDateTime v ^PreparedStatement ps ^long i]
     (.setTimestamp ps i (java.sql.Timestamp/valueOf v))))
 ```
 

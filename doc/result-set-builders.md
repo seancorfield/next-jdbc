@@ -73,10 +73,15 @@ In addition, inside `plan`, as each value is looked up by name in the current st
 
 The default implementation of this protocol is for these two functions to return `nil` as `nil`, a `Boolean` value as a canonical `true` or `false` value (unfortunately, JDBC drivers cannot be relied on to return unique values here!), and for all other objects to be returned as-is.
 
-`next.jdbc` makes no assumptions beyond `nil` and `Boolean`, but common extensions here could include converting `java.sql.Timestamp` to `java.time.Instant` for example:
+`next.jdbc` makes no assumptions beyond `nil` and `Boolean`, but common extensions here could include converting `java.sql.Date` to `java.time.LocalDate` and `java.sql.Timestamp` to `java.time.Instant` for example:
 
 ```clojure
 (extend-protocol rs/ReadableColumn
+  java.sql.Date
+  (read-column-by-label ^java.time.LocalDate [^java.sql.Date v _]
+    (.toLocalDate v))
+  (read-column-by-index ^java.time.LocalDate [^java.sql.Date v _2 _3]
+    (.toLocalDate v))
   java.sql.Timestamp
   (read-column-by-label ^java.time.Instant [^java.sql.Timestamp v _]
     (.toInstant v))
