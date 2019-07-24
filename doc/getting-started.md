@@ -174,19 +174,56 @@ Then import the appropriate classes into your code:
 
 Finally, create the connection pooled datasource. `db-spec` here contains the regular `next.jdbc` options (`:dbtype`, `:dbname`, and maybe `:host`, `:port`, `:classname` etc). Those are used to construct the JDBC URL that is passed into the datasource object (by calling `.setJdbcUrl` on it). You can also specify any of the connection pooling library's options, as mixed case keywords corresponding to any simple setter methods on the class being passed in, e.g., `:connectionTestQuery`, `:maximumPoolSize` (HikariCP), `:maxPoolSize`, `:preferredTestQuery` (c3p0).
 
+You will generally want to create the connection pooled datasource at the start of your program (and close it before you exit, although that's not really important since it'll be cleaned up when the JVM shuts down):
+
 ```clojure
-(with-open [^HikariDataSource ds (connection/->pool HikariDataSource db-spec)]
-  (jdbc/execute! ds ...)
-  (jdbc/execute! ds ...)
-  (into [] (map :column) (jdbc/plan ds ...)))
+(defn -main [& args]
+  (with-open [^HikariDataSource ds (connection/->pool HikariDataSource db-spec)]
+    (jdbc/execute! ds ...)
+    (jdbc/execute! ds ...)
+    (do-other-stuff ds args)
+    (into [] (map :column) (jdbc/plan ds ...))))
 ;; or:
-(with-open [^PooledDataSource ds (connection/->pool ComboPooledDataSource db-spec)]
-  (jdbc/execute! ds ...)
-  (jdbc/execute! ds ...)
-  (into [] (map :column) (jdbc/plan ds ...)))
+(defn -main [& args]
+  (with-open [^PooledDataSource ds (connection/->pool ComboPooledDataSource db-spec)]
+    (jdbc/execute! ds ...)
+    (jdbc/execute! ds ...)
+    (do-other-stuff ds args)
+    (into [] (map :column) (jdbc/plan ds ...))))
 ```
 
 You only need the type hints on `ds` if you plan to call methods on it via Java interop, such as `.close` (or using `with-open` to auto-close it) and you want to avoid reflection.
+
+If you are using [Component](https://github.com/stuartsierra/component), a connection pooled datasource is a good candidate since it has a `start`/`stop` lifecycle:
+
+```clojure
+(ns ...
+  (:require [com.stuartsierra.component :as component]
+            ...))
+
+(defrecord Database [db-spec ^HikariDataSource datasource]
+  component/Lifecycle
+  (start [this]
+    (if datasource
+      this ; already started
+      (assoc this :datasource (connection/->pool HikariDataSource db-spec))))
+  (stop [this]
+    (if datasource
+      (do
+        (.close datasource)
+        (assoc this :datasource nil))
+      this))) ; already stopped
+
+(defn -main [& args]
+  (let [db (component/start (map->Database {:db-spec db-spec}))]
+    (try
+      (jdbc/execute! (:datasource db) ...)
+      (jdbc/execute! (:datasource db) ...)
+      (do-other-stuff db args)
+      (into [] (map :column) (jdbc/plan (:datasource db) ...)))
+      (catch Throwable t)
+        (component/stop db)))
+```
 
 ## Support from Specs
 
