@@ -4,13 +4,16 @@ Only accretive/fixative changes will be made from now on.
 
 ## Unreleased Changes
 
-The following changes have been committed to the **master** branch since the 1.0.2 release:
+The following changes have been committed to the **master** branch since the 1.0.3 release:
 
-* Fix #48 by adding `next.jdbc.connection/->pool` and documenting how to use HikariCP and c3p0 in the Getting Started docs (as well as adding tests for both libraries).
-* More documentation updates, including examples of extending the `SettableParameter` and `ReadableColumn` protocols.
-* Updated test dependencies (testing against more recent versions of several drivers).
+* None.
 
 ## Stable Builds
+
+* 2019-07-23 -- 1.0.3
+  * Fix #48 by adding `next.jdbc.connection/->pool` and documenting how to use HikariCP and c3p0 in the Getting Started docs (as well as adding tests for both libraries).
+  * Documentation improvements, including examples of extending `ReadableColumn` and `SettableParameter`.
+  * Updated test dependencies (testing against more recent versions of several drivers).
 
 * 2019-07-15 -- 1.0.2
   * Fix #47 by refactoring database specs to be a single hash map instead of pouring multiple maps into one.
