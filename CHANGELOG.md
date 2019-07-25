@@ -7,7 +7,7 @@ Only accretive/fixative changes will be made from now on.
 The following changes have been committed to the **master** branch since the 1.0.3 release:
 
 * Fix #50 by adding machinery to test against (embedded) PostgreSQL!
-* Improved documentation for connection pooled datasources (including adding a Component example).
+* Improved documentation for connection pooled datasources (including adding a Component example); clarified the recommendations for globally overriding default options (write a wrapper namespace that suits your usage).
 
 ## Stable Builds
 
