@@ -3,7 +3,9 @@
 (ns next.jdbc.test-fixtures
   "Multi-database testing fixtures."
   (:require [next.jdbc :as jdbc]
-            [next.jdbc.sql :as sql]))
+            [next.jdbc.sql :as sql])
+  (:import (com.opentable.db.postgres.embedded EmbeddedPostgres)
+           (javax.sql DataSource)))
 
 (set! *warn-on-reflection* true)
 
@@ -17,11 +19,18 @@
 
 (def ^:private test-sqlite {:dbtype "sqlite" :dbname "clojure_test_sqlite"})
 
-(def ^:private test-db-specs [test-derby test-h2-mem test-h2 test-hsql test-sqlite])
+;; this is just a dummy db-spec -- it's handled in with-test-db below
+(def ^:private test-postgres {:dbtype "embedded-postgres"})
+(defonce embedded-pg (atom nil))
+
+(def ^:private test-db-specs
+  [test-derby test-h2-mem test-h2 test-hsql test-sqlite test-postgres])
 
 (def ^:private test-db-spec (atom nil))
 
 (defn derby? [] (= "derby" (:dbtype @test-db-spec)))
+
+(defn postgres? [] (= "embedded-postgres" (:dbtype @test-db-spec)))
 
 (defn sqlite? [] (= "sqlite" (:dbtype @test-db-spec)))
 
@@ -41,11 +50,20 @@
   [t]
   (doseq [db test-db-specs]
     (reset! test-db-spec db)
-    (reset! test-datasource (jdbc/get-datasource db))
+    (if (= "embedded-postgres" (:dbtype db))
+      (do
+        (when-not @embedded-pg
+          (reset! embedded-pg (EmbeddedPostgres/start)))
+        (reset! test-datasource
+                (.getPostgresDatabase ^EmbeddedPostgres @embedded-pg)))
+      (reset! test-datasource (jdbc/get-datasource db)))
     (let [auto-inc-pk
           (cond (or (derby?) (= "hsqldb" (:dbtype db)))
                 (str "GENERATED ALWAYS AS IDENTITY"
                      " (START WITH 1, INCREMENT BY 1)"
+                     " PRIMARY KEY")
+                (postgres?)
+                (str "GENERATED ALWAYS AS IDENTITY"
                      " PRIMARY KEY")
                 (sqlite?)
                 "PRIMARY KEY AUTOINCREMENT"

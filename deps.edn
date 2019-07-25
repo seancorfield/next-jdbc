@@ -14,6 +14,7 @@
                       net.sourceforge.jtds/jtds {:mvn/version "1.3.1"}
                       mysql/mysql-connector-java {:mvn/version "5.1.41"} ; behind
                       org.postgresql/postgresql {:mvn/version "42.2.6"}
+                      com.opentable.components/otj-pg-embedded {:mvn/version "0.13.1"}
                       com.impossibl.pgjdbc-ng/pgjdbc-ng {:mvn/version "0.8.2"}
                       org.xerial/sqlite-jdbc {:mvn/version "3.28.0"}
                       com.microsoft.sqlserver/mssql-jdbc {:mvn/version "7.2.2.jre8"}}}

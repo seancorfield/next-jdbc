@@ -9,7 +9,7 @@
             [next.jdbc.specs :as specs]
             [next.jdbc.sql :as sql]
             [next.jdbc.test-fixtures
-             :refer [with-test-db ds derby? sqlite?]]))
+             :refer [with-test-db ds derby? postgres? sqlite?]]))
 
 (set! *warn-on-reflection* true)
 
@@ -82,33 +82,33 @@
     (is (= 4 (count rs)))
     (is (every? map? rs))
     (is (every? meta rs))
-    (is (= 1 (:FRUIT/ID (first rs))))
-    (is (= 4 (:FRUIT/ID (last rs))))))
+    (is (= 1 ((if (postgres?) :fruit/id :FRUIT/ID) (first rs))))
+    (is (= 4 ((if (postgres?) :fruit/id :FRUIT/ID) (last rs))))))
 
 (deftest test-find-by-keys
   (let [rs (sql/find-by-keys (ds) :fruit {:appearance "yellow"})]
     (is (= 1 (count rs)))
     (is (every? map? rs))
     (is (every? meta rs))
-    (is (= 2 (:FRUIT/ID (first rs))))))
+    (is (= 2 ((if (postgres?) :fruit/id :FRUIT/ID) (first rs))))))
 
 (deftest test-get-by-id
   (let [row (sql/get-by-id (ds) :fruit 3)]
     (is (map? row))
-    (is (= "Peach" (:FRUIT/NAME row))))
+    (is (= "Peach" ((if (postgres?) :fruit/name :FRUIT/NAME) row))))
   (let [row (sql/get-by-id (ds) :fruit "juicy" :appearance {})]
     (is (map? row))
-    (is (= 4 (:FRUIT/ID row)))
-    (is (= "Orange" (:FRUIT/NAME row))))
+    (is (= 4 ((if (postgres?) :fruit/id :FRUIT/ID) row)))
+    (is (= "Orange" ((if (postgres?) :fruit/name :FRUIT/NAME) row))))
   (let [row (sql/get-by-id (ds) :fruit "Banana" :FRUIT/NAME {})]
     (is (map? row))
-    (is (= 2 (:FRUIT/ID row)))))
+    (is (= 2 ((if (postgres?) :fruit/id :FRUIT/ID) row)))))
 
 (deftest test-update!
   (try
     (is (= {:next.jdbc/update-count 1}
            (sql/update! (ds) :fruit {:appearance "brown"} {:id 2})))
-    (is (= "brown" (:FRUIT/APPEARANCE
+    (is (= "brown" ((if (postgres?) :fruit/appearance :FRUIT/APPEARANCE)
                     (sql/get-by-id (ds) :fruit 2))))
     (finally
       (sql/update! (ds) :fruit {:appearance "yellow"} {:id 2})))
@@ -116,68 +116,69 @@
     (is (= {:next.jdbc/update-count 1}
            (sql/update! (ds) :fruit {:appearance "green"}
                         ["name = ?" "Banana"])))
-    (is (= "green" (:FRUIT/APPEARANCE
+    (is (= "green" ((if (postgres?) :fruit/appearance :FRUIT/APPEARANCE)
                     (sql/get-by-id (ds) :fruit 2))))
     (finally
       (sql/update! (ds) :fruit {:appearance "yellow"} {:id 2}))))
 
 (deftest test-insert-delete
-  (testing "single insert/delete"
-    (is (= (cond (derby?)
-                 {:1 5M}
-                 (sqlite?)
-                 {(keyword "last_insert_rowid()") 5}
-                 :else
-                 {:FRUIT/ID 5})
-           (sql/insert! (ds) :fruit
-                        {:name "Kiwi" :appearance "green & fuzzy"
-                         :cost 100 :grade 99.9})))
-    (is (= 5 (count (sql/query (ds) ["select * from fruit"]))))
-    (is (= {:next.jdbc/update-count 1}
-           (sql/delete! (ds) :fruit {:id 5})))
-    (is (= 4 (count (sql/query (ds) ["select * from fruit"])))))
-  (testing "multiple insert/delete"
-    (is (= (cond (derby?)
-                 [{:1 nil}] ; WTF Apache Derby?
-                 (sqlite?)
-                 [{(keyword "last_insert_rowid()") 8}]
-                 :else
-                 [{:FRUIT/ID 6} {:FRUIT/ID 7} {:FRUIT/ID 8}])
-           (sql/insert-multi! (ds) :fruit
-                              [:name :appearance :cost :grade]
-                              [["Kiwi" "green & fuzzy" 100 99.9]
-                               ["Grape" "black" 10 50]
-                               ["Lemon" "yellow" 20 9.9]])))
-    (is (= 7 (count (sql/query (ds) ["select * from fruit"]))))
-    (is (= {:next.jdbc/update-count 1}
-           (sql/delete! (ds) :fruit {:id 6})))
-    (is (= 6 (count (sql/query (ds) ["select * from fruit"]))))
-    (is (= {:next.jdbc/update-count 2}
-           (sql/delete! (ds) :fruit ["id > ?" 4])))
-    (is (= 4 (count (sql/query (ds) ["select * from fruit"])))))
-  (testing "multiple insert/delete with sequential cols/rows" ; per #43
-    (is (= (cond (derby?)
-                 [{:1 nil}] ; WTF Apache Derby?
-                 (sqlite?)
-                 [{(keyword "last_insert_rowid()") 11}]
-                 :else
-                 [{:FRUIT/ID 9} {:FRUIT/ID 10} {:FRUIT/ID 11}])
-           (sql/insert-multi! (ds) :fruit
-                              '(:name :appearance :cost :grade)
-                              '(("Kiwi" "green & fuzzy" 100 99.9)
-                                ("Grape" "black" 10 50)
-                                ("Lemon" "yellow" 20 9.9)))))
-    (is (= 7 (count (sql/query (ds) ["select * from fruit"]))))
-    (is (= {:next.jdbc/update-count 1}
-           (sql/delete! (ds) :fruit {:id 9})))
-    (is (= 6 (count (sql/query (ds) ["select * from fruit"]))))
-    (is (= {:next.jdbc/update-count 2}
-           (sql/delete! (ds) :fruit ["id > ?" 4])))
-    (is (= 4 (count (sql/query (ds) ["select * from fruit"])))))
-  (testing "empty insert-multi!" ; per #44
-    (is (= [] (sql/insert-multi! (ds) :fruit
-                                 [:name :appearance :cost :grade]
-                                 [])))))
+  (let [new-key (cond (derby?)    :1
+                      (postgres?) :fruit/id
+                      (sqlite?)   (keyword "last_insert_rowid()")
+                      :else       :FRUIT/ID)]
+    (testing "single insert/delete"
+      (is (= (if (derby?) 5M 5)
+             (new-key (sql/insert! (ds) :fruit
+                                   {:name "Kiwi" :appearance "green & fuzzy"
+                                    :cost 100 :grade 99.9}))))
+      (is (= 5 (count (sql/query (ds) ["select * from fruit"]))))
+      (is (= {:next.jdbc/update-count 1}
+             (sql/delete! (ds) :fruit {:id 5})))
+      (is (= 4 (count (sql/query (ds) ["select * from fruit"])))))
+    (testing "multiple insert/delete"
+      (is (= (cond (derby?)
+                   [nil] ; WTF Apache Derby?
+                   (sqlite?)
+                   [8]
+                   :else
+                   [6 7 8])
+             (mapv new-key
+                   (sql/insert-multi! (ds) :fruit
+                                      [:name :appearance :cost :grade]
+                                      [["Kiwi" "green & fuzzy" 100 99.9]
+                                       ["Grape" "black" 10 50]
+                                       ["Lemon" "yellow" 20 9.9]]))))
+      (is (= 7 (count (sql/query (ds) ["select * from fruit"]))))
+      (is (= {:next.jdbc/update-count 1}
+             (sql/delete! (ds) :fruit {:id 6})))
+      (is (= 6 (count (sql/query (ds) ["select * from fruit"]))))
+      (is (= {:next.jdbc/update-count 2}
+             (sql/delete! (ds) :fruit ["id > ?" 4])))
+      (is (= 4 (count (sql/query (ds) ["select * from fruit"])))))
+    (testing "multiple insert/delete with sequential cols/rows" ; per #43
+      (is (= (cond (derby?)
+                   [nil] ; WTF Apache Derby?
+                   (sqlite?)
+                   [11]
+                   :else
+                   [9 10 11])
+             (mapv new-key
+                   (sql/insert-multi! (ds) :fruit
+                                      '(:name :appearance :cost :grade)
+                                      '(("Kiwi" "green & fuzzy" 100 99.9)
+                                        ("Grape" "black" 10 50)
+                                        ("Lemon" "yellow" 20 9.9))))))
+      (is (= 7 (count (sql/query (ds) ["select * from fruit"]))))
+      (is (= {:next.jdbc/update-count 1}
+             (sql/delete! (ds) :fruit {:id 9})))
+      (is (= 6 (count (sql/query (ds) ["select * from fruit"]))))
+      (is (= {:next.jdbc/update-count 2}
+             (sql/delete! (ds) :fruit ["id > ?" 4])))
+      (is (= 4 (count (sql/query (ds) ["select * from fruit"])))))
+    (testing "empty insert-multi!" ; per #44
+      (is (= [] (sql/insert-multi! (ds) :fruit
+                                   [:name :appearance :cost :grade]
+                                   []))))))
 
 (deftest no-empty-example-maps
   (is (thrown? clojure.lang.ExceptionInfo

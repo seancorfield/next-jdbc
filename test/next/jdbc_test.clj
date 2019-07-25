@@ -4,7 +4,7 @@
   "Not exactly a test suite -- more a series of examples."
   (:require [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc :as jdbc]
-            [next.jdbc.test-fixtures :refer [with-test-db ds]]
+            [next.jdbc.test-fixtures :refer [with-test-db ds postgres?]]
             [next.jdbc.prepare :as prep]
             [next.jdbc.result-set :as rs]
             [next.jdbc.specs :as specs])
@@ -25,7 +25,7 @@
                     (ds)
                     ["select * from fruit where appearance = ?" "red"])))))
   (testing "execute-one!"
-    (is (= "Apple" (:FRUIT/NAME
+    (is (= "Apple" ((if (postgres?) :fruit/name :FRUIT/NAME)
                     (jdbc/execute-one!
                      (ds)
                      ["select * from fruit where appearance = ?" "red"])))))
@@ -34,7 +34,7 @@
               (ds)
               ["select * from fruit where appearance = ?" "red"])]
       (is (= 1 (count rs)))
-      (is (= 1 (:FRUIT/ID (first rs)))))
+      (is (= 1 ((if (postgres?) :fruit/id :FRUIT/ID) (first rs)))))
     (let [rs (jdbc/execute!
               (ds)
               ["select * from fruit order by id"]
@@ -42,8 +42,8 @@
       (is (every? map? rs))
       (is (every? meta rs))
       (is (= 4 (count rs)))
-      (is (= 1 (:FRUIT/ID (first rs))))
-      (is (= 4 (:FRUIT/ID (last rs)))))
+      (is (= 1 ((if (postgres?) :fruit/id :FRUIT/ID) (first rs))))
+      (is (= 4 ((if (postgres?) :fruit/id :FRUIT/ID) (last rs)))))
     (let [rs (jdbc/execute!
               (ds)
               ["select * from fruit order by id"]
@@ -54,7 +54,7 @@
       ;; columns come first
       (is (every? qualified-keyword? (first rs)))
       ;; :FRUIT/ID should be first column
-      (is (= :FRUIT/ID (ffirst rs)))
+      (is (= (if (postgres?) :fruit/id :FRUIT/ID) (ffirst rs)))
       ;; and all its corresponding values should be ints
       (is (every? int? (map first (rest rs))))
       (is (every? string? (map second (rest rs)))))
@@ -65,8 +65,8 @@
       (is (every? map? rs))
       (is (every? meta rs))
       (is (= 4 (count rs)))
-      (is (= 1 (:ID (first rs))))
-      (is (= 4 (:ID (last rs)))))
+      (is (= 1 ((if (postgres?) :id :ID) (first rs))))
+      (is (= 4 ((if (postgres?) :id :ID) (last rs)))))
     (let [rs (jdbc/execute!
               (ds)
               ["select * from fruit order by id"]
@@ -77,7 +77,7 @@
       ;; columns come first
       (is (every? simple-keyword? (first rs)))
       ;; :ID should be first column
-      (is (= :ID (ffirst rs)))
+      (is (= (if (postgres?) :id :ID) (ffirst rs)))
       ;; and all its corresponding values should be ints
       (is (every? int? (map first (rest rs))))
       (is (every? string? (map second (rest rs))))))
@@ -90,8 +90,8 @@
       (is (every? map? rs))
       (is (every? meta rs))
       (is (= 4 (count rs)))
-      (is (= 1 (:FRUIT/ID (first rs))))
-      (is (= 4 (:FRUIT/ID (last rs)))))
+      (is (= 1 ((if (postgres?) :fruit/id :FRUIT/ID) (first rs))))
+      (is (= 4 ((if (postgres?) :fruit/id :FRUIT/ID) (last rs)))))
     (let [rs (with-open [con (jdbc/get-connection (ds))
                          ps  (jdbc/prepare
                               con
@@ -100,7 +100,7 @@
       (is (every? map? rs))
       (is (every? meta rs))
       (is (= 1 (count rs)))
-      (is (= 4 (:FRUIT/ID (first rs))))))
+      (is (= 4 ((if (postgres?) :fruit/id :FRUIT/ID) (first rs))))))
   (testing "transact"
     (is (= [{:next.jdbc/update-count 1}]
            (jdbc/transact (ds)

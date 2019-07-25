@@ -6,7 +6,7 @@
             [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc.optional :as opt]
             [next.jdbc.protocols :as p]
-            [next.jdbc.test-fixtures :refer [with-test-db ds]]))
+            [next.jdbc.test-fixtures :refer [with-test-db ds postgres?]]))
 
 (set! *warn-on-reflection* true)
 
@@ -18,17 +18,17 @@
                               ["select * from fruit where id = ?" 1]
                               {:builder-fn opt/as-maps})]
       (is (map? row))
-      (is (not (contains? row :FRUIT/GRADE)))
-      (is (= 1 (:FRUIT/ID row)))
-      (is (= "Apple" (:FRUIT/NAME row)))))
+      (is (not (contains? row (if (postgres?) :fruit/grade :FRUIT/GRADE))))
+      (is (= 1 ((if (postgres?) :fruit/id :FRUIT/ID) row)))
+      (is (= "Apple" ((if (postgres?) :fruit/name :FRUIT/NAME) row)))))
   (testing "unqualified row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 2]
                               {:builder-fn opt/as-unqualified-maps})]
       (is (map? row))
-      (is (not (contains? row :COST)))
-      (is (= 2 (:ID row)))
-      (is (= "Banana" (:NAME row)))))
+      (is (not (contains? row (if (postgres?) :cost :COST))))
+      (is (= 2 ((if (postgres?) :id :ID) row)))
+      (is (= "Banana" ((if (postgres?) :name :NAME) row)))))
   (testing "lower-case row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 3]
@@ -51,6 +51,6 @@
                                :label-fn str/lower-case
                                :qualifier-fn identity})]
       (is (map? row))
-      (is (not (contains? row :FRUIT/appearance)))
-      (is (= 3 (:FRUIT/id row)))
-      (is (= "Peach" (:FRUIT/name row))))))
+      (is (not (contains? row (if (postgres?) :fruit/appearance :FRUIT/appearance))))
+      (is (= 3 ((if (postgres?) :fruit/id :FRUIT/id) row)))
+      (is (= "Peach" ((if (postgres?) :fruit/name :FRUIT/name) row))))))

@@ -11,7 +11,7 @@
             [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc.protocols :as p]
             [next.jdbc.result-set :as rs]
-            [next.jdbc.test-fixtures :refer [with-test-db ds]])
+            [next.jdbc.test-fixtures :refer [with-test-db ds postgres?]])
   (:import (java.sql ResultSet ResultSetMetaData)))
 
 (set! *warn-on-reflection* true)
@@ -28,9 +28,8 @@
       (is (= 1 v))
       (let [object (d/nav data :table/fruit_id v)]
         ;; check nav produces a single map with the expected key/value data
-        ;; and remember H2 is all UPPERCASE!
-        (is (= 1 (:FRUIT/ID object)))
-        (is (= "Apple" (:FRUIT/NAME object))))))
+        (is (= 1 ((if (postgres?) :fruit/id :FRUIT/ID) object)))
+        (is (= "Apple" ((if (postgres?) :fruit/name :FRUIT/NAME) object))))))
   (testing "custom schema :one"
     (let [connectable (ds)
           test-row (rs/datafiable-row {:foo/bar 2} connectable
@@ -41,9 +40,8 @@
       (is (= 2 v))
       (let [object (d/nav data :foo/bar v)]
         ;; check nav produces a single map with the expected key/value data
-        ;; and remember H2 is all UPPERCASE!
-        (is (= 2 (:FRUIT/ID object)))
-        (is (= "Banana" (:FRUIT/NAME object))))))
+        (is (= 2 ((if (postgres?) :fruit/id :FRUIT/ID) object)))
+        (is (= "Banana" ((if (postgres?) :fruit/name :FRUIT/NAME) object))))))
   (testing "custom schema :many"
     (let [connectable (ds)
           test-row (rs/datafiable-row {:foo/bar 3} connectable
@@ -54,10 +52,9 @@
       (is (= 3 v))
       (let [object (d/nav data :foo/bar v)]
         ;; check nav produces a result set with the expected key/value data
-        ;; and remember H2 is all UPPERCASE!
         (is (vector? object))
-        (is (= 3 (:FRUIT/ID (first object))))
-        (is (= "Peach" (:FRUIT/NAME (first object))))))))
+        (is (= 3 ((if (postgres?) :fruit/id :FRUIT/ID) (first object))))
+        (is (= "Peach" ((if (postgres?) :fruit/name :FRUIT/NAME) (first object))))))))
 
 (deftest test-map-row-builder
   (testing "default row builder"
@@ -65,27 +62,27 @@
                               ["select * from fruit where id = ?" 1]
                               {})]
       (is (map? row))
-      (is (contains? row :FRUIT/GRADE))
-      (is (nil? (:FRUIT/GRADE row)))
-      (is (= 1 (:FRUIT/ID row)))
-      (is (= "Apple" (:FRUIT/NAME row))))
+      (is (contains? row (if (postgres?) :fruit/grade :FRUIT/GRADE)))
+      (is (nil? ((if (postgres?) :fruit/grade :FRUIT/GRADE) row)))
+      (is (= 1 ((if (postgres?) :fruit/id :FRUIT/ID) row)))
+      (is (= "Apple" ((if (postgres?) :fruit/name :FRUIT/NAME) row))))
     (let [rs (p/-execute-all (ds)
                              ["select * from fruit order by id"]
                              {})]
       (is (every? map? rs))
-      (is (= 1 (:FRUIT/ID (first rs))))
-      (is (= "Apple" (:FRUIT/NAME (first rs))))
-      (is (= 4 (:FRUIT/ID (last rs))))
-      (is (= "Orange" (:FRUIT/NAME (last rs))))))
+      (is (= 1 ((if (postgres?) :fruit/id :FRUIT/ID) (first rs))))
+      (is (= "Apple" ((if (postgres?) :fruit/name :FRUIT/NAME) (first rs))))
+      (is (= 4 ((if (postgres?) :fruit/id :FRUIT/ID) (last rs))))
+      (is (= "Orange" ((if (postgres?) :fruit/name :FRUIT/NAME) (last rs))))))
   (testing "unqualified row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 2]
                               {:builder-fn rs/as-unqualified-maps})]
       (is (map? row))
-      (is (contains? row :COST))
-      (is (nil? (:COST row)))
-      (is (= 2 (:ID row)))
-      (is (= "Banana" (:NAME row)))))
+      (is (contains? row (if (postgres?) :cost :COST)))
+      (is (nil? ((if (postgres?) :cost :COST) row)))
+      (is (= 2 ((if (postgres?) :id :ID) row)))
+      (is (= "Banana" ((if (postgres?) :name :NAME) row)))))
   (testing "lower-case row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 3]
@@ -109,10 +106,10 @@
                                :label-fn str/lower-case
                                :qualifier-fn identity})]
       (is (map? row))
-      (is (contains? row :FRUIT/appearance))
-      (is (nil? (:FRUIT/appearance row)))
-      (is (= 3 (:FRUIT/id row)))
-      (is (= "Peach" (:FRUIT/name row))))))
+      (is (contains? row (if (postgres?) :fruit/appearance :FRUIT/appearance)))
+      (is (nil? ((if (postgres?) :fruit/appearance :FRUIT/appearance) row)))
+      (is (= 3 ((if (postgres?) :fruit/id :FRUIT/id) row)))
+      (is (= "Peach" ((if (postgres?) :fruit/name :FRUIT/name) row))))))
 
 (deftest test-mapify
   (testing "no row builder is used"
