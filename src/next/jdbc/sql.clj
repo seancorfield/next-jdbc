@@ -5,7 +5,9 @@
   providing some syntactic sugar over `execute!`/`execute-one!`.
 
   This is intended to provide a minimal level of parity with
-  `clojure.java.jdbc` (`insert!`, `update!`, `delete!`, etc).
+  `clojure.java.jdbc` (`insert!`, `insert-multi!`, `query`, `find-by-keys`,
+  `get-by-id`, `update!`, and `delete!`).
+
   For anything more complex, use a library like HoneySQL
   https://github.com/jkk/honeysql to generate SQL + parameters.
 
