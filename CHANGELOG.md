@@ -4,12 +4,16 @@ Only accretive/fixative changes will be made from now on.
 
 ## Unreleased Changes
 
-The following changes have been committed to the **master** branch since the 1.0.3 release:
+The following changes have been committed to the **master** branch since the 1.0.4 release:
 
-* Fix #50 by adding machinery to test against (embedded) PostgreSQL!
-* Improved documentation for connection pooled datasources (including adding a Component example); clarified the recommendations for globally overriding default options (write a wrapper namespace that suits your usage).
+* None.
 
 ## Stable Builds
+
+* 2019-07-24 -- 1.0.4
+  * Fix #50 by adding machinery to test against (embedded) PostgreSQL!
+  * Improved documentation for connection pooled datasources (including adding a Component example); clarified the recommendations for globally overriding default options (write a wrapper namespace that suits your usage).
+  * Note: this release is primarily to fix the cljdoc.org documentation via repackaging the JAR file.
 
 * 2019-07-23 -- 1.0.3
   * Fix #48 by adding `next.jdbc.connection/->pool` and documenting how to use HikariCP and c3p0 in the Getting Started docs (as well as adding tests for both libraries).
