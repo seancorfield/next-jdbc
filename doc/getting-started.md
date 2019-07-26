@@ -176,7 +176,7 @@ Finally, create the connection pooled datasource. `db-spec` here contains the re
 
 Some important notes regarding HikariCP:
 
-* Authentication credentials must use `:username` (rather than `:user` for regular db-spec hash maps -- and c3p0).
+* Authentication credentials must use `:username` (if you are using c3p0 or regular, non-pooled, connections, then the db-spec hash map must contain `:user`).
 * When using `:dbtype "jtds"`, you must specify `:connectionTestQuery "SELECT 1"` (or some other query to verify the health of a connection) because the jTDS JDBC driver does not implement `.isValid()` so HikariCP requires a specific test query instead (c3p0 does not rely on this method so it works with jTDS without needing `:preferredTestQuery`).
 
 You will generally want to create the connection pooled datasource at the start of your program (and close it before you exit, although that's not really important since it'll be cleaned up when the JVM shuts down):
