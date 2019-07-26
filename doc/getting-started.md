@@ -174,7 +174,10 @@ Then import the appropriate classes into your code:
 
 Finally, create the connection pooled datasource. `db-spec` here contains the regular `next.jdbc` options (`:dbtype`, `:dbname`, and maybe `:host`, `:port`, `:classname` etc). Those are used to construct the JDBC URL that is passed into the datasource object (by calling `.setJdbcUrl` on it). You can also specify any of the connection pooling library's options, as mixed case keywords corresponding to any simple setter methods on the class being passed in, e.g., `:connectionTestQuery`, `:maximumPoolSize` (HikariCP), `:maxPoolSize`, `:preferredTestQuery` (c3p0).
 
-Note: HikariCP expects `:username` instead of `:user` when supplying authentication credentials. c3p0 expects `:user`, just like in a regular db-spec hash map.
+Some important notes regarding HikariCP:
+
+* Authentication credentials must use `:username` (rather than `:user` for regular db-spec hash maps -- and c3p0).
+* When using `:dbtype "jtds"`, you must specify `:connectionTestQuery "SELECT 1"` (or some other query to verify the health of a connection) because the jTDS JDBC driver does not implement `.isValid()` so HikariCP requires a specific test query instead (c3p0 does not rely on this method so it works with jTDS without needing `:preferredTestQuery`).
 
 You will generally want to create the connection pooled datasource at the start of your program (and close it before you exit, although that's not really important since it'll be cleaned up when the JVM shuts down):
 
