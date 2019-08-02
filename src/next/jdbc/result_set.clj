@@ -288,64 +288,100 @@
                (range 1 (inc (column-count builder))))
        (row! builder)))
 
+(definterface MapifiedResultSet)
+
 (defn- mapify-result-set
   "Given a `ResultSet`, return an object that wraps the current row as a hash
   map. Note that a result set is mutable and the current row will change behind
   this wrapper so operations need to be eager (and fairly limited).
 
-  In particular, this does not satisfy `map?` because it does not implement
-  all of `IPersistentMap`.
-
-  Supports `ILookup` (keywords are treated as strings).
-
-  Supports `Associative` (again, keywords are treated as strings). If you `assoc`,
-  a full row will be realized (via `row-builder` above).
-
-  Supports `Seqable` which realizes a full row of the data.
-
-  Supports `DatafiableRow` (which realizes a full row of the data)."
+  Supports `IPersistentMap` in full. Any operation that requires a full hash
+  map (`assoc`, `dissoc`, `cons`, `seq`, etc) will cause a full row to be
+  realized (via `row-builder` above). The result will be a regular map: if
+  you want the row to be datafiable/navigable, use `datafiable-row` to
+  realize the full row explicitly before performing other
+  (metadata-preserving) operations on it."
   [^ResultSet rs opts]
   (let [builder (delay ((get opts :builder-fn as-maps) rs opts))]
     (reify
 
-      clojure.lang.ILookup
-      (valAt [this k]
-             (try
-               (read-column-by-label (.getObject rs (name k)) (name k))
-               (catch SQLException _)))
-      (valAt [this k not-found]
-             (try
-               (read-column-by-label (.getObject rs (name k)) (name k))
-               (catch SQLException _
-                 not-found)))
+      MapifiedResultSet
+      ;; marker, just for printing resolution
+
+      clojure.lang.IPersistentMap
+      (assoc [this k v]
+        (assoc (row-builder @builder) k v))
+      (assocEx [this k v]
+        (.assocEx ^clojure.lang.IPersistentMap (row-builder @builder) k v))
+      (without [this k]
+        (dissoc (row-builder @builder) k))
+
+      java.lang.Iterable ; Java 7 compatible: no forEach / spliterator
+      (iterator [this]
+        (.iterator ^java.lang.Iterable (row-builder @builder)))
 
       clojure.lang.Associative
       (containsKey [this k]
-                   (try
-                     (.getObject rs (name k))
-                     true
-                     (catch SQLException _
-                       false)))
+        (try
+          (.getObject rs (name k))
+          true
+          (catch SQLException _
+            false)))
       (entryAt [this k]
-               (try
-                 (clojure.lang.MapEntry. k (read-column-by-label
-                                            (.getObject rs (name k))
-                                            (name k)))
-                 (catch SQLException _)))
-      (assoc [this k v]
-             (assoc (row-builder @builder) k v))
+        (try
+          (clojure.lang.MapEntry. k (read-column-by-label
+                                     (.getObject rs (name k))
+                                     (name k)))
+          (catch SQLException _)))
+
+      clojure.lang.Counted
+      (count [this]
+        (column-count @builder))
+
+      clojure.lang.IPersistentCollection
+      (cons [this obj]
+        (cons obj (seq (row-builder @builder))))
+      (empty [this]
+        {})
+      (equiv [this obj]
+        (.equiv ^clojure.lang.IPersistentCollection (row-builder @builder) obj))
+
+      clojure.lang.ILookup
+      (valAt [this k]
+        (try
+          (read-column-by-label (.getObject rs (name k)) (name k))
+          (catch SQLException _)))
+      (valAt [this k not-found]
+        (try
+          (read-column-by-label (.getObject rs (name k)) (name k))
+          (catch SQLException _
+            not-found)))
 
       clojure.lang.Seqable
       (seq [this]
-           (seq (row-builder @builder)))
+        (seq (row-builder @builder)))
 
       DatafiableRow
       (datafiable-row [this connectable opts]
-                      (with-meta
-                        (row-builder @builder)
-                        {`core-p/datafy (navize-row connectable opts)}))
+        (with-meta
+          (row-builder @builder)
+          {`core-p/datafy (navize-row connectable opts)}))
 
-      (toString [_] "{row} from `plan` -- missing `map` or `reduce`?"))))
+      (toString [_]
+        (try
+          (str (row-builder @builder))
+          (catch Throwable _
+            "{row} from `plan` -- missing `map` or `reduce`?"))))))
+
+(defmethod print-dup MapifiedResultSet [_ ^java.io.Writer w]
+  (.write w "{row} from `plan` -- missing `map` or `reduce`?"))
+
+(prefer-method print-dup MapifiedResultSet clojure.lang.IPersistentMap)
+
+(defmethod print-method MapifiedResultSet [_ ^java.io.Writer w]
+  (.write w "{row} from `plan` -- missing `map` or `reduce`?"))
+
+(prefer-method print-method MapifiedResultSet clojure.lang.IPersistentMap)
 
 (extend-protocol
   DatafiableRow

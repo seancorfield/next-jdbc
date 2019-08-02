@@ -113,12 +113,12 @@
 
 (deftest test-mapify
   (testing "no row builder is used"
-    (is (= [false]
-           (into [] (map map?) ; it is not a real map
+    (is (= [true]
+           (into [] (map map?) ; it looks like a real map now
                  (p/-execute (ds) ["select * from fruit where id = ?" 1]
                              {:builder-fn (constantly nil)}))))
     (is (= ["Apple"]
-           (into [] (map :name) ; but keyword selection works
+           (into [] (map :name) ; keyword selection works
                  (p/-execute (ds) ["select * from fruit where id = ?" 1]
                              {:builder-fn (constantly nil)}))))
     (is (= [[2 [:name "Banana"]]]
@@ -136,14 +136,55 @@
                                     :unnamed)
                                   (get % :id 0))) ; get with not-found works
                  (p/-execute (ds) ["select * from fruit where id = ?" 4]
+                             {:builder-fn (constantly nil)}))))
+    (is (= [{}]
+           (into [] (map empty) ; return empty map without building
+                 (p/-execute (ds) ["select * from fruit where id = ?" 1]
                              {:builder-fn (constantly nil)})))))
-  (testing "assoc and seq build maps"
+  (testing "count does not build a map"
+    (let [count-builder (fn [_1 _2]
+                          (reify rs/RowBuilder
+                            (column-count [_] 13)))]
+      (is (= [13]
+             (into [] (map count) ; count relies on columns, not row fields
+                   (p/-execute (ds) ["select * from fruit where id = ?" 1]
+                               {:builder-fn count-builder}))))))
+  (testing "assoc, dissoc, cons, seq, and = build maps"
     (is (map? (reduce (fn [_ row] (reduced (assoc row :x 1)))
                       nil
                       (p/-execute (ds) ["select * from fruit"] {}))))
+    (is (= 6 (count (reduce (fn [_ row] (reduced (assoc row :x 1)))
+                            nil
+                            (p/-execute (ds) ["select * from fruit"] {})))))
+    (is (map? (reduce (fn [_ row] (reduced
+                                   (dissoc row
+                                           (if (postgres?)
+                                             :fruit/name
+                                             :FRUIT/NAME))))
+                      nil
+                      (p/-execute (ds) ["select * from fruit"] {}))))
+    (is (= 4 (count (reduce (fn [_ row] (reduced
+                                         (dissoc row
+                                                 (if (postgres?)
+                                                   :fruit/name
+                                                   :FRUIT/NAME))))
+                            nil
+                            (p/-execute (ds) ["select * from fruit"] {})))))
     (is (seq? (reduce (fn [_ row] (reduced (seq row)))
                       nil
                       (p/-execute (ds) ["select * from fruit"] {}))))
+    (is (seq? (reduce (fn [_ row] (reduced (cons :seq row)))
+                      nil
+                      (p/-execute (ds) ["select * from fruit"] {}))))
+    (is (= :seq (first (reduce (fn [_ row] (reduced (cons :seq row)))
+                               nil
+                               (p/-execute (ds) ["select * from fruit"] {})))))
+    (is (false? (reduce (fn [_ row] (reduced (= row {})))
+                        nil
+                        (p/-execute (ds) ["select * from fruit"] {}))))
+    (is (map-entry? (second (reduce (fn [_ row] (reduced (cons :seq row)))
+                                    nil
+                                    (p/-execute (ds) ["select * from fruit"] {})))))
     (is (every? map-entry? (reduce (fn [_ row] (reduced (seq row)))
                                    nil
                                    (p/-execute (ds) ["select * from fruit"] {})))))
