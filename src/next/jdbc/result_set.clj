@@ -373,13 +373,13 @@
           (catch Throwable _
             "{row} from `plan` -- missing `map` or `reduce`?"))))))
 
-(defmethod print-dup MapifiedResultSet [_ ^java.io.Writer w]
-  (.write w "{row} from `plan` -- missing `map` or `reduce`?"))
+(defmethod print-dup MapifiedResultSet [rs ^java.io.Writer w]
+  (.write w (str rs)))
 
 (prefer-method print-dup MapifiedResultSet clojure.lang.IPersistentMap)
 
-(defmethod print-method MapifiedResultSet [_ ^java.io.Writer w]
-  (.write w "{row} from `plan` -- missing `map` or `reduce`?"))
+(defmethod print-method MapifiedResultSet [rs ^java.io.Writer w]
+  (.write w (str rs)))
 
 (prefer-method print-method MapifiedResultSet clojure.lang.IPersistentMap)
 

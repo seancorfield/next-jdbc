@@ -165,7 +165,15 @@ VALUES ('Pear', 'green', 49, 47)
     (is (re-find #"missing reduction" s)))
   (let [s (pr-str (into [] (jdbc/plan (ds) ["select * from fruit"])))]
     (is (re-find #"missing `map` or `reduce`" s)))
+  ;; this may succeed or not, depending on how the driver handles things
+  ;; most drivers will error because the ResultSet was closed before pr-str
+  ;; is invoked (which will attempt to print each row)
   (let [s (pr-str (into [] (take 3) (jdbc/plan (ds) ["select * from fruit"])))]
-    (is (re-find #"missing `map` or `reduce`" s)))
+    (is (or (re-find #"missing `map` or `reduce`" s)
+            (re-find #"(?i)^\[#:fruit\{.*:id.*\}\]$" s))))
+  (is (every? #(re-find #"(?i)^#:fruit\{.*:id.*\}$" %)
+              (into [] (map str) (jdbc/plan (ds) ["select * from fruit"]))))
+  (is (every? #(re-find #"(?i)^#:fruit\{.*:id.*\}$" %)
+              (into [] (map pr-str) (jdbc/plan (ds) ["select * from fruit"]))))
   (is (thrown? IllegalArgumentException
                (doall (take 3 (jdbc/plan (ds) ["select * from fruit"]))))))
