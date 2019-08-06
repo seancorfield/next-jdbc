@@ -4,12 +4,15 @@ Only accretive/fixative changes will be made from now on.
 
 ## Unreleased Changes
 
-The following changes have been committed to the **master** branch since the 1.0.4 release:
+The following changes have been committed to the **master** branch since the 1.0.5 release:
 
-* Fix #51 by implementing `IPersistentMap` fully for the "mapified" result set inside `plan`. This adds support for `dissoc` and `cons` (which will both realize a row), `count` (which returns the column count but does not realize a row), `empty` (returns an empty hash map without realizing a row), etc.
-* Improved documentation around connection pooling (HikariCP caveats).
+* None.
 
 ## Stable Builds
+
+* 2019-08-05 -- 1.0.5
+  * Fix #51 by implementing `IPersistentMap` fully for the "mapified" result set inside `plan`. This adds support for `dissoc` and `cons` (which will both realize a row), `count` (which returns the column count but does not realize a row), `empty` (returns an empty hash map without realizing a row), etc.
+  * Improved documentation around connection pooling (HikariCP caveats).
 
 * 2019-07-24 -- 1.0.4
   * Fix #50 by adding machinery to test against (embedded) PostgreSQL!
