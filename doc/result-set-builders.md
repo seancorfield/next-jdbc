@@ -15,7 +15,7 @@ The default builder for rows and result sets creates qualified keywords that mat
 
 The reason behind the default is to a) be a simple transform, b) produce qualified keys in keeping with Clojure's direction (with `clojure.spec` etc), and c) not mess with the data. `as-arrays` is (slightly) faster than `as-maps` since it produces less data (vectors of values instead of vectors of hash maps), but the `lower` options will be slightly slower since they include (conditional) logic to convert strings to lower-case. The `unqualified` options may be slightly faster than their qualified equivalents but make no attempt to keep column names unique if your SQL joins across multiple tables.
 
-In addition, the following generic builders can take `:label-fn` and `:qualifier-fn` options to control how the label and qualified are processed. The `lower` variants above are implemented in terms of these, passing `clojure.string/lower-case` for both of those options.
+In addition, the following generic builders can take `:label-fn` and `:qualifier-fn` options to control how the label and qualified are processed. The `lower` variants above are implemented in terms of these, passing a `lower-case` function for both of those options.
 
 * `as-modified-maps` -- table-qualified keywords,
 * `as-unqualified-modified-maps` -- simple keywords,

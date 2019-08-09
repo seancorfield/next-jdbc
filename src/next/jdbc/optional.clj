@@ -3,9 +3,9 @@
 (ns next.jdbc.optional
   "Builders that treat NULL SQL values as 'optional' and omit the
   corresponding keys from the Clojure hash maps for the rows."
-  (:require [clojure.string :as str]
-            [next.jdbc.result-set :as rs])
-  (:import (java.sql ResultSet)))
+  (:require [next.jdbc.result-set :as rs])
+  (:import (java.sql ResultSet)
+           (java.util Locale)))
 
 (set! *warn-on-reflection* true)
 
@@ -69,18 +69,25 @@
         cols   (rs/get-unqualified-modified-column-names rsmeta opts)]
     (->MapResultSetOptionalBuilder rs rsmeta cols)))
 
+(defn- lower-case
+  "Converts a string to lower case in the US locale to avoid problems in
+  locales where the lower case version of a character is not a valid SQL
+  entity name (e.g., Turkish)."
+  [^String s]
+  (.toLowerCase s (Locale/US)))
+
 (defn as-lower-maps
   "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
   that produces bare vectors of hash map rows, with lower-case keys and nil
   columns omitted."
   [rs opts]
   (as-modified-maps rs (assoc opts
-                              :qualifier-fn str/lower-case
-                              :label-fn str/lower-case)))
+                              :qualifier-fn lower-case
+                              :label-fn lower-case)))
 
 (defn as-unqualified-lower-maps
   "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
   that produces bare vectors of hash map rows, with simple, lower-case keys
   and nil columns omitted."
   [rs opts]
-  (as-unqualified-modified-maps rs (assoc opts :label-fn str/lower-case)))
+  (as-unqualified-modified-maps rs (assoc opts :label-fn lower-case)))

@@ -12,12 +12,12 @@
   Also provides the default implemenations for `Executable` and
   the default `datafy`/`nav` behavior for rows from a result set."
   (:require [clojure.core.protocols :as core-p]
-            [clojure.string :as str]
             [next.jdbc.prepare :as prepare]
             [next.jdbc.protocols :as p])
   (:import (java.sql PreparedStatement
                      ResultSet ResultSetMetaData
-                     SQLException)))
+                     SQLException)
+           (java.util Locale)))
 
 (set! *warn-on-reflection* true)
 
@@ -60,19 +60,26 @@
   (mapv (fn [^Integer i] (keyword ((:label-fn opts) (.getColumnLabel rsmeta i))))
         (range 1 (inc (.getColumnCount rsmeta)))))
 
+(defn- lower-case
+  "Converts a string to lower case in the US locale to avoid problems in
+  locales where the lower case version of a character is not a valid SQL
+  entity name (e.g., Turkish)."
+  [^String s]
+  (.toLowerCase s (Locale/US)))
+
 (defn get-lower-column-names
   "Given `ResultSetMetaData`, return a vector of lower-case column names, each
   qualified by the table from which it came."
   [rsmeta opts]
   (get-modified-column-names rsmeta (assoc opts
-                                           :qualifier-fn str/lower-case
-                                           :label-fn str/lower-case)))
+                                           :qualifier-fn lower-case
+                                           :label-fn lower-case)))
 
 (defn get-unqualified-lower-column-names
   "Given `ResultSetMetaData`, return a vector of unqualified column names."
   [rsmeta opts]
   (get-unqualified-modified-column-names rsmeta
-                                         (assoc opts :label-fn str/lower-case)))
+                                         (assoc opts :label-fn lower-case)))
 
 (defprotocol ReadableColumn
   "Protocol for reading objects from the `java.sql.ResultSet`. Default
@@ -184,14 +191,14 @@
   that produces bare vectors of hash map rows, with lower-case keys."
   [rs opts]
   (as-modified-maps rs (assoc opts
-                              :qualifier-fn str/lower-case
-                              :label-fn str/lower-case)))
+                              :qualifier-fn lower-case
+                              :label-fn lower-case)))
 
 (defn as-unqualified-lower-maps
   "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
   that produces bare vectors of hash map rows, with simple, lower-case keys."
   [rs opts]
-  (as-unqualified-modified-maps rs (assoc opts :label-fn str/lower-case)))
+  (as-unqualified-modified-maps rs (assoc opts :label-fn lower-case)))
 
 (defrecord ArrayResultSetBuilder [^ResultSet rs rsmeta cols]
   RowBuilder
@@ -254,15 +261,15 @@
   row values."
   [rs opts]
   (as-modified-arrays rs (assoc opts
-                                :qualifier-fn str/lower-case
-                                :label-fn str/lower-case)))
+                                :qualifier-fn lower-case
+                                :label-fn lower-case)))
 
 (defn as-unqualified-lower-arrays
   "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
   that produces a vector of simple, lower-case column names followed by
   vectors of row values."
   [rs opts]
-  (as-unqualified-modified-arrays rs (assoc opts :label-fn str/lower-case)))
+  (as-unqualified-modified-arrays rs (assoc opts :label-fn lower-case)))
 
 (declare navize-row)
 
