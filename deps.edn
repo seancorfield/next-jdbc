@@ -3,7 +3,7 @@
         org.clojure/java.data {:mvn/version "0.1.1"}}
  :aliases
  {:test {:extra-paths ["test"]
-         :extra-deps {org.clojure/test.check {:mvn/version "0.10.0-RC1"}
+         :extra-deps {org.clojure/test.check {:mvn/version "0.10.0"}
                       ;; connection pooling
                       com.zaxxer/HikariCP {:mvn/version "3.3.1"}
                       com.mchange/c3p0 {:mvn/version "0.9.5.4"}
