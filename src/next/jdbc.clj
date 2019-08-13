@@ -149,6 +149,7 @@
   "General SQL execution function.
 
   Returns a reducible that, when reduced, runs the SQL and yields the result.
+  See the Getting Started guide for examples and details.
 
   Can be called on a `PreparedStatement`, a `Connection`, or something that can
   produce a `Connection` via a `DataSource`."
@@ -168,6 +169,7 @@
   "General SQL execution function.
 
   Returns a fully-realized result set.
+  See the Getting Started guide for examples and details.
 
   Can be called on a `PreparedStatement`, a `Connection`, or something that can
   produce a `Connection` via a `DataSource`."
@@ -182,6 +184,7 @@
 
 (defn execute-one!
   "General SQL execution function that returns just the first row of a result.
+  See the Getting Started guide for examples and details.
 
   Can be called on a `PreparedStatement`, a `Connection`, or something that can
   produce a `Connection` via a `DataSource`."
