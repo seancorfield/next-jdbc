@@ -6,6 +6,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch since the 1.0.5 release:
 
+* Fix #54 by improving documentation around data type conversions (and the `ReadableColumn` and `SettableParameter` protocols).
 * Fix #52 by replacing `clojure.string/lower-case` with a US-locale function to avoid breakage in locales such as Turkish.
 * Update `org.clojure/test.check` to `"0.10.0"`.
 

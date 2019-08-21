@@ -48,6 +48,8 @@ Note that you can extend this protocol via metadata so you can do it on a per-ob
 (with-meta obj {'next.jdbc.prepare/set-parameter (fn [v ps i]...)})
 ```
 
+The converse, converting database-specific types to Clojure values is handled by the `ReadableColumn` protocol, discussed in the previous section ([Result Set Builders](/doc/result-set-builders.md#readablecolumn)).
+
 As noted above, `next.jdbc.prepare/set-parameters` is available for you to call on any existing `PreparedStatement` to set or update the parameters that will be used when the statement is executed:
 
 * `(set-parameters ps params)` -- loops over a sequence of parameter values and calls `set-parameter` for each one, as above.
@@ -93,7 +95,7 @@ Both of those are somewhat ugly and contain a fair bit of boilerplate and Java i
 
 By default, this adds all the parameter groups and executes one batched command. It returns a (Clojure) vector of update counts (rather than `int[]`). If you provide an options hash map, you can specify a `:batch-size` and the parameter groups will be partitioned and executed as multiple batched commands. This is intended to allow very large sequences of parameter groups to be executed without running into limitations that may apply to a single batched command. If you expect the update counts to be very large (more than `Integer/MAX_VALUE`), you can specify `:large true` so that `.executeLargeBatch` is called instead of `.executeBatch`. Note: not all databases support `.executeLargeBatch`.
 
-There are several caveats around using batched parameters. Some JDBC drivers need a "hint" in order to perform the batch operation as a single command for the database. In particular, PostgreSQL requires the `:reWriteBatchedInserts true` option and MySQL requires `:rewriteBatchedStatement true` (both non-standard JDBC options, of course!).
+There are several caveats around using batched parameters. Some JDBC drivers need a "hint" in order to perform the batch operation as a single command for the database. In particular, PostgreSQL requires the `:reWriteBatchedInserts true` option and MySQL requires `:rewriteBatchedStatement true` (both non-standard JDBC options, of course!). These should be provided as part of the db-spec hash map when the datasource is created.
 
 In addition, if the batch operation fails for a group of parameters, it is database-specific whether the remaining groups of parameters are used, i.e., whether the operation is performed for any further groups of parameters after the one that failed. The result of calling `execute-batch!` is a vector of integers. Each element of the vector is the number of rows affected by the operation for each group of parameters. `execute-batch!` may throw a `BatchUpdateException` and calling `.getUpdateCounts` (or `.getLargeUpdateCounts`) on the exception may return an array containing a mix of update counts and error values (a Java `int[]` or `long[]`). Some databases don't always return an update count but instead a value indicating the number of rows is not known (but sometimes you can still get the update counts).
 

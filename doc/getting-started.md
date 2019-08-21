@@ -230,6 +230,10 @@ If you are using [Component](https://github.com/stuartsierra/component), a conne
         (component/stop db)))
 ```
 
+## Working with Additional Data Types
+
+By default, `next.jdbc` relies on the JDBC driver to handle all data type conversions when reading from a result set (to produce Clojure values from SQL values) or setting parameters (to produce SQL values from Clojure values). Sometimes that means that you will get back a database-specific Java object that would need to be manually converted to a Clojure data structure, or that certain database column types require you to manually construct the appropriate database-specific Java object to pass into a SQL operation. You can usually automate those conversions using either the [ReadableColumn protocol](/doc/result-set-builders.md#readablecolumn) (for converting database-specific types to Clojure values) or the [SettableParameter protocol](/doc/prepared-statements.md#prepared-statement-parameters) (for converting Clojure values to database-specific types).
+
 ## Support from Specs
 
 As you are developing with `next.jdbc`, it can be useful to have assistance from `clojure.spec` in checking calls to `next.jdbc`'s functions, to provide explicit argument checking and/or better error messages for some common mistakes, e.g., trying to pass a plain SQL string where a vector (containing a SQL string, and no parameters) is expected.
