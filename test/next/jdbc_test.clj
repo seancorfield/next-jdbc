@@ -58,6 +58,23 @@
       ;; and all its corresponding values should be ints
       (is (every? int? (map first (rest rs))))
       (is (every? string? (map second (rest rs)))))
+    (let [rs (jdbc/execute! ; test again, with adapter and lower columns
+              (ds)
+              ["select * from fruit order by id"]
+              {:builder-fn (rs/as-arrays-adapter
+                            rs/as-lower-arrays
+                            (fn [^ResultSet rs _ ^Integer i]
+                              (.getObject rs i)))})]
+      (is (every? vector? rs))
+      (is (= 5 (count rs)))
+      (is (every? #(= 5 (count %)) rs))
+      ;; columns come first
+      (is (every? qualified-keyword? (first rs)))
+      ;; :fruit/id should be first column
+      (is (= :fruit/id (ffirst rs)))
+      ;; and all its corresponding values should be ints
+      (is (every? int? (map first (rest rs))))
+      (is (every? string? (map second (rest rs)))))
     (let [rs (jdbc/execute!
               (ds)
               ["select * from fruit order by id"]

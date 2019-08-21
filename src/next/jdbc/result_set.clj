@@ -201,9 +201,9 @@
   (as-unqualified-modified-maps rs (assoc opts :label-fn lower-case)))
 
 (defn as-maps-adapter
-  "Given a builder function (e.g., `as-maps`) and a column reading function,
-  return a new builder function that uses the column reading function
-  instead of `.getObject` so you can override the default behavior.
+  "Given a map builder function (e.g., `as-lower-maps`) and a column reading
+  function, return a new builder function that uses that column reading
+  function instead of `.getObject` so you can override the default behavior.
 
   The default column-reader behavior would be equivalent to:
 
@@ -302,6 +302,37 @@
   vectors of row values."
   [rs opts]
   (as-unqualified-modified-arrays rs (assoc opts :label-fn lower-case)))
+
+(defn as-arrays-adapter
+  "Given an array builder function (e.g., `as-unqualified-arrays`) and a column
+  reading function, return a new builder function that uses that column reading
+  function instead of `.getObject` so you can override the default behavior.
+
+  The default column-reader behavior would be equivalent to:
+
+      (defn default-column-reader
+        [^ResultSet rs ^ResultSetMetaData rsmeta ^Integer i]
+        (.getObject rs i))
+
+  Your column-reader can use the result set metadata to determine whether
+  to call `.getObject` or some other method to read the column's value."
+  [builder-fn column-reader]
+  (fn [rs opts]
+    (let [arsb (builder-fn rs opts)]
+      (reify
+        RowBuilder
+        (->row [this] (->row arsb))
+        (column-count [this] (column-count arsb))
+        (with-column [this row i]
+          (conj! row
+                 (read-column-by-index (column-reader rs (:rsmeta arsb) i)
+                                       (:rsmeta arsb)
+                                       i)))
+        (row! [this row] (row! arsb row))
+        ResultSetBuilder
+        (->rs [this] (->rs arsb))
+        (with-row [this mrs row] (with-row arsb mrs row))
+        (rs! [this mrs] (rs! arsb mrs))))))
 
 (declare navize-row)
 
