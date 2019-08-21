@@ -109,6 +109,27 @@
       (is (contains? row (if (postgres?) :fruit/appearance :FRUIT/appearance)))
       (is (nil? ((if (postgres?) :fruit/appearance :FRUIT/appearance) row)))
       (is (= 3 ((if (postgres?) :fruit/id :FRUIT/id) row)))
+      (is (= "Peach" ((if (postgres?) :fruit/name :FRUIT/name) row)))))
+  (testing "adapted row builder"
+    (let [row (p/-execute-one (ds)
+                              ["select * from fruit where id = ?" 3]
+                              {:builder-fn (rs/as-maps-adapter
+                                            rs/as-modified-maps
+                                            (fn [^ResultSet rs
+                                                 ^ResultSetMetaData rsmeta
+                                                 ^Integer i]
+                                              (condp = (.getColumnType rsmeta i)
+                                                     java.sql.Types/VARCHAR
+                                                     (.getString rs i)
+                                                     java.sql.Types/INTEGER
+                                                     (.getLong rs i)
+                                                     (.getObject rs i))))
+                               :label-fn str/lower-case
+                               :qualifier-fn identity})]
+      (is (map? row))
+      (is (contains? row (if (postgres?) :fruit/appearance :FRUIT/appearance)))
+      (is (nil? ((if (postgres?) :fruit/appearance :FRUIT/appearance) row)))
+      (is (= 3 ((if (postgres?) :fruit/id :FRUIT/id) row)))
       (is (= "Peach" ((if (postgres?) :fruit/name :FRUIT/name) row))))))
 
 (deftest test-mapify
