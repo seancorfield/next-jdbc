@@ -200,6 +200,38 @@
   [rs opts]
   (as-unqualified-modified-maps rs (assoc opts :label-fn lower-case)))
 
+(defn as-maps-adapter
+  "Given a builder function (e.g., `as-maps`) and a column reading function,
+  return a new builder function that uses the column reading function
+  instead of `.getObject` so you can override the default behavior.
+
+  The default column-reader behavior would be equivalent to:
+
+      (defn default-column-reader
+        [^ResultSet rs ^ResultSetMetaData rsmeta ^Integer i]
+        (.getObject rs i))
+
+  Your column-reader can use the result set metadata to determine whether
+  to call `.getObject` or some other method to read the column's value."
+  [builder-fn column-reader]
+  (fn [rs opts]
+    (let [mrsb (builder-fn rs opts)]
+      (reify
+        RowBuilder
+        (->row [this] (->row mrsb))
+        (column-count [this] (column-count mrsb))
+        (with-column [this row i]
+          (assoc! row
+                  (nth (:cols mrsb) (dec i))
+                  (read-column-by-index (column-reader rs (:rsmeta mrsb) i)
+                                        (:rsmeta mrsb)
+                                        i)))
+        (row! [this row] (row! mrsb row))
+        ResultSetBuilder
+        (->rs [this] (->rs mrsb))
+        (with-row [this mrs row] (with-row mrsb mrs row))
+        (rs! [this mrs] (rs! mrsb mrs))))))
+
 (defrecord ArrayResultSetBuilder [^ResultSet rs rsmeta cols]
   RowBuilder
   (->row [this] (transient []))
