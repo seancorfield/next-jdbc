@@ -140,8 +140,8 @@
 (defn execute-batch!
   "Given a `PreparedStatement` and a vector containing parameter groups,
   i.e., a vector of vector of parameters, use `.addBatch` to add each group
-  of parameters to the prepared statement and then call `.executeBatch`.
-  A vector of update counts is returned.
+  of parameters to the prepared statement (via `set-parameters`) and then
+  call `.executeBatch`. A vector of update counts is returned.
 
   An options hash map may also be provided, containing `:batch-size` which
   determines how to partition the parameter groups for submission to the
@@ -154,7 +154,12 @@
 
   May throw `java.sql.BatchUpdateException` if any part of the batch fails.
   You may be able to call `.getUpdateCounts` on that exception object to
-  get more information about which parts succeeded and which failed."
+  get more information about which parts succeeded and which failed.
+
+  For additional caveats and database-specific options you may need, see:
+  https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/prepared-statements#caveats
+
+  Not all databases support batch execution."
   ([ps param-groups]
    (execute-batch! ps param-groups {}))
   ([^PreparedStatement ps param-groups opts]

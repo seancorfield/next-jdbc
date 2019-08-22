@@ -9,6 +9,10 @@
   * `PreparedStatement` -- SQL and parameters combined, from a connection,
 
   and the following functions and a macro:
+  * `get-datasource` -- given a hash map describing a database or a JDBC
+      connection string, construct a `javax.sql.DataSource` and return it,
+  * `get-connection` -- given a connectable, obtain a new `java.sql.Connection`
+      from it and return that,
   * `plan` -- given a connectable and SQL + parameters or a statement,
       return a reducible that, when reduced will execute the SQL and consume
       the `ResultSet` produced,

@@ -53,7 +53,11 @@ Given a table name (as a keyword), a vector of column names, and a vector of row
 Note: this expands to a single SQL statement with placeholders for every
 value being inserted -- for large sets of rows, this may exceed the limits
 on SQL string size and/or number of parameters for your JDBC driver or your
-database! You should look at [`next.jdbc.prepare/execute-batch!'](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.prepare#execute-batch!) for an alternative approach.
+database. Several databases have a limit of 1,000 parameter placeholders.
+Oracle does not support this form of multi-row insert, requiring a different
+syntax altogether.
+
+You should look at [`next.jdbc.prepare/execute-batch!'](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.prepare#execute-batch!) for an alternative approach.
 
 ## `query`
 
