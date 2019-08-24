@@ -4,15 +4,18 @@ Only accretive/fixative changes will be made from now on.
 
 ## Unreleased Changes
 
-The following changes have been committed to the **master** branch since the 1.0.5 release:
+The following changes have been committed to the **master** branch since the 1.0.6 release:
 
-* Fix #54 by improving documentation around data type conversions (and the `ReadableColumn` and `SettableParameter` protocols).
-* Fix #52 by using a US-locale function in the "lower" result set builders to avoid unexpected character changes in column names in locales such as Turkish. If you want the locale-sensitive behavior, pass `clojure.string/lower-case` into one of the "modified" result set builders.
-* Improved documentation around `insert-multi!` and `execute-batch!`.
-* Add `next.jdbc.result-set/as-maps-adapter` and `next.jdbc.result-set/as-arrays-adapter` to provide a way to override the default result set reading behavior of using `.getObject`.
-* Update `org.clojure/test.check` to `"0.10.0"`.
+* None.
 
 ## Stable Builds
+
+* 2019-08-24 -- 1.0.6
+  * Fix #54 by improving documentation around data type conversions (and the `ReadableColumn` and `SettableParameter` protocols).
+  * Fix #52 by using a US-locale function in the "lower" result set builders to avoid unexpected character changes in column names in locales such as Turkish. If you want the locale-sensitive behavior, pass `clojure.string/lower-case` into one of the "modified" result set builders.
+  * Improved documentation around `insert-multi!` and `execute-batch!`.
+  * Add `next.jdbc.result-set/as-maps-adapter` and `next.jdbc.result-set/as-arrays-adapter` to provide a way to override the default result set reading behavior of using `.getObject`.
+  * Update `org.clojure/test.check` to `"0.10.0"`.
 
 * 2019-08-05 -- 1.0.5
   * Fix #51 by implementing `IPersistentMap` fully for the "mapified" result set inside `plan`. This adds support for `dissoc` and `cons` (which will both realize a row), `count` (which returns the column count but does not realize a row), `empty` (returns an empty hash map without realizing a row), etc.
