@@ -30,6 +30,11 @@ An example builder that converts `snake_case` database table/column names to `ke
     (result-set/as-modified-maps rs (assoc opts :qualifier-fn kebab :label-fn kebab))))
 ```
 
+And finally there are adapters for the existing builders that let you override the default way that columns are read from result sets:
+
+* `as-maps-adapter` -- adapts an existing map builder function with a new column reader,
+* `as-arrays-adapter` -- adapts an existing array builder function with a new column reader.
+
 ## RowBuilder Protocol
 
 This protocol defines four functions and is used whenever `next.jdbc` needs to materialize a row from a `ResultSet` as a Clojure data structure:
@@ -70,6 +75,7 @@ This namespace contains variants of the six `as-maps`-style builders above that 
 As mentioned above, when `with-column` is called, the expectation is that the row builder will call `.getObject` on the current state of the `ResultSet` object with the column index and will then call `read-column-by-index`, passing the column value, the `ResultSetMetaData`, and the column index. That function is part of the `ReadableColumn` protocol that you can extend to handle conversion of arbitrary database-specific types to Clojure values.
 
 If you need more control over how values are read from the `ResultSet` object, you can use `next.jdbc.result-set/as-maps-adapter` (or `next.jdbc.result-set/as-arrays-adapter`) which takes an existing builder function and a column reading function and returns a new builder function that calls your column reading function (with the `ResultSet` object, the `ResultSetMetaData` object, and the column index) instead of calling `.getObject` directly.
+Note that the adapters still call `read-column-by-index` on the value your column reading function returns.
 
 In addition, inside `plan`, as each value is looked up by name in the current state of the `ResultSet` object, the `read-column-by-label` function is called, again passing the column value and the column label (the name used in the SQL to identify that column). This function is also part of the `ReadableColumn` protocol.
 
@@ -91,7 +97,7 @@ The default implementation of this protocol is for these two functions to return
     (.toInstant v)))
 ```
 
-Remember that a protocol extension will apply to all code running in your application so with the above code **all** timestamp values coming from the database will be converted to `java.time.Instant` for all queries.
+Remember that a protocol extension will apply to all code running in your application so with the above code **all** timestamp values coming from the database will be converted to `java.time.Instant` for all queries. If you want to control behavior across different calls, consider the adapters described above (`as-maps-adapter` and `as-arrays-adapter`).
 
 Note that the converse, converting Clojure values to database-specific types is handled by the `SettableParameter` protocol, discussed in the next section ([Prepared Statements](/doc/prepared-statements.md#prepared-statement-parameters)).
 
