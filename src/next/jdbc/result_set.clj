@@ -9,6 +9,8 @@
   * `RowBuilder` -- for materializing a row
   * `ResultSetBuilder` -- for materializing a result set
 
+  A broad range of result set builder implementation functions are provided.
+
   Also provides the default implemenations for `Executable` and
   the default `datafy`/`nav` behavior for rows from a result set."
   (:require [clojure.core.protocols :as core-p]
@@ -212,7 +214,9 @@
         (.getObject rs i))
 
   Your column-reader can use the result set metadata to determine whether
-  to call `.getObject` or some other method to read the column's value."
+  to call `.getObject` or some other method to read the column's value.
+
+  `read-column-by-index` is still called on the result of that read."
   [builder-fn column-reader]
   (fn [rs opts]
     (let [mrsb (builder-fn rs opts)]
@@ -315,7 +319,9 @@
         (.getObject rs i))
 
   Your column-reader can use the result set metadata to determine whether
-  to call `.getObject` or some other method to read the column's value."
+  to call `.getObject` or some other method to read the column's value.
+
+  `read-column-by-index` is still called on the result of that read."
   [builder-fn column-reader]
   (fn [rs opts]
     (let [arsb (builder-fn rs opts)]
