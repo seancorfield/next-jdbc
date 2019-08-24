@@ -7,7 +7,7 @@ Only accretive/fixative changes will be made from now on.
 The following changes have been committed to the **master** branch since the 1.0.5 release:
 
 * Fix #54 by improving documentation around data type conversions (and the `ReadableColumn` and `SettableParameter` protocols).
-* Fix #52 by replacing `clojure.string/lower-case` with a US-locale function to avoid breakage in locales such as Turkish.
+* Fix #52 by using a US-locale function in the "lower" result set builders to avoid unexpected character changes in column names in locales such as Turkish. If you want the locale-sensitive behavior, pass `clojure.string/lower-case` into one of the "modified" result set builders.
 * Improved documentation around `insert-multi!` and `execute-batch!`.
 * Add `next.jdbc.result-set/as-maps-adapter` and `next.jdbc.result-set/as-arrays-adapter` to provide a way to override the default result set reading behavior of using `.getObject`.
 * Update `org.clojure/test.check` to `"0.10.0"`.
