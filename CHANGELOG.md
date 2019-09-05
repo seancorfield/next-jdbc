@@ -6,7 +6,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch since the 1.0.6 release:
 
-* None.
+* Added test for using `any(?)` and arrays in PostgreSQL for `IN (?,,,?)` style queries. Documentation to follow once I figure out where that belongs!
 
 ## Stable Builds
 

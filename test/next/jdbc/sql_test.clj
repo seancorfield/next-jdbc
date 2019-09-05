@@ -197,3 +197,8 @@
                (sql/find-by-keys (ds) :fruit
                                  {:name "Apple"}
                                  {:order-by []}))))
+
+(deftest array-in
+  (when (postgres?)
+    (let [data (sql/find-by-keys (ds) :fruit ["id = any(?)" (int-array [1 2 3 4])])]
+      (is (= 4 (count data))))))
