@@ -20,6 +20,8 @@ Although `get-datasource` does not accept options, the "db spec" hash map passed
 
 Any additional keys provided in the "db spec" will be passed to the JDBC driver as `Properties` when each connection is made. Alternatively, when used with `next.jdbc.connection/->pool`, additional keys correspond to setters called on the pooled connection object.
 
+If you are using HikariCP and `next.jdbc.connection/->pool` to create a connection pooled datasource, you need to provide `:username` for the database username (instead of, or as well as, `:user`).
+
 Any path that calls `get-connection` will accept the following options:
 
 * `:auto-commit` -- a `Boolean` that determines whether operations on this connection should be automatically committed (the default, `true`) or not; note that setting `:auto-commit false` is commonly required when you want to stream result set data from a query (along with fetch size etc -- see below),
