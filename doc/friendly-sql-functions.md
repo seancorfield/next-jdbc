@@ -19,6 +19,7 @@ as well as these more specific "read" operations:
 These functions are described in more detail below. They are intended to cover the most common, simple SQL operations. If you need more expressiveness, consider one of the following libraries to build SQL/parameter vectors, or run queries:
 
 * [HoneySQL](https://github.com/jkk/honeysql)
+* [seql](https://github.com/exoscale/seql)
 * [SQLingvo](https://github.com/r0man/sqlingvo)
 * [Walkable](https://github.com/walkable-server/walkable)
 
@@ -57,7 +58,7 @@ database. Several databases have a limit of 1,000 parameter placeholders.
 Oracle does not support this form of multi-row insert, requiring a different
 syntax altogether.
 
-You should look at [`next.jdbc.prepare/execute-batch!'](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.prepare#execute-batch!) for an alternative approach.
+You should look at [`next.jdbc.prepare/execute-batch!`](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.prepare#execute-batch!) for an alternative approach.
 
 ## `query`
 
