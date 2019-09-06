@@ -17,7 +17,9 @@
                       com.opentable.components/otj-pg-embedded {:mvn/version "0.13.1"}
                       com.impossibl.pgjdbc-ng/pgjdbc-ng {:mvn/version "0.8.2"}
                       org.xerial/sqlite-jdbc {:mvn/version "3.28.0"}
-                      com.microsoft.sqlserver/mssql-jdbc {:mvn/version "7.2.2.jre8"}}}
+                      com.microsoft.sqlserver/mssql-jdbc {:mvn/version "7.2.2.jre8"}
+                      ;; supplementary test stuff
+                      org.slf4j/slf4j-nop {:mvn/version "1.7.28"}}}
   :runner
   {:extra-deps {com.cognitect/test-runner
                 {:git/url "https://github.com/cognitect-labs/test-runner"
