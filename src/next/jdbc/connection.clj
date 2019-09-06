@@ -208,7 +208,7 @@
 
   Note that the result is not type-hinted (because there's no common base
   class or interface that can be assumed). In particular, connection pooled
-  datasource object may need to be closed but they don't necessarily implement
+  datasource objects may need to be closed but they don't necessarily implement
   `java.io.Closeable` (HikariCP does, c3p0 does not)."
   [clazz db-spec]
   (if (:jdbcUrl db-spec)
