@@ -620,6 +620,44 @@
     (when table
       [(keyword table) :id])))
 
+(defn- expand-schema
+  "Given a (possibly nil) schema entry, return it expanded to a triple of:
+
+  [table fk cardinality]
+
+  Possibly schema entry input formats are:
+  * [table fk] => cardinality :one
+  * [table fk cardinality] -- no change
+  * :table/fk => [:table :fk :one]
+  * [:table/fk] => [:table :fk :many]"
+  [k entry]
+  (when entry
+    (if-let [mapping
+             (cond
+              (keyword? entry)
+              [(keyword (namespace entry)) (keyword (name entry)) :one]
+
+              (coll? entry)
+              (let [[table fk cardinality] entry]
+                (cond (and table fk cardinality)
+                      entry
+
+                      (and table fk)
+                      [table fk :one]
+
+                      (keyword? table)
+                      [(keyword (namespace table)) (keyword (name table)) :many])))]
+
+      mapping
+      (throw (ex-info (str "Invalid schema entry for: " (name k)) {:entry entry})))))
+
+(comment
+  (expand-schema :user/statusid nil)
+  (expand-schema :user/statusid :status/id)
+  (expand-schema :user/statusid [:status :id])
+  (expand-schema :user/email    [:deliverability :email :many])
+  (expand-schema :user/email    [:deliverability/email]))
+
 (defn- navize-row
   "Given a connectable object, return a function that knows how to turn a row
   into a `nav`igable object.
@@ -642,8 +680,9 @@
     (with-meta row
       {`core-p/nav (fn [coll k v]
                      (try
-                       (let [[table fk cardinality] (or (get-in opts [:schema k])
-                                                        (default-schema k))]
+                       (let [[table fk cardinality]
+                             (expand-schema k (or (get-in opts [:schema k])
+                                                  (default-schema k)))]
                          (if fk
                            (let [entity-fn (:table-fn opts identity)
                                  exec-fn!  (if (= :many cardinality)
