@@ -11,7 +11,7 @@ The following changes have been committed to the **master** branch since the 1.0
 
 The following changes have been committed to the **issue-60** branch since the 1.0.6 release:
 
-* Address #60 by allowing for additional schema entry formats: `:table/column` is equivalent to the old `[:table :column :one]` and `[:table/column]` is equivalent to the old `[:table :column :many]`. I'm still evaluating what might be needed for #61 before settling on a suitable format for schema extensions.
+* Address #60 by supporting simpler schema entry formats: `:table/column` is equivalent to the old `[:table :column :one]` and `[:table/column]` is equivalent to the old `[:table :column :many]`. The older formats will continue to be supported but should be considered deprecated.
 
 ## Stable Builds
 

@@ -30,7 +30,32 @@
         ;; check nav produces a single map with the expected key/value data
         (is (= 1 ((if (postgres?) :fruit/id :FRUIT/ID) object)))
         (is (= "Apple" ((if (postgres?) :fruit/name :FRUIT/NAME) object))))))
-  (testing "custom schema :one"
+  (testing "custom schema *-to-1"
+    (let [connectable (ds)
+          test-row (rs/datafiable-row {:foo/bar 2} connectable
+                                      {:schema {:foo/bar :fruit/id}})
+          data (d/datafy test-row)
+          v (get data :foo/bar)]
+      ;; check datafication is sane
+      (is (= 2 v))
+      (let [object (d/nav data :foo/bar v)]
+        ;; check nav produces a single map with the expected key/value data
+        (is (= 2 ((if (postgres?) :fruit/id :FRUIT/ID) object)))
+        (is (= "Banana" ((if (postgres?) :fruit/name :FRUIT/NAME) object))))))
+  (testing "custom schema *-to-many"
+    (let [connectable (ds)
+          test-row (rs/datafiable-row {:foo/bar 3} connectable
+                                      {:schema {:foo/bar [:fruit/id]}})
+          data (d/datafy test-row)
+          v (get data :foo/bar)]
+      ;; check datafication is sane
+      (is (= 3 v))
+      (let [object (d/nav data :foo/bar v)]
+        ;; check nav produces a result set with the expected key/value data
+        (is (vector? object))
+        (is (= 3 ((if (postgres?) :fruit/id :FRUIT/ID) (first object))))
+        (is (= "Peach" ((if (postgres?) :fruit/name :FRUIT/NAME) (first object)))))))
+  (testing "legacy schema tuples"
     (let [connectable (ds)
           test-row (rs/datafiable-row {:foo/bar 2} connectable
                                       {:schema {:foo/bar [:fruit :id]}})
@@ -41,8 +66,7 @@
       (let [object (d/nav data :foo/bar v)]
         ;; check nav produces a single map with the expected key/value data
         (is (= 2 ((if (postgres?) :fruit/id :FRUIT/ID) object)))
-        (is (= "Banana" ((if (postgres?) :fruit/name :FRUIT/NAME) object))))))
-  (testing "custom schema :many"
+        (is (= "Banana" ((if (postgres?) :fruit/name :FRUIT/NAME) object)))))
     (let [connectable (ds)
           test-row (rs/datafiable-row {:foo/bar 3} connectable
                                       {:schema {:foo/bar [:fruit :id :many]}})

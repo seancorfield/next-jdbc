@@ -20,22 +20,24 @@ In addition to `execute!` and `execute-one!`, you can call `next.jdbc.result-set
 
 By default, `next.jdbc` assumes that a column named `<something>id` or `<something>_id` is a foreign key into a table called `<something>` with a primary key called `id`. As an example, if you have a table `address` which has columns `id` (the primary key), `name`, `email`, etc, and a table `contact` which has various columns including `addressid`, then if you retrieve a result set based on `contact`, call `datafy` on it and then "drill down" into the columns, when `(nav row :contact/addressid v)` is called (where `v` is the value of that column in that row) `next.jdbc`'s implementation of `nav` will fetch a single row from the `address` table, identified by `id` matching `v`.
 
-You can override this default behavior for any column in any table by providing a `:schema` option that is a hash map whose keys are column names (usually the table-qualified keywords that `next.jdbc` produces by default) and whose values are tuples containing the name of the table to which that column is a foreign key and the name of the key column within that table. These tuples can optionally include a third value which indicates the cardinality of the foreign key relationship: `:one` or `:many`. The default is `:one` and indicates a one-to-one or many-to-one relationship -- `nav`igation will produce a single row. `:many` indicates a one-to-many or many-to-many relationship -- `nav`igation will produce a result set.
+You can override this default behavior for any column in any table by providing a `:schema` option that is a hash map whose keys are column names (usually the table-qualified keywords that `next.jdbc` produces by default) and whose values are table-qualified keywords, optionally wrapped in vectors, that identity the name of the table to which that column is a foreign key and the name of the key column within that table.
 
 The default behavior in the example above is equivalent to this `:schema` value:
 
 ```clojure
-{:contact/addressid [:address :id :one]} ; :one is the default and could be omitted
+{:contact/addressid :address/id} ; a one-to-one or many-to-one relationship
 ```
 
-If you had a table to track the current valid/bouncing status of email addresses, where `email` is the primary key, you could provide automatic navigation into that using:
+If you had a table to track the valid/bouncing status of email addresses over time, `:deliverability`, where `email` is the non-unique key, you could provide automatic navigation into that using:
 
 ```clojure
-{:contact/addressid [:address :id :one]
- :address/email [:deliverability :email]}
+{:contact/addressid :address/id
+ :address/email [:deliverability/email]} ; one-to-many or many-to-many
 ```
 
-If you use foreign key constraints in your database, you could probably generate this `:schema` data structure automatically from the metadata in your database.
+When you indicate a `*-to-many` relationship, by wrapping the foreign table/key in a vector, `next.jdbc`'s implementation of `nav` will fetch a multi-row result set from the target table.
+
+If you use foreign key constraints in your database, you could probably generate this `:schema` data structure automatically from the metadata in your database. Similarly, if you use a library that depends on an entity relationship map (such as [seql](https://exoscale.github.io/seql/) or [walkable](https://walkable.gitlab.io/)), then you could probably generate this `:schema` data structure from that entity map.
 
 ## Behind The Scenes
 
