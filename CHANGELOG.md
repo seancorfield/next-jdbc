@@ -9,6 +9,10 @@ The following changes have been committed to the **master** branch since the 1.0
 * Added test for using `any(?)` and arrays in PostgreSQL for `IN (?,,,?)` style queries. Added a **Tips & Tricks** section to **Friendly SQL Functions** with database-specific suggestions, that starts with this one.
 * Improved documentation in several areas.
 
+The following changes have been committed to the **issue-60** branch since the 1.0.6 release:
+
+* Address #60 by allowing for additional schema entry formats: `:table/column` is equivalent to the old `[:table :column :one]` and `[:table/column]` is equivalent to the old `[:table :column :many]`. I'm still evaluating what might be needed for #61 before settling on a suitable format for schema extensions.
+
 ## Stable Builds
 
 * 2019-08-24 -- 1.0.6
