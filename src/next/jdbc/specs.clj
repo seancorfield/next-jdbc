@@ -13,7 +13,8 @@
   extend `Sourceable` or `Connectable`, those specs will likely be too strict.
 
   In addition, there is an `instrument` function that provides a simple
-  way to instrument all of the `next.jdbc` functions."
+  way to instrument all of the `next.jdbc` functions, and `unstrument`
+  to undo that."
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.test.alpha :as st]
             [next.jdbc :as jdbc]
@@ -183,42 +184,28 @@
                                          :where ::sql-params)
                      :opts (s/? ::opts-map)))
 
+(def ^:private fns-with-specs
+  [`jdbc/get-datasource
+   `jdbc/get-connection
+   `jdbc/prepare
+   `jdbc/plan
+   `jdbc/execute!
+   `jdbc/execute-one!
+   `jdbc/transact
+   `jdbc/with-transaction
+   `connection/->pool
+   `prepare/execute-batch!
+   `prepare/set-parameters
+   `sql/insert!
+   `sql/insert-multi!
+   `sql/query
+   `sql/find-by-keys
+   `sql/get-by-id
+   `sql/update!
+   `sql/delete!])
+
 (defn instrument []
-  (st/instrument [`jdbc/get-datasource
-                  `jdbc/get-connection
-                  `jdbc/prepare
-                  `jdbc/plan
-                  `jdbc/execute!
-                  `jdbc/execute-one!
-                  `jdbc/transact
-                  `jdbc/with-transaction
-                  `connection/->pool
-                  `prepare/execute-batch!
-                  `prepare/set-parameters
-                  `sql/insert!
-                  `sql/insert-multi!
-                  `sql/query
-                  `sql/find-by-keys
-                  `sql/get-by-id
-                  `sql/update!
-                  `sql/delete!]))
+  (st/instrument fns-with-specs))
 
 (defn unstrument []
-  (st/unstrument [`jdbc/get-datasource
-                  `jdbc/get-connection
-                  `jdbc/prepare
-                  `jdbc/plan
-                  `jdbc/execute!
-                  `jdbc/execute-one!
-                  `jdbc/transact
-                  `jdbc/with-transaction
-                  `connection/->pool
-                  `prepare/execute-batch!
-                  `prepare/set-parameters
-                  `sql/insert!
-                  `sql/insert-multi!
-                  `sql/query
-                  `sql/find-by-keys
-                  `sql/get-by-id
-                  `sql/update!
-                  `sql/delete!]))
+  (st/unstrument fns-with-specs))

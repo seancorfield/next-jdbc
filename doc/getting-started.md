@@ -250,4 +250,10 @@ Call to #'next.jdbc/execute! did not conform to spec.
 
 In the `:problems` output, you'll see the `:path [:sql :sql-params]` and `:pred vector?` for the `:val "SELECT * FROM fruit"`. Without the specs' assistance, this mistake would produce a more cryptic error, a `ClassCastException`, that a `Character` cannot be cast to a `String`, from inside `next.jdbc.prepare`.
 
+A convenience function also exists to revert that instrumentation:
+
+```clojure
+(specs/unstrument) ; undoes the instrumentation of all next.jdbc API functions
+```
+
 [Friendly SQL Functions :>](/doc/friendly-sql-functions.md)

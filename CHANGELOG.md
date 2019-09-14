@@ -6,7 +6,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch since the 1.0.7 release:
 
-* None.
+* Add `next.jdbc.specs/unstrument`. PR #64 (@gerred).
 
 ## Stable Builds
 
