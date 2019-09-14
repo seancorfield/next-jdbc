@@ -202,3 +202,23 @@
                   `sql/get-by-id
                   `sql/update!
                   `sql/delete!]))
+
+(defn unstrument []
+  (st/unstrument [`jdbc/get-datasource
+                  `jdbc/get-connection
+                  `jdbc/prepare
+                  `jdbc/plan
+                  `jdbc/execute!
+                  `jdbc/execute-one!
+                  `jdbc/transact
+                  `jdbc/with-transaction
+                  `connection/->pool
+                  `prepare/execute-batch!
+                  `prepare/set-parameters
+                  `sql/insert!
+                  `sql/insert-multi!
+                  `sql/query
+                  `sql/find-by-keys
+                  `sql/get-by-id
+                  `sql/update!
+                  `sql/delete!]))
