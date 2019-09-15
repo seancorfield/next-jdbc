@@ -7,6 +7,7 @@ Only accretive/fixative changes will be made from now on.
 The following changes have been committed to the **master** branch since the 1.0.7 release:
 
 * Add `next.jdbc.specs/unstrument`. PR #64 (@gerred).
+* Address #63 by improving documentation around qualified column names and `:qualifier` (`clojure.java.jdbc`) migration.
 
 ## Stable Builds
 

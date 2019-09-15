@@ -2,7 +2,7 @@
 
 The `next.jdbc` library provides a simpler, faster alternative to the [`clojure.java.jdbc`](https://github.com/clojure/java.jdbc) Contrib library and is the next step in the evolution of that library.
 
-It is designed to work with Clojure 1.10 or later, supports `datafy`/`nav`, and by default produces hash maps with automatically qualified keywords, indicating source tables and column names (labels).
+It is designed to work with Clojure 1.10 or later, supports `datafy`/`nav`, and by default produces hash maps with automatically qualified keywords, indicating source tables and column names (labels), if your database supports that.
 
 ## Installation
 

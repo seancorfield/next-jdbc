@@ -2,6 +2,8 @@
 
 In [Getting Started](/doc/getting-started.md), it was noted that, by default, `execute!` and `execute-one!` return result sets as (vectors of) hash maps with namespace-qualified keys as-is. If your database naturally produces uppercase column names from the JDBC driver, that's what you'll get. If it produces mixed-case names, that's what you'll get.
 
+*Note: Some databases do not return the table name in the metadata by default. If you run into this, you might try adding `:ResultSetMetaDataOptions "1"` to your db-spec (so it is passed as a property to the JDBC driver when you create connections). If your database supports that, it will perform additional work to try to add table names to the result set metadata. It has been reported that Oracle just plain old does not support table names at all in its JDBC drivers.*
+
 The default builder for rows and result sets creates qualified keywords that match whatever case the JDBC driver produces. That builder is `next.jdbc.result-set/as-maps` but there are several options available:
 
 * `as-maps` -- table-qualified keywords as-is, the default, e.g., `:ADDRESS/ID`, `:myTable/firstName`,

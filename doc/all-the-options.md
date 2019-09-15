@@ -42,7 +42,7 @@ Any function that might realize a row or a result set will accept:
 
 * `:builder-fn` -- a function that implements the `RowBuilder` and `ResultSetBuilder` protocols; strictly speaking, `plan` and `execute-one!` only need `RowBuilder` to be implemented (and `plan` only needs that if it actually has to realize a row) but most generation functions will implement both for ease of use.
 * `:label-fn` -- if `:builder-fn` is specified as one of `next.jdbc.result-set`'s `as-modified-*` builders, this option must be present and should specify a string-to-string transformation that will be applied to the column label for each returned column name.
-* `:qualifier-fn` -- if `:builder-fn` is specified as one of `next.jdbc.result-set`'s `as-modified-*` builders, this option should specify a string-to-string transformation that will be applied to the table name for each returned column name. It can be omitted for the `as-unqualified-modified-*` variants.
+* `:qualifier-fn` -- if `:builder-fn` is specified as one of `next.jdbc.result-set`'s `as-modified-*` builders, this option should specify a string-to-string transformation that will be applied to the table name for each returned column name for which the table name is known. It can be omitted for the `as-unqualified-modified-*` variants.
 
 ## Prepared Statements
 
