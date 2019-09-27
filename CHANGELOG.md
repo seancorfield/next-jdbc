@@ -7,7 +7,7 @@ Only accretive/fixative changes will be made from now on.
 The following changes have been committed to the **master** branch since the 1.0.7 release:
 
 * Fix #66 by adding support for a db-spec hash map format containing a `:jdbcUrl` key (consistent with `->pool`) so that you can create a datasource from a JDBC URL string and additional options.
-* Address #65 by adding a HugSQL "quick start" to the Friendly SQL Functions section of the docs.
+* Address #65 by adding a HugSQL "quick start" to the **Friendly SQL Functions** section of the docs.
 * Add `next.jdbc.specs/unstrument`. PR #64 (@gerred).
 * Address #63 by improving documentation around qualified column names and `:qualifier` (`clojure.java.jdbc`) migration.
 
