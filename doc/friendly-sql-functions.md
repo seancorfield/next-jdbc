@@ -173,6 +173,8 @@ Here's how to get up and running quickly with `next.jdbc` and HugSQL. For more d
         com.layerware/hugsql-adapter-next-jdbc {:mvn/version "0.5.1"}
 ```
 
+_Check the HugSQL documentation for the latest versions to use!_
+
 Write your SQL in `.sql` files that are on the classpath (somewhere under `src` or `resources`). For our purposes, assume a SQL file `db/example.sql` containing your first set of definitions. In your namespace, add these `require`s:
 
 ```clojure
