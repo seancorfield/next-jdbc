@@ -103,6 +103,18 @@
         (is (str/index-of (pr-str ds) url))
         (with-open [con (p/get-connection ds {})]
           (is (instance? java.sql.Connection con)))))
+    (testing "datasource via jdbcUrl"
+      (let [[url etc] (#'c/spec->url+etc db)
+            ds (p/get-datasource (assoc etc :jdbcUrl url))]
+        (if (= "derby" (:dbtype db))
+          (is {:create true} etc)
+          (is {} etc))
+        (is (instance? javax.sql.DataSource ds))
+        (is (str/index-of (pr-str ds) (str "jdbc:" (:dbtype db))))
+        ;; checks get-datasource on a DataSource is identity
+        (is (identical? ds (p/get-datasource ds)))
+        (with-open [con (p/get-connection ds {})]
+          (is (instance? java.sql.Connection con)))))
     (testing "datasource via HikariCP"
       ;; the type hint is only needed because we want to call .close
       (with-open [^HikariDataSource ds (c/->pool HikariDataSource db)]

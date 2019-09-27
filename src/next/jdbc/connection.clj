@@ -136,61 +136,68 @@
   (atom {}))
 
 (defn- spec->url+etc
-  "Given a database spec, return a JDBC URL and a map of any additional options."
+  "Given a database spec, return a JDBC URL and a map of any additional options.
+
+  As a special case, the database spec can contain jdbcUrl (just like ->pool),
+  in which case it will return that URL as-is and a map of any other options."
   [{:keys [dbtype dbname host port classname
-           dbname-separator host-prefix]
+           dbname-separator host-prefix
+           jdbcUrl]
     :as db-spec}]
-  (let [;; allow aliases for dbtype
-        subprotocol (-> dbtype dbtypes :alias-for (or dbtype))
-        host        (or host (-> dbtype dbtypes :host) "127.0.0.1")
-        port        (or port (-> dbtype dbtypes :port))
-        db-sep      (or dbname-separator (-> dbtype dbtypes :dbname-separator (or "/")))
-        local-sep   (or dbname-separator (-> dbtype dbtypes :dbname-separator (or ":")))
-        url (cond (#{"h2"} subprotocol)
-                  (str "jdbc:" subprotocol local-sep
-                       (if (re-find #"^([A-Za-z]:)?[\./\\]" dbname)
-                         ;; DB name starts with relative or absolute path
-                         dbname
-                         ;; otherwise make it local
-                         (str "./" dbname)))
-
-                  (#{"h2:mem"} subprotocol)
-                  (str "jdbc:" subprotocol local-sep dbname ";DB_CLOSE_DELAY=-1")
-
-                  (= :none host)
-                  (str "jdbc:" subprotocol local-sep dbname)
-
-                  :else
-                  (str "jdbc:" subprotocol ":"
-                       (or host-prefix (-> dbtype dbtypes :host-prefix (or "//")))
-                       host
-                       (when port (str ":" port))
-                       db-sep dbname))
-        etc (dissoc db-spec
+  (let [etc (dissoc db-spec
                     :dbtype :dbname :host :port :classname
-                    :dbname-separator :host-prefix)]
-    ;; verify the datasource is loadable
-    (if-let [class-name (or classname (-> dbtype dbtypes :classname))]
-      (swap! driver-cache update class-name
-             #(if % %
-                (do
-                  ;; force DriverManager to be loaded
-                  (DriverManager/getLoginTimeout)
-                  (if (string? class-name)
-                    (clojure.lang.RT/loadClassForName class-name)
-                    (loop [[clazz & more] class-name]
-                      (let [loaded
-                            (try
-                              (clojure.lang.RT/loadClassForName clazz)
-                              (catch Exception e
-                                e))]
-                        (if (instance? Throwable loaded)
-                          (if (seq more)
-                            (recur more)
-                            (throw loaded))
-                          loaded)))))))
-      (throw (ex-info (str "Unknown dbtype: " dbtype) db-spec)))
-    [url etc]))
+                    :dbname-separator :host-prefix
+                    :jdbcUrl)]
+    (if jdbcUrl
+      [jdbcUrl etc]
+      (let [;; allow aliases for dbtype
+            subprotocol (-> dbtype dbtypes :alias-for (or dbtype))
+            host        (or host (-> dbtype dbtypes :host) "127.0.0.1")
+            port        (or port (-> dbtype dbtypes :port))
+            db-sep      (or dbname-separator (-> dbtype dbtypes :dbname-separator (or "/")))
+            local-sep   (or dbname-separator (-> dbtype dbtypes :dbname-separator (or ":")))
+            url (cond (#{"h2"} subprotocol)
+                      (str "jdbc:" subprotocol local-sep
+                           (if (re-find #"^([A-Za-z]:)?[\./\\]" dbname)
+                             ;; DB name starts with relative or absolute path
+                             dbname
+                             ;; otherwise make it local
+                             (str "./" dbname)))
+
+                      (#{"h2:mem"} subprotocol)
+                      (str "jdbc:" subprotocol local-sep dbname ";DB_CLOSE_DELAY=-1")
+
+                      (= :none host)
+                      (str "jdbc:" subprotocol local-sep dbname)
+
+                      :else
+                      (str "jdbc:" subprotocol ":"
+                           (or host-prefix (-> dbtype dbtypes :host-prefix (or "//")))
+                           host
+                           (when port (str ":" port))
+                           db-sep dbname))]
+        ;; verify the datasource is loadable
+        (if-let [class-name (or classname (-> dbtype dbtypes :classname))]
+          (swap! driver-cache update class-name
+                 #(if % %
+                    (do
+                      ;; force DriverManager to be loaded
+                      (DriverManager/getLoginTimeout)
+                      (if (string? class-name)
+                        (clojure.lang.RT/loadClassForName class-name)
+                        (loop [[clazz & more] class-name]
+                          (let [loaded
+                                (try
+                                  (clojure.lang.RT/loadClassForName clazz)
+                                  (catch Exception e
+                                    e))]
+                            (if (instance? Throwable loaded)
+                              (if (seq more)
+                                (recur more)
+                                (throw loaded))
+                              loaded)))))))
+          (throw (ex-info (str "Unknown dbtype: " dbtype) db-spec)))
+        [url etc]))))
 
 (defn ->pool
   "Given a (connection pooled datasource) class and a database spec, return a

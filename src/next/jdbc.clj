@@ -58,7 +58,11 @@
   "Given some sort of specification of a database, return a `DataSource`.
 
   A specification can be a JDBC URL string (which is passed to the JDBC
-  driver as-is), or a hash map. For the hash map, these keys are required:
+  driver as-is), or a hash map.
+
+  For the hash map, there are two formats accepted:
+
+  In the first format, these keys are required:
   * `:dbtype` -- a string indicating the type of the database
   * `:dbname` -- a string indicating the name of the database to be used
 
@@ -81,10 +85,13 @@
   * `:host-prefix` -- override the `//` that normally precedes the IP
       address or hostname in the JDBC URL
 
+  In the second format, this key is required:
+  * `:jdbcUrl` -- a JDBC URL string
+
   Any additional options provided will be passed to the JDBC driver's
   `.getConnection` call as a `java.util.Properties` structure.
 
-  Database types supported, and their defaults:
+  Database types supported (for `:dbtype`), and their defaults:
   * `derby` -- `org.apache.derby.jdbc.EmbeddedDriver` -- also pass `:create true`
       if you want the database to be automatically created
   * `h2` -- `org.h2.Driver` -- for an on-disk database

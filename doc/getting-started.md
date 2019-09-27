@@ -68,6 +68,8 @@ We described the database with just `:dbtype` and `:dbname` because it is create
 
 > Note: You can see the full list of `:dbtype` values supported in [next.jdbc/get-datasource](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc#get-datasource)'s docstring. If you need this programmatically, you can get it from the [next.jdbc.connection/dbtypes](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.connection#dbtypes) hash map. If those lists differ, the hash map is the definitive list (and I'll need to fix the docstring!). The docstring of that Var explains how to tell `next.jdbc` about additional databases.
 
+If you already have a JDBC URL (string), you can use that as-is instead of the db-spec hash map. If you have a JDBC URL and still need additional options passed into the JDBC driver, you can use a hash map with the `:jdbcUrl` key specifying the string and whatever additional options you need.
+
 ### `execute!` & `execute-one!`
 
 We used `execute!` to create the `address` table, to insert a new row into it, and to query it. In all three cases, `execute!` returns a vector of hash maps with namespace-qualified keys, representing the result set from the operation, if available. When no result set is produced, `next.jdbc` returns a "result set" containing the "update count" from the operation (which is usually the number of rows affected). By default, H2 uses uppercase names and `next.jdbc` returns these as-is.
@@ -172,7 +174,7 @@ Then import the appropriate classes into your code:
            (com.mchange.v2.c3p0 ComboPooledDataSource PooledDataSource)))
 ```
 
-Finally, create the connection pooled datasource. `db-spec` here contains the regular `next.jdbc` options (`:dbtype`, `:dbname`, and maybe `:host`, `:port`, `:classname` etc). Those are used to construct the JDBC URL that is passed into the datasource object (by calling `.setJdbcUrl` on it). You can also specify any of the connection pooling library's options, as mixed case keywords corresponding to any simple setter methods on the class being passed in, e.g., `:connectionTestQuery`, `:maximumPoolSize` (HikariCP), `:maxPoolSize`, `:preferredTestQuery` (c3p0).
+Finally, create the connection pooled datasource. `db-spec` here contains the regular `next.jdbc` options (`:dbtype`, `:dbname`, and maybe `:host`, `:port`, `:classname` etc -- or the `:jdbcUrl` format mentioned above). Those are used to construct the JDBC URL that is passed into the datasource object (by calling `.setJdbcUrl` on it). You can also specify any of the connection pooling library's options, as mixed case keywords corresponding to any simple setter methods on the class being passed in, e.g., `:connectionTestQuery`, `:maximumPoolSize` (HikariCP), `:maxPoolSize`, `:preferredTestQuery` (c3p0).
 
 Some important notes regarding HikariCP:
 
