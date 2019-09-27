@@ -23,6 +23,8 @@ These functions are described in more detail below. They are intended to cover t
 * [SQLingvo](https://github.com/r0man/sqlingvo)
 * [Walkable](https://github.com/walkable-server/walkable)
 
+If you prefer to write your SQL separately from your code, take a look at [HugSQL](https://github.com/layerware/hugsql) -- [HugSQL documentation](https://www.hugsql.org/) -- which has a `next.jdbc` adapter, as of version 0.5.1. See below for a "[quick start](#hugsql-quick-start)" for using HugSQL with `next.jdbc`.
+
 ## `insert!`
 
 Given a table name (as a keyword) and a hash map of column names and values, this performs a single row insertion into the database:
@@ -161,6 +163,67 @@ These quoting functions can be provided to any of the friendly SQL functions abo
 ```
 
 Note that the entity naming function is passed a string, the result of calling `name` on the keyword passed in. Also note that the default quoting functions do not handle schema-qualified names, such as `dbo.table_name` -- `sql-server` would produce `[dbo.table_name]` from that. Use the `schema` function to wrap the quoting function if you need that behavior, e.g,. `{:table-fn (schema sql-server)}` which would produce `[dbo].[table_name]`.
+
+## HugSQL Quick Start
+
+Here's how to get up and running quickly with `next.jdbc` and HugSQL. For more detail, consult the [HugSQL documentation](https://www.hugsql.org/). Add the following dependencies to your project (in addition to `seancorfield/next.jdbc` and whichever JDBC drivers you need):
+
+```clojure
+        com.layerware/hugsql-core {:mvn/version "0.5.1"}
+        com.layerware/hugsql-adapter-next-jdbc {:mvn/version "0.5.1"}
+```
+
+Write your SQL in `.sql` files that are on the classpath (somewhere under `src` or `resources`). For our purposes, assume a SQL file `db/example.sql` containing your first set of definitions. In your namespace, add these `require`s:
+
+```clojure
+            [hugsql.core :as hugsql]
+            [hugsql.adapter.next-jdbc :as adapter]
+            [next.jdbc :as jdbc]
+```
+
+At program startup you'll need to call these functions (either at the top-level of your namespace on inside your initialization function):
+
+```clojure
+;; regular SQL functions
+(hugsql/def-db-fns "db/example.sql"
+                   {:adapter (adapter/hugsql-adapter-next-jdbc)})
+
+;; development/advanced usage functions that produce a vector containing
+;; SQL and parameters that could be passed to jdbc/execute! etc
+(hugsql/def-sqlvec-fns "db/example.sql"
+                       {:adapter (adapter/hugsql-adapter-next-jdbc)})
+```
+
+Those calls will add function definitions to that namespace based on what is in the `.sql` files. Now set up your db-spec and datasource as usual with `next.jdbc`:
+
+```clojure
+(def db-spec {:dbytpe "h2:mem" :dbtype "example"}) ; assumes H2 driver in deps.edn
+
+(def ds (jdbc/get-datasource db-spec))
+```
+
+Borrowing from Princess Bride examples from the HugSQL documentation, you can now do things like this:
+
+```clojure
+(create-characters-table ds)
+;;=> [#:next.jdbc{:update-count 0}]
+(insert-character ds {:name "Westley", :specialty "love"})
+;;=> 1
+```
+
+By default, for compatibility with their default adapter (`clojure.java.jdbc`), the `next.jdbc` adapter uses the `next.jdbc.result-set/as-unqualified-lower-maps` builder function. You can specify a different builder function when you pass in the adapter:
+
+```clojure
+;; add require next.jdbc.result-set :as rs to your ns
+
+(hugsql/def-db-fns "db/example.sql"
+                   {:adapter (adapter/hugsql-adapter-next-jdbc
+                              {:builder-fn rs/as-maps})})
+
+;; now you'll get qualified as-is hash maps back:
+(character-by-id ds {:id 1})
+;;=> #:CHARACTERS{:ID 1, :NAME "Westley", :SPECIALTY "love", :CREATED_AT #inst "2019-09-27T18:52:54.413000000-00:00"}
+```
 
 ## Tips & Tricks
 
