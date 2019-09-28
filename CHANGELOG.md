@@ -6,7 +6,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch since the 1.0.8 release:
 
-* None.
+* Fix #67 by adding `:jdbcUrl` version spec.
 
 ## Stable Builds
 

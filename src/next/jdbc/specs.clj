@@ -42,14 +42,19 @@
                                       ::host ::port
                                       ::dbname-separator
                                       ::host-prefix]))
+(s/def ::jdbcUrl string?)
+(s/def ::jdbc-url-map (s/keys :req-un [::jdbcUrl]))
 
 (s/def ::connection #(instance? Connection %))
 (s/def ::datasource #(instance? DataSource %))
 (s/def ::prepared-statement #(instance? PreparedStatement %))
 
-(s/def ::db-spec (s/or :db-spec ::db-spec-map
-                       :string  string?
-                       :ds      ::datasource))
+(s/def ::db-spec (s/or :db-spec  ::db-spec-map
+                       :jdbc-url ::jdbc-url-map
+                       :string   string?
+                       :ds       ::datasource))
+(s/def ::db-spec-or-jdbc (s/or :db-spec  ::db-spec-map
+                               :jdbc-url ::jdbc-url-map))
 
 (s/def ::connectable any?)
 (s/def ::key-map (s/map-of keyword? any?))
@@ -117,7 +122,7 @@
 
 (s/fdef connection/->pool
         :args (s/cat :clazz #(instance? Class %)
-                     :db-spec ::db-spec-map))
+                     :db-spec ::db-spec-or-jdbc))
 
 (s/fdef prepare/execute-batch!
         :args (s/cat :ps ::prepared-statement
