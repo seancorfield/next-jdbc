@@ -4,24 +4,27 @@ Only accretive/fixative changes will be made from now on.
 
 ## Unreleased Changes
 
-The following changes have been committed to the **master** branch since the 1.0.7 release:
+The following changes have been committed to the **master** branch since the 1.0.8 release:
 
-* Fix #66 by adding support for a db-spec hash map format containing a `:jdbcUrl` key (consistent with `->pool`) so that you can create a datasource from a JDBC URL string and additional options.
-* Address #65 by adding a HugSQL "quick start" to the **Friendly SQL Functions** section of the docs.
-* Add `next.jdbc.specs/unstrument`. PR #64 (@gerred).
-* Address #63 by improving documentation around qualified column names and `:qualifier` (`clojure.java.jdbc`) migration.
+* None.
 
 ## Stable Builds
 
+* 2019-09-27 -- 1.0.8
+  * Fix #66 by adding support for a db-spec hash map format containing a `:jdbcUrl` key (consistent with `->pool`) so that you can create a datasource from a JDBC URL string and additional options.
+  * Address #65 by adding a HugSQL "quick start" to the **Friendly SQL Functions** section of the docs.
+  * Add `next.jdbc.specs/unstrument`. PR #64 (@gerred).
+  * Address #63 by improving documentation around qualified column names and `:qualifier` (`clojure.java.jdbc`) migration, with a specific caveat about Oracle not fully supporting `.getTableName()`.
+
 * 2019-09-09 -- 1.0.7
-  * Address #60 by supporting simpler schema entry formats: `:table/column` is equivalent to the old `[:table :column :one]` and `[:table/column]` is equivalent to the old `[:table :column :many]`. The older formats will continue to be supported but should be considered deprecated.
+  * Address #60 by supporting simpler schema entry formats: `:table/column` is equivalent to the old `[:table :column :one]` and `[:table/column]` is equivalent to the old `[:table :column :many]`. The older formats will continue to be supported but should be considered deprecated. PR #62 (@seancorfield).
   * Added test for using `ANY(?)` and arrays in PostgreSQL for `IN (?,,,?)` style queries. Added a **Tips & Tricks** section to **Friendly SQL Functions** with database-specific suggestions, that starts with this one.
   * Improved documentation in several areas.
 
 * 2019-08-24 -- 1.0.6
+  * Improved documentation around `insert-multi!` and `execute-batch!` (addresses #57).
   * Fix #54 by improving documentation around data type conversions (and the `ReadableColumn` and `SettableParameter` protocols).
   * Fix #52 by using a US-locale function in the "lower" result set builders to avoid unexpected character changes in column names in locales such as Turkish. If you want the locale-sensitive behavior, pass `clojure.string/lower-case` into one of the "modified" result set builders.
-  * Improved documentation around `insert-multi!` and `execute-batch!`.
   * Add `next.jdbc.result-set/as-maps-adapter` and `next.jdbc.result-set/as-arrays-adapter` to provide a way to override the default result set reading behavior of using `.getObject`.
   * Update `org.clojure/test.check` to `"0.10.0"`.
 
