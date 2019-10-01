@@ -14,6 +14,8 @@ This page attempts to list all of the differences between [clojure.java.jdbc](ht
 
 If you used `:as-arrays? true`, you will most likely want to use a `:builder-fn` option of `next.jdbc.result-set/as-unqualified-lower-arrays`.
 
+*Note: When `next.jdbc` cannot obtain a `ResultSet` object and returns `{:next.jdbc/count N}` instead, these builder functions are not applied -- the `:builder-fn` option is not used in that situation.*
+
 ### Option Handling
 
 Because `clojure.java.jdbc` focuses on a hash map for the `db-spec` that is passed around, it can hold options that act as defaults for all operations on it. In addition, all operations in `clojure.java.jdbc` can accept a hash map of options and can pass those options down the call chain. In `next.jdbc`, `get-datasource`, `get-connection`, and `prepare` all produce Java objects that cannot have any extra options attached. On one hand, that means that you cannot provide "default options", and on the other hand it means you need to be a bit more careful to ensure that you pass the appropriate options to the appropriate function, since they cannot be passed through the call chain via the `db-spec`.

@@ -72,7 +72,7 @@ If you already have a JDBC URL (string), you can use that as-is instead of the d
 
 ### `execute!` & `execute-one!`
 
-We used `execute!` to create the `address` table, to insert a new row into it, and to query it. In all three cases, `execute!` returns a vector of hash maps with namespace-qualified keys, representing the result set from the operation, if available. When no result set is produced, `next.jdbc` returns a "result set" containing the "update count" from the operation (which is usually the number of rows affected). By default, H2 uses uppercase names and `next.jdbc` returns these as-is.
+We used `execute!` to create the `address` table, to insert a new row into it, and to query it. In all three cases, `execute!` returns a vector of hash maps with namespace-qualified keys, representing the result set from the operation, if available. When no result set is produced, `next.jdbc` returns a "result set" containing the "update count" from the operation (which is usually the number of rows affected; note that `:builder-fn` does not affect this fake "result set"). By default, H2 uses uppercase names and `next.jdbc` returns these as-is.
 
 If you only want a single row back -- the first row of any result set, generated keys, or update counts -- you can use `execute-one!` instead. Continuing the REPL session, we'll insert another address and ask for the generated keys to be returned, and then we'll query for a single row:
 

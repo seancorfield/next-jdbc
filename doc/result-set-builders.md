@@ -64,6 +64,8 @@ The `as-*` functions described above are all implemented in terms of these proto
 
 The options hash map for any `next.jdbc` function can contain a `:builder-fn` key and the value is used as the row/result set builder function. The tests for `next.jdbc.result-set` include a [record-based builder function](https://github.com/seancorfield/next-jdbc/blob/master/test/next/jdbc/result_set_test.clj#L162-L180) as an example of how you can extend this to satisfy your needs.
 
+*Note: When `next.jdbc` cannot obtain a `ResultSet` object and returns `{:next.jdbc/count N}` instead, the builder function is not applied -- the `:builder-fn` option does not affect the shape of the result.*
+
 The options hash map passed to the builder function will contain a `:next.jdbc/sql-params` key, whose value is the SQL + parameters vector passed into the top-level `next.jdbc` functions (`plan`, `execute!`, and `execute-one!`).
 
 There is also a convenience function, `datafiable-result-set`, that accepts a `ResultSet` object (and a connectable and an options hash map) and returns a fully realized result set, per the `:builder-fn` option (or `as-maps` if that option is omitted).
