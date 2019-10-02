@@ -36,6 +36,11 @@
 
 (def ^:private test-datasource (atom nil))
 
+(defn db
+  "Tests should call this to get the db-spec to use inside a fixture."
+  []
+  @test-db-spec)
+
 (defn ds
   "Tests should call this to get the DataSource to use inside a fixture."
   []

@@ -2,9 +2,12 @@
 
 (ns next.jdbc-test
   "Not exactly a test suite -- more a series of examples."
-  (:require [clojure.test :refer [deftest is testing use-fixtures]]
+  (:require [clojure.string :as str]
+            [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc :as jdbc]
-            [next.jdbc.test-fixtures :refer [with-test-db ds postgres?]]
+            [next.jdbc.connection :as c]
+            [next.jdbc.test-fixtures :refer [with-test-db db ds
+                                              derby? postgres?]]
             [next.jdbc.prepare :as prep]
             [next.jdbc.result-set :as rs]
             [next.jdbc.specs :as specs])
@@ -176,6 +179,21 @@ VALUES ('Pear', 'green', 49, 47)
                (.rollback t save-point)
                result))))
     (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))))
+
+(deftest connection-tests
+  (testing "datasource via jdbcUrl"
+    (when-not (postgres?)
+      (let [[url etc] (#'c/spec->url+etc (db))
+            ds (jdbc/get-datasource (assoc etc :jdbcUrl url))]
+        (if (derby?)
+          (is {:create true} etc)
+          (is {} etc))
+        (is (instance? javax.sql.DataSource ds))
+        (is (str/index-of (pr-str ds) (str "jdbc:" (:dbtype (db)))))
+        ;; checks get-datasource on a DataSource is identity
+        (is (identical? ds (jdbc/get-datasource ds)))
+        (with-open [con (jdbc/get-connection ds {})]
+          (is (instance? java.sql.Connection con)))))))
 
 (deftest plan-misuse
   (let [s (pr-str (jdbc/plan (ds) ["select * from fruit"]))]
