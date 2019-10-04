@@ -8,6 +8,7 @@ The following changes have been committed to the **master** branch since the 1.0
 
 * Address #68 by clarifying that builder functions do not affect the "fake result set" containing `:next.jdbc/update-count`.
 * Fix #67 by adding `:jdbcUrl` version spec.
+* Add `next.jdbc.optional/as-maps-adapter` to provide a way to override the default result set reading behavior of using `.getObject` when omitting SQL `NULL` values from result set maps.
 
 ## Stable Builds
 
