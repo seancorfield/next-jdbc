@@ -4,14 +4,17 @@ Only accretive/fixative changes will be made from now on.
 
 ## Unreleased Changes
 
-The following changes have been committed to the **master** branch since the 1.0.8 release:
+The following changes have been committed to the **master** branch since the 1.0.9 release:
 
-* Address #69 by trying to clarify when to use `execute-one!` vs `execute!` vs `plan`.
-* Address #68 by clarifying that builder functions do not affect the "fake result set" containing `:next.jdbc/update-count`.
-* Fix #67 by adding `:jdbcUrl` version spec.
-* Add `next.jdbc.optional/as-maps-adapter` to provide a way to override the default result set reading behavior of using `.getObject` when omitting SQL `NULL` values from result set maps.
+* None.
 
 ## Stable Builds
+
+* 2019-10-11 -- 1.0.9
+  * Address #69 by trying to clarify when to use `execute-one!` vs `execute!` vs `plan`.
+  * Address #68 by clarifying that builder functions do not affect the "fake result set" containing `:next.jdbc/update-count`.
+  * Fix #67 by adding `:jdbcUrl` version spec.
+  * Add `next.jdbc.optional/as-maps-adapter` to provide a way to override the default result set reading behavior of using `.getObject` when omitting SQL `NULL` values from result set maps.
 
 * 2019-09-27 -- 1.0.8
   * Fix #66 by adding support for a db-spec hash map format containing a `:jdbcUrl` key (consistent with `->pool`) so that you can create a datasource from a JDBC URL string and additional options.
