@@ -40,7 +40,7 @@
     "Produce a 'reducible' that, when reduced, executes the SQL and
     processes the rows of the `ResultSet` directly.")
   (-execute-one [this sql-params opts]
-    "Executes the SQL and produces the first row of the `ResultSet`
+    "Executes the SQL or DDL and produces the first row of the `ResultSet`
     as a fully-realized, datafiable hash map (by default).")
   (-execute-all [this sql-params opts]
     "Executes the SQL and produces (by default) a vector of

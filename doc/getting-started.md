@@ -89,9 +89,11 @@ user=>
 
 Since we used `execute-one!`, we get just one row back (a hash map). This also shows how you provide parameters to SQL statements -- with `?` in the SQL and then the corresponding parameter values in the vector after the SQL string.
 
+> Note: In general, you should use `execute-one!` for DDL operations since you will only get back an update count. If you have a SQL statement that you know will only return an update count, `execute-one!` is the right choice. If you have a SQL statement that you know will only return a single row in the result set, you probably want to use `execute-one!`. If you use `execute-one!` for a SQL statement that would return multiple rows in a result set, even though you will only get the first row back (as a hash map), the full result set will still be retrieved from the database -- it does not limit the SQL in any way.
+
 ### `plan` & Reducing Result Sets
 
-While these functions are fine for retrieving result sets as data, most of the time you want to process that data efficiently, so `next.jdbc` provides a SQL execution function that works with `reduce` and with transducers to consume the result set without the intermediate overhead of creating Clojure data structures for every row:
+While those functions are fine for retrieving result sets as data, most of the time you want to process that data efficiently, so `next.jdbc` provides a SQL execution function that works with `reduce` and with transducers to consume the result set without the intermediate overhead of creating Clojure data structures for every row:
 
 ```clojure
 user=> (into #{}
@@ -112,6 +114,8 @@ user=>
 ```
 
 Any operation that can perform key-based lookup can be used here without creating hash maps: `get`, `contains?`, `find` (returns a `MapEntry` of whatever key you requested and the corresponding column value), or direct keyword access as shown above. Any operation that would require a Clojure hash map, such as `assoc` or anything that invokes `seq` (`keys`, `vals`), will cause the full row to be expanded into a hash map, such as produced by `execute!` or `execute-one!`.
+
+> Note: since `plan` expects you to process the result set via reduction, you should not use it for DDL or for SQL statements that only produce update counts.
 
 ## Datasources, Connections & Transactions
 

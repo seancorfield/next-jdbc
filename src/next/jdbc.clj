@@ -157,7 +157,7 @@
     (p/prepare connection sql-params opts)))
 
 (defn plan
-  "General SQL execution function.
+  "General SQL execution function (for working with result sets).
 
   Returns a reducible that, when reduced, runs the SQL and yields the result.
 
@@ -193,9 +193,14 @@
 
 (defn execute-one!
   "General SQL execution function that returns just the first row of a result.
+  For any DDL or SQL statement that will return just an update count, this is
+  the preferred function to use.
 
   Can be called on a `PreparedStatement`, a `Connection`, or something that can
-  produce a `Connection` via a `DataSource`."
+  produce a `Connection` via a `DataSource`.
+
+  Note: although this only returns the first row of a result set, it does not
+  place any limit on the result of the SQL executed."
   ([stmt]
    (p/-execute-one stmt [] {}))
   ([connectable sql-params]
