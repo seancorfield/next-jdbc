@@ -6,7 +6,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch since the 1.0.9 release:
 
-* None.
+* Update `org.clojure/java.data` to `"0.1.2"` (which fixes a number of reflection warnings).
 
 ## Stable Builds
 
