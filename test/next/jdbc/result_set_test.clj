@@ -289,3 +289,30 @@
                             (= "fruit" (-> % val name str/lower-case)))
                       row))
               metadata))))
+
+(deftest clob-reading
+  (when-not (postgres?) ; embedded postgres does not support clob
+    (with-open [con (p/get-connection (ds) {})]
+      (try
+        (p/-execute-one con ["DROP TABLE CLOBBER"] {})
+        (catch Exception _))
+      (p/-execute-one con [(str "
+CREATE TABLE CLOBBER (
+  ID INTEGER,
+  STUFF CLOB
+)")]
+                      {})
+      (p/-execute-one con
+                      [(str "insert into clobber (id, stuff)"
+                            "values (?,?), (?,?)")
+                       1 "This is some long string"
+                       2 "This is another long string"]
+                      {})
+      (is (= "This is some long string"
+             (-> (p/-execute-all con
+                                 ["select * from clobber where id = ?" 1]
+                                 {:builder-fn (rs/as-maps-adapter
+                                               rs/as-unqualified-lower-maps
+                                               rs/clob-column-reader)})
+                 (first)
+                 :stuff))))))

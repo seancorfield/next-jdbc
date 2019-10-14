@@ -6,6 +6,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch since the 1.0.9 release:
 
+* Address #70 by adding `next.jdbc.result-set/clob-column-reader` and `next.jdbc.result-set/clob->string` helper to make it easier to deal with `CLOB` column data.
 * Update `org.clojure/java.data` to `"0.1.4"` (0.1.2 fixes a number of reflection warnings).
 
 ## Stable Builds

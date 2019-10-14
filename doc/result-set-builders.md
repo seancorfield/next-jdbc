@@ -37,6 +37,14 @@ And finally there are adapters for the existing builders that let you override t
 * `as-maps-adapter` -- adapts an existing map builder function with a new column reader,
 * `as-arrays-adapter` -- adapts an existing array builder function with a new column reader.
 
+An example column reader is provided -- `clob-column-reader` -- that still uses `.getObject` but will expand `java.sql.Clob` values into string (using the `clob->string` helper function):
+
+```clojure
+    {:builder-fn (result-set/as-maps-adapter
+                  result-set/as-maps
+                  result-set/clob-column-reader)}
+```
+
 ## RowBuilder Protocol
 
 This protocol defines four functions and is used whenever `next.jdbc` needs to materialize a row from a `ResultSet` as a Clojure data structure:

@@ -14,9 +14,11 @@
   Also provides the default implemenations for `Executable` and
   the default `datafy`/`nav` behavior for rows from a result set."
   (:require [clojure.core.protocols :as core-p]
+            [clojure.java.io :as io]
             [next.jdbc.prepare :as prepare]
             [next.jdbc.protocols :as p])
-  (:import (java.sql PreparedStatement
+  (:import (java.sql Clob
+                     PreparedStatement
                      ResultSet ResultSetMetaData
                      SQLException)
            (java.util Locale)))
@@ -235,6 +237,21 @@
         (->rs [this] (->rs mrsb))
         (with-row [this mrs row] (with-row mrsb mrs row))
         (rs! [this mrs] (rs! mrsb mrs))))))
+
+(defn clob->string
+  "Given a CLOB column value, read it as a string."
+  [^Clob clob]
+  (with-open [rdr (io/reader (.getCharacterStream clob))]
+    (slurp rdr)))
+
+(defn clob-column-reader
+  "An example column-reader that still uses `.getObject` but expands CLOB
+  columns into strings."
+  [^ResultSet rs ^ResultSetMetaData _ ^Integer i]
+  (when-let [value (.getObject rs i)]
+    (cond-> value
+      (instance? Clob value)
+      (clob->string))))
 
 (defrecord ArrayResultSetBuilder [^ResultSet rs rsmeta cols]
   RowBuilder

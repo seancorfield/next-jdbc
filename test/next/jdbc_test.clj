@@ -2,8 +2,7 @@
 
 (ns next.jdbc-test
   "Not exactly a test suite -- more a series of examples."
-  (:require [clojure.java.io :as io]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc :as jdbc]
             [next.jdbc.connection :as c]
@@ -12,7 +11,7 @@
             [next.jdbc.prepare :as prep]
             [next.jdbc.result-set :as rs]
             [next.jdbc.specs :as specs])
-  (:import (java.sql Clob ResultSet ResultSetMetaData)))
+  (:import (java.sql ResultSet ResultSetMetaData)))
 
 (set! *warn-on-reflection* true)
 
@@ -213,37 +212,3 @@ VALUES ('Pear', 'green', 49, 47)
               (into [] (map pr-str) (jdbc/plan (ds) ["select * from fruit"]))))
   (is (thrown? IllegalArgumentException
                (doall (take 3 (jdbc/plan (ds) ["select * from fruit"]))))))
-
-(defn- clob-reader
-  [^ResultSet rs ^ResultSetMetaData _ ^Integer i]
-  (let [obj (.getObject rs i)]
-    (cond (instance? Clob obj)
-          (with-open [rdr (io/reader (.getCharacterStream ^Clob obj))]
-            (slurp rdr))
-          :default
-          obj)))
-
-(deftest clob-reading
-  (when-not (postgres?)
-    (with-open [con (jdbc/get-connection (ds))]
-      (try
-        (jdbc/execute-one! con ["DROP TABLE CLOBBER"])
-        (catch Exception _))
-      (jdbc/execute-one! con [(str "
-CREATE TABLE CLOBBER (
-  ID INTEGER,
-  STUFF CLOB
-)")])
-      (jdbc/execute-one! con
-                         [(str "insert into clobber (id, stuff)"
-                               "values (?,?), (?,?)")
-                          1 "This is some long string"
-                          2 "This is another long string"])
-      (is (= "This is some long string"
-             (-> (jdbc/execute! con
-                                ["select * from clobber where id = ?" 1]
-                                {:builder-fn (rs/as-maps-adapter
-                                              rs/as-unqualified-lower-maps
-                                              clob-reader)})
-                 (first)
-                 :stuff))))))
