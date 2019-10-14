@@ -7,12 +7,13 @@
   * ReadableColumn protocol extension point"
   (:require [clojure.core.protocols :as core-p]
             [clojure.datafy :as d]
+            [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc.protocols :as p]
             [next.jdbc.result-set :as rs]
             [next.jdbc.test-fixtures :refer [with-test-db ds postgres?]])
-  (:import (java.sql ResultSet ResultSetMetaData)))
+  (:import (java.sql Clob ResultSet ResultSetMetaData)))
 
 (set! *warn-on-reflection* true)
 
@@ -289,3 +290,38 @@
                             (= "fruit" (-> % val name str/lower-case)))
                       row))
               metadata))))
+
+(defn- clob-reader
+  [^ResultSet rs ^ResultSetMetaData _ ^Integer i]
+  (let [obj (.getObject rs i)]
+    (cond (instance? Clob obj)
+          (with-open [rdr (io/reader (.getCharacterStream ^Clob obj))]
+            (slurp rdr))
+          :default
+          obj)))
+
+(deftest clob-reading
+  (when-not (postgres?)
+    (with-open [con (p/get-connection (ds) {})]
+      (try
+        (p/-execute-one con ["DROP TABLE CLOBBER"] {})
+        (catch Exception _))
+      (p/-execute-one con [(str "
+CREATE TABLE CLOBBER (
+  ID INTEGER,
+  STUFF CLOB
+)")]
+                      {})
+      (p/-execute-one con
+                      [(str "insert into clobber (id, stuff)"
+                            "values (?,?), (?,?)")
+                       1 "This is some long string"
+                       2 "This is another long string"]
+                      {})
+      (is (= "This is some long string"
+             (:stuff
+              (p/-execute-one con
+                              ["select * from clobber where id = ?" 1]
+                              {:builder-fn (rs/as-maps-adapter
+                                            rs/as-unqualified-lower-maps
+                                            clob-reader)})))))))
