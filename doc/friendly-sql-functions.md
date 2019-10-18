@@ -229,7 +229,41 @@ By default, for compatibility with their default adapter (`clojure.java.jdbc`), 
 
 ## Tips & Tricks
 
-This section will accrue various tips and tricks that make it easier to use `next.jdbc` with a variety of databases. It will be organized by database.
+This section will accrue various tips and tricks that make it easier to use `next.jdbc` with a variety of databases. It will be mostly organized by database, but there are a few that are cross-database and those are listed first.
+
+### CLOB & BLOB SQL Types
+
+Columns declared with the `CLOB` or `BLOB` SQL types are typically rendered into Clojure result sets as database-specific custom types but they will implement `java.sql.Clob` or `java.sql.Blob` (as appropriate). In general, you can only read the data out of those Java objects during the current transaction, which effectively means that you need to do it either inside the reduction (for `plan`) or inside the result set builder (for `execute!` or `execute-one!`). If you always treat these types the same way for all columns across the whole of your application, you could simply extend `next.jdbc.result-set/ReadableColumn` to `java.sql.Clob` (and/or `java.sql.Blob`). Here's an example for reading `CLOB` into a `String`:
+
+```clojure
+(extend-protocol rs/ReadableColumn
+  java.sql.Clob
+  (read-column-by-label ^String [^java.sql.Clob v _]
+    (with-open [rdr (.getCharacterStream v)] (slurp rdr)))
+  (read-column-by-index ^String [^java.sql.Clob v _2 _3]
+    (with-open [rdr (.getCharacterStream v)] (slurp rdr))))
+```
+
+There is a helper in `next.jdbc.result-set` to make this easier -- `clob->string`:
+
+```clojure
+(extend-protocol rs/ReadableColumn
+  java.sql.Clob
+  (read-column-by-label ^String [^java.sql.Clob v _]
+    (clob->string v))
+  (read-column-by-index ^String [^java.sql.Clob v _2 _3]
+    (clob->string v)))
+```
+
+As noted in [Result Set Builders](/doc/result-set-builders.md), there is also `clob-column-reader` that can be used with the `as-*-adapter` result set builder functions.
+
+No helper or column reader is provided for `BLOB` data since it is expected that the semantics of any given binary data will be application specific. For a raw `byte[]` you could probably use:
+
+```clojure
+    (.getBytes v 1 (.length v)) ; BLOB has 1-based byte index!
+```
+
+Consult the [java.sql.Blob documentation](https://docs.oracle.com/javase/8/docs/api/java/sql/Blob.html) for more ways to process it.
 
 ### MySQL
 

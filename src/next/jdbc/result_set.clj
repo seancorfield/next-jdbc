@@ -14,7 +14,6 @@
   Also provides the default implemenations for `Executable` and
   the default `datafy`/`nav` behavior for rows from a result set."
   (:require [clojure.core.protocols :as core-p]
-            [clojure.java.io :as io]
             [next.jdbc.prepare :as prepare]
             [next.jdbc.protocols :as p])
   (:import (java.sql Clob
@@ -241,7 +240,7 @@
 (defn clob->string
   "Given a CLOB column value, read it as a string."
   [^Clob clob]
-  (with-open [rdr (io/reader (.getCharacterStream clob))]
+  (with-open [rdr (.getCharacterStream clob)]
     (slurp rdr)))
 
 (defn clob-column-reader
