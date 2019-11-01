@@ -28,11 +28,19 @@
                     (ds)
                     ["select * from fruit where appearance = ?" "red"])))))
   (testing "execute-one!"
+    (is (nil? (jdbc/execute-one!
+               (ds)
+               ["select * from fruit where appearance = ?" "neon-green"])))
     (is (= "Apple" ((if (postgres?) :fruit/name :FRUIT/NAME)
                     (jdbc/execute-one!
                      (ds)
                      ["select * from fruit where appearance = ?" "red"])))))
   (testing "execute!"
+    (let [rs (jdbc/execute!
+              (ds)
+              ["select * from fruit where appearance = ?" "neon-green"])]
+      (is (vector? rs))
+      (is (= [] rs)))
     (let [rs (jdbc/execute!
               (ds)
               ["select * from fruit where appearance = ?" "red"])]

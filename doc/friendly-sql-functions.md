@@ -124,6 +124,8 @@ Given a table name (as a keyword) and either a hash map of column names and valu
                    "Stella" "stella@artois.beer"])
 ```
 
+If no rows match, `find-by-keys` returns `[]`, just like `execute!`.
+
 ## `get-by-id`
 
 Given a table name (as a keyword) and a primary key value, with an optional primary key column name, execute a query on the database:
@@ -139,6 +141,8 @@ Given a table name (as a keyword) and a primary key value, with an optional prim
 ```
 
 Note that in order to override the default primary key column name (of `:id`), you need to specify both the column name and an options hash map.
+
+If no rows match, `get-by-id` returns `nil`, just like `execute-one!`.
 
 ## Table & Column Entity Names
 

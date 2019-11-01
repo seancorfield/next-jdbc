@@ -86,6 +86,9 @@
     (is (= 4 ((if (postgres?) :fruit/id :FRUIT/ID) (last rs))))))
 
 (deftest test-find-by-keys
+  (let [rs (sql/find-by-keys (ds) :fruit {:appearance "neon-green"})]
+    (is (vector? rs))
+    (is (= [] rs)))
   (let [rs (sql/find-by-keys (ds) :fruit {:appearance "yellow"})]
     (is (= 1 (count rs)))
     (is (every? map? rs))
@@ -93,6 +96,7 @@
     (is (= 2 ((if (postgres?) :fruit/id :FRUIT/ID) (first rs))))))
 
 (deftest test-get-by-id
+  (is (nil? (sql/get-by-id (ds) :fruit -1)))
   (let [row (sql/get-by-id (ds) :fruit 3)]
     (is (map? row))
     (is (= "Peach" ((if (postgres?) :fruit/name :FRUIT/NAME) row))))
