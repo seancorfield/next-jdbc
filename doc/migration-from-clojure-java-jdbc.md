@@ -12,6 +12,8 @@ This page attempts to list all of the differences between [clojure.java.jdbc](ht
 
 `clojure.java.jdbc` returned result sets (and generated keys) as hash maps with simple, lower-case keys by default. `next.jdbc` returns result sets (and generated keys) as hash maps with qualified, as-is keys by default: each key is qualified by the name of table from which it is drawn, if known. The as-is default is chosen to a) improve performance and b) not mess with the data. Using a `:builder-fn` option of `next.jdbc.result-set/as-unqualified-maps` will produce simple, as-is keys. Using a `:builder-fn` option of `next.jdbc.result-set/as-unqualified-lower-maps` will produce simple, lower-case keys -- the most compatible with `clojure.java.jdbc`'s default behavior.
 
+*Note: `clojure.java.jdbc` would make column names unique by appending numeric suffices, for example in a `JOIN` that produced columns `id` from multiple tables. `next.jdbc` does not do this: if you use _qualified_ column names -- the default -- then you would get `:sometable/id` and `:othertable/id`, but with _unqualified_ column names you would just get one `:id` in each row. It was always poor practice to rely on `clojure.java.jdbc`'s renaming behavior and it added quite an overhead to result set building, which is why `next.jdbc` does not support it -- use explicit column aliasing in your SQL instead if you want _unqualified_ column names!*
+
 If you used `:as-arrays? true`, you will most likely want to use a `:builder-fn` option of `next.jdbc.result-set/as-unqualified-lower-arrays`.
 
 *Note: When `next.jdbc` cannot obtain a `ResultSet` object and returns `{:next.jdbc/count N}` instead, these builder functions are not applied -- the `:builder-fn` option is not used in that situation.*
@@ -57,7 +59,7 @@ The `next.jdbc.sql` namespace contains several functions with similarities to `c
 
 If you are using `:identifiers`, you will need to change to the appropriate `:builder-fn` option with one of `next.jdbc.result-set`'s `as-*` functions.
 
-`clojure.java.jdbc`'s default is the equivalent of `as-unqualified-lower-maps`. If you specified `:identifiers identity`, you can use `as-unqualified-maps`. If you provided your own string transformation function, you probably want `as-unqualified-modified-maps` and also pass your transformation function as the `:label-fn` option.
+`clojure.java.jdbc`'s default is the equivalent of `as-unqualified-lower-maps` (with the caveat that conflicting column names are not made unique -- see the note above in **Rows and Result Sets**). If you specified `:identifiers identity`, you can use `as-unqualified-maps`. If you provided your own string transformation function, you probably want `as-unqualified-modified-maps` and also pass your transformation function as the `:label-fn` option.
 
 If you used `:qualifier`, you may be able to get the same effect with `as-maps`, `as-lower-maps`, or `as-modified-maps`. Otherwise, you may need to specify the fixed qualifier via the `:label-fn #(str "my_qualifier/" %)`. You might think you could use `:qualifier-fn (constantly "my_qualifier")` for this but it is only called when the column has a known table name so it wouldn't be applied for derived values (and some databases don't provide the table name, so it wouldn't be applied at all for those databases).
 

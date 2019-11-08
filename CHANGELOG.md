@@ -9,6 +9,9 @@ The following changes have been committed to the **master** branch since the 1.0
 * Fix link to **All The Options** in **Migration from `clojure.java.jdbc`**. PR #71 (@laurio).
 * Address #70 by adding **CLOB & BLOB SQL Types** to the **Tips & Tricks** section of **Friendly SQL Functions** and by adding `next.jdbc.result-set/clob-column-reader` and `next.jdbc.result-set/clob->string` helper to make it easier to deal with `CLOB` column data.
 * Clarify what `execute!` and `execute-one!` produce when the result set is empty (`[]` and `nil` respectively, and there are now tests for this). Similarly for `find-by-keys` and `get-by-id`.
+* Clarify that **Friendly SQL Functions** are deliberately simple (hint: they will not be enhanced or expanded -- use `plan`, `execute!`, and `execute-one!` instead, with a DSL library if you want!).
+* Improve migration docs: explicitly recommend the use of a datasource for code that needs to work with both `clojure.java.jdbc` and `next.jdbc`; add caveat about column name conflicts.
+* Improve `datafy`/`nav` documentation around `:schema`.
 * Update `org.clojure/java.data` to `"0.1.4"` (0.1.2 fixes a number of reflection warnings).
 
 ## Stable Builds

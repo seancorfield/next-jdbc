@@ -25,14 +25,20 @@ You can override this default behavior for any column in any table by providing 
 The default behavior in the example above is equivalent to this `:schema` value:
 
 ```clojure
-{:contact/addressid :address/id} ; a one-to-one or many-to-one relationship
+(jdbc/execute! ds
+               ["select * from contact where city = ?" "San Francisco"]
+               ;; a one-to-one or many-to-one relationship
+               {:schema {:contact/addressid :address/id}})
 ```
 
 If you had a table to track the valid/bouncing status of email addresses over time, `:deliverability`, where `email` is the non-unique key, you could provide automatic navigation into that using:
 
 ```clojure
-{:contact/addressid :address/id
- :address/email [:deliverability/email]} ; one-to-many or many-to-many
+(jdbc/execute! ds
+               ["select * from contact where city = ?" "San Francisco"]
+               ;; one-to-many or many-to-many
+               {:schema {:contact/addressid :address/id
+                         :address/email [:deliverability/email]}})
 ```
 
 When you indicate a `*-to-many` relationship, by wrapping the foreign table/key in a vector, `next.jdbc`'s implementation of `nav` will fetch a multi-row result set from the target table.

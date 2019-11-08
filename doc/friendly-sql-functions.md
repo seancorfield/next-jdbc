@@ -16,7 +16,7 @@ as well as these more specific "read" operations:
 * `find-by-keys` -- a query on one or more column values, specified as a hash map or `WHERE` clause,
 * `get-by-id` -- a query to return a single row, based on a single column value, usually the primary key.
 
-These functions are described in more detail below. They are deliberately simple and intended to cover only the most common, basic SQL operations. If you need more expressiveness, consider one of the following libraries to build SQL/parameter vectors, or run queries:
+These functions are described in more detail below. They are deliberately simple and intended to cover only the most common, basic SQL operations. The primary API (`plan`, `execute!`, `execute-one!`) is the recommended approach for everything beyond that. If you need more expressiveness, consider one of the following libraries to build SQL/parameter vectors, or run queries:
 
 * [HoneySQL](https://github.com/jkk/honeysql) -- a composable DSL for creating SQL/parameter vectors from Clojure data structures
 * [seql](https://github.com/exoscale/seql) -- a simplified EQL-inspired query language, built on `next.jdbc` (as of release 0.1.6)
