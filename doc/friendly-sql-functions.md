@@ -16,12 +16,12 @@ as well as these more specific "read" operations:
 * `find-by-keys` -- a query on one or more column values, specified as a hash map or `WHERE` clause,
 * `get-by-id` -- a query to return a single row, based on a single column value, usually the primary key.
 
-These functions are described in more detail below. They are intended to cover the most common, simple SQL operations. If you need more expressiveness, consider one of the following libraries to build SQL/parameter vectors, or run queries:
+These functions are described in more detail below. They are deliberately simple and intended to cover only the most common, basic SQL operations. If you need more expressiveness, consider one of the following libraries to build SQL/parameter vectors, or run queries:
 
-* [HoneySQL](https://github.com/jkk/honeysql)
-* [seql](https://github.com/exoscale/seql)
-* [SQLingvo](https://github.com/r0man/sqlingvo)
-* [Walkable](https://github.com/walkable-server/walkable)
+* [HoneySQL](https://github.com/jkk/honeysql) -- a composable DSL for creating SQL/parameter vectors from Clojure data structures
+* [seql](https://github.com/exoscale/seql) -- a simplified EQL-inspired query language, built on `next.jdbc` (as of release 0.1.6)
+* [SQLingvo](https://github.com/r0man/sqlingvo) -- a composable DSL for creating SQL/parameter vectors
+* [Walkable](https://github.com/walkable-server/walkable) -- full EQL query language support for creating SQL/parameter vectors
 
 If you prefer to write your SQL separately from your code, take a look at [HugSQL](https://github.com/layerware/hugsql) -- [HugSQL documentation](https://www.hugsql.org/) -- which has a `next.jdbc` adapter, as of version 0.5.1. See below for a "[quick start](#hugsql-quick-start)" for using HugSQL with `next.jdbc`.
 
