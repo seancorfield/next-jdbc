@@ -39,7 +39,7 @@ In particular, this means that you can't globally override the default options (
 
 If you were using a bare `db-spec` hash map with `:dbtype`/`:dbname`, or a JDBC URI string everywhere, that should mostly work with `next.jdbc` since most functions accept a "connectable", but it would be better to create a datasource first, and then pass that around. Note that `clojure.java.jdbc` allowed the `jdbc:` prefix in a JDBC URI to be omitted but `next.jdbc` _requires that prefix!_
 
-If you were already creating `db-spec` as a pooled connection datasource -- a `{:datasource ds}` hashmap -- then passing `(:datasource db-spec)` to the `next.jdbc` functions is the simplest migration path.
+If you were already creating `db-spec` as a pooled connection datasource -- a `{:datasource ds}` hashmap -- then passing `(:datasource db-spec)` to the `next.jdbc` functions is the simplest migration path. If you are migrating piecemeal and want to support _both_ `clojure.java.jdbc` _and_ `next.jdbc` at the same time in your code, you should consider using a datasource as the common way to work with both libraries. You can using `next.jdbc`'s `get-datasource` or the `->pool` function (in `next.jdbc.connection`) to create the a `javax.sql.DataSource` and then build a `db-spec` hash map with it (`{:datasource ds}`) and pass that around your program. `clojure.java.jdbc` calls can use that as-is, `next.jdbc` calls can use `(:datasource db-spec)`, so you don't have to adjust any of your call chains (assuming you're passing `db-spec` around) and you can migrate one function at a time.
 
 If you were using other forms of the `db-spec` hash map, you'll need to adjust to one of the three modes above, since those are the only ones supported in `next.jdbc`.
 

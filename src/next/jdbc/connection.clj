@@ -1,7 +1,10 @@
 ;; copyright (c) 2018-2019 Sean Corfield, all rights reserved
 
 (ns next.jdbc.connection
-  "Standard implementations of `get-datasource` and `get-connection`."
+  "Standard implementations of `get-datasource` and `get-connection`.
+
+  Also provides `dbtypes` as a map of all known database types, and
+  the `->pool` function for creating pooled datasource objects."
   (:require [clojure.java.data :refer [to-java]]
             [next.jdbc.protocols :as p])
   (:import (java.sql Connection DriverManager)
