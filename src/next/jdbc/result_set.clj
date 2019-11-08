@@ -356,6 +356,45 @@
         (with-row [this mrs row] (with-row arsb mrs row))
         (rs! [this mrs] (rs! arsb mrs))))))
 
+(defn builder-adapter
+  "Given a builder function (e.g., `as-lower-maps`) and a hash map of
+  (optional) processing functions, return a new builder function that
+  applies those functions as follows, _after_ the SQL operation completes:
+
+  * `:sql-params-fn` -- called on the value of `:next.jdbc/sql-params`
+    (which is the vector of SQL and parameters passed to `plan`, `execute!`,
+     or `execute-one!` that was just completed)
+  * `:row!-fn` -- called on each row once it is fully-realized
+  * `:rs!-fn` -- called on the whole result set once it is fully-realized
+
+  These functions are assumed to be side-effecting and their result is
+  ignored."
+  [builder-fn processors]
+  (fn [rs opts]
+    (when-let [f (:sql-params-fn processors)]
+      (when-let [sql-params (:next.jdbc/sql-params opts)]
+        (f sql-params)))
+    (let [mrsb (builder-fn rs opts)]
+      (reify
+        RowBuilder
+        (->row [this] (->row mrsb))
+        (column-count [this] (column-count mrsb))
+        (with-column [this row i] (with-column mrsb row i))
+        (row! [this row]
+          (let [r (row! mrsb row)]
+            (when-let [f (:row!-fn processors)]
+              (f r))
+            r))
+        ResultSetBuilder
+        (->rs [this] (->rs mrsb))
+        (with-row [this mrs row] (with-row mrsb mrs row))
+        (rs! [this mrs]
+          (let [r (rs! mrsb mrs)]
+            (when-let [f (:rs!-fn processors)]
+              (f r))
+            r))))))
+
+
 (declare navize-row)
 
 (defprotocol DatafiableRow
