@@ -95,6 +95,22 @@ When no result is produced, and `next.jdbc` returns a fake "result set" containi
 
 > Note: In general, you should use `execute-one!` for DDL operations since you will only get back an update count. If you have a SQL statement that you know will only return an update count, `execute-one!` is the right choice. If you have a SQL statement that you know will only return a single row in the result set, you probably want to use `execute-one!`. If you use `execute-one!` for a SQL statement that would return multiple rows in a result set, even though you will only get the first row back (as a hash map), the full result set will still be retrieved from the database -- it does not limit the SQL in any way.
 
+We saw `:return-keys` provided as an option to the `execute-one!` function above and mentioned the `:builder-fn` option just above that. As noted, the default behavior it to return rows as hash maps with namespace-qualified keywords identifying the column names with the table name as the qualifier. There's a whole chapter on [result set builders](/doc/result-set-builders.md) but here's a quick example showing how to get unqualified, lower case keywords instead:
+
+```clojure
+user=> (require '[next.jdbc.result-set :as rs])
+nil
+user=> (jdbc/execute-one! ds ["
+insert into address(name,email)
+  values('Someone Else','some@elsewhere.com')
+"] {:return-keys true :builder-fn rs/as-unqualified-lower-maps})
+{:id 2}
+user=> (jdbc/execute-one! ds ["select * from address where id = ?" 2]
+                          {:builder-fn rs/as-unqualified-lower-maps})
+{:id 2, :name "Someone Else", :email "some@elsewhere.com"}
+user=>
+```
+
 ### `plan` & Reducing Result Sets
 
 While those functions are fine for retrieving result sets as data, most of the time you want to process that data efficiently, so `next.jdbc` provides a SQL execution function that works with `reduce` and with transducers to consume the result set without the intermediate overhead of creating Clojure data structures for every row:
