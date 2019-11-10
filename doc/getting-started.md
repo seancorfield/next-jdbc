@@ -95,6 +95,10 @@ When no result is produced, and `next.jdbc` returns a fake "result set" containi
 
 > Note: In general, you should use `execute-one!` for DDL operations since you will only get back an update count. If you have a SQL statement that you know will only return an update count, `execute-one!` is the right choice. If you have a SQL statement that you know will only return a single row in the result set, you probably want to use `execute-one!`. If you use `execute-one!` for a SQL statement that would return multiple rows in a result set, even though you will only get the first row back (as a hash map), the full result set will still be retrieved from the database -- it does not limit the SQL in any way.
 
+### Options & Result Set Builders
+
+All functions in `next.jdbc` (except `get-datasource`) can accept, as the optional last argument, a hash map containing a [variety of options](/doc/all-the-options.md) that control the behavior of the `next.jdbc` functions.
+
 We saw `:return-keys` provided as an option to the `execute-one!` function above and mentioned the `:builder-fn` option just above that. As noted, the default behavior it to return rows as hash maps with namespace-qualified keywords identifying the column names with the table name as the qualifier. There's a whole chapter on [result set builders](/doc/result-set-builders.md) but here's a quick example showing how to get unqualified, lower case keywords instead:
 
 ```clojure
