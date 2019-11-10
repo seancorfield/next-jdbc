@@ -220,39 +220,3 @@ VALUES ('Pear', 'green', 49, 47)
               (into [] (map pr-str) (jdbc/plan (ds) ["select * from fruit"]))))
   (is (thrown? IllegalArgumentException
                (doall (take 3 (jdbc/plan (ds) ["select * from fruit"]))))))
-
-(deftest adapter-side-effects
-  (let [logging (atom [])
-        logger  (fn [data] (swap! logging conj data))
-        sql-p   ["select * from fruit where id in (?,?) order by id desc" 1 4]]
-    (jdbc/execute! (ds) sql-p
-                   {:builder-fn (rs/builder-adapter
-                                 rs/as-lower-maps
-                                 {:sql-params-fn logger
-                                  :row!-fn logger
-                                  :rs!-fn logger})})
-    ;; should log four things
-    (is (= 4     (-> @logging count)))
-    ;; :next.jdbc/sql-params value
-    (is (= sql-p (-> @logging (nth 0))))
-    ;; first row (with PK 4)
-    (is (= 4     (-> @logging (nth 1) :fruit/id)))
-    ;; second row (with PK 1)
-    (is (= 1     (-> @logging (nth 2) :fruit/id)))
-    ;; full result set with two rows
-    (is (= 2     (-> @logging (nth 3) count)))
-    (is (= [4 1] (-> @logging (nth 3) (->> (map :fruit/id)))))
-    ;; now repeat without the row logging
-    (reset! logging [])
-    (jdbc/execute! (ds) sql-p
-                   {:builder-fn (rs/builder-adapter
-                                 rs/as-lower-maps
-                                 {:sql-params-fn logger
-                                  :rs!-fn logger})})
-    ;; should log two things
-    (is (= 2     (-> @logging count)))
-    ;; :next.jdbc/sql-params value
-    (is (= sql-p (-> @logging (nth 0))))
-    ;; full result set with two rows
-    (is (= 2     (-> @logging (nth 1) count)))
-    (is (= [4 1] (-> @logging (nth 1) (->> (map :fruit/id)))))))
