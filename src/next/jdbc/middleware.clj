@@ -1,6 +1,34 @@
-;; copyright (c) 2019 world singles networks llc
+;; copyright (c) 2019 Sean Corfield, all rights reserved
 
 (ns next.jdbc.middleware
+  "This is just an experimental sketch of what it might look like to be
+  able to provide middleware that can wrap SQL execution in a way that
+  behavior can be extended in interesting ways, to support logging, timing.
+  and other cross-cutting things.
+
+  Since it's just an experiment, there's no guarantee that this -- or
+  anything like it -- will actually end up in a next.jdbc release. You've
+  been warned!
+
+  So far these execution points can be hooked into:
+  * start -- pre-process the SQL & parameters and options
+  * (execute SQL)
+  * ????? -- process the options (and something else?)
+  * row   -- post-process each row and options
+  * rs    -- post-process the whole result set and options
+
+  For the rows and result set, it's 'obvious' that the functions should
+  take the values and return them (or updated versions). For the start
+  function with SQL & parameters, it also makes sense to take and return
+  that vector.
+
+  For timing middleware, you'd need to pass data through the call chain
+  somehow -- unless you control the whole middleware and this isn't sufficient
+  for that yet. Hence the decision to allow processing of the options and
+  passing data through those -- which leads to a rather odd call chain:
+  start can return the vector or a map of updated options (with a payload),
+  and the ????? point can process the options again (e.g., to update timing
+  data etc). And that's all kind of horrible."
   (:require [next.jdbc.protocols :as p]
             [next.jdbc.result-set :as rs]))
 
@@ -13,6 +41,8 @@
   and parameters, in case post-processing needs it):
 
   * `:execute-fn` -- called immediately after the SQL operation completes
+      ^ This is a horrible name and it needs to return the options which
+        is weird so I don't like this approach overall...
   * `:row!-fn` -- called on each row as it is fully-realized
   * `:rs!-fn` -- called on the whole result set once it is fully-realized
 
@@ -20,8 +50,9 @@
   [builder-fn]
   (fn [rs opts]
     (let [id2     (fn [x _] x)
-          exec-fn (get opts :execute-fn id2)
-          opts    (exec-fn opts {})
+          id2'    (fn [_ x] x)
+          exec-fn (get opts :execute-fn id2')
+          opts    (exec-fn rs opts)
           mrsb    (builder-fn rs opts)
           row!-fn (get opts :row!-fn id2)
           rs!-fn  (get opts :rs!-fn id2)]
@@ -43,40 +74,40 @@
           id2           (fn [x _] x)
           builder-fn    (get opts :builder-fn rs/as-maps)
           sql-params-fn (get opts :sql-params-fn id2)
-          result        (sql-params-fn sql-params opts)]
-      (p/-execute db
-                  (if (map? result)
-                    (or (:next.jdbc/sql-params result) sql-params)
-                    result)
+          result        (sql-params-fn sql-params opts)
+          sql-params'   (if (map? result)
+                          (or (:next.jdbc/sql-params result) sql-params)
+                          result)]
+      (p/-execute db sql-params'
                   (assoc (if (map? result) result opts)
-                         :builder-fn
-                         (post-processing-adapter builder-fn)))))
+                         :builder-fn (post-processing-adapter builder-fn)
+                         :next.jdbc/sql-params sql-params'))))
   (-execute-one [this sql-params opts]
     (let [opts          (merge global-opts opts)
           id2           (fn [x _] x)
           builder-fn    (get opts :builder-fn rs/as-maps)
           sql-params-fn (get opts :sql-params-fn id2)
-          result        (sql-params-fn sql-params opts)]
-      (p/-execute-one db
-                      (if (map? result)
-                        (or (:next.jdbc/sql-params result) sql-params)
-                        result)
+          result        (sql-params-fn sql-params opts)
+          sql-params'   (if (map? result)
+                          (or (:next.jdbc/sql-params result) sql-params)
+                          result)]
+      (p/-execute-one db sql-params'
                       (assoc (if (map? result) result opts)
-                             :builder-fn
-                             (post-processing-adapter builder-fn)))))
+                             :builder-fn (post-processing-adapter builder-fn)
+                             :next.jdbc/sql-params sql-params'))))
   (-execute-all [this sql-params opts]
     (let [opts          (merge global-opts opts)
           id2           (fn [x _] x)
           builder-fn    (get opts :builder-fn rs/as-maps)
           sql-params-fn (get opts :sql-params-fn id2)
-          result        (sql-params-fn sql-params opts)]
-      (p/-execute-all db
-                      (if (map? result)
-                        (or (:next.jdbc/sql-params result) sql-params)
-                        result)
+          result        (sql-params-fn sql-params opts)
+          sql-params'   (if (map? result)
+                          (or (:next.jdbc/sql-params result) sql-params)
+                          result)]
+      (p/-execute-all db sql-params'
                       (assoc (if (map? result) result opts)
-                             :builder-fn
-                             (post-processing-adapter builder-fn))))))
+                             :builder-fn (post-processing-adapter builder-fn)
+                             :next.jdbc/sql-params sql-params')))))
 
 (defn wrapper
   ""

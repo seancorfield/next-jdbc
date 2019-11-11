@@ -21,7 +21,8 @@
 
 ;; this is just a dummy db-spec -- it's handled in with-test-db below
 (def ^:private test-postgres {:dbtype "embedded-postgres"})
-(defonce embedded-pg (atom nil))
+;; it takes a while to spin up so we kick it off at startup
+(defonce embedded-pg (future (EmbeddedPostgres/start)))
 
 (def ^:private test-db-specs
   [test-derby test-h2-mem test-h2 test-hsql test-sqlite test-postgres])
@@ -56,11 +57,8 @@
   (doseq [db test-db-specs]
     (reset! test-db-spec db)
     (if (= "embedded-postgres" (:dbtype db))
-      (do
-        (when-not @embedded-pg
-          (reset! embedded-pg (EmbeddedPostgres/start)))
-        (reset! test-datasource
-                (.getPostgresDatabase ^EmbeddedPostgres @embedded-pg)))
+      (reset! test-datasource
+              (.getPostgresDatabase ^EmbeddedPostgres @embedded-pg))
       (reset! test-datasource (jdbc/get-datasource db)))
     (let [auto-inc-pk
           (cond (or (derby?) (= "hsqldb" (:dbtype db)))

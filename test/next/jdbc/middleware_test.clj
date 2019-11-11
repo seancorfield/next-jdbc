@@ -1,4 +1,4 @@
-;; copyright (c) 2019 world singles networks llc
+;; copyright (c) 2019 Sean Corfield, all rights reserved
 
 (ns next.jdbc.middleware-test
   (:require [clojure.string :as str]
@@ -22,6 +22,7 @@
 (deftest logging-test
   (let [logging (atom [])
         logger  (fn [data _] (swap! logging conj data) data)
+
         sql-p   ["select * from fruit where id in (?,?) order by id desc" 1 4]]
     (jdbc/execute! (mw/wrapper (ds))
                    sql-p
@@ -60,7 +61,7 @@
         start-fn (fn [sql-p opts]
                    (swap! (:timing opts) update :calls inc)
                    (assoc opts :start (System/nanoTime)))
-        exec-fn  (fn [opts _]
+        exec-fn  (fn [_ opts]
                    (let [end (System/nanoTime)]
                      (swap! (:timing opts) update :total + (- end (:start opts)))
                      opts))
