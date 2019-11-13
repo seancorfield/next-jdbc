@@ -232,4 +232,4 @@
   * `:rollback-only` -- `true` / `false`."
   [[sym transactable opts] & body]
   (let [con (vary-meta sym assoc :tag 'java.sql.Connection)]
-   `(transact ~transactable (^{:once true} fn* [~con] ~@body) (or ~opts {}))))
+   `(transact ~transactable (^{:once true} fn* [~con] ~@body) ~(or opts {}))))

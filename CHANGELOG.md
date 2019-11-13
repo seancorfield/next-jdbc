@@ -7,6 +7,7 @@ Only accretive/fixative changes will be made from now on.
 The following changes have been committed to the **master** branch since the 1.0.9 release:
 
 * Fix link to **All The Options** in **Migration from `clojure.java.jdbc`**. PR #71 (@laurio).
+* Address #74 by making several small changes to satisfy Eastwood.
 * Address #70 by adding **CLOB & BLOB SQL Types** to the **Tips & Tricks** section of **Friendly SQL Functions** and by adding `next.jdbc.result-set/clob-column-reader` and `next.jdbc.result-set/clob->string` helper to make it easier to deal with `CLOB` column data.
 * Clarify what `execute!` and `execute-one!` produce when the result set is empty (`[]` and `nil` respectively, and there are now tests for this). Similarly for `find-by-keys` and `get-by-id`.
 * Add **MS SQL Server** section to **Tips & Tricks** to note that returns an empty string for table names by default (so table-qualified column names are not available). Using the `:result-type` (scroll) and `:concurrency` options will cause table names to be returned.

@@ -183,9 +183,8 @@
         (if-let [class-name (or classname (-> dbtype dbtypes :classname))]
           (swap! driver-cache update class-name
                  #(if % %
-                    (do
-                      ;; force DriverManager to be loaded
-                      (DriverManager/getLoginTimeout)
+                    (let [;; force DriverManager to be loaded
+                          _ (DriverManager/getLoginTimeout)]
                       (if (string? class-name)
                         (clojure.lang.RT/loadClassForName class-name)
                         (loop [[clazz & more] class-name]

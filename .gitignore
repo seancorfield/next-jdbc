@@ -5,6 +5,7 @@ pom.xml.asc
 *.jar
 *.class
 /.cpcache
+/.eastwood
 /.lein-*
 /.nrepl-history
 /.nrepl-port
