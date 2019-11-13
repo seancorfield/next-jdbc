@@ -220,3 +220,11 @@ VALUES ('Pear', 'green', 49, 47)
               (into [] (map pr-str) (jdbc/plan (ds) ["select * from fruit"]))))
   (is (thrown? IllegalArgumentException
                (doall (take 3 (jdbc/plan (ds) ["select * from fruit"]))))))
+
+(deftest issue-73
+  (when (postgres?)
+    (try
+      (jdbc/execute-one! (ds) ["drop table temp_table"])
+      (catch Throwable _))
+    (jdbc/execute-one! (ds) ["create table temp_table (id serial primary key, deadline timestamp not null)"])
+    (jdbc/execute-one! (ds) ["insert into temp_table (deadline) values (?)" (java.util.Date.)])))
