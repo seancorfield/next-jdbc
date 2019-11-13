@@ -11,7 +11,7 @@ The following changes have been committed to the **master** branch since the 1.0
 * Clarify what `execute!` and `execute-one!` produce when the result set is empty (`[]` and `nil` respectively, and there are now tests for this). Similarly for `find-by-keys` and `get-by-id`.
 * Add **MS SQL Server** section to **Tips & Tricks** to note that returns an empty string for table names by default (so table-qualified column names are not available). Using the `:result-type` (scroll) and `:concurrency` options will cause table names to be returned.
 * Clarify that **Friendly SQL Functions** are deliberately simple (hint: they will not be enhanced or expanded -- use `plan`, `execute!`, and `execute-one!` instead, with a DSL library if you want!).
-* Improve migration docs: explicitly recommend the use of a datasource for code that needs to work with both `clojure.java.jdbc` and `next.jdbc`; add caveat about column name conflicts.
+* Improve migration docs: explicitly recommend the use of a datasource for code that needs to work with both `clojure.java.jdbc` and `next.jdbc`; add caveats about column name conflicts (in several places).
 * Improve `datafy`/`nav` documentation around `:schema`.
 * Update `org.clojure/java.data` to `"0.1.4"` (0.1.2 fixes a number of reflection warnings).
 
