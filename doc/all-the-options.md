@@ -56,6 +56,10 @@ Any function that creates a `PreparedStatement` will accept the following option
 * `:return-keys` -- a truthy value asks that the JDBC driver to return any generated keys created by the operation; it can be `true` or it can be a vector of keywords identifying column names that should be returned,
 * `:timeout` -- an integer that specifies the timeout allowed for SQL operations.
 
+If you specify either `:concurrency` or `:result-type`, you must specify _both_ of them. If you specify `:cursors`, you must also specify `:result-type` _and_ `:concurrency`.
+
+*Note: For MS SQL Server to return table names (for qualified column names), you must specify `:result-type` with one of the scroll values (and so you must also specify `:concurrency`).*
+
 Not all databases or drivers support all of these options, or all values for any given option. If `:return-keys` is a vector of column names and that is not supported, `next.jdbc` will attempt a generic "return generated keys" option instead. If that is not supported, `next.jdbc` will fall back to a regular SQL operation. If other options are not supported, you may get a `SQLException`.
 
 In addition, `next.jdbc.prepare/execute-batch!` accepts an options hash map that can contain the following:

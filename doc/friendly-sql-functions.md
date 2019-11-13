@@ -271,7 +271,7 @@ Consult the [java.sql.Blob documentation](https://docs.oracle.com/javase/8/docs/
 
 ### MS SQL Server
 
-By default, you won't get table names as qualifiers with Microsoft's JDBC driver (you might with the jTDS drive -- I haven't tried that recently). See this [MSDN forum post about `.getTableName()`](https://social.msdn.microsoft.com/Forums/sqlserver/en-US/55e8cbb2-b11c-446e-93ab-dc30658caf99/resultsetmetadatagettablename-returns-instead-of-table-name) for details. According to one of the answers posted there, if you specify `{:result-type :scroll-insensitive}` or `{:result-type :scroll-sensitive}` in the options for `execute!`, `execute-one!`, `plan`, or `prepare`, that will cause SQL Server to return table names for columns. I have not confirmed this.
+By default, you won't get table names as qualifiers with Microsoft's JDBC driver (you might with the jTDS drive -- I haven't tried that recently). See this [MSDN forum post about `.getTableName()`](https://social.msdn.microsoft.com/Forums/sqlserver/en-US/55e8cbb2-b11c-446e-93ab-dc30658caf99/resultsetmetadatagettablename-returns-instead-of-table-name) for details. According to one of the answers posted there, if you specify `:result-type` and `:concurrency` in the options for `execute!`, `execute-one!`, `plan`, or `prepare`, that will cause SQL Server to return table names for columns. `:result-type` needs to be `:scoll-sensitive` or `:scroll-insensitive` for this to work. `:concurrency` can be `:read-only` or `:updatable`.
 
 ### MySQL
 
