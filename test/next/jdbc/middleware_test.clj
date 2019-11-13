@@ -1,8 +1,7 @@
 ;; copyright (c) 2019 Sean Corfield, all rights reserved
 
 (ns next.jdbc.middleware-test
-  (:require [clojure.string :as str]
-            [clojure.test :refer [deftest is testing use-fixtures]]
+  (:require [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc :as jdbc]
             [next.jdbc.connection :as c]
             [next.jdbc.middleware :as mw]
