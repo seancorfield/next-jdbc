@@ -74,4 +74,4 @@
                                      :sql-params-fn start-fn
                                      :execute-fn    exec-fn})
                    sql-p)
-    (println (:calls @timing) (long (:total @timing)))))
+    (println (db) (:calls @timing) "calls took" (long (:total @timing)) "nanoseconds")))

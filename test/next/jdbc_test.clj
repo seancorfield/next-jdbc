@@ -227,4 +227,8 @@ VALUES ('Pear', 'green', 49, 47)
       (jdbc/execute-one! (ds) ["drop table temp_table"])
       (catch Throwable _))
     (jdbc/execute-one! (ds) ["create table temp_table (id serial primary key, deadline timestamp not null)"])
-    (jdbc/execute-one! (ds) ["insert into temp_table (deadline) values (?)" (java.util.Date.)])))
+    (try
+      (jdbc/execute-one! (ds) ["insert into temp_table (deadline) values (?)" (java.util.Date.)])
+      (catch Throwable t
+        (println "Issue #73: PostgreSQL cannot convert java.util.Date to timestamp by default?")
+        (println (ex-message t))))))
