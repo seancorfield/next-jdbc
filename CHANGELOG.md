@@ -4,21 +4,24 @@ Only accretive/fixative changes will be made from now on.
 
 ## Unreleased Changes
 
-The following changes have been committed to the **master** branch since the 1.0.9 release:
+The following changes have been committed to the **master** branch since the 1.0.10 release:
 
-* Fix #75 by adding support for `java.sql.Statement` to `plan`, `execute!`, and `execute-one!`.
-* Address #74 by making several small changes to satisfy Eastwood.
-* Fix #73 by providing a new, optional namespace `next.jdbc.date-time` that can be required if your database driver needs assistance converting `java.util.Date` (PostgreSQL!) or the Java Time types to SQL `timestamp` (or SQL `date`/`time`).
-* Fix link to **All The Options** in **Migration from `clojure.java.jdbc`**. PR #71 (@laurio).
-* Address #70 by adding **CLOB & BLOB SQL Types** to the **Tips & Tricks** section of **Friendly SQL Functions** and by adding `next.jdbc.result-set/clob-column-reader` and `next.jdbc.result-set/clob->string` helper to make it easier to deal with `CLOB` column data.
-* Clarify what `execute!` and `execute-one!` produce when the result set is empty (`[]` and `nil` respectively, and there are now tests for this). Similarly for `find-by-keys` and `get-by-id`.
-* Add **MS SQL Server** section to **Tips & Tricks** to note that returns an empty string for table names by default (so table-qualified column names are not available). Using the `:result-type` (scroll) and `:concurrency` options will cause table names to be returned.
-* Clarify that **Friendly SQL Functions** are deliberately simple (hint: they will not be enhanced or expanded -- use `plan`, `execute!`, and `execute-one!` instead, with a DSL library if you want!).
-* Improve migration docs: explicitly recommend the use of a datasource for code that needs to work with both `clojure.java.jdbc` and `next.jdbc`; add caveats about column name conflicts (in several places).
-* Improve `datafy`/`nav` documentation around `:schema`.
-* Update `org.clojure/java.data` to `"0.1.4"` (0.1.2 fixes a number of reflection warnings).
+* None.
 
 ## Stable Builds
+
+* 2019-11-14 -- 1.0.10
+  * Fix #75 by adding support for `java.sql.Statement` to `plan`, `execute!`, and `execute-one!`.
+  * Address #74 by making several small changes to satisfy Eastwood.
+  * Fix #73 by providing a new, optional namespace `next.jdbc.date-time` that can be required if your database driver needs assistance converting `java.util.Date` (PostgreSQL!) or the Java Time types to SQL `timestamp` (or SQL `date`/`time`).
+  * Fix link to **All The Options** in **Migration from `clojure.java.jdbc`**. PR #71 (@laurio).
+  * Address #70 by adding **CLOB & BLOB SQL Types** to the **Tips & Tricks** section of **Friendly SQL Functions** and by adding `next.jdbc.result-set/clob-column-reader` and `next.jdbc.result-set/clob->string` helper to make it easier to deal with `CLOB` column data.
+  * Clarify what `execute!` and `execute-one!` produce when the result set is empty (`[]` and `nil` respectively, and there are now tests for this). Similarly for `find-by-keys` and `get-by-id`.
+  * Add **MS SQL Server** section to **Tips & Tricks** to note that returns an empty string for table names by default (so table-qualified column names are not available). Using the `:result-type` (scroll) and `:concurrency` options will cause table names to be returned.
+  * Clarify that **Friendly SQL Functions** are deliberately simple (hint: they will not be enhanced or expanded -- use `plan`, `execute!`, and `execute-one!` instead, with a DSL library if you want!).
+  * Improve migration docs: explicitly recommend the use of a datasource for code that needs to work with both `clojure.java.jdbc` and `next.jdbc`; add caveats about column name conflicts (in several places).
+  * Improve `datafy`/`nav` documentation around `:schema`.
+  * Update `org.clojure/java.data` to `"0.1.4"` (0.1.2 fixes a number of reflection warnings).
 
 * 2019-10-11 -- 1.0.9
   * Address #69 by trying to clarify when to use `execute-one!` vs `execute!` vs `plan`.
