@@ -93,19 +93,19 @@
 (s/fdef jdbc/plan
         :args (s/alt :prepared (s/cat :stmt ::prepared-statement)
                      :sql (s/cat :connectable ::connectable
-                                 :sql-params ::sql-params
+                                 :sql-params (s/nilable ::sql-params)
                                  :opts (s/? ::opts-map))))
 
 (s/fdef jdbc/execute!
         :args (s/alt :prepared (s/cat :stmt ::prepared-statement)
                      :sql (s/cat :connectable ::connectable
-                                 :sql-params ::sql-params
+                                 :sql-params (s/nilable ::sql-params)
                                  :opts (s/? ::opts-map))))
 
 (s/fdef jdbc/execute-one!
         :args (s/alt :prepared (s/cat :stmt ::prepared-statement)
                      :sql (s/cat :connectable ::connectable
-                                 :sql-params ::sql-params
+                                 :sql-params (s/nilable ::sql-params)
                                  :opts (s/? ::opts-map))))
 
 (s/fdef jdbc/transact

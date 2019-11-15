@@ -149,7 +149,7 @@ Any operation that can perform key-based lookup can be used here without creatin
 
 ## Datasources, Connections & Transactions
 
-In the examples above, we created a datasource and then passed it into each function call. When `next.jdbc` is given a datasource, it creates a `java.sql.Connection` from it, uses it for the SQL operation, and then closes it. If you're not using a connection pooling datasource (see below), that can be quite an overhead: setting up database connections to remote servers is not cheap!
+In the examples above, we created a datasource and then passed it into each function call. When `next.jdbc` is given a datasource, it creates a `java.sql.Connection` from it, uses it for the SQL operation (by creating and populating a `java.sql.PreparedStatement` from the connection and the SQL string and parameters passed in), and then closes it. If you're not using a connection pooling datasource (see below), that can be quite an overhead: setting up database connections to remote servers is not cheap!
 
 If you want to run multiple SQL operations without that overhead each time, you can create the connection yourself and reuse it across several operations using `with-open` and `next.jdbc/get-connection`:
 
@@ -182,6 +182,17 @@ If `with-transaction` is given a datasource, it will create and close the connec
 ```
 
 You can read more about [working with transactions](/doc/transactions.md) further on in the documentation.
+
+### Prepared Statement Caveat
+
+*Note: Not all databases support using a `PreparedStatement` for every type of SQL operation. You might have to create a `java.sql.Statement` yourself, directly from a `java.sql.Connection` and use that, without parameters, in `plan`, `execute!`, or `execute-one!`. See the following example:*
+
+```clojure
+(with-open [con (jdbc/get-connection ds)]
+  (jdbc/execute! (.createStatement con) ["...just a SQL string..."])
+  (jdbc/execute! con ["...some SQL..." "and" "parameters"]) ; uses PreparedStatement
+  (into [] (map :column) (jdbc/plan (.createStatement con) ["..."])))
+```
 
 ## Connection Pooling
 

@@ -124,7 +124,23 @@
                          ps  (jdbc/prepare
                               con
                               ["select * from fruit where id = ?"])]
-                 (jdbc/execute! (prep/set-parameters ps [4])))]
+                 (jdbc/execute! (prep/set-parameters ps [4]) nil {}))]
+      (is (every? map? rs))
+      (is (every? meta rs))
+      (is (= 1 (count rs)))
+      (is (= 4 ((if (postgres?) :fruit/id :FRUIT/ID) (first rs))))))
+  (testing "statement"
+    (let [rs (with-open [con (jdbc/get-connection (ds))]
+               (jdbc/execute! (.createStatement con)
+                              ["select * from fruit order by id"]))]
+      (is (every? map? rs))
+      (is (every? meta rs))
+      (is (= 4 (count rs)))
+      (is (= 1 ((if (postgres?) :fruit/id :FRUIT/ID) (first rs))))
+      (is (= 4 ((if (postgres?) :fruit/id :FRUIT/ID) (last rs)))))
+    (let [rs (with-open [con (jdbc/get-connection (ds))]
+               (jdbc/execute! (.createStatement con)
+                              ["select * from fruit where id = 4"]))]
       (is (every? map? rs))
       (is (every? meta rs))
       (is (= 1 (count rs)))

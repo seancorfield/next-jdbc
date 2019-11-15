@@ -19,6 +19,7 @@
   (:import (java.sql Clob
                      PreparedStatement
                      ResultSet ResultSetMetaData
+                     Statement
                      SQLException)
            (java.util Locale)))
 
@@ -532,6 +533,38 @@
           init')))
     (f init {:next.jdbc/update-count (.getUpdateCount stmt)})))
 
+(defn- stmt-sql->result-set
+  "Given a `Statement`, a SQL command, and options, execute it and return a
+  `ResultSet` if possible."
+  ^ResultSet
+  [^Statement stmt ^String sql opts]
+  (if (.execute stmt sql)
+    (.getResultSet stmt)
+    (when (:return-keys opts)
+      (try
+        (.getGeneratedKeys stmt)
+        (catch Exception _)))))
+
+(defn- reduce-stmt-sql
+  "Execute the SQL command on the given `Statement`, attempt to get either
+  its `ResultSet` or its generated keys (as a `ResultSet`), and reduce
+  that using the supplied function and initial value.
+
+  If the statement yields neither a `ResultSet` nor generated keys, return
+  a hash map containing `:next.jdbc/update-count` and the number of rows
+  updated, with the supplied function and initial value applied."
+  [^Statement stmt sql f init opts]
+  (if-let [rs (stmt-sql->result-set stmt sql opts)]
+    (let [rs-map (mapify-result-set rs opts)]
+      (loop [init' init]
+        (if (.next rs)
+          (let [result (f init' rs-map)]
+            (if (reduced? result)
+              @result
+              (recur result)))
+          init')))
+    (f init {:next.jdbc/update-count (.getUpdateCount stmt)})))
+
 (extend-protocol p/Executable
   java.sql.Connection
   (-execute [this sql-params opts]
@@ -615,6 +648,34 @@
       {:next.jdbc/update-count (.getUpdateCount this)}))
   (-execute-all [this _ opts]
     (if-let [rs (stmt->result-set this opts)]
+      (datafiable-result-set rs (.getConnection this) opts)
+      [{:next.jdbc/update-count (.getUpdateCount this)}]))
+
+  java.sql.Statement
+  ;; we can't tell if this PreparedStatement will return generated
+  ;; keys so we pass a truthy value to at least attempt it if we
+  ;; do not get a ResultSet back from the execute call
+  (-execute [this sql-params opts]
+    (assert (= 1 (count sql-params))
+            "Parameters cannot be provided when executing a non-prepared Statement")
+    (reify clojure.lang.IReduceInit
+      (reduce [_ f init]
+              (reduce-stmt-sql this (first sql-params) f init (assoc opts :return-keys true)))
+      (toString [_] "`IReduceInit` from `plan` -- missing reduction?")))
+  (-execute-one [this sql-params opts]
+    (assert (= 1 (count sql-params))
+            "Parameters cannot be provided when executing a non-prepared Statement")
+    (if-let [rs (stmt-sql->result-set this (first sql-params) (assoc opts :return-keys true))]
+      (let [builder-fn (get opts :builder-fn as-maps)
+            builder    (builder-fn rs opts)]
+        (when (.next rs)
+          (datafiable-row (row-builder builder)
+                          (.getConnection this) opts)))
+      {:next.jdbc/update-count (.getUpdateCount this)}))
+  (-execute-all [this sql-params opts]
+    (assert (= 1 (count sql-params))
+            "Parameters cannot be provided when executing a non-prepared Statement")
+    (if-let [rs (stmt-sql->result-set this (first sql-params) opts)]
       (datafiable-result-set rs (.getConnection this) opts)
       [{:next.jdbc/update-count (.getUpdateCount this)}]))
 
