@@ -8,6 +8,7 @@ The following changes have been committed to the **master** branch since the 1.0
 
 * Fix #75 by adding support for `java.sql.Statement` to `plan`, `execute!`, and `execute-one!`.
 * Address #74 by making several small changes to satisfy Eastwood.
+* Fix #73 by providing a new, optional namespace `next.jdbc.date-time` that can be required if your database driver needs assistance converting `java.util.Date` (PostgreSQL!) or the Java Time types to SQL `timestamp` (or SQL `date`/`time`).
 * Fix link to **All The Options** in **Migration from `clojure.java.jdbc`**. PR #71 (@laurio).
 * Address #70 by adding **CLOB & BLOB SQL Types** to the **Tips & Tricks** section of **Friendly SQL Functions** and by adding `next.jdbc.result-set/clob-column-reader` and `next.jdbc.result-set/clob->string` helper to make it easier to deal with `CLOB` column data.
 * Clarify what `execute!` and `execute-one!` produce when the result set is empty (`[]` and `nil` respectively, and there are now tests for this). Similarly for `find-by-keys` and `get-by-id`.
