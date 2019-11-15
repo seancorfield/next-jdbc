@@ -1,7 +1,7 @@
 ;; copyright (c) 2018-2019 Sean Corfield, all rights reserved
 
-(ns next.jdbc.transaction
-  "SQL Transaction logic."
+(ns ^:no-doc next.jdbc.transaction
+  "Implementation of SQL transaction logic."
   (:require [next.jdbc.protocols :as p])
   (:import (java.sql Connection)))
 
