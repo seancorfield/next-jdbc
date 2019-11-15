@@ -5,21 +5,21 @@
  {:test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "0.10.0"}
                       ;; connection pooling
-                      com.zaxxer/HikariCP {:mvn/version "3.3.1"}
+                      com.zaxxer/HikariCP {:mvn/version "3.4.1"}
                       com.mchange/c3p0 {:mvn/version "0.9.5.4"}
                       ;; JDBC drivers
                       org.apache.derby/derby {:mvn/version "10.14.2.0"} ; behind
                       org.hsqldb/hsqldb {:mvn/version "2.5.0"}
-                      com.h2database/h2 {:mvn/version "1.4.199"}
+                      com.h2database/h2 {:mvn/version "1.4.200"}
                       net.sourceforge.jtds/jtds {:mvn/version "1.3.1"}
-                      mysql/mysql-connector-java {:mvn/version "5.1.41"} ; behind
-                      org.postgresql/postgresql {:mvn/version "42.2.6"}
-                      com.opentable.components/otj-pg-embedded {:mvn/version "0.13.1"}
-                      com.impossibl.pgjdbc-ng/pgjdbc-ng {:mvn/version "0.8.2"}
+                      mysql/mysql-connector-java {:mvn/version "8.0.18"}
+                      org.postgresql/postgresql {:mvn/version "42.2.8"}
+                      com.opentable.components/otj-pg-embedded {:mvn/version "0.13.3"}
+                      com.impossibl.pgjdbc-ng/pgjdbc-ng {:mvn/version "0.8.3"}
                       org.xerial/sqlite-jdbc {:mvn/version "3.28.0"}
-                      com.microsoft.sqlserver/mssql-jdbc {:mvn/version "7.2.2.jre8"}
+                      com.microsoft.sqlserver/mssql-jdbc {:mvn/version "7.4.1.jre8"}
                       ;; supplementary test stuff
-                      org.slf4j/slf4j-nop {:mvn/version "1.7.28"}}}
+                      org.slf4j/slf4j-nop {:mvn/version "1.7.29"}}}
   :runner
   {:extra-deps {com.cognitect/test-runner
                 {:git/url "https://github.com/cognitect-labs/test-runner"

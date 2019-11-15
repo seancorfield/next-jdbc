@@ -9,7 +9,7 @@
             [next.jdbc.specs :as specs]
             [next.jdbc.sql :as sql]
             [next.jdbc.test-fixtures
-             :refer [with-test-db ds derby? postgres? sqlite?]]))
+             :refer [with-test-db ds column derby? mysql? postgres? sqlite?]]))
 
 (set! *warn-on-reflection* true)
 
@@ -82,8 +82,8 @@
     (is (= 4 (count rs)))
     (is (every? map? rs))
     (is (every? meta rs))
-    (is (= 1 ((if (postgres?) :fruit/id :FRUIT/ID) (first rs))))
-    (is (= 4 ((if (postgres?) :fruit/id :FRUIT/ID) (last rs))))))
+    (is (= 1 ((column :FRUIT/ID) (first rs))))
+    (is (= 4 ((column :FRUIT/ID) (last rs))))))
 
 (deftest test-find-by-keys
   (let [rs (sql/find-by-keys (ds) :fruit {:appearance "neon-green"})]
@@ -93,26 +93,26 @@
     (is (= 1 (count rs)))
     (is (every? map? rs))
     (is (every? meta rs))
-    (is (= 2 ((if (postgres?) :fruit/id :FRUIT/ID) (first rs))))))
+    (is (= 2 ((column :FRUIT/ID) (first rs))))))
 
 (deftest test-get-by-id
   (is (nil? (sql/get-by-id (ds) :fruit -1)))
   (let [row (sql/get-by-id (ds) :fruit 3)]
     (is (map? row))
-    (is (= "Peach" ((if (postgres?) :fruit/name :FRUIT/NAME) row))))
+    (is (= "Peach" ((column :FRUIT/NAME) row))))
   (let [row (sql/get-by-id (ds) :fruit "juicy" :appearance {})]
     (is (map? row))
-    (is (= 4 ((if (postgres?) :fruit/id :FRUIT/ID) row)))
-    (is (= "Orange" ((if (postgres?) :fruit/name :FRUIT/NAME) row))))
+    (is (= 4 ((column :FRUIT/ID) row)))
+    (is (= "Orange" ((column :FRUIT/NAME) row))))
   (let [row (sql/get-by-id (ds) :fruit "Banana" :FRUIT/NAME {})]
     (is (map? row))
-    (is (= 2 ((if (postgres?) :fruit/id :FRUIT/ID) row)))))
+    (is (= 2 ((column :FRUIT/ID) row)))))
 
 (deftest test-update!
   (try
     (is (= {:next.jdbc/update-count 1}
            (sql/update! (ds) :fruit {:appearance "brown"} {:id 2})))
-    (is (= "brown" ((if (postgres?) :fruit/appearance :FRUIT/APPEARANCE)
+    (is (= "brown" ((column :FRUIT/APPEARANCE)
                     (sql/get-by-id (ds) :fruit 2))))
     (finally
       (sql/update! (ds) :fruit {:appearance "yellow"} {:id 2})))
@@ -120,13 +120,14 @@
     (is (= {:next.jdbc/update-count 1}
            (sql/update! (ds) :fruit {:appearance "green"}
                         ["name = ?" "Banana"])))
-    (is (= "green" ((if (postgres?) :fruit/appearance :FRUIT/APPEARANCE)
+    (is (= "green" ((column :FRUIT/APPEARANCE)
                     (sql/get-by-id (ds) :fruit 2))))
     (finally
       (sql/update! (ds) :fruit {:appearance "yellow"} {:id 2}))))
 
 (deftest test-insert-delete
   (let [new-key (cond (derby?)    :1
+                      (mysql?)    :GENERATED_KEY
                       (postgres?) :fruit/id
                       (sqlite?)   (keyword "last_insert_rowid()")
                       :else       :FRUIT/ID)]

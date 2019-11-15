@@ -2,7 +2,8 @@
 
 (ns next.jdbc.test-fixtures
   "Multi-database testing fixtures."
-  (:require [next.jdbc :as jdbc]
+  (:require [clojure.string :as str]
+            [next.jdbc :as jdbc]
             [next.jdbc.sql :as sql])
   (:import (com.opentable.db.postgres.embedded EmbeddedPostgres)
            (javax.sql DataSource)))
@@ -24,16 +25,32 @@
 ;; it takes a while to spin up so we kick it off at startup
 (defonce embedded-pg (future (EmbeddedPostgres/start)))
 
+(def ^:private test-mysql
+  (when (System/getenv "NEXT_JDBC_TEST_MYSQL")
+    {:dbtype "mysql" :dbname "clojure_test" :useSSL false
+     :user "root" :password (System/getenv "MYSQL_ROOT_PASSWORD")}))
+
 (def ^:private test-db-specs
-  [test-derby test-h2-mem test-h2 test-hsql test-sqlite test-postgres])
+  (cond-> [test-derby test-h2-mem test-h2 test-hsql test-sqlite test-postgres]
+    test-mysql (conj test-mysql)))
 
 (def ^:private test-db-spec (atom nil))
 
 (defn derby? [] (= "derby" (:dbtype @test-db-spec)))
 
+(defn mysql? [] (= "mysql" (:dbtype @test-db-spec)))
+
 (defn postgres? [] (= "embedded-postgres" (:dbtype @test-db-spec)))
 
 (defn sqlite? [] (= "sqlite" (:dbtype @test-db-spec)))
+
+(defn column [k]
+  (let [n (namespace k)]
+    (keyword (when n (cond (postgres?) (str/lower-case n)
+                           (mysql?)    (str/lower-case n)
+                           :else       n))
+             (cond (postgres?) (str/lower-case (name k))
+                   :else       (name k)))))
 
 (def ^:private test-datasource (atom nil))
 
@@ -60,7 +77,8 @@
       (reset! test-datasource
               (.getPostgresDatabase ^EmbeddedPostgres @embedded-pg))
       (reset! test-datasource (jdbc/get-datasource db)))
-    (let [auto-inc-pk
+    (let [fruit (if (mysql?) "fruit" "FRUIT") ; MySQL is case sensitive!
+          auto-inc-pk
           (cond (or (derby?) (= "hsqldb" (:dbtype db)))
                 (str "GENERATED ALWAYS AS IDENTITY"
                      " (START WITH 1, INCREMENT BY 1)"
@@ -74,10 +92,10 @@
                 "AUTO_INCREMENT PRIMARY KEY")]
       (with-open [con (jdbc/get-connection (ds))]
         (try
-          (jdbc/execute-one! con ["DROP TABLE FRUIT"])
+          (jdbc/execute-one! con [(str "DROP TABLE " fruit)])
           (catch Exception _))
         (jdbc/execute-one! con [(str "
-CREATE TABLE FRUIT (
+CREATE TABLE " fruit " (
   ID INTEGER " auto-inc-pk ",
   NAME VARCHAR(32),
   APPEARANCE VARCHAR(32) DEFAULT NULL,

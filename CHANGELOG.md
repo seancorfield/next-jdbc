@@ -6,7 +6,9 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch since the 1.0.10 release:
 
-* None.
+* Add testing against MySQL (run tests with environment variables `NEXT_JDBC_TEST_MYSQL=yes` and `MYSQL_ROOT_PASSWORD` set to your local MySQL `root` user password; assumes you have already created an empty database called `clojure_test`).
+* Bump several JDBC driver versions for up-to-date testing.
+* Minor documentation fixes.
 
 ## Stable Builds
 
