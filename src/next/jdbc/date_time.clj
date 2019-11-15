@@ -11,7 +11,7 @@
 
   * H2 and SQLite support conversion of Java Time (`Instant`, `LocalDate`,
     `LocalDateTime`) out of the box,
-  * Nearly all databases support conversion of `java.util.date` out of
+  * Nearly all databases support conversion of `java.util.Date` out of
     the box -- except PostgreSQL apparently!
 
   Types supported:
