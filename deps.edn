@@ -8,7 +8,11 @@
                       com.zaxxer/HikariCP {:mvn/version "3.4.1"}
                       com.mchange/c3p0 {:mvn/version "0.9.5.4"}
                       ;; JDBC drivers
-                      org.apache.derby/derby {:mvn/version "10.14.2.0"} ; behind
+                      ;; compatible with JDK8+:
+                      org.apache.derby/derby {:mvn/version "10.14.2.0"}
+                      ;; compatible only with JDK9+:
+                      ;; org.apache.derby/derby {:mvn/version "10.15.1.3"}
+                      ;; org.apache.derby/derbyshared {:mvn/version "10.15.1.3"}
                       org.hsqldb/hsqldb {:mvn/version "2.5.0"}
                       com.h2database/h2 {:mvn/version "1.4.200"}
                       net.sourceforge.jtds/jtds {:mvn/version "1.3.1"}
