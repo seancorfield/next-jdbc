@@ -12,7 +12,8 @@
             [next.jdbc.protocols :as p]
             [next.jdbc.result-set :as rs]
             [next.jdbc.test-fixtures :refer [with-test-db ds column
-                                              mysql? postgres?]])
+                                              default-options
+                                              mssql? mysql? postgres?]])
   (:import (java.sql ResultSet ResultSetMetaData)))
 
 (set! *warn-on-reflection* true)
@@ -22,7 +23,8 @@
 (deftest test-datafy-nav
   (testing "default schema"
     (let [connectable (ds)
-          test-row (rs/datafiable-row {:TABLE/FRUIT_ID 1} connectable {})
+          test-row (rs/datafiable-row {:TABLE/FRUIT_ID 1} connectable
+                                      (default-options))
           data (d/datafy test-row)
           v (get data :TABLE/FRUIT_ID)]
       ;; check datafication is sane
@@ -34,7 +36,8 @@
   (testing "custom schema *-to-1"
     (let [connectable (ds)
           test-row (rs/datafiable-row {:foo/bar 2} connectable
-                                      {:schema {:foo/bar :fruit/id}})
+                                      (assoc (default-options)
+                                             :schema {:foo/bar :fruit/id}))
           data (d/datafy test-row)
           v (get data :foo/bar)]
       ;; check datafication is sane
@@ -46,7 +49,8 @@
   (testing "custom schema *-to-many"
     (let [connectable (ds)
           test-row (rs/datafiable-row {:foo/bar 3} connectable
-                                      {:schema {:foo/bar [:fruit/id]}})
+                                      (assoc (default-options)
+                                             :schema {:foo/bar [:fruit/id]}))
           data (d/datafy test-row)
           v (get data :foo/bar)]
       ;; check datafication is sane
@@ -59,7 +63,8 @@
   (testing "legacy schema tuples"
     (let [connectable (ds)
           test-row (rs/datafiable-row {:foo/bar 2} connectable
-                                      {:schema {:foo/bar [:fruit :id]}})
+                                      (assoc (default-options)
+                                             :schema {:foo/bar [:fruit :id]}))
           data (d/datafy test-row)
           v (get data :foo/bar)]
       ;; check datafication is sane
@@ -70,7 +75,8 @@
         (is (= "Banana" ((column :FRUIT/NAME) object)))))
     (let [connectable (ds)
           test-row (rs/datafiable-row {:foo/bar 3} connectable
-                                      {:schema {:foo/bar [:fruit :id :many]}})
+                                      (assoc (default-options)
+                                             :schema {:foo/bar [:fruit :id :many]}))
           data (d/datafy test-row)
           v (get data :foo/bar)]
       ;; check datafication is sane
@@ -85,7 +91,7 @@
   (testing "default row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 1]
-                              {})]
+                              (default-options))]
       (is (map? row))
       (is (contains? row (column :FRUIT/GRADE)))
       (is (nil? ((column :FRUIT/GRADE) row)))
@@ -93,7 +99,7 @@
       (is (= "Apple" ((column :FRUIT/NAME) row))))
     (let [rs (p/-execute-all (ds)
                              ["select * from fruit order by id"]
-                             {})]
+                             (default-options))]
       (is (every? map? rs))
       (is (= 1 ((column :FRUIT/ID) (first rs))))
       (is (= "Apple" ((column :FRUIT/NAME) (first rs))))
@@ -111,7 +117,8 @@
   (testing "lower-case row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 3]
-                              {:builder-fn rs/as-lower-maps})]
+                              (assoc (default-options)
+                                     :builder-fn rs/as-lower-maps))]
       (is (map? row))
       (is (contains? row :fruit/appearance))
       (is (nil? (:fruit/appearance row)))
@@ -127,9 +134,10 @@
   (testing "custom row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 3]
-                              {:builder-fn rs/as-modified-maps
-                               :label-fn str/lower-case
-                               :qualifier-fn identity})]
+                              (assoc (default-options)
+                                     :builder-fn rs/as-modified-maps
+                                     :label-fn str/lower-case
+                                     :qualifier-fn identity))]
       (is (map? row))
       (is (contains? row (column :FRUIT/appearance)))
       (is (nil? ((column :FRUIT/appearance) row)))
@@ -138,7 +146,9 @@
   (testing "adapted row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 3]
-                              {:builder-fn (rs/as-maps-adapter
+                              (assoc
+                               (default-options)
+                               :builder-fn (rs/as-maps-adapter
                                             rs/as-modified-maps
                                             (fn [^ResultSet rs
                                                  ^ResultSetMetaData rsmeta
@@ -150,7 +160,7 @@
                                                      (.getLong rs i)
                                                      (.getObject rs i))))
                                :label-fn str/lower-case
-                               :qualifier-fn identity})]
+                               :qualifier-fn identity))]
       (is (map? row))
       (is (contains? row (column :FRUIT/appearance)))
       (is (nil? ((column :FRUIT/appearance) row)))
@@ -205,11 +215,13 @@
     (is (map? (reduce (fn [_ row] (reduced
                                    (dissoc row (column :FRUIT/NAME))))
                       nil
-                      (p/-execute (ds) ["select * from fruit"] {}))))
+                      (p/-execute (ds) ["select * from fruit"]
+                                  (default-options)))))
     (is (= 4 (count (reduce (fn [_ row] (reduced
                                          (dissoc row (column :FRUIT/NAME))))
                             nil
-                            (p/-execute (ds) ["select * from fruit"] {})))))
+                            (p/-execute (ds) ["select * from fruit"]
+                                        (default-options))))))
     (is (seq? (reduce (fn [_ row] (reduced (seq row)))
                       nil
                       (p/-execute (ds) ["select * from fruit"] {}))))
@@ -286,7 +298,7 @@
               metadata))))
 
 (deftest clob-reading
-  (when-not (or (mysql?) (postgres?)) ; no clob in mysql or embedded postgres
+  (when-not (or (mssql?) (mysql?) (postgres?)) ; no clob in these
     (with-open [con (p/get-connection (ds) {})]
       (try
         (p/-execute-one con ["DROP TABLE CLOBBER"] {})

@@ -9,7 +9,8 @@
             [next.jdbc.specs :as specs]
             [next.jdbc.sql :as sql]
             [next.jdbc.test-fixtures
-             :refer [with-test-db ds column derby? mysql? postgres? sqlite?]]))
+             :refer [with-test-db ds column default-options
+                      derby? mssql? mysql? postgres? sqlite?]]))
 
 (set! *warn-on-reflection* true)
 
@@ -78,7 +79,8 @@
            ["INSERT INTO [user] (`id`, `status`) VALUES (?, ?), (?, ?), (?, ?)" 42 "hello" 35 "world" 64 "dollars"]))))
 
 (deftest test-query
-  (let [rs (sql/query (ds) ["select * from fruit order by id"])]
+  (let [rs (sql/query (ds) ["select * from fruit order by id"]
+                      (default-options))]
     (is (= 4 (count rs)))
     (is (every? map? rs))
     (is (every? meta rs))
@@ -89,7 +91,8 @@
   (let [rs (sql/find-by-keys (ds) :fruit {:appearance "neon-green"})]
     (is (vector? rs))
     (is (= [] rs)))
-  (let [rs (sql/find-by-keys (ds) :fruit {:appearance "yellow"})]
+  (let [rs (sql/find-by-keys (ds) :fruit {:appearance "yellow"}
+                             (default-options))]
     (is (= 1 (count rs)))
     (is (every? map? rs))
     (is (every? meta rs))
@@ -97,14 +100,14 @@
 
 (deftest test-get-by-id
   (is (nil? (sql/get-by-id (ds) :fruit -1)))
-  (let [row (sql/get-by-id (ds) :fruit 3)]
+  (let [row (sql/get-by-id (ds) :fruit 3 (default-options))]
     (is (map? row))
     (is (= "Peach" ((column :FRUIT/NAME) row))))
-  (let [row (sql/get-by-id (ds) :fruit "juicy" :appearance {})]
+  (let [row (sql/get-by-id (ds) :fruit "juicy" :appearance (default-options))]
     (is (map? row))
     (is (= 4 ((column :FRUIT/ID) row)))
     (is (= "Orange" ((column :FRUIT/NAME) row))))
-  (let [row (sql/get-by-id (ds) :fruit "Banana" :FRUIT/NAME {})]
+  (let [row (sql/get-by-id (ds) :fruit "Banana" :FRUIT/NAME (default-options))]
     (is (map? row))
     (is (= 2 ((column :FRUIT/ID) row)))))
 
@@ -113,7 +116,7 @@
     (is (= {:next.jdbc/update-count 1}
            (sql/update! (ds) :fruit {:appearance "brown"} {:id 2})))
     (is (= "brown" ((column :FRUIT/APPEARANCE)
-                    (sql/get-by-id (ds) :fruit 2))))
+                    (sql/get-by-id (ds) :fruit 2 (default-options)))))
     (finally
       (sql/update! (ds) :fruit {:appearance "yellow"} {:id 2})))
   (try
@@ -121,21 +124,21 @@
            (sql/update! (ds) :fruit {:appearance "green"}
                         ["name = ?" "Banana"])))
     (is (= "green" ((column :FRUIT/APPEARANCE)
-                    (sql/get-by-id (ds) :fruit 2))))
+                    (sql/get-by-id (ds) :fruit 2 (default-options)))))
     (finally
       (sql/update! (ds) :fruit {:appearance "yellow"} {:id 2}))))
 
 (deftest test-insert-delete
   (let [new-key (cond (derby?)    :1
+                      (mssql?)    :GENERATED_KEYS
                       (mysql?)    :GENERATED_KEY
                       (postgres?) :fruit/id
                       (sqlite?)   (keyword "last_insert_rowid()")
                       :else       :FRUIT/ID)]
     (testing "single insert/delete"
-      (is (= (if (derby?) 5M 5)
-             (new-key (sql/insert! (ds) :fruit
-                                   {:name "Kiwi" :appearance "green & fuzzy"
-                                    :cost 100 :grade 99.9}))))
+      (is (== 5 (new-key (sql/insert! (ds) :fruit
+                                      {:name "Kiwi" :appearance "green & fuzzy"
+                                       :cost 100 :grade 99.9}))))
       (is (= 5 (count (sql/query (ds) ["select * from fruit"]))))
       (is (= {:next.jdbc/update-count 1}
              (sql/delete! (ds) :fruit {:id 5})))
@@ -143,6 +146,8 @@
     (testing "multiple insert/delete"
       (is (= (cond (derby?)
                    [nil] ; WTF Apache Derby?
+                   (mssql?)
+                   [8M]
                    (sqlite?)
                    [8]
                    :else
@@ -163,6 +168,8 @@
     (testing "multiple insert/delete with sequential cols/rows" ; per #43
       (is (= (cond (derby?)
                    [nil] ; WTF Apache Derby?
+                   (mssql?)
+                   [11M]
                    (sqlite?)
                    [11]
                    :else

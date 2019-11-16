@@ -6,6 +6,7 @@
             [next.jdbc.connection :as c]
             [next.jdbc.middleware :as mw]
             [next.jdbc.test-fixtures :refer [with-test-db db ds
+                                              default-options
                                               derby? postgres?]]
             [next.jdbc.prepare :as prep]
             [next.jdbc.result-set :as rs]
@@ -25,10 +26,11 @@
         sql-p   ["select * from fruit where id in (?,?) order by id desc" 1 4]]
     (jdbc/execute! (mw/wrapper (ds))
                    sql-p
-                   {:builder-fn rs/as-lower-maps
-                    :sql-params-fn logger
-                    :row!-fn logger
-                    :rs!-fn logger})
+                   (assoc (default-options)
+                          :builder-fn rs/as-lower-maps
+                          :sql-params-fn logger
+                          :row!-fn logger
+                          :rs!-fn logger))
     ;; should log four things
     (is (= 4     (-> @logging count)))
     ;; :next.jdbc/sql-params value
@@ -46,7 +48,8 @@
                                {:builder-fn rs/as-lower-maps
                                 :sql-params-fn logger
                                 :rs!-fn logger})
-                   sql-p)
+                   sql-p
+                   (default-options))
     ;; should log two things
     (is (= 2     (-> @logging count)))
     ;; :next.jdbc/sql-params value

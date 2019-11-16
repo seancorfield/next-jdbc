@@ -7,7 +7,8 @@
             [next.jdbc :as jdbc]
             [next.jdbc.connection :as c]
             [next.jdbc.test-fixtures :refer [with-test-db db ds column
-                                              derby? mysql? postgres?]]
+                                              default-options
+                                              derby? mssql? mysql? postgres?]]
             [next.jdbc.prepare :as prep]
             [next.jdbc.result-set :as rs]
             [next.jdbc.specs :as specs])
@@ -34,7 +35,8 @@
     (is (= "Apple" ((column :FRUIT/NAME)
                     (jdbc/execute-one!
                      (ds)
-                     ["select * from fruit where appearance = ?" "red"])))))
+                     ["select * from fruit where appearance = ?" "red"]
+                     (default-options))))))
   (testing "execute!"
     (let [rs (jdbc/execute!
               (ds)
@@ -43,13 +45,14 @@
       (is (= [] rs)))
     (let [rs (jdbc/execute!
               (ds)
-              ["select * from fruit where appearance = ?" "red"])]
+              ["select * from fruit where appearance = ?" "red"]
+              (default-options))]
       (is (= 1 (count rs)))
       (is (= 1 ((column :FRUIT/ID) (first rs)))))
     (let [rs (jdbc/execute!
               (ds)
               ["select * from fruit order by id"]
-              {:builder-fn rs/as-maps})]
+              (assoc (default-options) :builder-fn rs/as-maps))]
       (is (every? map? rs))
       (is (every? meta rs))
       (is (= 4 (count rs)))
@@ -58,7 +61,7 @@
     (let [rs (jdbc/execute!
               (ds)
               ["select * from fruit order by id"]
-              {:builder-fn rs/as-arrays})]
+              (assoc (default-options) :builder-fn rs/as-arrays))]
       (is (every? vector? rs))
       (is (= 5 (count rs)))
       (is (every? #(= 5 (count %)) rs))
@@ -72,10 +75,11 @@
     (let [rs (jdbc/execute! ; test again, with adapter and lower columns
               (ds)
               ["select * from fruit order by id"]
-              {:builder-fn (rs/as-arrays-adapter
-                            rs/as-lower-arrays
-                            (fn [^ResultSet rs _ ^Integer i]
-                              (.getObject rs i)))})]
+              (assoc (default-options)
+                     :builder-fn (rs/as-arrays-adapter
+                                  rs/as-lower-arrays
+                                  (fn [^ResultSet rs _ ^Integer i]
+                                    (.getObject rs i)))))]
       (is (every? vector? rs))
       (is (= 5 (count rs)))
       (is (every? #(= 5 (count %)) rs))
@@ -113,7 +117,8 @@
     (let [rs (with-open [con (jdbc/get-connection (ds))
                          ps  (jdbc/prepare
                               con
-                              ["select * from fruit order by id"])]
+                              ["select * from fruit order by id"]
+                              (default-options))]
                  (jdbc/execute! ps))]
       (is (every? map? rs))
       (is (every? meta rs))
@@ -123,7 +128,8 @@
     (let [rs (with-open [con (jdbc/get-connection (ds))
                          ps  (jdbc/prepare
                               con
-                              ["select * from fruit where id = ?"])]
+                              ["select * from fruit where id = ?"]
+                              (default-options))]
                  (jdbc/execute! (prep/set-parameters ps [4]) nil {}))]
       (is (every? map? rs))
       (is (every? meta rs))
@@ -136,15 +142,19 @@
       (is (every? map? rs))
       (is (every? meta rs))
       (is (= 4 (count rs)))
-      (is (= 1 ((column :FRUIT/ID) (first rs))))
-      (is (= 4 ((column :FRUIT/ID) (last rs)))))
+      ;; SQL Server only returns table name if result-type/concurrency
+      ;; provided, which we can only for a PreparedStatement
+      (is (= 1 ((if (mssql?) :ID (column :FRUIT/ID)) (first rs))))
+      (is (= 4 ((if (mssql?) :ID (column :FRUIT/ID)) (last rs)))))
     (let [rs (with-open [con (jdbc/get-connection (ds))]
                (jdbc/execute! (.createStatement con)
                               ["select * from fruit where id = 4"]))]
       (is (every? map? rs))
       (is (every? meta rs))
       (is (= 1 (count rs)))
-      (is (= 4 ((column :FRUIT/ID) (first rs))))))
+      ;; SQL Server only returns table name if result-type/concurrency
+      ;; provided, which we can only for a PreparedStatement
+      (is (= 4 ((if (mssql?) :ID (column :FRUIT/ID)) (first rs))))))
   (testing "transact"
     (is (= [{:next.jdbc/update-count 1}]
            (jdbc/transact (ds)
@@ -210,10 +220,14 @@ VALUES ('Pear', 'green', 49, 47)
       (let [[url etc] (#'c/spec->url+etc (db))
             ds (jdbc/get-datasource (assoc etc :jdbcUrl url))]
         (cond (derby?) (is (= {:create true} etc))
+              (mssql?) (is (= #{:user :password} (set (keys etc))))
               (mysql?) (is (= #{:user :password :useSSL} (set (keys etc))))
               :else    (is (= {} etc)))
         (is (instance? javax.sql.DataSource ds))
-        (is (str/index-of (pr-str ds) (str "jdbc:" (:dbtype (db)))))
+        (is (str/index-of (pr-str ds) (str "jdbc:"
+                                           (if (mssql?)
+                                             "sqlserver" ; mssql is the alias
+                                             (:dbtype (db))))))
         ;; checks get-datasource on a DataSource is identity
         (is (identical? ds (jdbc/get-datasource ds)))
         (with-open [con (jdbc/get-connection ds {})]
@@ -227,12 +241,15 @@ VALUES ('Pear', 'green', 49, 47)
   ;; this may succeed or not, depending on how the driver handles things
   ;; most drivers will error because the ResultSet was closed before pr-str
   ;; is invoked (which will attempt to print each row)
-  (let [s (pr-str (into [] (take 3) (jdbc/plan (ds) ["select * from fruit"])))]
+  (let [s (pr-str (into [] (take 3) (jdbc/plan (ds) ["select * from fruit"]
+                                               (default-options))))]
     (is (or (re-find #"missing `map` or `reduce`" s)
             (re-find #"(?i)^\[#:fruit\{.*:id.*\}\]$" s))))
   (is (every? #(re-find #"(?i)^#:fruit\{.*:id.*\}$" %)
-              (into [] (map str) (jdbc/plan (ds) ["select * from fruit"]))))
+              (into [] (map str) (jdbc/plan (ds) ["select * from fruit"]
+                                            (default-options)))))
   (is (every? #(re-find #"(?i)^#:fruit\{.*:id.*\}$" %)
-              (into [] (map pr-str) (jdbc/plan (ds) ["select * from fruit"]))))
+              (into [] (map pr-str) (jdbc/plan (ds) ["select * from fruit"]
+                                               (default-options)))))
   (is (thrown? IllegalArgumentException
                (doall (take 3 (jdbc/plan (ds) ["select * from fruit"]))))))

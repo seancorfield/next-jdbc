@@ -30,13 +30,21 @@
     {:dbtype "mysql" :dbname "clojure_test" :useSSL false
      :user "root" :password (System/getenv "MYSQL_ROOT_PASSWORD")}))
 
+(def ^:private test-mssql
+  (when (System/getenv "NEXT_JDBC_TEST_MSSQL")
+    {:dbtype "mssql" :dbname "model"
+     :user "sa" :password (System/getenv "MSSQL_SA_PASSWORD")}))
+
 (def ^:private test-db-specs
   (cond-> [test-derby test-h2-mem test-h2 test-hsql test-sqlite test-postgres]
-    test-mysql (conj test-mysql)))
+    test-mysql (conj test-mysql)
+    test-mssql (conj test-mssql)))
 
 (def ^:private test-db-spec (atom nil))
 
 (defn derby? [] (= "derby" (:dbtype @test-db-spec)))
+
+(defn mssql? [] (= "mssql" (:dbtype @test-db-spec)))
 
 (defn mysql? [] (= "mysql" (:dbtype @test-db-spec)))
 
@@ -47,10 +55,16 @@
 (defn column [k]
   (let [n (namespace k)]
     (keyword (when n (cond (postgres?) (str/lower-case n)
+                           (mssql?)    (str/lower-case n)
                            (mysql?)    (str/lower-case n)
                            :else       n))
              (cond (postgres?) (str/lower-case (name k))
                    :else       (name k)))))
+
+(defn default-options []
+  (if (mssql?) ; so that we get table names back from queries
+    {:result-type :scroll-insensitive :concurrency :read-only}
+    {}))
 
 (def ^:private test-datasource (atom nil))
 
@@ -86,6 +100,8 @@
                 (postgres?)
                 (str "GENERATED ALWAYS AS IDENTITY"
                      " PRIMARY KEY")
+                (mssql?)
+                "IDENTITY PRIMARY KEY"
                 (sqlite?)
                 "PRIMARY KEY AUTOINCREMENT"
                 :else

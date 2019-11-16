@@ -6,7 +6,8 @@
             [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc.optional :as opt]
             [next.jdbc.protocols :as p]
-            [next.jdbc.test-fixtures :refer [with-test-db ds column]])
+            [next.jdbc.test-fixtures :refer [with-test-db ds column
+                                              default-options]])
   (:import (java.sql ResultSet ResultSetMetaData)))
 
 (set! *warn-on-reflection* true)
@@ -17,7 +18,8 @@
   (testing "default row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 1]
-                              {:builder-fn opt/as-maps})]
+                              (assoc (default-options)
+                                     :builder-fn opt/as-maps))]
       (is (map? row))
       (is (not (contains? row (column :FRUIT/GRADE))))
       (is (= 1 ((column :FRUIT/ID) row)))
@@ -33,7 +35,8 @@
   (testing "lower-case row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 3]
-                              {:builder-fn opt/as-lower-maps})]
+                              (assoc (default-options)
+                                     :builder-fn opt/as-lower-maps))]
       (is (map? row))
       (is (not (contains? row :fruit/appearance)))
       (is (= 3 (:fruit/id row)))
@@ -48,9 +51,10 @@
   (testing "custom row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 3]
-                              {:builder-fn opt/as-modified-maps
-                               :label-fn str/lower-case
-                               :qualifier-fn identity})]
+                              (assoc (default-options)
+                                     :builder-fn opt/as-modified-maps
+                                     :label-fn str/lower-case
+                                     :qualifier-fn identity))]
       (is (map? row))
       (is (not (contains? row (column :FRUIT/appearance))))
       (is (= 3 ((column :FRUIT/id) row)))
@@ -64,9 +68,10 @@
   (testing "default row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 1]
-                              {:builder-fn (opt/as-maps-adapter
-                                            opt/as-maps
-                                            default-column-reader)})]
+                              (assoc (default-options)
+                                     :builder-fn (opt/as-maps-adapter
+                                                  opt/as-maps
+                                                  default-column-reader)))]
       (is (map? row))
       (is (not (contains? row (column :FRUIT/GRADE))))
       (is (= 1 ((column :FRUIT/ID) row)))
@@ -84,9 +89,10 @@
   (testing "lower-case row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 3]
-                              {:builder-fn (opt/as-maps-adapter
-                                            opt/as-lower-maps
-                                            default-column-reader)})]
+                              (assoc (default-options)
+                                     :builder-fn (opt/as-maps-adapter
+                                                  opt/as-lower-maps
+                                                  default-column-reader)))]
       (is (map? row))
       (is (not (contains? row :fruit/appearance)))
       (is (= 3 (:fruit/id row)))
@@ -103,11 +109,12 @@
   (testing "custom row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 3]
-                              {:builder-fn (opt/as-maps-adapter
-                                            opt/as-modified-maps
-                                            default-column-reader)
-                               :label-fn str/lower-case
-                               :qualifier-fn identity})]
+                              (assoc (default-options)
+                                     :builder-fn (opt/as-maps-adapter
+                                                  opt/as-modified-maps
+                                                  default-column-reader)
+                                     :label-fn str/lower-case
+                                     :qualifier-fn identity))]
       (is (map? row))
       (is (not (contains? row (column :FRUIT/appearance))))
       (is (= 3 ((column :FRUIT/id) row)))
