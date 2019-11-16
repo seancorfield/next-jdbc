@@ -3,12 +3,9 @@
 (ns next.jdbc.middleware-test
   (:require [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc :as jdbc]
-            [next.jdbc.connection :as c]
             [next.jdbc.middleware :as mw]
             [next.jdbc.test-fixtures :refer [with-test-db db ds
-                                              default-options
-                                              derby? postgres?]]
-            [next.jdbc.prepare :as prep]
+                                              default-options]]
             [next.jdbc.result-set :as rs]
             [next.jdbc.specs :as specs])
   (:import (java.sql ResultSet ResultSetMetaData)))
@@ -21,16 +18,16 @@
 
 (deftest logging-test
   (let [logging (atom [])
-        logger  (fn [data _] (swap! logging conj data) data)
-
+        logger  (fn [data _]     (swap! logging conj data)  data)
+        log-sql (fn [sql-p opts] (logger sql-p opts) [sql-p opts])
         sql-p   ["select * from fruit where id in (?,?) order by id desc" 1 4]]
     (jdbc/execute! (mw/wrapper (ds))
                    sql-p
                    (assoc (default-options)
-                          :builder-fn rs/as-lower-maps
-                          :sql-params-fn logger
-                          :row!-fn logger
-                          :rs!-fn logger))
+                          :builder-fn     rs/as-lower-maps
+                          :pre-execute-fn log-sql
+                          :row!-fn        logger
+                          :rs!-fn         logger))
     ;; should log four things
     (is (= 4     (-> @logging count)))
     ;; :next.jdbc/sql-params value
@@ -45,9 +42,9 @@
     ;; now repeat without the row logging
     (reset! logging [])
     (jdbc/execute! (mw/wrapper (ds)
-                               {:builder-fn rs/as-lower-maps
-                                :sql-params-fn logger
-                                :rs!-fn logger})
+                               {:builder-fn     rs/as-lower-maps
+                                :pre-execute-fn log-sql
+                                :rs!-fn         logger})
                    sql-p
                    (default-options))
     ;; should log two things
@@ -59,21 +56,22 @@
     (is (= [4 1] (-> @logging (nth 1) (->> (map :fruit/id)))))))
 
 (deftest timing-test
-  (let [timing   (atom {:calls 0 :total 0.0})
-        start-fn (fn [sql-p opts]
-                   (swap! (:timing opts) update :calls inc)
-                   (assoc opts :start (System/nanoTime)))
-        exec-fn  (fn [_ opts]
+  (let [start-fn (fn [sql-p opts]
+                   (swap! (::timing opts) update ::calls inc)
+                   [sql-p (assoc opts ::start (System/nanoTime))])
+        end-fn   (fn [rs opts]
                    (let [end (System/nanoTime)]
-                     (swap! (:timing opts) update :total + (- end (:start opts)))
-                     opts))
+                     (swap! (::timing opts) update ::total + (- end (::start opts)))
+                     [rs opts]))
+        timing   (atom {::calls 0 ::total 0.0})
         sql-p    ["select * from fruit where id in (?,?) order by id desc" 1 4]]
-    (jdbc/execute! (mw/wrapper (ds) {:timing timing
-                                     :sql-params-fn start-fn
-                                     :execute-fn    exec-fn})
+    (jdbc/execute! (mw/wrapper (ds) {::timing         timing
+                                     :pre-execute-fn  start-fn
+                                     :post-execute-fn end-fn})
                    sql-p)
-    (jdbc/execute! (mw/wrapper (ds) {:timing timing
-                                     :sql-params-fn start-fn
-                                     :execute-fn    exec-fn})
+    (jdbc/execute! (mw/wrapper (ds) {::timing         timing
+                                     :pre-execute-fn  start-fn
+                                     :post-execute-fn end-fn})
                    sql-p)
-    (println (db) (:calls @timing) "calls took" (long (:total @timing)) "nanoseconds")))
+    (printf "%20s - %d calls took %,10d nanoseconds\n"
+            (:dbtype (db)) (::calls @timing) (long (::total @timing)))))
