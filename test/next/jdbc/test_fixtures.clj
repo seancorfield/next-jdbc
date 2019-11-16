@@ -25,15 +25,17 @@
 ;; it takes a while to spin up so we kick it off at startup
 (defonce embedded-pg (future (EmbeddedPostgres/start)))
 
+(def ^:private test-mysql-map
+  {:dbtype "mysql" :dbname "clojure_test" :useSSL false
+   :user "root" :password (System/getenv "MYSQL_ROOT_PASSWORD")})
 (def ^:private test-mysql
-  (when (System/getenv "NEXT_JDBC_TEST_MYSQL")
-    {:dbtype "mysql" :dbname "clojure_test" :useSSL false
-     :user "root" :password (System/getenv "MYSQL_ROOT_PASSWORD")}))
+  (when (System/getenv "NEXT_JDBC_TEST_MYSQL") test-mysql-map))
 
+(def ^:private test-mssql-map
+  {:dbtype "mssql" :dbname "model"
+   :user "sa" :password (System/getenv "MSSQL_SA_PASSWORD")})
 (def ^:private test-mssql
-  (when (System/getenv "NEXT_JDBC_TEST_MSSQL")
-    {:dbtype "mssql" :dbname "model"
-     :user "sa" :password (System/getenv "MSSQL_SA_PASSWORD")}))
+  (when (System/getenv "NEXT_JDBC_TEST_MSSQL") test-mssql-map))
 
 (def ^:private test-db-specs
   (cond-> [test-derby test-h2-mem test-h2 test-hsql test-sqlite test-postgres]
@@ -143,4 +145,10 @@ CREATE TABLE " fruit " (
                      :test
                      :extra-deps))
   (doseq [[coord version] test-deps]
-    (add-lib coord version)))
+    (add-lib coord version))
+  ;; now you can load this file... and then you can load other test
+  ;; files and run their tests as needed... which will leave (ds)
+  ;; set to the embedded PostgreSQL datasource -- reset it with this:
+  (let [db test-h2-mem #_test-mysql-map]
+    (reset! test-db-spec db)
+    (reset! test-datasource (jdbc/get-datasource db))))
