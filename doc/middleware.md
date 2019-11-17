@@ -76,12 +76,14 @@ Assuming you have some logging library available in your application, such as [t
 
 ```clojure
 (def ds (mw/wrapper (jdbc/get-datasource db-spec)
-                    {:pre-process-fn (fn [sql-p opts]
-                                       (logger/info "About to execute" sql-p)
-                                       [sql-p opts])
-                     :rs!-fn (fn [rs opts]
-                               (logger/info "=>" (count rs) "rows")
-                               rs)}))
+                    {:pre-process-fn
+                     (fn [sql-p opts]
+                       (logger/info "About to execute" sql-p)
+                       [sql-p opts])
+                     :rs!-fn
+                     (fn [rs opts]
+                       (logger/info "=>" (count rs) "rows")
+                       rs)}))
 
 (jdbc/execute! ds ["select * from fruit"])
 ;; should produce log output like:
@@ -111,7 +113,7 @@ Because the pre- and post-process hooks can modify the options hash map that is 
               (logger/info "SQL took" (- (::end opts) (::start opts)) "ms,"
                            "build took" (- build-time (::end opts)) "ms,"
                            "for" (first (:next.jdbc/sql-params opts))))
-                rs)}))
+            rs)}))
 
 (jdbc/execute! ds ["select * from fruit"])
 ;; should produce log output like:
