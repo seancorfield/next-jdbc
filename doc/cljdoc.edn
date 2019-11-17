@@ -6,5 +6,6 @@
                     ["Prepared Statements" {:file "doc/prepared-statements.md"}]
                     ["Transactions" {:file "doc/transactions.md"}]]
                    ["All The Options" {:file "doc/all-the-options.md"}]
+                   ["Middleware" {:file "doc/middleware.md"}]
                    ["datafy, nav, and :schema" {:file "doc/datafy-nav-and-schema.md"}]
                    ["Migration from clojure.java.jdbc" {:file "doc/migration-from-clojure-java-jdbc.md"}]]}
