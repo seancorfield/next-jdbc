@@ -460,6 +460,11 @@
           (row-builder @builder)
           {`core-p/datafy (navize-row connectable opts)}))
 
+      clojure.lang.IDeref
+      (deref [this]
+        (deref builder))
+
+      ;; from java.lang.Object:
       (toString [_]
         (try
           (str (row-builder @builder))
