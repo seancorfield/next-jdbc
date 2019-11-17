@@ -120,6 +120,6 @@ Because the pre- and post-process hooks can modify the options hash map that is 
 ;; ... SQL took 10 ms, build took 2 ms, for select * from fruit
 ```
 
-This takes advantage of the fact that `next.jdbc` adds the SQL & parameters vector into the options automcatically, under the key `:next.jdbc/sql-params`.
+This takes advantage of the fact that `next.jdbc` adds the SQL & parameters vector into the options automatically, under the key `:next.jdbc/sql-params`.
 
 [<: All The Options](/doc/all-the-options.md) | [`datafy`, `nav`, and `:schema` :>](/doc/datafy-nav-and-schema.md)
