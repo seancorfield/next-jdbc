@@ -63,6 +63,28 @@ As you can see, both `:pre-process-fn` and `:post-process-fn` can return updated
 
 Any of the hook functions may execute side-effects (such as logging) but must still return the expected data.
 
+## Middleware and `plan`
+
+Because `next.jdbc/plan` tries to avoid realizing a result set, it is possible to perform reductions that do not even cause the result set builder to be constructed -- the `:post-execute-fn` hook will not executed in such cases. For example:
+
+```clojure
+user=> (into [] (map :name) ; does not construct the builder!
+             (jdbc/plan db-spec ["select * from fruit"]))
+["Apple" "Banana" "Peach" "Orange"]
+```
+
+You can force the result set builder to be constructed by calling `deref` on any row:
+
+```clojure
+user=> (into [] (map (comp :name deref))
+             (jdbc/plan db-spec ["select * from fruit"]))
+["Apple" "Banana" "Peach" "Orange"]
+```
+
+That will ensure that the result set builder _is_ constructed and it will execute the `:post-execute-fn` hook, but it will not cause rows (or the overall result set) to be realized. Thus, the only overhead of calling `deref` on each row is the one-off cost of constructing the result set builder for the first row, and the cost of derefencing a realized delay object for each row (and throwing that value away).
+
+*Note: If your SQL operation produces no rows, or no `ResultSet` at all (only an update count), then there is no way to force the result set builder to be constructed and no way for the `:post-execute-fn` hook to be executed.*
+
 ## Examples of Middleware Usage
 
 The usage for providing default options should be clear from the overview above

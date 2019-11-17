@@ -462,7 +462,10 @@
 
       clojure.lang.IDeref
       (deref [this]
-        (deref builder))
+        ;; force the builder to be created but return the row
+        ;; without actually building anything
+        (deref builder)
+        this)
 
       ;; from java.lang.Object:
       (toString [_]

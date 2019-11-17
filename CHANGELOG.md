@@ -7,6 +7,7 @@ Only accretive/fixative changes will be made from now on.
 The following changes have been committed to the **master** branch since the 1.0.10 release:
 
 * Add `next.jdbc.middleware` containing a `wrapper` for connectable objects that can offer default options, as well as four "hooks" for pre- and post-processing functions that make it easier to add logging and timing code to your `next.jdbc`-based application.
+* Make the "mapified" result set object implement `clojure.lang.IDeref` so you can "force" the result set builder to be constructed so that the `:post-execute-fn` hook will run in middleware.
 * Add testing against Microsoft SQL Server (run tests with environment variables `NEXT_JDBC_TEST_MSSQL=yes` and `MSSQL_SA_PASSWORD` set to your local -- `127.0.0.1:1433` -- SQL Server `sa` user password; assumes that it can create and drop `fruit` and `fruit_time` tables in the `model` database).
 * Add testing against MySQL (run tests with environment variables `NEXT_JDBC_TEST_MYSQL=yes` and `MYSQL_ROOT_PASSWORD` set to your local -- `127.0.0.1:3306` -- MySQL `root` user password; assumes you have already created an empty database called `clojure_test`).
 * Bump several JDBC driver versions for up-to-date testing.
