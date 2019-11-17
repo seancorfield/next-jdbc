@@ -75,4 +75,14 @@ The `transact` function and `with-transaction` macro accept the following option
 * `:read-only` -- a `Boolean` that indicates whether the transaction should be read-only or not (the default),
 * `:rollback-only` -- a `Boolean` that indicates whether the transaction should commit on success (the default) or rollback.
 
-[<: Transactions](/doc/transactions.md) | [`datafy`, `nav`, and `:schema` :>](/doc/datafy-nav-and-schema.md)
+## Middleware
+
+The `next.jdbc.middleware/wrapper` function (and the `post-processing-adapter`
+in that namespace) accept the following options:
+
+* `:pre-process-fn` -- a function that can pre-process the SQL & parameters vector and the options hash map before the SQL is executed; the default is to return both unchanged in a vector pair,
+* `:post-process-fn` -- a function that can post-process the `ResultSet` object and the options hash map after the SQL is executed; the default is to return both unchanged in a vector pair,
+* `:row!-fn` -- a function that can post-process each row as it is built (wrapping the call to `row!` within a result set builder); it is passed the row and the options and should return a (possibly updated) row; the default is to return the row unchanged,
+* `:rs!-fn` -- a function that can post-process the result set once it is built (wrapping the call to `rs!` within a result set builder); it is passed the result set and the options and should return a (possibly updated) result set; the default is to return the result set unchanged.
+
+[<: Transactions](/doc/transactions.md) | [Middleware :>](/doc/middleware.md)

@@ -57,4 +57,4 @@ The protocol `next.jdbc.result-set/DatafiableRow` has a default implementation o
 
 In addition, you can call `next.jdbc.result-set/datafiable-result-set` on any `ResultSet` object and get a fully realized, datafiable result set created using any of the result set builders.
 
-[<: All The Options](/doc/all-the-options.md) | [Migration from `clojure.java.jdbc` :>](/doc/migration-from-clojure-java-jdbc.md)
+[<: Middleware](/doc/middleware.md) | [Migration from `clojure.java.jdbc` :>](/doc/migration-from-clojure-java-jdbc.md)
