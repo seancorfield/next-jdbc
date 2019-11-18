@@ -185,7 +185,7 @@ You can read more about [working with transactions](/doc/transactions.md) furthe
 
 ### Prepared Statement Caveat
 
-*Note: Not all databases support using a `PreparedStatement` for every type of SQL operation. You might have to create a `java.sql.Statement` yourself, directly from a `java.sql.Connection` and use that, without parameters, in `plan`, `execute!`, or `execute-one!`. See the following example:*
+Not all databases support using a `PreparedStatement` for every type of SQL operation. You might have to create a `java.sql.Statement` yourself, directly from a `java.sql.Connection` and use that, without parameters, in `plan`, `execute!`, or `execute-one!`. See the following example:
 
 ```clojure
 (with-open [con (jdbc/get-connection ds)]
