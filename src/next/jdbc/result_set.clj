@@ -460,13 +460,6 @@
           (row-builder @builder)
           {`core-p/datafy (navize-row connectable opts)}))
 
-      clojure.lang.IDeref
-      (deref [this]
-        ;; force the builder to be created but return the row
-        ;; without actually building anything
-        (deref builder)
-        this)
-
       ;; from java.lang.Object:
       (toString [_]
         (try
@@ -573,6 +566,11 @@
           init')))
     (f init {:next.jdbc/update-count (.getUpdateCount stmt)})))
 
+;; the Connection and DataSource implementations could simply delegate to
+;; the PreparedStatement implementation which would reduce the amount of
+;; code here -- but they are unrolled for performance, to avoid the extra
+;; function call through the protocol that would be involved in reuse
+;; note that middleware duplicates this code but does delegate and reuse
 (extend-protocol p/Executable
   java.sql.Connection
   (-execute [this sql-params opts]

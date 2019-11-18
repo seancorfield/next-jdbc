@@ -8,7 +8,7 @@
                                               default-options]]
             [next.jdbc.result-set :as rs]
             [next.jdbc.specs :as specs])
-  (:import (java.sql ResultSet ResultSetMetaData)))
+  (:import (java.sql ResultSet)))
 
 (set! *warn-on-reflection* true)
 
@@ -64,14 +64,49 @@
                      (swap! (::timing opts) update ::total + (- end (::start opts)))
                      [rs opts]))
         timing   (atom {::calls 0 ::total 0.0})
+        mw-ds    (mw/wrapper (ds) {::timing         timing
+                                   :pre-execute-fn  start-fn
+                                   :post-execute-fn end-fn})
         sql-p    ["select * from fruit where id in (?,?) order by id desc" 1 4]]
-    (jdbc/execute! (mw/wrapper (ds) {::timing         timing
-                                     :pre-execute-fn  start-fn
-                                     :post-execute-fn end-fn})
-                   sql-p)
-    (jdbc/execute! (mw/wrapper (ds) {::timing         timing
-                                     :pre-execute-fn  start-fn
-                                     :post-execute-fn end-fn})
-                   sql-p)
+    (jdbc/execute! mw-ds sql-p)
+    (jdbc/execute! mw-ds sql-p)
     (printf "%20s - %d calls took %,10d nanoseconds\n"
             (:dbtype (db)) (::calls @timing) (long (::total @timing)))))
+
+(deftest post-execute-tests
+  (let [calls   (atom 0)
+        seen-rs (atom 0)
+        rows    (atom 0)
+        rss     (atom 0)
+        post-fn (fn [x opts]
+                  (swap! calls inc)
+                  (when (instance? ResultSet x)
+                    (swap! seen-rs inc))
+                  [x opts])
+        mw-ds   (mw/wrapper (ds) {:post-execute-fn post-fn
+                                  :row!-fn (fn [row _] (swap! rows inc) row)
+                                  :rs!-fn  (fn [rs  _] (swap! rss  inc) rs)})]
+    ;; first call, four rows, one result set
+    (jdbc/execute! mw-ds ["select * from fruit"])
+    (is (= 1 @calls))
+    (is (= 1 @seen-rs))
+    (is (= 4 @rows))
+    (is (= 1 @rss))
+    ;; second call, no rows, one more result set
+    (jdbc/execute! mw-ds ["select * from fruit where id < 0"])
+    (is (= 2 @calls))
+    (is (= 2 @seen-rs))
+    (is (= 4 @rows))
+    (is (= 2 @rss))
+    ;; third call, no result set
+    (jdbc/execute! mw-ds ["update fruit set name = ? where id < 0" "Plum"])
+    (is (= 3 @calls))
+    (is (= 2 @seen-rs))
+    (is (= 4 @rows))
+    (is (= 2 @rss))
+    ;; fourth call, one row, one result set (but no rs!-fn)
+    (jdbc/execute-one! mw-ds ["select * from fruit"])
+    (is (= 4 @calls))
+    (is (= 3 @seen-rs))
+    (is (= 5 @rows))
+    (is (= 2 @rss))))

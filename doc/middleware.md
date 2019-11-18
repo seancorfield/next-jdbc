@@ -26,9 +26,10 @@ The `next.jdbc.middleware/wrapper` function accepts a connectable and an optiona
 In addition to providing default options, the middleware wrapper also provides a number of "hooks" around SQL execution and result set building that you can tap into by providing any of the following options:
 
 * `:pre-process-fn` -- `(fn [sql-params opts] ,,, [sql-params' opts'])` -- this function is called on the SQL & parameters and the options hash map, prior to executing the SQL, and can pre-process them, returning a vector pair of (possibly updated) SQL & parameters and options,
-* `:post-process-fn` -- `(fn [rs opts] ,,, [rs' opts'])` -- this function is called on the `ResultSet` object and the options hash map, after executing the SQL, and can post-process them, returning a vector pair of (possibly updated) `ResultSet` object and options,
+* `:post-process-fn` -- `(fn [rs opts] ,,, [rs' opts'])` -- this function is called on the `ResultSet` object and the options hash map, after executing the SQL, and can post-process them, returning a vector pair of (possibly updated) `ResultSet` object and options;
+if the SQL operation does not return a `ResultSet` then this function is called on the update count and the options hash map, and should return a vector pair of the update count and options (unchanged),
 * `:row!-fn` -- `(fn [row opts] ,,, row')` -- this function is called on each row as it is realized (and also passed the options hash map) and can post-process the row, returning a  (possibly updated) row; it is named for the `row!` function in the result set builder that it wraps,
-* `:rs!-fn` -- `(fn [sql-params opts] ,,, [sql-params' opts'])` -- this function is called on the result set once it is realized (and also passed the options hash map) and can post-process the result set, returning a (possibly updated) result set; it is named for the `rs!` function in the result set builder that it wraps.
+* `:rs!-fn` -- `(fn [sql-params opts] ,,, [sql-params' opts'])` -- this function is called, for `execute!` only, on the full result set once it is realized (and also passed the options hash map) and can post-process the result set, returning a (possibly updated) result set; it is named for the `rs!` function in the result set builder that it wraps.
 
 Here's the data flow of middleware:
 
@@ -48,9 +49,11 @@ Here's the data flow of middleware:
 ;; 2. pre-process the SQL, parameters, and options:
 ;;    [sql-params' opts''] <- (A ["select..." 4] opts')
 ;; 3. execute sql-params' with the opts'' hash map
-;; 4. create the result set builder from the ResultSet rs and options opts''
-;; 5. inside that builder, post-process the ResultSet and options:
-;;    [rs' opts'''] <- (B rs opts'')
+;; 4. post-process the ResultSet (or update count) and options:
+;;    [rs' opts'''] <- (B rs opts'') or
+;;    [count' opts'''] <- (B count opts'')
+;; if a result set was produced then:
+;; 5. create the result set builder from the ResultSet rs' and options opts'''
 ;; 6. post-process each row as row! is called:
 ;;    row' <- (C (row! builder row) opts''')
 ;; 7. add row' into the result set being built
@@ -63,27 +66,24 @@ As you can see, both `:pre-process-fn` and `:post-process-fn` can return updated
 
 Any of the hook functions may execute side-effects (such as logging) but must still return the expected data.
 
-## Middleware and `plan`
+### Middleware and `plan`
 
-Because `next.jdbc/plan` tries to avoid realizing a result set, it is possible to perform reductions that do not even cause the result set builder to be constructed -- the `:post-execute-fn` hook will not executed in such cases. For example:
+Because `plan` tries to avoid realizing a result set, it is possible to perform reductions that do not even cause the result set builder to be constructed -- the `:post-execute-fn` hook will still be executed in such cases, but the `:row!-fn` hook may not be executed and the `:rs!-fn` hook will definitely not be executed. For example:
 
 ```clojure
 user=> (into [] (map :name) ; does not construct the builder!
-             (jdbc/plan db-spec ["select * from fruit"]))
+             (jdbc/plan db-spec ["select id, name from fruit"]))
 ["Apple" "Banana" "Peach" "Orange"]
+user=> (into [] (map #(dissoc % :id)) ; constructs builder, calls row!-fn
+             (jdbc/plan db-spec ["select id, name from fruit"]))
+[{:name "Apple"} {:name "Banana"} {:name "Peach"} {:name "Orange"}]
 ```
 
-You can force the result set builder to be constructed by calling `deref` on any row:
+### Middleware and `execute-one!`
 
-```clojure
-user=> (into [] (map (comp :name deref))
-             (jdbc/plan db-spec ["select * from fruit"]))
-["Apple" "Banana" "Peach" "Orange"]
-```
+Because `execute-one!` only realizes at most one row from a result set, it never calls `rs!-fn`. It will call `row!-fn` at most once (zero times if no rows are returned from the SQL operation, exactly once if any rows are returned).
 
-That will ensure that the result set builder _is_ constructed and it will execute the `:post-execute-fn` hook, but it will not cause rows (or the overall result set) to be realized. Thus, the only overhead of calling `deref` on each row is the one-off cost of constructing the result set builder for the first row, and the cost of derefencing a realized delay object for each row (and throwing that value away).
-
-*Note: If your SQL operation produces no rows, or no `ResultSet` at all (only an update count), then there is no way to force the result set builder to be constructed and no way for the `:post-execute-fn` hook to be executed.*
+Both of the `:pre-execute-fn` and `:post-execute-fn` hooks are always called for `execute-one!`.
 
 ## Examples of Middleware Usage
 
