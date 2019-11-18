@@ -12,11 +12,11 @@ This page attempts to list all of the differences between [clojure.java.jdbc](ht
 
 `clojure.java.jdbc` returned result sets (and generated keys) as hash maps with simple, lower-case keys by default. `next.jdbc` returns result sets (and generated keys) as hash maps with qualified, as-is keys by default: each key is qualified by the name of table from which it is drawn, if known. The as-is default is chosen to a) improve performance and b) not mess with the data. Using a `:builder-fn` option of `next.jdbc.result-set/as-unqualified-maps` will produce simple, as-is keys. Using a `:builder-fn` option of `next.jdbc.result-set/as-unqualified-lower-maps` will produce simple, lower-case keys -- the most compatible with `clojure.java.jdbc`'s default behavior.
 
-*Note: `clojure.java.jdbc` would make column names unique by appending numeric suffices, for example in a `JOIN` that produced columns `id` from multiple tables. `next.jdbc` does not do this: if you use _qualified_ column names -- the default -- then you would get `:sometable/id` and `:othertable/id`, but with _unqualified_ column names you would just get one `:id` in each row. It was always poor practice to rely on `clojure.java.jdbc`'s renaming behavior and it added quite an overhead to result set building, which is why `next.jdbc` does not support it -- use explicit column aliasing in your SQL instead if you want _unqualified_ column names!*
+> Note: `clojure.java.jdbc` would make column names unique by appending numeric suffices, for example in a `JOIN` that produced columns `id` from multiple tables. `next.jdbc` does not do this: if you use _qualified_ column names -- the default -- then you would get `:sometable/id` and `:othertable/id`, but with _unqualified_ column names you would just get one `:id` in each row. It was always poor practice to rely on `clojure.java.jdbc`'s renaming behavior and it added quite an overhead to result set building, which is why `next.jdbc` does not support it -- use explicit column aliasing in your SQL instead if you want _unqualified_ column names!
 
 If you used `:as-arrays? true`, you will most likely want to use a `:builder-fn` option of `next.jdbc.result-set/as-unqualified-lower-arrays`.
 
-*Note: When `next.jdbc` cannot obtain a `ResultSet` object and returns `{:next.jdbc/count N}` instead, these builder functions are not applied -- the `:builder-fn` option is not used in that situation.*
+> Note: When `next.jdbc` cannot obtain a `ResultSet` object and returns `{:next.jdbc/count N}` instead, these builder functions are not applied -- the `:builder-fn` option is not used in that situation.
 
 ### Option Handling
 
@@ -71,7 +71,7 @@ If you are using `:entities`, you will need to change to the appropriate `:table
 
 If you are using `:result-set-fn` and/or `:row-fn`, you will need to change to explicit calls (to the result set function, or to `map` the row function), or to use the `plan` approach with `reduce` or various transducing functions.
 
-Note: this means that result sets are never exposed lazily in `next.jdbc` -- in `clojure.java.jdbc` you had to be careful that your `:result-set-fn` was eager, but in `next.jdbc` you either reduce the result set eagerly (via `plan`) or you get a fully-realized result set data structure back (from `execute!` and `execute-one!`). As with `clojure.java.jdbc` however, you can still stream result sets from the database and process them via reduction (was `reducible-query`, now `plan`). Remember that you can terminate a reduction early by using the `reduced` function to wrap the final value you produce.
+> Note: this means that result sets are never exposed lazily in `next.jdbc` -- in `clojure.java.jdbc` you had to be careful that your `:result-set-fn` was eager, but in `next.jdbc` you either reduce the result set eagerly (via `plan`) or you get a fully-realized result set data structure back (from `execute!` and `execute-one!`). As with `clojure.java.jdbc` however, you can still stream result sets from the database and process them via reduction (was `reducible-query`, now `plan`). Remember that you can terminate a reduction early by using the `reduced` function to wrap the final value you produce.
 
 ### Processing Database Metadata
 

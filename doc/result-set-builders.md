@@ -2,7 +2,7 @@
 
 In [Getting Started](/doc/getting-started.md), it was noted that, by default, `execute!` and `execute-one!` return result sets as (vectors of) hash maps with namespace-qualified keys as-is. If your database naturally produces uppercase column names from the JDBC driver, that's what you'll get. If it produces mixed-case names, that's what you'll get.
 
-*Note: Some databases do not return the table name in the metadata by default. If you run into this, you might try adding `:ResultSetMetaDataOptions "1"` to your db-spec (so it is passed as a property to the JDBC driver when you create connections). If your database supports that, it will perform additional work to try to add table names to the result set metadata. It has been reported that Oracle just plain old does not support table names at all in its JDBC drivers.*
+> Note: Some databases do not return the table name in the metadata by default. If you run into this, you might try adding `:ResultSetMetaDataOptions "1"` to your db-spec (so it is passed as a property to the JDBC driver when you create connections). If your database supports that, it will perform additional work to try to add table names to the result set metadata. It has been reported that Oracle just plain old does not support table names at all in its JDBC drivers.
 
 The default builder for rows and result sets creates qualified keywords that match whatever case the JDBC driver produces. That builder is `next.jdbc.result-set/as-maps` but there are several options available:
 
@@ -17,7 +17,7 @@ The default builder for rows and result sets creates qualified keywords that mat
 
 The reason behind the default is to a) be a simple transform, b) produce qualified keys in keeping with Clojure's direction (with `clojure.spec` etc), and c) not mess with the data. `as-arrays` is (slightly) faster than `as-maps` since it produces less data (vectors of values instead of vectors of hash maps), but the `lower` options will be slightly slower since they include (conditional) logic to convert strings to lower-case. The `unqualified` options may be slightly faster than their qualified equivalents but **make no attempt to keep column names unique if your SQL joins across multiple tables**.
 
-*Note: This is a deliberate difference from `clojure.java.jdbc` which would make column names unique by appending numeric suffices. It was always poor practice to rely on `clojure.java.jdbc`'s renaming behavior and it added quite an overhead to result set building, which is why `next.jdbc` does not support it -- use explicit column aliasing in your SQL instead if you want _unqualified_ column names!*
+> Note: This is a deliberate difference from `clojure.java.jdbc` which would make column names unique by appending numeric suffices. It was always poor practice to rely on `clojure.java.jdbc`'s renaming behavior and it added quite an overhead to result set building, which is why `next.jdbc` does not support it -- use explicit column aliasing in your SQL instead if you want _unqualified_ column names!
 
 In addition, the following generic builders can take `:label-fn` and `:qualifier-fn` options to control how the label and qualified are processed. The `lower` variants above are implemented in terms of these, passing a `lower-case` function for both of those options.
 
@@ -74,7 +74,7 @@ The `as-*` functions described above are all implemented in terms of these proto
 
 The options hash map for any `next.jdbc` function can contain a `:builder-fn` key and the value is used as the row/result set builder function. The tests for `next.jdbc.result-set` include a [record-based builder function](https://github.com/seancorfield/next-jdbc/blob/master/test/next/jdbc/result_set_test.clj#L162-L180) as an example of how you can extend this to satisfy your needs.
 
-*Note: When `next.jdbc` cannot obtain a `ResultSet` object and returns `{:next.jdbc/count N}` instead, the builder function is not applied -- the `:builder-fn` option does not affect the shape of the result.*
+> Note: When `next.jdbc` cannot obtain a `ResultSet` object and returns `{:next.jdbc/count N}` instead, the builder function is not applied -- the `:builder-fn` option does not affect the shape of the result.
 
 The options hash map passed to the builder function will contain a `:next.jdbc/sql-params` key, whose value is the SQL + parameters vector passed into the top-level `next.jdbc` functions (`plan`, `execute!`, and `execute-one!`).
 

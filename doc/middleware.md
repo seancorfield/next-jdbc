@@ -128,7 +128,7 @@ Because the pre- and post-process hooks can modify the options hash map that is 
           :post-process-fn
           (fn [rs opts]
             [rs (assoc opts ::end (System/currentTimeMillis))])
-          :rs!-fn
+          :rs!-fn ; assumes you are using execute!
           (fn [rs opts]
             (let [build-time (- (System/currentTimeMillis)
                                 (::end opts))]

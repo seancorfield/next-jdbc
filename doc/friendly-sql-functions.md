@@ -53,7 +53,7 @@ Given a table name (as a keyword), a vector of column names, and a vector of row
                    "Aunt Sally" "sour@lagunitas.beer"] {:return-keys true})
 ```
 
-Note: this expands to a single SQL statement with placeholders for every
+> Note: this expands to a single SQL statement with placeholders for every
 value being inserted -- for large sets of rows, this may exceed the limits
 on SQL string size and/or number of parameters for your JDBC driver or your
 database. Several databases have a limit of 1,000 parameter placeholders.
