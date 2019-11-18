@@ -25,8 +25,8 @@ The `next.jdbc.middleware/wrapper` function accepts a connectable and an optiona
 
 In addition to providing default options, the middleware wrapper also provides a number of "hooks" around SQL execution and result set building that you can tap into by providing any of the following options:
 
-* `:pre-process-fn` -- `(fn [sql-params opts] ,,, [sql-params' opts'])` -- this function is called on the SQL & parameters and the options hash map, prior to executing the SQL, and can pre-process them, returning a vector pair of (possibly updated) SQL & parameters and options,
-* `:post-process-fn` -- `(fn [rs opts] ,,, [rs' opts'])` -- this function is called on the `ResultSet` object and the options hash map, after executing the SQL, and can post-process them, returning a vector pair of (possibly updated) `ResultSet` object and options;
+* `:pre-execute-fn` -- `(fn [sql-params opts] ,,, [sql-params' opts'])` -- this function is called on the SQL & parameters and the options hash map, prior to executing the SQL, and can pre-process them, returning a vector pair of (possibly updated) SQL & parameters and options,
+* `:post-execute-fn` -- `(fn [rs opts] ,,, [rs' opts'])` -- this function is called on the `ResultSet` object and the options hash map, after executing the SQL, and can post-process them, returning a vector pair of (possibly updated) `ResultSet` object and options;
 if the SQL operation does not return a `ResultSet` then this function is called on the update count and the options hash map, and should return a vector pair of the update count and options (unchanged),
 * `:row!-fn` -- `(fn [row opts] ,,, row')` -- this function is called on each row as it is realized (and also passed the options hash map) and can post-process the row, returning a  (possibly updated) row; it is named for the `row!` function in the result set builder that it wraps,
 * `:rs!-fn` -- `(fn [sql-params opts] ,,, [sql-params' opts'])` -- this function is called, for `execute!` only, on the full result set once it is realized (and also passed the options hash map) and can post-process the result set, returning a (possibly updated) result set; it is named for the `rs!` function in the result set builder that it wraps.
@@ -37,8 +37,8 @@ Here's the data flow of middleware:
 ;; assuming appropriate definitions for some-default and the fns A, B, C, and D:
 (def default-opts {:an-option       some-default
                    ,,, ; more defaults for options
-                   :pre-process-fn  A
-                   :post-process-fn B
+                   :pre-execute-fn  A
+                   :post-execute-fn B
                    :row!-fn         C
                    :rs!-fn          D})
 (def ds (mw/wrapper (jdbc/get-datasource db-spec) default-opts))
@@ -62,7 +62,7 @@ Here's the data flow of middleware:
 ;; and the result is rs'
 ```
 
-As you can see, both `:pre-process-fn` and `:post-process-fn` can return updated options that are passed along the processing pipeline so they can contain data that later stages in the pipeline can examine. This allows for timing data to passed through the pipeline for example.
+As you can see, both `:pre-execute-fn` and `:post-execute-fn` can return updated options that are passed along the processing pipeline so they can contain data that later stages in the pipeline can examine. This allows for timing data to passed through the pipeline for example.
 
 Any of the hook functions may execute side-effects (such as logging) but must still return the expected data.
 
@@ -98,7 +98,7 @@ Assuming you have some logging library available in your application, such as [t
 
 ```clojure
 (def ds (mw/wrapper (jdbc/get-datasource db-spec)
-                    {:pre-process-fn
+                    {:pre-execute-fn
                      (fn [sql-p opts]
                        (logger/info "About to execute" sql-p)
                        [sql-p opts])
@@ -122,10 +122,10 @@ Because the pre- and post-process hooks can modify the options hash map that is 
 ```clojure
 (def ds (mw/wrapper
          (jdbc/get-datasource db-spec)
-         {:pre-process-fn
+         {:pre-execute-fn
           (fn [sql-p opts]
             [sql-p (assoc opts ::start (System/currentTimeMillis))])
-          :post-process-fn
+          :post-execute-fn
           (fn [rs opts]
             [rs (assoc opts ::end (System/currentTimeMillis))])
           :rs!-fn ; assumes you are using execute!
@@ -143,5 +143,7 @@ Because the pre- and post-process hooks can modify the options hash map that is 
 ```
 
 This takes advantage of the fact that `next.jdbc` adds the SQL & parameters vector into the options automatically, under the key `:next.jdbc/sql-params`.
+
+> Note: Remember that `rs!-fn` will only be called for `execute!` so the above example will not work for `plan` or `execute-one!`. You would need the logging in `:post-execute-fn` for it to work for all calls (and you would have to log the build time separately in `rs!-fn` for `execute!` calls).
 
 [<: All The Options](/doc/all-the-options.md) | [`datafy`, `nav`, and `:schema` :>](/doc/datafy-nav-and-schema.md)
