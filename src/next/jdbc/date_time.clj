@@ -44,4 +44,8 @@
   ;; this is just to help PostgreSQL:
   java.util.Date
   (set-parameter [^java.util.Date v ^PreparedStatement s ^long i]
-    (.setTimestamp s i (Timestamp/from (.toInstant v)))))
+    (.setTimestamp s i (Timestamp/from (.toInstant v))))
+  ;; ... but leave java.*sql*.Date as-is, it doesn't support toInstant
+  java.sql.Date
+  (set-parameter [^java.sql.Date v ^PreparedStatement s ^long i]
+    (.setDate s i v)))
