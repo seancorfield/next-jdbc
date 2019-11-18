@@ -67,8 +67,8 @@
   [builder-fn]
   (fn [rs opts]
     (let [mrsb      (builder-fn rs opts)
-          row!-fn   (get opts :row!-fn (comp first vector))
-          rs!-fn    (get opts :rs!-fn  (comp first vector))]
+          row!-fn   (:row!-fn opts (comp first vector))
+          rs!-fn    (:rs!-fn  opts (comp first vector))]
       (reify
         rs/RowBuilder
         (->row [this] (rs/->row mrsb))
@@ -86,12 +86,29 @@
   (wrapped-execute-one [this sql-params opts])
   (wrapped-execute-all [this sql-params opts]))
 
+(defn- execute-wrapper
+  [f db global-opts sql-params opts]
+  (let [opts (merge global-opts opts)
+        ;; rebind both the SQL & parameters and the options
+        [sql-params opts] ((:pre-execute-fn opts vector) sql-params opts)]
+    (f db sql-params (assoc opts :next.jdbc/sql-params sql-params))))
+
+(defrecord JdbcMiddleware [db global-opts]
+  p/Executable
+  (-execute [this sql-params opts]
+    (execute-wrapper wrapped-execute db global-opts sql-params opts))
+  (-execute-one [this sql-params opts]
+    (execute-wrapper wrapped-execute-one db global-opts sql-params opts))
+  (-execute-all [this sql-params opts]
+    (execute-wrapper wrapped-execute-all db global-opts sql-params opts)))
+
 (defn- reduce-stmt
   "Variant of `next.jdbc.result-set/reduce-stmt` that calls the
   `:post-execute-fn` hook on results sets and update counts."
   [^PreparedStatement stmt f init opts]
   (if-let [rs (#'rs/stmt->result-set stmt opts)]
-    (let [[rs opts] ((:post-execute-fn opts) rs opts)
+    (let [opts      (update opts :builder-fn (fnil post-processing-adapter rs/as-maps))
+          [rs opts] ((:post-execute-fn opts vector) rs opts)
           rs-map    (#'rs/mapify-result-set rs opts)]
       (loop [init' init]
         (if (.next rs)
@@ -100,7 +117,7 @@
               @result
               (recur result)))
           init')))
-    (let [[n _] ((:post-execute-fn opts) (.getUpdateCount stmt) opts)]
+    (let [[n _] ((:post-execute-fn opts vector) (.getUpdateCount stmt) opts)]
       (f init {:next.jdbc/update-count n}))))
 
 (defn- reduce-stmt-sql
@@ -108,7 +125,8 @@
   `:post-execute-fn` hook on results sets and update counts."
   [^Statement stmt sql f init opts]
   (if-let [rs (#'rs/stmt-sql->result-set stmt sql opts)]
-    (let [[rs opts] ((:post-execute-fn opts) rs opts)
+    (let [opts      (update opts :builder-fn (fnil post-processing-adapter rs/as-maps))
+          [rs opts] ((:post-execute-fn opts vector) rs opts)
           rs-map    (#'rs/mapify-result-set rs opts)]
       (loop [init' init]
         (if (.next rs)
@@ -117,12 +135,11 @@
               @result
               (recur result)))
           init')))
-    (let [[n _] ((:post-execute-fn opts) (.getUpdateCount stmt) opts)]
+    (let [[n _] ((:post-execute-fn opts vector) (.getUpdateCount stmt) opts)]
       (f init {:next.jdbc/update-count n}))))
 
 ;; this duplicates the Executable implementations from next.jdbc.result-set
-;; but with hooks for calling :post-execute-fn and being able to rely on
-;; :builder-fn always being present
+;; but with hooks for calling :post-execute-fn
 (extend-protocol WrappedExecutable
   java.sql.Connection
   (wrapped-execute [this sql-params opts]
@@ -184,18 +201,20 @@
       (toString [_] "`IReduceInit` from `plan` -- missing reduction?")))
   (wrapped-execute-one [this _ opts]
     (if-let [rs (#'rs/stmt->result-set this (assoc opts :return-keys true))]
-      (let [[rs opts] ((:post-execute-fn opts) rs opts)
+      (let [opts      (update opts :builder-fn (fnil post-processing-adapter rs/as-maps))
+            [rs opts] ((:post-execute-fn opts vector) rs opts)
             builder   ((:builder-fn opts) rs opts)]
         (when (.next rs)
           (rs/datafiable-row (#'rs/row-builder builder)
                              (.getConnection this) opts)))
-      (let [[n _] ((:post-execute-fn opts) (.getUpdateCount this) opts)]
+      (let [[n _] ((:post-execute-fn opts vector) (.getUpdateCount this) opts)]
         {:next.jdbc/update-count n})))
   (wrapped-execute-all [this _ opts]
     (if-let [rs (#'rs/stmt->result-set this opts)]
-      (let [[rs opts] ((:post-execute-fn opts) rs opts)]
+      (let [opts      (update opts :builder-fn (fnil post-processing-adapter rs/as-maps))
+            [rs opts] ((:post-execute-fn opts vector) rs opts)]
         (rs/datafiable-result-set rs (.getConnection this) opts))
-      (let [[n _] ((:post-execute-fn opts) (.getUpdateCount this) opts)]
+      (let [[n _] ((:post-execute-fn opts vector) (.getUpdateCount this) opts)]
         [{:next.jdbc/update-count n}])))
 
   java.sql.Statement
@@ -213,21 +232,31 @@
     (assert (= 1 (count sql-params))
             "Parameters cannot be provided when executing a non-prepared Statement")
     (if-let [rs (#'rs/stmt-sql->result-set this (first sql-params) (assoc opts :return-keys true))]
-      (let [[rs opts] ((:post-execute-fn opts) rs opts)
+      (let [opts      (update opts :builder-fn (fnil post-processing-adapter rs/as-maps))
+            [rs opts] ((:post-execute-fn opts vector) rs opts)
             builder   ((:builder-fn opts) rs opts)]
         (when (.next rs)
           (rs/datafiable-row (#'rs/row-builder builder)
                              (.getConnection this) opts)))
-      (let [[n _] ((:post-execute-fn opts) (.getUpdateCount this) opts)]
+      (let [[n _] ((:post-execute-fn opts vector) (.getUpdateCount this) opts)]
         {:next.jdbc/update-count n})))
   (wrapped-execute-all [this sql-params opts]
     (assert (= 1 (count sql-params))
             "Parameters cannot be provided when executing a non-prepared Statement")
     (if-let [rs (#'rs/stmt-sql->result-set this (first sql-params) opts)]
-      (let [[rs opts] ((:post-execute-fn opts) rs opts)]
+      (let [opts      (update opts :builder-fn (fnil post-processing-adapter rs/as-maps))
+            [rs opts] ((:post-execute-fn opts vector) rs opts)]
         (rs/datafiable-result-set rs (.getConnection this) opts))
-      (let [[n _] ((:post-execute-fn opts) (.getUpdateCount this) opts)]
+      (let [[n _] ((:post-execute-fn opts vector) (.getUpdateCount this) opts)]
         [{:next.jdbc/update-count n}])))
+
+  JdbcMiddleware ; this unrolls one layer of middleware, combining the options
+  (wrapped-execute [this sql-params opts]
+    (p/-execute this sql-params (merge (:global-opts this) opts)))
+  (wrapped-execute-one [this sql-params opts]
+    (p/-execute-one this sql-params (merge (:global-opts this) opts)))
+  (wrapped-execute-all [this sql-params opts]
+    (p/-execute-all this sql-params (merge (:global-opts this) opts)))
 
   Object
   (wrapped-execute [this sql-params opts]
@@ -236,27 +265,6 @@
     (wrapped-execute-one (p/get-datasource this) sql-params opts))
   (wrapped-execute-all [this sql-params opts]
     (wrapped-execute-all (p/get-datasource this) sql-params opts)))
-
-(defn- execute-wrapper
-  [f db global-opts sql-params opts]
-  (let [opts (merge {:pre-execute-fn vector :post-execute-fn vector
-                     :builder-fn rs/as-maps}
-                    global-opts opts)
-        ;; rebind both the SQL & parameters and the options
-        [sql-params opts] ((:pre-execute-fn opts) sql-params opts)]
-    (f db sql-params
-       (assoc opts
-              :builder-fn (post-processing-adapter (:builder-fn opts))
-              :next.jdbc/sql-params sql-params))))
-
-(defrecord JdbcMiddleware [db global-opts]
-  p/Executable
-  (-execute [this sql-params opts]
-    (execute-wrapper wrapped-execute db global-opts sql-params opts))
-  (-execute-one [this sql-params opts]
-    (execute-wrapper wrapped-execute-one db global-opts sql-params opts))
-  (-execute-all [this sql-params opts]
-    (execute-wrapper wrapped-execute-all db global-opts sql-params opts)))
 
 (defn wrapper
   "Given a connectable and a hash map of options, return a wrapped connectable

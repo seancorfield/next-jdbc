@@ -110,3 +110,16 @@
     (is (= 3 @seen-rs))
     (is (= 5 @rows))
     (is (= 2 @rss))))
+
+;; does middleware compose?
+(deftest middleware-composition
+  (let [pre   (atom 0)
+        post  (atom 0)
+        rows  (atom 0)
+        inner (mw/wrapper (ds) {:pre-execute-fn #(do (swap! pre inc) [%1 %2])})
+        mw-ds (mw/wrapper inner {:post-execute-fn #(do (swap! post inc) [%1 %2])})]
+    (jdbc/execute! mw-ds ["select * from fruit"]
+                   {:row!-fn (fn [row _] (swap! rows inc) row)})
+    (is (= 1 @pre))
+    (is (= 1 @post))
+    (is (= 4 @rows))))
