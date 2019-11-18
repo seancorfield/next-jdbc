@@ -30,7 +30,7 @@
 (set! *warn-on-reflection* true)
 
 (extend-protocol p/SettableParameter
-  ;; Java Time type conversion
+  ;; Java Time type conversion:
   java.time.Instant
   (set-parameter [^java.time.Instant v ^PreparedStatement s ^long i]
     (.setTimestamp s i (Timestamp/from v)))
@@ -44,4 +44,11 @@
   ;; this is just to help PostgreSQL:
   java.util.Date
   (set-parameter [^java.util.Date v ^PreparedStatement s ^long i]
-    (.setTimestamp s i (Timestamp/from (.toInstant v)))))
+    (.setTimestamp s i (Timestamp/from (.toInstant v))))
+  ;; but avoid unnecessary conversions for SQL Date and Timestamp:
+  java.sql.Date
+  (set-parameter [^java.sql.Date v ^PreparedStatement s ^long i]
+    (.setDate s i v))
+  java.sql.Timestamp
+  (set-parameter [^java.sql.Timestamp v ^PreparedStatement s ^long i]
+    (.setTimestamp s i v)))

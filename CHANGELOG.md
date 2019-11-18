@@ -6,6 +6,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch since the 1.0.10 release:
 
+* Fix #76 by avoiding conversions on `java.sql.Date` and `java.sql.Timestamp`.
 * Add testing against Microsoft SQL Server (run tests with environment variables `NEXT_JDBC_TEST_MSSQL=yes` and `MSSQL_SA_PASSWORD` set to your local -- `127.0.0.1:1433` -- SQL Server `sa` user password; assumes that it can create and drop `fruit` and `fruit_time` tables in the `model` database).
 * Add testing against MySQL (run tests with environment variables `NEXT_JDBC_TEST_MYSQL=yes` and `MYSQL_ROOT_PASSWORD` set to your local -- `127.0.0.1:3306` -- MySQL `root` user password; assumes you have already created an empty database called `clojure_test`).
 * Bump several JDBC driver versions for up-to-date testing.
