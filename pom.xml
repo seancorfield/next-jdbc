@@ -3,9 +3,8 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>seancorfield</groupId>
   <artifactId>next.jdbc</artifactId>
-  <version>1.0.10</version>
+  <version>1.0.11</version>
   <name>next.jdbc</name>
-
   <description>The next generation of clojure.java.jdbc: a new low-level Clojure wrapper for JDBC-based access to databases.</description>
   <url>https://github.com/seancorfield/next-jdbc</url>
   <licenses>
@@ -14,20 +13,17 @@
       <url>http://www.eclipse.org/legal/epl-v10.html</url>
     </license>
   </licenses>
-
   <developers>
     <developer>
       <name>Sean Corfield</name>
     </developer>
   </developers>
-
   <scm>
     <url>https://github.com/seancorfield/next-jdbc</url>
     <connection>scm:git:git://github.com/seancorfield/next-jdbc.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/seancorfield/next-jdbc.git</developerConnection>
     <tag>05a6d8a47fcea7dc2928e5e2c176310fb7205e0c</tag>
   </scm>
-
   <dependencies>
     <dependency>
       <groupId>org.clojure</groupId>
@@ -40,11 +36,9 @@
       <version>0.1.4</version>
     </dependency>
   </dependencies>
-
   <build>
     <sourceDirectory>src</sourceDirectory>
   </build>
-
   <repositories>
     <repository>
       <id>clojars</id>
@@ -55,7 +49,6 @@
       <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
     </repository>
   </repositories>
-
   <distributionManagement>
     <repository>
       <id>clojars</id>
@@ -63,5 +56,4 @@
       <url>https://clojars.org/repo</url>
     </repository>
   </distributionManagement>
-
 </project>
