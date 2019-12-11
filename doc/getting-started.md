@@ -225,6 +225,7 @@ Some important notes regarding HikariCP:
 
 * Authentication credentials must use `:username` (if you are using c3p0 or regular, non-pooled, connections, then the db-spec hash map must contain `:user`).
 * When using `:dbtype "jtds"`, you must specify `:connectionTestQuery "SELECT 1"` (or some other query to verify the health of a connection) because the jTDS JDBC driver does not implement `.isValid()` so HikariCP requires a specific test query instead (c3p0 does not rely on this method so it works with jTDS without needing `:preferredTestQuery`).
+* When using PostgreSQL, and trying to set a default `:schema` via HikariCP, you will need to specify `:connectionInitSql "COMMIT;"` until [this HikariCP issue](https://github.com/brettwooldridge/HikariCP/issues/1369) is addressed.
 
 You will generally want to create the connection pooled datasource at the start of your program (and close it before you exit, although that's not really important since it'll be cleaned up when the JVM shuts down):
 
