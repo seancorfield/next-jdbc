@@ -27,7 +27,8 @@
         rollback-only  (:rollback-only opts)
         old-autocommit (.getAutoCommit con)
         old-isolation  (.getTransactionIsolation con)
-        old-readonly   (.isReadOnly con)]
+        old-readonly   (.isReadOnly con)
+        restore-ac?    (volatile! true)]
     (io!
      (when isolation
        (.setTransactionIsolation con (isolation isolation-levels)))
@@ -37,12 +38,21 @@
      (try
        (let [result (f con)]
          (if rollback-only
-           (.rollback con)
+           (do
+             ;; per #80: if the rollback operation fails, we do not
+             ;; want to try to restore auto-commit...
+             (vreset! restore-ac? false)
+             (.rollback con)
+             (vreset! restore-ac? true))
            (.commit con))
          result)
        (catch Throwable t
          (try
+           ;; per #80: if the rollback operation fails, we do not
+           ;; want to try to restore auto-commit...
+           (vreset! restore-ac? false)
            (.rollback con)
+           (vreset! restore-ac? true)
            (catch Throwable rb
              ;; combine both exceptions
              (throw (ex-info (str "Rollback failed handling \""
@@ -56,9 +66,10 @@
          ;; want those to replace any exception currently being
          ;; handled -- and if the connection got closed, we just
          ;; want to ignore exceptions here anyway
-         (try
-           (.setAutoCommit con old-autocommit)
-           (catch Exception _))
+         (when @restore-ac?
+           (try ; only restore auto-commit if rollback did not fail
+             (.setAutoCommit con old-autocommit)
+             (catch Exception _)))
          (when isolation
            (try
              (.setTransactionIsolation con old-isolation)

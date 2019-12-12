@@ -171,7 +171,17 @@ VALUES ('Pear', 'green', 49, 47)
 INSERT INTO fruit (name, appearance, cost, grade)
 VALUES ('Pear', 'green', 49, 47)
 "]))))
-    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
+    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))
+    (with-open [con (jdbc/get-connection (ds))]
+      (let [ac (.getAutoCommit con)]
+        (is (= [{:next.jdbc/update-count 1}]
+               (jdbc/with-transaction [t con {:rollback-only true}]
+                 (jdbc/execute! t ["
+INSERT INTO fruit (name, appearance, cost, grade)
+VALUES ('Pear', 'green', 49, 47)
+"]))))
+        (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
+        (is (= ac (.getAutoCommit con))))))
   (testing "with-transaction exception"
     (is (thrown? Throwable
            (jdbc/with-transaction [t (ds)]
@@ -180,7 +190,18 @@ INSERT INTO fruit (name, appearance, cost, grade)
 VALUES ('Pear', 'green', 49, 47)
 "])
              (throw (ex-info "abort" {})))))
-    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
+    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))
+    (with-open [con (jdbc/get-connection (ds))]
+      (let [ac (.getAutoCommit con)]
+        (is (thrown? Throwable
+               (jdbc/with-transaction [t con]
+                 (jdbc/execute! t ["
+INSERT INTO fruit (name, appearance, cost, grade)
+VALUES ('Pear', 'green', 49, 47)
+"])
+                 (throw (ex-info "abort" {})))))
+        (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
+        (is (= ac (.getAutoCommit con))))))
   (testing "with-transaction call rollback"
     (is (= [{:next.jdbc/update-count 1}]
            (jdbc/with-transaction [t (ds)]
@@ -190,7 +211,19 @@ VALUES ('Pear', 'green', 49, 47)
 "])]
                (.rollback t)
                result))))
-    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
+    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))
+    (with-open [con (jdbc/get-connection (ds))]
+      (let [ac (.getAutoCommit con)]
+        (is (= [{:next.jdbc/update-count 1}]
+               (jdbc/with-transaction [t con]
+                 (let [result (jdbc/execute! t ["
+INSERT INTO fruit (name, appearance, cost, grade)
+VALUES ('Pear', 'green', 49, 47)
+"])]
+                   (.rollback t)
+                   result))))
+        (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
+        (is (= ac (.getAutoCommit con))))))
   (testing "with-transaction with unnamed save point"
     (is (= [{:next.jdbc/update-count 1}]
            (jdbc/with-transaction [t (ds)]
@@ -201,7 +234,20 @@ VALUES ('Pear', 'green', 49, 47)
 "])]
                (.rollback t save-point)
                result))))
-    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
+    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))
+    (with-open [con (jdbc/get-connection (ds))]
+      (let [ac (.getAutoCommit con)]
+        (is (= [{:next.jdbc/update-count 1}]
+               (jdbc/with-transaction [t con]
+                 (let [save-point (.setSavepoint t)
+                       result (jdbc/execute! t ["
+INSERT INTO fruit (name, appearance, cost, grade)
+VALUES ('Pear', 'green', 49, 47)
+"])]
+                   (.rollback t save-point)
+                   result))))
+        (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
+        (is (= ac (.getAutoCommit con))))))
   (testing "with-transaction with named save point"
     (is (= [{:next.jdbc/update-count 1}]
            (jdbc/with-transaction [t (ds)]
@@ -212,7 +258,20 @@ VALUES ('Pear', 'green', 49, 47)
 "])]
                (.rollback t save-point)
                result))))
-    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))))
+    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))
+    (with-open [con (jdbc/get-connection (ds))]
+      (let [ac (.getAutoCommit con)]
+        (is (= [{:next.jdbc/update-count 1}]
+               (jdbc/with-transaction [t con]
+                 (let [save-point (.setSavepoint t (name (gensym)))
+                       result (jdbc/execute! t ["
+INSERT INTO fruit (name, appearance, cost, grade)
+VALUES ('Pear', 'green', 49, 47)
+"])]
+                   (.rollback t save-point)
+                   result))))
+        (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
+        (is (= ac (.getAutoCommit con)))))))
 
 (deftest connection-tests
   (testing "datasource via jdbcUrl"
