@@ -6,6 +6,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch since the 1.0.11 release:
 
+* Address #81 by splitting the SQL-building functions out of `next.jdbc.sql` into `next.jdbc.sql.builder`.
 * Fix #80 by avoiding the auto-commit restore after a failed rollback in a failed transaction.
 * Address #78 by documenting the `:connectionInitSql` workaround for HikariCP/PostgreSQL and non-default schemas.
 
