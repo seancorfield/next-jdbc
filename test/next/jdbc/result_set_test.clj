@@ -11,6 +11,7 @@
             [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc.protocols :as p]
             [next.jdbc.result-set :as rs]
+            [next.jdbc.specs :as specs]
             [next.jdbc.test-fixtures :refer [with-test-db ds column
                                               default-options
                                               mssql? mysql? postgres?]])
@@ -19,6 +20,8 @@
 (set! *warn-on-reflection* true)
 
 (use-fixtures :once with-test-db)
+
+(specs/instrument)
 
 (deftest test-datafy-nav
   (testing "default schema"
