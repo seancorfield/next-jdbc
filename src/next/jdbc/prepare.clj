@@ -12,7 +12,8 @@
 
   Defines the `SettableParameter` protocol for converting Clojure values
   to database-specific values."
-  (:require [next.jdbc.protocols :as p])
+  (:require [clojure.java.data :as j]
+            [next.jdbc.protocols :as p])
   (:import (java.sql Connection
                      PreparedStatement
                      ResultSet
@@ -82,7 +83,8 @@
   ^java.sql.PreparedStatement
   [^Connection con ^String sql params
    {:keys [return-keys result-type concurrency cursors
-           fetch-size max-rows timeout]}]
+           fetch-size max-rows timeout]
+    :as opts}]
   (let [^PreparedStatement ps
         (cond
          return-keys
@@ -124,18 +126,60 @@
                       "may not be specified independently.")))
          :else
          (.prepareStatement con sql))]
+    ;; fast, specific option handling:
     (when fetch-size
       (.setFetchSize ps fetch-size))
     (when max-rows
       (.setMaxRows ps max-rows))
     (when timeout
       (.setQueryTimeout ps timeout))
+    ;; slow, general-purpose option handling:
+    (when-let [props (:statement opts)]
+      (j/set-properties ps props))
     (set-parameters ps params)))
 
 (extend-protocol p/Preparable
   java.sql.Connection
   (prepare [this sql-params opts]
            (create this (first sql-params) (rest sql-params) opts)))
+
+(defn statement
+  "Given a `Connection` and some options, return a `Statement`."
+  ^java.sql.Statement
+  ([con] (statement con {}))
+  ([^Connection con
+    {:keys [result-type concurrency cursors
+            fetch-size max-rows timeout]
+     :as opts}]
+   (let [^Statement stmt
+         (cond
+          (and result-type concurrency)
+          (if cursors
+            (.createStatement con
+                              (get result-set-type result-type result-type)
+                              (get result-set-concurrency concurrency concurrency)
+                              (get result-set-holdability cursors cursors))
+            (.createStatement con
+                              (get result-set-type result-type result-type)
+                              (get result-set-concurrency concurrency concurrency)))
+
+          (or result-type concurrency cursors)
+          (throw (IllegalArgumentException.
+                  (str ":concurrency, :cursors, and :result-type "
+                       "may not be specified independently.")))
+          :else
+          (.createStatement con))]
+     ;; fast, specific option handling:
+     (when fetch-size
+       (.setFetchSize stmt fetch-size))
+     (when max-rows
+       (.setMaxRows stmt max-rows))
+     (when timeout
+       (.setQueryTimeout stmt timeout))
+     ;; slow, general-purpose option handling:
+     (when-let [props (:statement opts)]
+       (j/set-properties stmt props))
+     stmt)))
 
 (defn execute-batch!
   "Given a `PreparedStatement` and a vector containing parameter groups,

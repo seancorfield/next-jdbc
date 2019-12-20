@@ -71,7 +71,8 @@
       (is (= (column :FRUIT/ID) (ffirst rs)))
       ;; and all its corresponding values should be ints
       (is (every? int? (map first (rest rs))))
-      (is (every? string? (map second (rest rs)))))
+      (is (every? string? (map second (rest rs))))))
+  (testing "execute! with adapter"
     (let [rs (jdbc/execute! ; test again, with adapter and lower columns
               (ds)
               ["select * from fruit order by id"]
@@ -89,7 +90,8 @@
       (is (= :fruit/id (ffirst rs)))
       ;; and all its corresponding values should be ints
       (is (every? int? (map first (rest rs))))
-      (is (every? string? (map second (rest rs)))))
+      (is (every? string? (map second (rest rs))))))
+  (testing "execute! with unqualified"
     (let [rs (jdbc/execute!
               (ds)
               ["select * from fruit order by id"]
@@ -113,6 +115,25 @@
       ;; and all its corresponding values should be ints
       (is (every? int? (map first (rest rs))))
       (is (every? string? (map second (rest rs))))))
+  (testing "execute! with :max-rows / :maxRows"
+    (let [rs (jdbc/execute!
+              (ds)
+              ["select * from fruit order by id"]
+              (assoc (default-options) :max-rows 2))]
+      (is (every? map? rs))
+      (is (every? meta rs))
+      (is (= 2 (count rs)))
+      (is (= 1 ((column :FRUIT/ID) (first rs))))
+      (is (= 2 ((column :FRUIT/ID) (last rs)))))
+    (let [rs (jdbc/execute!
+              (ds)
+              ["select * from fruit order by id"]
+              (assoc (default-options) :statement {:maxRows 2}))]
+      (is (every? map? rs))
+      (is (every? meta rs))
+      (is (= 2 (count rs)))
+      (is (= 1 ((column :FRUIT/ID) (first rs))))
+      (is (= 2 ((column :FRUIT/ID) (last rs))))))
   (testing "prepare"
     (let [rs (with-open [con (jdbc/get-connection (ds))
                          ps  (jdbc/prepare
@@ -137,24 +158,20 @@
       (is (= 4 ((column :FRUIT/ID) (first rs))))))
   (testing "statement"
     (let [rs (with-open [con (jdbc/get-connection (ds))]
-               (jdbc/execute! (.createStatement con)
+               (jdbc/execute! (prep/statement con (default-options))
                               ["select * from fruit order by id"]))]
       (is (every? map? rs))
       (is (every? meta rs))
       (is (= 4 (count rs)))
-      ;; SQL Server only returns table name if result-type/concurrency
-      ;; provided, which we can only for a PreparedStatement
-      (is (= 1 ((if (mssql?) :ID (column :FRUIT/ID)) (first rs))))
-      (is (= 4 ((if (mssql?) :ID (column :FRUIT/ID)) (last rs)))))
+      (is (= 1 ((column :FRUIT/ID) (first rs))))
+      (is (= 4 ((column :FRUIT/ID) (last rs)))))
     (let [rs (with-open [con (jdbc/get-connection (ds))]
-               (jdbc/execute! (.createStatement con)
+               (jdbc/execute! (prep/statement con (default-options))
                               ["select * from fruit where id = 4"]))]
       (is (every? map? rs))
       (is (every? meta rs))
       (is (= 1 (count rs)))
-      ;; SQL Server only returns table name if result-type/concurrency
-      ;; provided, which we can only for a PreparedStatement
-      (is (= 4 ((if (mssql?) :ID (column :FRUIT/ID)) (first rs))))))
+      (is (= 4 ((column :FRUIT/ID) (first rs))))))
   (testing "transact"
     (is (= [{:next.jdbc/update-count 1}]
            (jdbc/transact (ds)

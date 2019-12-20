@@ -38,14 +38,25 @@
       column names followed by vectors of column values for each row, and
       lower-case variants of each.
 
-  The following options are supported wherever a `PreparedStatement` is created:
+  The following options are supported wherever a `Connection` is created:
+  * `:auto-commit` -- either `true` or `false`,
+  * `:read-only` -- either `true` or `false`,
+  * `:connection` -- a hash map of camelCase properties to set, via reflection,
+      on the `Connection` object after it is created.
+
+  The following options are supported wherever a `Statement` or
+  `PreparedStatement` is created:
   * `:concurrency` -- `:read-only`, `:updatable`,
   * `:cursors` -- `:close`, `:hold`
   * `:fetch-size` -- the fetch size value,
   * `:max-rows` -- the maximum number of rows to return,
   * `:result-type` -- `:forward-only`, `:scroll-insensitive`, `:scroll-sensitive`,
-  * `:return-keys` -- either `true` or a vector of key names to return,
-  * `:timeout` -- the query timeout."
+  * `:timeout` -- the query timeout,
+  * `:statement` -- a hash map of camelCase properties to set, via reflection,
+      on the `Statement` or `PreparedStatement` object after it is created.
+
+  In addition, wherever a `PreparedStatement` is created, you may specify:
+  * `:return-keys` -- either `true` or a vector of key names to return."
   (:require [next.jdbc.connection]
             [next.jdbc.prepare]
             [next.jdbc.protocols :as p]

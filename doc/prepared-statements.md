@@ -2,16 +2,18 @@
 
 Under the hood, whenever you ask `next.jdbc` to execute some SQL it creates a `java.sql.PreparedStatement`, adds in the parameters you provide, and then calls `.execute` on it. Then it attempts to get a `ResultSet` from that and either return it or process it. If you asked for generated keys to be returned, that `ResultSet` will contain those generated keys if your database supports it, otherwise it will be whatever the `.execute` function produces. If no `ResultSet` is available at all, `next.jdbc` will ask for the count of updated rows and return that as if it were a result set.
 
-> Note: Some databases do not support all SQL operations via `PreparedStatement`, in which case you may need to create a `java.sql.Statement` and pass that into `plan`, `execute!`, or `execute-one!`, along with the SQL you wish to execute. Note that such statement execution may not have parameters. See the [Prepared Statement Caveat in Getting Started](/doc/getting-started.md#prepared-statement-caveat) for an example.
+> Note: Some databases do not support all SQL operations via `PreparedStatement`, in which case you may need to create a `java.sql.Statement` instead and pass that into `plan`, `execute!`, or `execute-one!`, along with the SQL you wish to execute. Note that such statement execution may not have parameters. See the [Prepared Statement Caveat in Getting Started](/doc/getting-started.md#prepared-statement-caveat) for an example.
 
 If you have a SQL operation that you intend to run multiple times on the same `java.sql.Connection`, it may be worth creating the prepared statement yourself and reusing it. `next.jdbc/prepare` accepts a connection and a vector of SQL and optional parameters and returns a `java.sql.PreparedStatement` which can be passed to `plan`, `execute!`, or `execute-one!` as the first argument. It is your responsibility to close the prepared statement after it has been used.
 
-If you need to pass an option map to `plan`, `execute!`, or `execute-one!` when passing a prepared statement, you must pass `nil` or `[]` as the second argument:
+If you need to pass an option map to `plan`, `execute!`, or `execute-one!` when passing a statement or prepared statement, you must pass `nil` or `[]` as the second argument:
 
 ```clojure
 (with-open [con (jdbc/get-connection ds)]
   (with-open [ps (jdbc/prepare con ["..." ...])]
     (jdbc/execute-one! ps nil {...})))
+  (with-open [stmt (jdbc/statement con)]
+    (jdbc/execute-one! stmt nil {...})))
 ```
 
 You can provide the parameters in the `prepare` call or you can provide them via a call to `set-parameters` (discussed in more detail below).

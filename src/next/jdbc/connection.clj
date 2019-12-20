@@ -5,7 +5,7 @@
 
   Also provides `dbtypes` as a map of all known database types, and
   the `->pool` function for creating pooled datasource objects."
-  (:require [clojure.java.data :refer [to-java]]
+  (:require [clojure.java.data :as j]
             [next.jdbc.protocols :as p])
   (:import (java.sql Connection DriverManager)
            (javax.sql DataSource)
@@ -221,9 +221,9 @@
   `java.io.Closeable` (HikariCP does, c3p0 does not)."
   [clazz db-spec]
   (if (:jdbcUrl db-spec)
-    (to-java clazz db-spec)
+    (j/to-java clazz db-spec)
     (let [[url etc] (spec->url+etc db-spec)]
-      (to-java clazz (assoc etc :jdbcUrl url)))))
+      (j/to-java clazz (assoc etc :jdbcUrl url)))))
 
 (defn- string->url+etc
   "Given a JDBC URL, return it with an empty set of options with no parsing."
@@ -248,17 +248,23 @@
   "Given a `DataSource` and a map of options, get a connection and update it
   as specified by the options.
 
-  The options supported are:
+  These options are supported:
   * `:auto-commit` -- whether the connection should be set to auto-commit or not;
       without this option, the defaut is `true` -- connections will auto-commit,
-  * `:read-only` -- whether the connection should be set to read-only mode."
+  * `:read-only` -- whether the connection should be set to read-only mode,
+  * `:connection` -- a hash map of camelCase properties to set on the connection,
+      via reflection, e.g., :autoCommit, :readOnly, :schema..."
   ^Connection
   [^DataSource datasource opts]
   (let [^Connection connection (.getConnection datasource)]
+    ;; fast, specific option handling:
     (when (contains? opts :auto-commit)
       (.setAutoCommit connection (boolean (:auto-commit opts))))
     (when (contains? opts :read-only)
       (.setReadOnly connection (boolean (:read-only opts))))
+    ;; slow, general-purpose option handling:
+    (when-let [props (:connection opts)]
+      (j/set-properties connection props))
     connection))
 
 (extend-protocol p/Sourceable

@@ -26,6 +26,7 @@ Any path that calls `get-connection` will accept the following options:
 
 * `:auto-commit` -- a `Boolean` that determines whether operations on this connection should be automatically committed (the default, `true`) or not; note that setting `:auto-commit false` is commonly required when you want to stream result set data from a query (along with fetch size etc -- see below),
 * `:read-only` -- a `Boolean` that determines whether the operations on this connection should be read-only or not (the default, `false`).
+* `:connection` -- a hash map of camelCase properties to set on the `Connection` object after it is created; these correspond to `.set*` methods on the `Connection` class and are set via the Java reflection API (using `org.clojure/java.data`). If `:autoCommit` or `:readOnly` are provided, they will take precedence over the fast, specific options above.
 
 If you need additional options set on a connection, you can either use Java interop to set them directly, or provide them as part of the "db spec" hash map passed to `get-datasource` (although then they will apply to _all_ connections obtained from that datasource).
 
@@ -44,21 +45,25 @@ Any function that might realize a row or a result set will accept:
 * `:label-fn` -- if `:builder-fn` is specified as one of `next.jdbc.result-set`'s `as-modified-*` builders, this option must be present and should specify a string-to-string transformation that will be applied to the column label for each returned column name.
 * `:qualifier-fn` -- if `:builder-fn` is specified as one of `next.jdbc.result-set`'s `as-modified-*` builders, this option should specify a string-to-string transformation that will be applied to the table name for each returned column name for which the table name is known. It can be omitted for the `as-unqualified-modified-*` variants.
 
-## Prepared Statements
+## Statements & Prepared Statements
 
-Any function that creates a `PreparedStatement` will accept the following options:
+Any function that creates a `Statement` or a `PreparedStatement` will accept the following options (see below for additional options for `PreparedStatement`):
 
 * `:concurrency` -- a keyword that specifies the concurrency level: `:read-only`, `:updatable`,
 * `:cursors` -- a keyword that specifies whether cursors should be closed or held over a commit: `:close`, `:hold`,
 * `:fetch-size` -- an integer that guides the JDBC driver in terms of how many rows to fetch at once; it is common to set `:fetch-size` to zero or a negative value in order to trigger streaming of result sets -- some JDBC drivers require additional options to be set on the connection _as well_,
 * `:max-rows` -- an integer that tells the JDBC driver to limit result sets to this many rows,
 * `:result-type` -- a keyword that affects how the `ResultSet` can be traversed: `:forward-only`, `:scroll-insensitive`, `:scroll-sensitive`,
-* `:return-keys` -- a truthy value asks that the JDBC driver to return any generated keys created by the operation; it can be `true` or it can be a vector of keywords identifying column names that should be returned,
-* `:timeout` -- an integer that specifies the timeout allowed for SQL operations.
+* `:timeout` -- an integer that specifies the (query) timeout allowed for SQL operations.
+* `:statement` -- a hash map of camelCase properties to set on the `Statement` or `PreparedStatement` object after it is created; these correspond to `.set*` methods on the `Statement` class (which `PreparedStatement` inherits) and are set via the Java reflection API (using `org.clojure/java.data`). If `:fetchSize`, `:maxRows`, or `:queryTimeout` are provided, they will take precedence over the fast, specific options above.
 
 If you specify either `:concurrency` or `:result-type`, you must specify _both_ of them. If you specify `:cursors`, you must also specify `:result-type` _and_ `:concurrency`.
 
 > Note: For MS SQL Server to return table names (for qualified column names), you must specify `:result-type` with one of the scroll values (and so you must also specify `:concurrency`).
+
+Any function that creates a `PreparedStatement` will additionally accept the following options:
+
+* `:return-keys` -- a truthy value asks that the JDBC driver to return any generated keys created by the operation; it can be `true` or it can be a vector of keywords identifying column names that should be returned.
 
 Not all databases or drivers support all of these options, or all values for any given option. If `:return-keys` is a vector of column names and that is not supported, `next.jdbc` will attempt a generic "return generated keys" option instead. If that is not supported, `next.jdbc` will fall back to a regular SQL operation. If other options are not supported, you may get a `SQLException`.
 

@@ -21,7 +21,7 @@
             [next.jdbc.connection :as connection]
             [next.jdbc.prepare :as prepare]
             [next.jdbc.sql :as sql])
-  (:import (java.sql Connection PreparedStatement)
+  (:import (java.sql Connection PreparedStatement Statement)
            (javax.sql DataSource)))
 
 (set! *warn-on-reflection* true)
@@ -48,6 +48,7 @@
 (s/def ::connection #(instance? Connection %))
 (s/def ::datasource #(instance? DataSource %))
 (s/def ::prepared-statement #(instance? PreparedStatement %))
+(s/def ::statement #(instance? Statement %))
 
 (s/def ::db-spec (s/or :db-spec  ::db-spec-map
                        :jdbc-url ::jdbc-url-map
@@ -90,20 +91,24 @@
                      :sql-params ::sql-params
                      :opts (s/? ::opts-map)))
 
+(s/fdef jdbc/statement
+        :args (s/cat :connection ::connection
+                     :opts (s/? ::opts-map)))
+
 (s/fdef jdbc/plan
-        :args (s/alt :prepared (s/cat :stmt ::prepared-statement)
+        :args (s/alt :prepared (s/cat :stmt ::statement)
                      :sql (s/cat :connectable ::connectable
                                  :sql-params (s/nilable ::sql-params)
                                  :opts (s/? ::opts-map))))
 
 (s/fdef jdbc/execute!
-        :args (s/alt :prepared (s/cat :stmt ::prepared-statement)
+        :args (s/alt :prepared (s/cat :stmt ::statement)
                      :sql (s/cat :connectable ::connectable
                                  :sql-params (s/nilable ::sql-params)
                                  :opts (s/? ::opts-map))))
 
 (s/fdef jdbc/execute-one!
-        :args (s/alt :prepared (s/cat :stmt ::prepared-statement)
+        :args (s/alt :prepared (s/cat :stmt ::statement)
                      :sql (s/cat :connectable ::connectable
                                  :sql-params (s/nilable ::sql-params)
                                  :opts (s/? ::opts-map))))
@@ -201,6 +206,7 @@
    `connection/->pool
    `prepare/execute-batch!
    `prepare/set-parameters
+   `prepare/statement
    `sql/insert!
    `sql/insert-multi!
    `sql/query

@@ -185,13 +185,15 @@ You can read more about [working with transactions](/doc/transactions.md) furthe
 
 ### Prepared Statement Caveat
 
-Not all databases support using a `PreparedStatement` for every type of SQL operation. You might have to create a `java.sql.Statement` yourself, directly from a `java.sql.Connection` and use that, without parameters, in `plan`, `execute!`, or `execute-one!`. See the following example:
+Not all databases support using a `PreparedStatement` for every type of SQL operation. You might have to create a `java.sql.Statement` instead, directly from a `java.sql.Connection` and use that, without parameters, in `plan`, `execute!`, or `execute-one!`. See the following example:
 
 ```clojure
+(require '[next.jdbc.prepare :as prep])
+
 (with-open [con (jdbc/get-connection ds)]
-  (jdbc/execute! (.createStatement con) ["...just a SQL string..."])
+  (jdbc/execute! (prep/statement con) ["...just a SQL string..."])
   (jdbc/execute! con ["...some SQL..." "and" "parameters"]) ; uses PreparedStatement
-  (into [] (map :column) (jdbc/plan (.createStatement con) ["..."])))
+  (into [] (map :column) (jdbc/plan (prep/statement con) ["..."])))
 ```
 
 ## Connection Pooling

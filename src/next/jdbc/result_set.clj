@@ -652,7 +652,7 @@
       [{:next.jdbc/update-count (.getUpdateCount this)}]))
 
   java.sql.Statement
-  ;; we can't tell if this PreparedStatement will return generated
+  ;; we can't tell if this Statement will return generated
   ;; keys so we pass a truthy value to at least attempt it if we
   ;; do not get a ResultSet back from the execute call
   (-execute [this sql-params opts]
