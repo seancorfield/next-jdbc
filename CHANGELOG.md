@@ -9,6 +9,7 @@ The following changes have been committed to the **master** branch since the 1.0
 * Fix #82 by adding `clojure.java.data`-based support for setting arbitrary properties on `Connection` and `PreparedStatement` objects, post-creation. Note: this uses the Java reflection API under the hood.
 * Adds `next.jdbc.prepare/statement` to create `Statement` objects with all the options available to `prepare` except `:return-keys`.
 * Update `org.clojure/java.data` to 0.1.5 (for property setting).
+* Additional clarifications in the documentation based on feedback on Slack.
 
 ## Stable Builds
 

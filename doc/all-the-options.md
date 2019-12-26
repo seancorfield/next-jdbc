@@ -30,9 +30,11 @@ Any path that calls `get-connection` will accept the following options:
 
 If you need additional options set on a connection, you can either use Java interop to set them directly, or provide them as part of the "db spec" hash map passed to `get-datasource` (although then they will apply to _all_ connections obtained from that datasource).
 
+> Note: If `plan`, `execute!`, or `execute-one!` are passed a `DataSource`, a "db spec" hash map, or a JDBC URI string, they will call `get-connection`, so they will accept the above options in those cases.
+
 ## Generating SQL
 
-The "friendly" SQL functions all accept the following options:
+The "friendly" SQL functions all accept the following options (in addition to all the options that `plan`, `execute!`, and `execute-one!` can accept):
 
 * `:table-fn` -- the quoting function to be used on the string that identifies the table name, if provided,
 * `:column-fn` -- the quoting function to be used on any string that identifies a column name, if provided.
@@ -44,6 +46,8 @@ Any function that might realize a row or a result set will accept:
 * `:builder-fn` -- a function that implements the `RowBuilder` and `ResultSetBuilder` protocols; strictly speaking, `plan` and `execute-one!` only need `RowBuilder` to be implemented (and `plan` only needs that if it actually has to realize a row) but most generation functions will implement both for ease of use.
 * `:label-fn` -- if `:builder-fn` is specified as one of `next.jdbc.result-set`'s `as-modified-*` builders, this option must be present and should specify a string-to-string transformation that will be applied to the column label for each returned column name.
 * `:qualifier-fn` -- if `:builder-fn` is specified as one of `next.jdbc.result-set`'s `as-modified-*` builders, this option should specify a string-to-string transformation that will be applied to the table name for each returned column name for which the table name is known. It can be omitted for the `as-unqualified-modified-*` variants.
+
+> Note: Subject to the caveats above about `:builder-fn`, that means that `plan`, `execute!`, `execute-one!`, and the "friendly" SQL functions will all accept these options for generating rows and result sets.
 
 ## Statements & Prepared Statements
 
@@ -67,7 +71,9 @@ Any function that creates a `PreparedStatement` will additionally accept the fol
 
 Not all databases or drivers support all of these options, or all values for any given option. If `:return-keys` is a vector of column names and that is not supported, `next.jdbc` will attempt a generic "return generated keys" option instead. If that is not supported, `next.jdbc` will fall back to a regular SQL operation. If other options are not supported, you may get a `SQLException`.
 
-In addition, `next.jdbc.prepare/execute-batch!` accepts an options hash map that can contain the following:
+> Note: If `plan`, `execute!`, or `execute-one!` are passed a `DataSource`, a "db spec" hash map, or a JDBC URI string, they will call `prepare` to create a `PreparedStatement`, so they will accept the above options in those cases.
+
+In addition the the above, `next.jdbc.prepare/execute-batch!` accepts an options hash map that can also contain the following:
 
 * `:batch-size` -- an integer that determines how to partition the parameter groups for submitting to the database in batches,
 * `:large` -- a Boolean flag that indicates whether the batch will produce large update counts (`long` rather than `int` values).
