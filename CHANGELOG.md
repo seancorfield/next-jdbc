@@ -4,14 +4,17 @@ Only accretive/fixative changes will be made from now on.
 
 ## Unreleased Changes
 
-The following changes have been committed to the **master** branch since the 1.0.12 release:
+The following changes have been committed to the **master** branch since the 1.0.13 release:
 
-* Fix #82 by adding `clojure.java.data`-based support for setting arbitrary properties on `Connection` and `PreparedStatement` objects, post-creation. Note: this uses the Java reflection API under the hood.
-* Adds `next.jdbc.prepare/statement` to create `Statement` objects with all the options available to `prepare` except `:return-keys`.
-* Update `org.clojure/java.data` to 0.1.5 (for property setting).
-* Additional clarifications in the documentation based on feedback on Slack.
+* None.
 
 ## Stable Builds
+
+* 2019-12-20 -- 1.0.13
+  * Fix #82 by adding `clojure.java.data`-based support for setting arbitrary properties on `Connection` and `PreparedStatement` objects, post-creation. Note: this uses the Java reflection API under the hood.
+  * Adds `next.jdbc.prepare/statement` to create `Statement` objects with all the options available to `prepare` except `:return-keys`.
+  * Update `org.clojure/java.data` to 0.1.5 (for property setting).
+  * Additional clarifications in the documentation based on feedback on Slack.
 
 * 2019-12-11 -- 1.0.12
   * Address #81 by splitting the SQL-building functions out of `next.jdbc.sql` into `next.jdbc.sql.builder`.
