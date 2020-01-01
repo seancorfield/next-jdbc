@@ -1,4 +1,4 @@
-;; copyright (c) 2019 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2020 Sean Corfield, all rights reserved
 
 (ns next.jdbc.sql.builder-test
   "Tests for the SQL string building functions in next.jdbc.sql.builder."

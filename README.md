@@ -75,6 +75,6 @@ In addition, convenience functions -- "syntactic sugar" -- are provided to inser
 
 ## License
 
-Copyright © 2018-2019 Sean Corfield
+Copyright © 2018-2020 Sean Corfield
 
 Distributed under the Eclipse Public License version 1.0.

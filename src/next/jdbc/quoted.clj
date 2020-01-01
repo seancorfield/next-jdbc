@@ -1,4 +1,4 @@
-;; copyright (c) 2019 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2020 Sean Corfield, all rights reserved
 
 (ns next.jdbc.quoted
   "Provides functions for use with the `:table-fn` and `:column-fn` options

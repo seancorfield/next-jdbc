@@ -1,4 +1,4 @@
-;; copyright (c) 2018-2019 Sean Corfield, all rights reserved
+;; copyright (c) 2018-2020 Sean Corfield, all rights reserved
 
 (ns next.jdbc.protocols
   "This is the extensible core of the next generation java.jdbc library.

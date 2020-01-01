@@ -1,4 +1,4 @@
-;; copyright (c) 2018-2019 Sean Corfield, all rights reserved
+;; copyright (c) 2018-2020 Sean Corfield, all rights reserved
 
 (ns ^:no-doc next.jdbc.transaction
   "Implementation of SQL transaction logic."

@@ -1,4 +1,4 @@
-;; copyright (c) 2019 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2020 Sean Corfield, all rights reserved
 
 (ns next.jdbc.quoted-test
   "Basic tests for quoting strategies. These are also tested indirectly
