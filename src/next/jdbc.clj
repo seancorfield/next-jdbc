@@ -120,7 +120,10 @@
   * `sqlite` -- `org.sqlite.JDBC`
   * `sqlserver`, `mssql` -- `com.microsoft.sqlserver.jdbc.SQLServerDriver` -- `1433`
   * `timesten:client` -- `com.timesten.jdbc.TimesTenClientDriver`
-  * `timesten:direct` -- `com.timesten.jdbc.TimesTenDriver`"
+  * `timesten:direct` -- `com.timesten.jdbc.TimesTenDriver`
+
+  For more details about `:dbtype` and `:classname` values, see:
+  https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.connection#dbtypes"
   ^javax.sql.DataSource
   [spec]
   (p/get-datasource spec))
