@@ -6,7 +6,9 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch since the 1.0.13 release:
 
-* None.
+* Add PostgreSQL streaming option information to **Tips & Tricks**.
+* Minor documentation fixes.
+* Planning to move to MAJOR.MINOR.COMMITS versioning scheme (1.0.375).
 
 ## Stable Builds
 
