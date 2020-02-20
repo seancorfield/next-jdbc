@@ -8,11 +8,13 @@ The latest versions on Clojars and on cljdoc:
 
 [![Clojars Project](https://clojars.org/seancorfield/next.jdbc/latest-version.svg)](https://clojars.org/seancorfield/next.jdbc) [![cljdoc badge](https://cljdoc.org/badge/seancorfield/next.jdbc)](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT)
 
-This documentation is for the 1.0.13 release -- [see the CHANGELOG](CHANGELOG.md).
+This documentation is for **master** since the 1.0.13 release -- [see the CHANGELOG](CHANGELOG.md).
 
 * [Getting Started](/doc/getting-started.md)
 * [Migrating from `clojure.java.jdbc`](/doc/migration-from-clojure-java-jdbc.md)
 * Feedback via [issues](https://github.com/seancorfield/next-jdbc/issues) or in the [`#sql` channel on the Clojurians Slack](https://clojurians.slack.com/messages/C1Q164V29/details/) or the [`#sql` stream on the Clojurians Zulip](https://clojurians.zulipchat.com/#narrow/stream/152063-sql).
+
+This project is moveing to the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINOR provide some relative indication of the size of the change, but do not follow semantic versioning. In general, all changes endeavor to be non-breaking (by moving to new names rather than by breaking existing names). COMMITS is an ever-increasing counter of commits since the beginning of this repository. The next version is likely to be 1.0.375.
 
 ## Motivation
 
