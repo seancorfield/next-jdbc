@@ -25,6 +25,8 @@ It is possible to tell `next.jdbc` to create connections that do not automatical
   (jdbc/execute! tx ...))
 ```
 
+If `with-transaction` is given a datasource, it will create and close the connection for you. If you pass in an existing connection, `with-transaction` will set up a transaction on that connection and, after either committing or rolling back the transaction, will restore the state of the connection and leave it open.
+
 You can also provide an options map as the third element of the binding vector (or the third argument to the `transact` function). The following options are supported:
 
 * `:isolation` -- the isolation level for this transaction (see [All The Options](/doc/all-the-options.md) for specifics),

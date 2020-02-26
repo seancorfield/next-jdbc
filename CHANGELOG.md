@@ -7,7 +7,7 @@ Only accretive/fixative changes will be made from now on.
 The following changes have been committed to the **master** branch since the 1.0.13 release:
 
 * Add PostgreSQL streaming option information to **Tips & Tricks**.
-* Minor documentation fixes.
+* Minor documentation fixes (including #92).
 * Improve `Unknown dbtype` exception message (to clarify that `:classname` is also missing).
 * Fix #88 by using 1-arity `keyword` call when table name unavailable (or `:qualifier-fn` returns `nil` or an empty string); also allows `:qualifier-fn` function to be called on empty table name (so `:qualifier-fn (constantly "qual")` will now work much like `clojure.java.jdbc`'s `:qualifier "qual"` worked).
 * Address #89, #91 by making minor performance tweaks to `next.jdbc.result-set` functions.
