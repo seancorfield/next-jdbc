@@ -8,6 +8,8 @@ The following changes have been committed to the **master** branch since the 1.0
 
 * Add PostgreSQL streaming option information to **Tips & Tricks**.
 * Minor documentation fixes.
+* Improve `Unknown dbtype` exception message (to clarify that `:classname` is also missing).
+* Address #89, #91 by making minor performance tweaks to `next.jdbc.result-set` functions.
 * Planning to move to MAJOR.MINOR.COMMITS versioning scheme (1.0.375).
 
 ## Stable Builds

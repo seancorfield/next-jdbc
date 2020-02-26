@@ -198,7 +198,9 @@
                                 (recur more)
                                 (throw loaded))
                               loaded)))))))
-          (throw (ex-info (str "Unknown dbtype: " dbtype) db-spec)))
+          (throw (ex-info (str "Unknown dbtype: " dbtype
+                               ", and :classname not provided.")
+                          db-spec)))
         [url etc]))))
 
 (defn ->pool

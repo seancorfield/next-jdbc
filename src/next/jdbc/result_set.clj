@@ -45,14 +45,16 @@
 
   Requires both the `:qualifier-fn` and `:label-fn` options."
   [^ResultSetMetaData rsmeta opts]
-  (assert (:qualifier-fn opts) ":qualifier-fn is required")
-  (assert (:label-fn opts) ":label-fn is required")
-  (mapv (fn [^Integer i] (keyword (some-> (.getTableName rsmeta i)
-                                          (not-empty)
-                                          ((:qualifier-fn opts)))
-                                  (-> (.getColumnLabel rsmeta i)
-                                      ((:label-fn opts)))))
-        (range 1 (inc (.getColumnCount rsmeta)))))
+  (let [qf (:qualifier-fn opts)
+        lf (:label-fn opts)]
+    (assert qf ":qualifier-fn is required")
+    (assert lf ":label-fn is required")
+    (mapv (fn [^Integer i] (keyword (some-> (.getTableName rsmeta i)
+                                            (not-empty)
+                                            (qf))
+                                    (-> (.getColumnLabel rsmeta i)
+                                        (lf))))
+          (range 1 (inc (.getColumnCount rsmeta))))))
 
 (defn get-unqualified-modified-column-names
   "Given `ResultSetMetaData`, return a vector of unqualified modified column
@@ -60,9 +62,10 @@
 
   Requires the `:label-fn` option."
   [^ResultSetMetaData rsmeta opts]
-  (assert (:label-fn opts) ":label-fn is required")
-  (mapv (fn [^Integer i] (keyword ((:label-fn opts) (.getColumnLabel rsmeta i))))
-        (range 1 (inc (.getColumnCount rsmeta)))))
+  (let [lf (:label-fn opts)]
+    (assert lf ":label-fn is required")
+    (mapv (fn [^Integer i] (keyword (lf (.getColumnLabel rsmeta i))))
+          (range 1 (inc (.getColumnCount rsmeta))))))
 
 (defn- lower-case
   "Converts a string to lower case in the US locale to avoid problems in
@@ -173,8 +176,6 @@
 
   Requires both the `:qualifier-fn` and `:label-fn` options."
   [^ResultSet rs opts]
-  (assert (:qualifier-fn opts) ":qualifier-fn is required")
-  (assert (:label-fn opts) ":label-fn is required")
   (let [rsmeta (.getMetaData rs)
         cols   (get-modified-column-names rsmeta opts)]
     (->MapResultSetBuilder rs rsmeta cols)))
@@ -185,7 +186,6 @@
 
   Requires the `:label-fn` option."
   [^ResultSet rs opts]
-  (assert (:label-fn opts) ":label-fn is required")
   (let [rsmeta (.getMetaData rs)
         cols   (get-unqualified-modified-column-names rsmeta opts)]
     (->MapResultSetBuilder rs rsmeta cols)))
@@ -290,8 +290,6 @@
 
   Requires both the `:qualifier-fn` and `:label-fn` options."
   [^ResultSet rs opts]
-  (assert (:qualifier-fn opts) ":qualifier-fn is required")
-  (assert (:label-fn opts) ":label-fn is required")
   (let [rsmeta (.getMetaData rs)
         cols   (get-modified-column-names rsmeta opts)]
     (->ArrayResultSetBuilder rs rsmeta cols)))
@@ -303,7 +301,6 @@
 
   Requires the `:label-fn` option."
   [^ResultSet rs opts]
-  (assert (:label-fn opts) ":label-fn is required")
   (let [rsmeta (.getMetaData rs)
         cols   (get-unqualified-modified-column-names rsmeta opts)]
     (->ArrayResultSetBuilder rs rsmeta cols)))
