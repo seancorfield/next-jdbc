@@ -29,8 +29,10 @@
   "Given `ResultSetMetaData`, return a vector of column names, each qualified by
   the table from which it came."
   [^ResultSetMetaData rsmeta opts]
-  (mapv (fn [^Integer i] (keyword (not-empty (.getTableName rsmeta i))
-                                  (.getColumnLabel rsmeta i)))
+  (mapv (fn [^Integer i]
+          (if-let [q (not-empty (.getTableName rsmeta i))]
+            (keyword q (.getColumnLabel rsmeta i))
+            (keyword (.getColumnLabel rsmeta i))))
         (range 1 (inc (.getColumnCount rsmeta)))))
 
 (defn get-unqualified-column-names
@@ -49,11 +51,10 @@
         lf (:label-fn opts)]
     (assert qf ":qualifier-fn is required")
     (assert lf ":label-fn is required")
-    (mapv (fn [^Integer i] (keyword (some-> (.getTableName rsmeta i)
-                                            (not-empty)
-                                            (qf))
-                                    (-> (.getColumnLabel rsmeta i)
-                                        (lf))))
+    (mapv (fn [^Integer i]
+            (if-let [q (some-> (.getTableName rsmeta i) (qf) (not-empty))]
+              (keyword q (-> (.getColumnLabel rsmeta i) (lf)))
+              (keyword (-> (.getColumnLabel rsmeta i) (lf)))))
           (range 1 (inc (.getColumnCount rsmeta))))))
 
 (defn get-unqualified-modified-column-names

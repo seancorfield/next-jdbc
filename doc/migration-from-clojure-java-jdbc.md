@@ -61,7 +61,7 @@ If you are using `:identifiers`, you will need to change to the appropriate `:bu
 
 `clojure.java.jdbc`'s default is the equivalent of `as-unqualified-lower-maps` (with the caveat that conflicting column names are not made unique -- see the note above in **Rows and Result Sets**). If you specified `:identifiers identity`, you can use `as-unqualified-maps`. If you provided your own string transformation function, you probably want `as-unqualified-modified-maps` and also pass your transformation function as the `:label-fn` option.
 
-If you used `:qualifier`, you may be able to get the same effect with `as-maps`, `as-lower-maps`, or `as-modified-maps`. Otherwise, you may need to specify the fixed qualifier via the `:label-fn #(str "my_qualifier/" %)`. You might think you could use `:qualifier-fn (constantly "my_qualifier")` for this but it is only called when the column has a known table name so it wouldn't be applied for derived values (and some databases don't provide the table name, so it wouldn't be applied at all for those databases).
+If you used `:qualifier`, you can get the same effect with `as-modified-maps` by passing `:qualifier-fn (constantly "my_qualifier")` (and the appropriate `:label-fn` -- either `identity` or `clojure.string/lowercase`).
 
 ### `:entities`
 

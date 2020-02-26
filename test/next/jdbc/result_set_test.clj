@@ -134,9 +134,9 @@
       (is (map? row))
       (is (= 4 (:id row)))
       (is (= "Orange" (:name row)))))
-  (testing "custom row builder"
+  (testing "custom row builder 1"
     (let [row (p/-execute-one (ds)
-                              ["select * from fruit where id = ?" 3]
+                              ["select fruit.*, id + 100 as newid from fruit where id = ?" 3]
                               (assoc (default-options)
                                      :builder-fn rs/as-modified-maps
                                      :label-fn str/lower-case
@@ -145,7 +145,21 @@
       (is (contains? row (column :FRUIT/appearance)))
       (is (nil? ((column :FRUIT/appearance) row)))
       (is (= 3 ((column :FRUIT/id) row)))
+      (is (= 103 (:newid row))) ; no table name here
       (is (= "Peach" ((column :FRUIT/name) row)))))
+  (testing "custom row builder 2"
+    (let [row (p/-execute-one (ds)
+                              ["select fruit.*, id + 100 as newid from fruit where id = ?" 3]
+                              (assoc (default-options)
+                                     :builder-fn rs/as-modified-maps
+                                     :label-fn str/lower-case
+                                     :qualifier-fn (constantly "vegetable")))]
+      (is (map? row))
+      (is (contains? row :vegetable/appearance))
+      (is (nil? (:vegetable/appearance row)))
+      (is (= 3 (:vegetable/id row)))
+      (is (= 103 (:vegetable/newid row))) ; constant qualifier here
+      (is (= "Peach" (:vegetable/name row)))))
   (testing "adapted row builder"
     (let [row (p/-execute-one (ds)
                               ["select * from fruit where id = ?" 3]
