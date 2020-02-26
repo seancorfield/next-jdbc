@@ -51,8 +51,6 @@
 
   Requires both the `:qualifier-fn` and `:label-fn` options."
   [^ResultSet rs opts]
-  (assert (:qualifier-fn opts) ":qualifier-fn is required")
-  (assert (:label-fn opts) ":label-fn is required")
   (let [rsmeta (.getMetaData rs)
         cols   (rs/get-modified-column-names rsmeta opts)]
     (->MapResultSetOptionalBuilder rs rsmeta cols)))
@@ -64,7 +62,6 @@
 
   Requires the `:label-fn` option."
   [^ResultSet rs opts]
-  (assert (:label-fn opts) ":label-fn is required")
   (let [rsmeta (.getMetaData rs)
         cols   (rs/get-unqualified-modified-column-names rsmeta opts)]
     (->MapResultSetOptionalBuilder rs rsmeta cols)))
