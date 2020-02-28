@@ -366,7 +366,7 @@
 
   If `datafiable-row` is called when reducing the result set produced by
   `next.jdbc/plan`, the row is fully-realized from the `ResultSet`
-  first."
+  first, using the `:builder-fn` (or `as-maps` by default)."
   (datafiable-row [this connectable opts]
     "Produce a datafiable representation of a row from a `ResultSet`."))
 

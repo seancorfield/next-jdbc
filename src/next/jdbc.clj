@@ -176,7 +176,24 @@
   Returns a reducible that, when reduced, runs the SQL and yields the result.
 
   Can be called on a `PreparedStatement`, a `Connection`, or something that can
-  produce a `Connection` via a `DataSource`."
+  produce a `Connection` via a `DataSource`.
+
+  Your reducing function can read columns by name (string or simple keyword)
+  from each row of the underlying `ResultSet` without realizing the row as
+  a Clojure hash map. `select-keys` can also be used without realizing the row.
+  Operations that imply an actual Clojure data structure (such as `assoc`,
+  `dissoc`, `seq`, `keys`, `vals`, etc) will realize the whole into a hash map
+  using the supplied `:builder-fn` (or `as-maps` by default).
+
+  If your reducing function needs to produce a hash map without calling a
+  function that implicitly realizes the row, you can call:
+
+  `(next.jdbc.result-set/datafiable-row row connectable opts)`
+
+  passing in the current row (passed to the reducing function), a `connectable`,
+  and an `opts` hash map. These can be the same values that you passed to `plan`
+  (or they can be different, depending on how you want the row to be built,
+  and how you want any subsequent lazy navigation to be handled)."
   (^clojure.lang.IReduceInit
     [stmt]
     (p/-execute stmt [] {}))
