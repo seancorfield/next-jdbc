@@ -116,7 +116,7 @@ user=>
 ```
 
 Relying on the default result set builder -- and table-qualified column names -- is the recommended approach to take, if possible, with a few caveats:
-* MS SQL Server produces unqualified column names by default (see [**Tips & Tricks**](/doc/getting-started/friendly-sql-functions.md#tips--tricks) for how to get table names back from MS SQL Server),
+* MS SQL Server produces unqualified column names by default (see [**Tips & Tricks**](/doc/tips-and-tricks.md) for how to get table names back from MS SQL Server),
 * Oracle's JDBC driver doesn't support `.getTableName()` so it will only produce unqualified column names (also mentioned in **Tips & Tricks**),
 * If your SQL query joins tables in a way that produces duplicate column names, and you use unqualified column names, then those duplicated column names will conflict and you will get only one of them in your result -- use aliases in SQL (`as`) to make the column names distinct,
 * If your SQL query joins a table to itself under different aliases, the _qualified_ column names will conflict because they are based on the underlying table name provided by the JDBC driver rather the alias you used in your query -- again, use aliases in SQL to make those column names distinct.

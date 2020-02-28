@@ -6,6 +6,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch since the 1.0.384 release:
 
+* Split **Tips & Tricks** into its own page, with a whole new section on using JSON data types with PostgreSQL (#94 -- thank you @vharmain).
 * Bump dependencies to latest.
 
 ## Stable Builds

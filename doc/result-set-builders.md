@@ -115,4 +115,4 @@ Remember that a protocol extension will apply to all code running in your applic
 
 Note that the converse, converting Clojure values to database-specific types is handled by the `SettableParameter` protocol, discussed in the next section ([Prepared Statements](/doc/prepared-statements.md#prepared-statement-parameters)).
 
-[<: Friendly SQL Functions](/doc/friendly-sql-functions.md) | [Prepared Statements :>](/doc/prepared-statements.md)
+[<: Tips & Tricks](/doc/tips-and-tricks.md) | [Prepared Statements :>](/doc/prepared-statements.md)
