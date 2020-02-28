@@ -2,6 +2,7 @@
                    ["Changes" {:file "CHANGELOG.md"}]
                    ["Getting Started" {:file "doc/getting-started.md"}
                     ["Friendly SQL Functions" {:file "doc/friendly-sql-functions.md"}]
+                    ["Tips & Tricks" {:file "doc/tips-and-tricks.md"}]
                     ["Result Set Builders" {:file "doc/result-set-builders.md"}]
                     ["Prepared Statements" {:file "doc/prepared-statements.md"}]
                     ["Transactions" {:file "doc/transactions.md"}]]
