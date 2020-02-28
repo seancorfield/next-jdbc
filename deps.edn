@@ -1,32 +1,38 @@
 {:paths ["src"]
  :deps {org.clojure/clojure {:mvn/version "1.10.1"}
-        org.clojure/java.data {:mvn/version "0.1.5"}}
+        org.clojure/java.data {:mvn/version "1.0.64"}}
  :aliases
  {:test {:extra-paths ["test"]
-         :extra-deps {org.clojure/test.check {:mvn/version "0.10.0"}
+         :extra-deps {org.clojure/test.check {:mvn/version "1.0.0"}
                       ;; connection pooling
-                      com.zaxxer/HikariCP {:mvn/version "3.4.1"}
-                      com.mchange/c3p0 {:mvn/version "0.9.5.4"}
+                      com.zaxxer/HikariCP {:mvn/version "3.4.2"}
+                      com.mchange/c3p0 {:mvn/version "0.9.5.5"}
                       ;; JDBC drivers
                       ;; compatible with JDK8+:
                       org.apache.derby/derby {:mvn/version "10.14.2.0"}
                       ;; compatible only with JDK9+:
-                      ;; org.apache.derby/derby {:mvn/version "10.15.1.3"}
-                      ;; org.apache.derby/derbyshared {:mvn/version "10.15.1.3"}
+                      ;; org.apache.derby/derby {:mvn/version "10.15.2.0"}
+                      ;; org.apache.derby/derbyshared {:mvn/version "10.15.2.0"}
                       org.hsqldb/hsqldb {:mvn/version "2.5.0"}
                       com.h2database/h2 {:mvn/version "1.4.200"}
                       net.sourceforge.jtds/jtds {:mvn/version "1.3.1"}
-                      mysql/mysql-connector-java {:mvn/version "8.0.18"}
-                      org.postgresql/postgresql {:mvn/version "42.2.8"}
+                      mysql/mysql-connector-java {:mvn/version "8.0.19"}
+                      org.postgresql/postgresql {:mvn/version "42.2.10"}
                       com.opentable.components/otj-pg-embedded {:mvn/version "0.13.3"}
                       com.impossibl.pgjdbc-ng/pgjdbc-ng {:mvn/version "0.8.3"}
-                      org.xerial/sqlite-jdbc {:mvn/version "3.28.0"}
-                      com.microsoft.sqlserver/mssql-jdbc {:mvn/version "7.4.1.jre8"}
+                      org.xerial/sqlite-jdbc {:mvn/version "3.30.1"}
+                      com.microsoft.sqlserver/mssql-jdbc {:mvn/version "8.2.1.jre8"}
                       ;; supplementary test stuff
-                      org.slf4j/slf4j-nop {:mvn/version "1.7.29"}}}
+                      org.slf4j/slf4j-nop {:mvn/version "1.7.30"}}}
   :runner
   {:extra-deps {com.cognitect/test-runner
                 {:git/url "https://github.com/cognitect-labs/test-runner"
-                 :sha "cb96e80f6f3d3b307c59cbeb49bb0dcb3a2a780b"}}
+                 :sha "f7ef16dc3b8332b0d77bc0274578ad5270fbfedd"}}
    :main-opts ["-m" "cognitect.test-runner"
-               "-d" "test"]}}}
+               "-d" "test"]}
+  :jar
+  {:extra-deps {seancorfield/depstar {:mvn/version "0.5.2"}}
+   :main-opts ["-m" "hf.depstar.jar" "next-jdbc.jar"]}
+  :deploy
+  {:extra-deps {deps-deploy {:mvn/version "0.0.9"}}
+   :main-opts ["-m" "deps-deploy.deps-deploy" "deploy" "next-jdbc.jar"]}}}
