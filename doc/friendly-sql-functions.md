@@ -298,4 +298,146 @@ You can get PostgreSQL to stream very large result sets (when you are reducing o
 * `:auto-commit false` -- when opening the connection
 * `:fetch-size 4000, :concurrency :read-only, :cursors :close, :result-type :forward-only` -- when running `plan` (or when creating a `PreparedStatement`).
 
+#### Working with json and jsonb
+
+Postgres has [good support](https://www.postgresql.org/docs/current/datatype-json.html) for storing, querying and manipulating JSON data. Basic Clojure datastructures (lists, vectors, and maps) transform pretty well to JSON data. With little help next.jdbc can automatically convert Clojure data to JSON and back for us.
+
+First we define functions for JSON encoding and decoding. `decode-key-fn` transforms all JSON-keys (strings) to keywords. metosin/jsonista is used here but cheshire would work as well.
+
+``` clojure
+(require '[jsonista.core :as json])
+
+(def mapper (json/object-mapper {:decode-key-fn keyword}))
+(def ->json json/write-value-as-string)
+(def <-json #(json/read-value % mapper))
+```
+
+Then we create helper functions to transform Clojure data to PGobjects
+containing JSON and vice versa.
+
+``` clojure
+(import '[org.postgresql.util PGobject])
+
+(defn ->pgobject
+  "Transforms clojure data to a PGobject that contains the data as
+  JSON. PGObject type defaults to `jsonb` but can be changed via
+  metadata key `:pgtype`"
+  [x]
+  (let [pgtype (or (:pgtype (meta x)) "jsonb")]
+    (doto (PGobject.)
+      (.setType pgtype)
+      (.setValue (->json x)))))
+
+(defn <-pgobject
+  "Transform PGobject containing `json` or `jsonb` value to clojure
+  data."
+  [^org.postgresql.util.PGobject v]
+  (let [type  (.getType v)
+        value (.getValue v)]
+    (if (#{"jsonb" "json"} type)
+      (with-meta (<-json value) {:pgtype type})
+      value)))
+```
+
+Finally we extend `next.jdbc.prepare/SettableParameter` and `next.jdbc.result-set/ReadableColumn` protocols to make the conversion between clojure data and PGobject JSON automatically.
+
+``` clojure
+(require '[next.jdbc.prepare :as prepare])
+(require '[next.jdbc.result-set :as result-set])
+
+;; if sql parameter is a clojure map...
+(extend-protocol prepare/SettableParameter
+  clojure.lang.IPersistentMap
+  (set-parameter [m s i]
+    (.setObject s i (->pgobject m))))
+
+;; ...or vector, they'll be transformed to PGobjects for postgres.
+(extend-protocol prepare/SettableParameter
+  clojure.lang.IPersistentVector
+  (set-parameter [v s i]
+    (.setObject s i (->pgobject v))))
+
+;; if result-set contains PGobjects we'll convert them to clojure data
+;; while reading (if column is either json or jsonb type)
+(extend-protocol result-set/ReadableColumn
+  org.postgresql.util.PGobject
+  (read-column-by-label [^org.postgresql.util.PGobject v _]
+    (<-pgobject v))
+  (read-column-by-index [^org.postgresql.util.PGobject v _2 _3]
+    (<-pgobject v)))
+```
+
+##### Inserting and querying json
+
+Let's assume we have following table:
+
+``` sql
+create table demo (
+  id          serial primary key,
+  doc_jsonb   jsonb,
+  doc_json    json
+)
+```
+
+We can now insert clojure data into json and jsonb fields:
+
+``` clojure
+(require '[next.jdbc :as jdbc])
+(require '[next.jdbc.sql :as sql])
+
+(def db { ...db-spec here... })
+(def ds (jdbc/get-datasource db))
+
+(def test-map
+    {:some-key "some val" :nested {:a 1} :null-val nil :vector [1 2 3]})
+
+(def data1
+    {:doc_jsonb test-map
+     :doc_json  (with-meta test-map {:pgtype "json"})})
+
+(sql/insert! ds :demo data1)
+
+(def test-vector
+    [{:a 1} nil 2 "lalala" []])
+
+(def data2
+    {:doc_jsonb test-vector
+     :doc_json  (with-meta test-vector {:pgtype "json"})})
+
+(sql/insert! ds :demo data2)
+```
+
+And result-set data is nicely transformed into Clojure data when querying:
+
+``` clojure
+(sql/get-by-id ds :demo 1)
+=> #:demo{:id 1,
+          :doc_json
+          {:some-key "some val",
+           :nested {:a 1},
+           :vector [1 2 3],
+           :null-val nil},
+          :doc_jsonb
+          {:some-key "some val",
+           :nested {:a 1},
+           :vector [1 2 3],
+           :null-val nil}}
+
+(sql/get-by-id ds :demo 2)
+=> #:demo{:id 2,
+          :doc_json [{:a 1} nil 2 "lalala" []],
+          :doc_jsonb [{:a 1} nil 2 "lalala" []]}
+
+;; Query by value of JSON field 'some-key'
+(sql/query ds ["select id, doc_jsonb::json->'nested' as foo from demo where doc_jsonb::json->>'some-key' = ?" "some val"])
+=> [{:demo/id 1, :foo {:a 1}}]
+```
+
+##### json or jsonb?
+
+* `json` column stores JSON data as strings (reading and writing is fast but manipulation is slow, field order is preserved)
+* `jsonb` column stores JSON data in binary format (manipulation is significantly faster but reading and writing is a little slower)
+
+If you're unsure whether you want to use json or jsonb, use jsonb.
+
 [<: Getting Started](/doc/getting-started.md) | [Result Set Builders :>](/doc/result-set-builders.md)
