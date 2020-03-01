@@ -65,6 +65,11 @@ You can get PostgreSQL to stream very large result sets (when you are reducing o
 * `:auto-commit false` -- when opening the connection
 * `:fetch-size 4000, :concurrency :read-only, :cursors :close, :result-type :forward-only` -- when running `plan` (or when creating a `PreparedStatement`).
 
+### Working with Date and Time
+
+By default, PostgreSQL's JDBC driver does not always perform conversions from `java.util.Date` to a SQL data type.
+You can enable this by extending `SettableParameter` to the appropriate (Java) types, or by simply requiring [`next.jdbc.date-time`](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.date-time).
+
 ### Working with JSON and JSONB
 
 PostgreSQL has good support for [storing, querying and manipulating JSON data](https://www.postgresql.org/docs/current/datatype-json.html). Basic Clojure data structures (lists, vectors, and maps) transform pretty well to JSON data. With a little help `next.jdbc` can automatically convert Clojure data to JSON and back for us.
