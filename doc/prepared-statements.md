@@ -46,7 +46,9 @@ This can be extended to any Clojure data type, to provide a customized way to ad
     (.setTimestamp ps i (java.sql.Timestamp/valueOf v))))
 ```
 
-Note that you can extend this protocol via metadata so you can do it on a per-object basis if you need:
+> Note: those conversions can also be enabled by requiring the [`next.jdbc.date-time` namespace](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.date-time).
+
+You can also extend this protocol via metadata so you can do it on a per-object basis if you need:
 
 ```clojure
 (with-meta obj {'next.jdbc.prepare/set-parameter (fn [v ps i]...)})

@@ -6,6 +6,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been committed to the **master** branch since the 1.0.384 release:
 
+* Specifically call out PostgreSQL as needing `next.jdbc.date-time` to enable automatic conversion of `java.util.Date` objects to SQL timestamps for prepared statements (#95).
 * Split **Tips & Tricks** into its own page, with a whole new section on using JSON data types with PostgreSQL (#94 -- thank you @vharmain).
 * Bump dependencies to latest.
 

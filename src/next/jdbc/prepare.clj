@@ -11,7 +11,11 @@
   `PreparedStatement` and then execute it in batch mode (via `.executeBatch`).
 
   Defines the `SettableParameter` protocol for converting Clojure values
-  to database-specific values."
+  to database-specific values.
+
+  See also https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.date-time
+  for implementations of `SettableParameter` that provide automatic
+  conversion of Java Time objects to SQL data types."
   (:require [clojure.java.data :as j]
             [next.jdbc.protocols :as p])
   (:import (java.sql Connection
