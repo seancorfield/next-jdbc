@@ -4,7 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 ## Stable Builds
 
-* 2020-03-02 -- 1.0.next
+* 2020-03-02 -- 1.0.395
   * Add `read-as-instant` and `read-as-local` functions to `next.jdbc.date-time` to extend `ReadableColumn` so that SQL `DATE` and `TIMESTAMP` columns can be read as Java Time types.
   * Specifically call out PostgreSQL as needing `next.jdbc.date-time` to enable automatic conversion of `java.util.Date` objects to SQL timestamps for prepared statements (#95).
   * Split **Tips & Tricks** into its own page, with a whole new section on using JSON data types with PostgreSQL (#94 -- thank you @vharmain).
