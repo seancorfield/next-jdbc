@@ -6,7 +6,7 @@ The next generation of `clojure.java.jdbc`: a new low-level Clojure wrapper for 
 
 The latest versions on Clojars and on cljdoc:
 
-[![Clojars Project](https://clojars.org/seancorfield/next.jdbc/latest-version.svg)](https://clojars.org/seancorfield/next.jdbc) [![cljdoc badge](https://cljdoc.org/badge/seancorfield/next.jdbc)](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT)
+[![Clojars Project](https://clojars.org/seancorfield/next.jdbc/latest-version.svg)](https://clojars.org/seancorfield/next.jdbc) [![cljdoc badge](https://cljdoc.org/badge/seancorfield/next.jdbc?1.0.395)](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT)
 
 This documentation is for **master** since the 1.0.395 release -- [see the CHANGELOG](CHANGELOG.md).
 
