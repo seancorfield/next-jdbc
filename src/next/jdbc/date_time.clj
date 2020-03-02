@@ -5,9 +5,13 @@
   to various date/time types so that they will all be treated as SQL
   timestamps (which also supports date and time column types).
 
-  Some databases support a wide variety of date/time type conversions.
-  Other databases need a bit of help. You should only require this
-  namespace if you database does not support these conversions automatically.
+  Simply requiring this namespace will extend the `SettableParameter` protocol
+  to the four types listed below. In addition, there are several `read-as-*`
+  functions here that will extend `next.jdbc.result-set/ReadableColumn` to
+  allow `java.sql.Date` and `java.sql.Timestamp` columns to be read as
+  (converted to) various Java Time types automatically. The expectation is
+  that you will call at most one of these, at application startup, to enable
+  the behavior you want.
 
   * H2 and SQLite support conversion of Java Time (`Instant`, `LocalDate`,
     `LocalDateTime`) out of the box,
@@ -22,8 +26,10 @@
 
   PostgreSQL does not seem able to convert `java.util.Date` to a SQL
   timestamp by default (every other database can!) so you'll probably
-  need to require this namespace, even if you don't use Java Time."
-  (:require [next.jdbc.prepare :as p])
+  need to require this namespace, even if you don't use Java Time, when
+  working with PostgreSQL."
+  (:require [next.jdbc.prepare :as p]
+            [next.jdbc.result-set :as rs])
   (:import (java.sql PreparedStatement Timestamp)
            (java.time Instant LocalDate LocalDateTime)))
 
@@ -52,3 +58,47 @@
   java.sql.Timestamp
   (set-parameter [^java.sql.Timestamp v ^PreparedStatement s ^long i]
     (.setTimestamp s i v)))
+
+(defn read-as-instant
+  "After calling this function, `next.jdbc.result-set/ReadableColumn`
+  will be extended to (`java.sql.Date` and) `java.sql.Timestamp` so that any
+  timestamp columns will automatically be read as `java.time.Instant`.
+
+  Note that `java.sql.Date` columns will still be returns as-is because they
+  cannot be converted to an instant (they lack a time component)."
+  []
+  (extend-protocol rs/ReadableColumn
+    java.sql.Date
+    (read-column-by-label [^java.sql.Date v _]     v)
+    (read-column-by-index [^java.sql.Date v _2 _3] v)
+    java.sql.Timestamp
+    (read-column-by-label [^java.sql.Timestamp v _]     (.toInstant v))
+    (read-column-by-index [^java.sql.Timestamp v _2 _3] (.toInstant v))))
+
+(defn read-as-local
+  "After calling this function, `next.jdbc.result-set/ReadableColumn`
+  will be extended to `java.sql.Date` and `java.sql.Timestamp` so that any
+  date or timestamp columns will automatically be read as `java.time.LocalDate`
+  or `java.time.LocalDateTime` respectively."
+  []
+  (extend-protocol rs/ReadableColumn
+    java.sql.Date
+    (read-column-by-label [^java.sql.Date v _]     (.toLocalDate v))
+    (read-column-by-index [^java.sql.Date v _2 _3] (.toLocalDate v))
+    java.sql.Timestamp
+    (read-column-by-label [^java.sql.Timestamp v _]     (.toLocalDateTime v))
+    (read-column-by-index [^java.sql.Timestamp v _2 _3] (.toLocalDateTime v))))
+
+(defn read-as-default
+  "After calling this function, `next.jdbc.result-set/ReadableColumn`
+  will be extended to `java.sql.Date` and `java.sql.Timestamp` so that any
+  date or timestamp columns will be read as-is. This is provided for
+  completeness, to undo the effects of `read-as-instant` or `read-as-local`."
+  []
+  (extend-protocol rs/ReadableColumn
+    java.sql.Date
+    (read-column-by-label [^java.sql.Date v _]     v)
+    (read-column-by-index [^java.sql.Date v _2 _3] v)
+    java.sql.Timestamp
+    (read-column-by-label [^java.sql.Timestamp v _]     v)
+    (read-column-by-index [^java.sql.Timestamp v _2 _3] v)))
