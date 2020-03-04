@@ -32,7 +32,7 @@ I also wanted `datafy`/`nav` support baked right in (it was added to `clojure.ja
 
 As `next.jdbc` moved from alpha to beta, the last breaking change was made (renaming `reducible!` to `plan`) and the API should be considered stable. Only accretive and fixative changes will be made from now on.
 
-After a month of alpha builds being available for testing, the first beta build was released on May 24th, 2019. A release candidate followed on June 4th and the "gold" (1.0.0) release was on June 12th. In addition to the small, core API in `next.jdbc`, there are "syntactic sugar" SQL functions (`insert!`, `query`, `update!`, and `delete!`) available in `next.jdbc.sql` that are similar to the main API in `clojure.java.jdbc`. See [Migrating from `clojure.java.jdbc`](/doc/migration-from-clojure-java-jdbc.md) for more detail about the differences.
+After a month of alpha builds being available for testing, the first beta build was released on May 24th, 2019. A release candidate followed on June 4th and the "gold" (1.0.0) release was on June 12th. In addition to the small, core API in `next.jdbc`, there are "syntactic sugar" SQL functions (`insert!`, `query`, `update!`, and `delete!`) available in `next.jdbc.sql` that are similar to the main API in `clojure.java.jdbc`. See [Migrating from `clojure.java.jdbc`](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/migration-from-clojure-java-jdbc) for more detail about the differences.
 
 ## Usage
 
@@ -70,6 +70,7 @@ In addition, convenience functions -- "syntactic sugar" -- are provided to inser
 
 * [Getting Started](/doc/getting-started.md)
 * [Friendly SQL Functions](/doc/friendly-sql-functions.md)
+* [Tips & Tricks](/doc/tips-and-tricks.md)
 * [Result Set Builders](/doc/result-set-builders.md)
 * [Prepared Statements](/doc/prepared-statements.md)
 * [Transactions](/doc/transactions.md)
