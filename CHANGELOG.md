@@ -6,7 +6,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been made to **master** since the 1.0.395 build:
 
-* None.
+* Attempt to drive readers to cljdoc.org instead of the GitHub version (which is harder to navigate).
 
 ## Stable Builds
 

@@ -182,7 +182,7 @@
   from each row of the underlying `ResultSet` without realizing the row as
   a Clojure hash map. `select-keys` can also be used without realizing the row.
   Operations that imply an actual Clojure data structure (such as `assoc`,
-  `dissoc`, `seq`, `keys`, `vals`, etc) will realize the whole into a hash map
+  `dissoc`, `seq`, `keys`, `vals`, etc) will realize the row into a hash map
   using the supplied `:builder-fn` (or `as-maps` by default).
 
   If your reducing function needs to produce a hash map without calling a
