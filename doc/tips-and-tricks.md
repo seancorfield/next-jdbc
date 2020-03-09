@@ -123,7 +123,7 @@ Finally we extend `next.jdbc.prepare/SettableParameter` and `next.jdbc.result-se
 (extend-protocol prepare/SettableParameter
   clojure.lang.IPersistentMap
   (set-parameter [m s i]
-    (.setObject s i (->pgobject m))))
+    (.setObject s i (->pgobject m)))
 
   clojure.lang.IPersistentVector
   (set-parameter [v s i]
