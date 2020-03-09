@@ -30,7 +30,7 @@ For the examples in this documentation, we will use a local H2 database on disk,
 ;; deps.edn
 {:deps {org.clojure/clojure {:mvn/version "1.10.1"}
         seancorfield/next.jdbc {:mvn/version "1.0.395"}
-        com.h2database/h2 {:mvn/version "1.4.200"}}}
+        com.h2database/h2 {:mvn/version "1.4.199"}}}
 ```
 
 ### Create & Populate a Database
@@ -123,39 +123,102 @@ Relying on the default result set builder -- and table-qualified column names --
 
 ### `plan` & Reducing Result Sets
 
-While those functions are fine for retrieving result sets as data, most of the time you want to process that data efficiently, so `next.jdbc` provides a SQL execution function that works with `reduce` and with transducers to consume the result set without the intermediate overhead of creating Clojure data structures for every row:
+While the `execute!` and `execute-one!` functions are fine for retrieving result sets as data, most of the time you want to process that data efficiently without necessarily converting the entire result set into a Clojure data structure, so `next.jdbc` provides a SQL execution function that works with `reduce` and with transducers to consume the result set without the intermediate overhead of creating Clojure data structures for every row.
+
+We're going to create a new table that contains invoice items so we can see how to use `plan` without producing data structures:
+
+```clojure
+user=> (jdbc/execute-one! ds ["
+create table invoice (
+  id int auto_increment primary key,
+  product varchar(32),
+  unit_price decimal(10,2),
+  unit_count int unsigned,
+  customer_id int unsigned
+)"])
+#:next.jdbc{:update-count 0}
+user=> (jdbc/execute-one! ds ["
+insert into invoice (product, unit_price, unit_count, customer_id)
+values ('apple', 0.99, 6, 100),
+       ('banana', 1.25, 3, 100),
+       ('cucumber', 2.49, 2, 100)
+"])
+#:next.jdbc{:update-count 3}
+user=> (reduce
+         (fn [cost row]
+           (+ cost (* (:unit_price row)
+                      (:unit_count row))))
+         0
+         (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
+14.67M
+```
+
+The call to `jdbc/plan` returns an `IReduceInit` object but does not actually run the SQL. Only when the returned object is reduced is the connection obtained from the data source, the SQL executed, and the computation performed. The connection is closed automatically when the reduction is complete. The `row` in the reduction is an abstraction over the underlying (mutable) `ResultSet` object -- it is not a Clojure data structure. Because of that, you can simply access the columns via their SQL labels as shown -- you do not need to use the column-qualified name, and you do not need to worry about the database returning uppercase column names (SQL labels are not case sensitive).
+
+Here's the same computation rewritten using `transduce`:
+
+```clojure
+user=> (transduce
+         (map #(* (:unit_price %) (:unit_count %)))
+         +
+         0
+         (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
+14.67M
+```
+
+or composing the transforms:
+
+```clojure
+user=> (transduce
+         (comp (map (juxt :unit_price :unit_count))
+               (map #(apply * %)))
+         +
+         0
+         (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
+14.67M
+```
+
+If you just wanted the total item count:
+
+```clojure
+user=> (transduce
+         (map :unit_count)
+         +
+         0
+         (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
+11
+```
+
+You can use other functions that perform reductions to process the result of `plan`, such as obtaining a set of unique products from an invoice:
 
 ```clojure
 user=> (into #{}
-             (map :ADDRESS/NAME)
-             (jdbc/plan ds ["select * from address"]))
-#{"Sean Corfield" "Someone Else"}
-user=>
+             (map :product)
+             (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
+#{"apple" "banana" "cucumber"}
 ```
 
-This produces a set of all the unique names in the `address` table, directly from the `java.sql.ResultSet` object returned by the JDBC driver, without creating any Clojure hash maps. That means you can use either the qualified keyword that would be produced by `execute!` or `execute-one!` or you can use a simple keyword that mirrors the column name (label) directly:
-
-```clojure
-user=> (into #{}
-             (map :name)
-             (jdbc/plan ds ["select * from address"]))
-#{"Sean Corfield" "Someone Else"}
-user=>
-```
-
-Any operation that can perform key-based lookup can be used here without creating hash maps: `get`, `contains?`, `find` (returns a `MapEntry` of whatever key you requested and the corresponding column value), or direct keyword access as shown above. Any operation that would require a Clojure hash map, such as `assoc` or anything that invokes `seq` (`keys`, `vals`), will cause the full row to be expanded into a hash map, such as produced by `execute!` or `execute-one!`, which implements `Datafiable` and `Navigable` and supports lazy navigation via foreign keys, explained in [`datafy`, `nav`, and the `:schema` option](/doc/datafy-nav-and-schema.md).
+Any operation that can perform key-based lookup can be used here without creating hash maps from the rows: `get`, `contains?`, `find` (returns a `MapEntry` of whatever key you requested and the corresponding column value), or direct keyword access as shown above. Any operation that would require a Clojure hash map, such as `assoc` or anything that invokes `seq` (`keys`, `vals`), will cause the full row to be expanded into a hash map, such as produced by `execute!` or `execute-one!`, which implements `Datafiable` and `Navigable` and supports lazy navigation via foreign keys, explained in [`datafy`, `nav`, and the `:schema` option](/doc/datafy-nav-and-schema.md).
 
 This means that `select-keys` can be used to create regular Clojure hash map from (a subset of) columns in the row, without realizing the row, and it will not implement `Datafiable` or `Navigable`.
 
-If you wish to create a Clojure hash map that supports that lazy navigation, you can call `next.jdbc.result-set/datafiable-row`, passing in the current row, a `connectable`, and an options hash map, just as you passed into `plan`:
+If you wish to create a Clojure hash map that supports that lazy navigation, you can call `next.jdbc.result-set/datafiable-row`, passing in the current row, a `connectable`, and an options hash map, just as you passed into `plan`. Compare the difference in output between these three expressions:
 
 ```clojure
 user=> (into []
+             (map #(select-keys % [:id :product :unit_price :unit_cost :customer_id]))
+             (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
+user=> (into []
+             (map #(select-keys % [:invoice/id :invoice/product
+                                   :invoice/unit_price :invoice/unit_cost
+                                   :invoice/customer_id]))
+             (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
+user=> (into []
              (map #(rs/datafiable-row % ds {}))
-             (jdbc/plan ds ["select * from address"]))
+             (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
 ```
 
-This produces a vector of hash maps, just like the result of `execute!`, where each "row" is datafiable and navigable.
+The latter produces a vector of hash maps, just like the result of `execute!`, where each "row" follows the case conventions of the database, the keys are qualified by the table name, and the hash map is datafiable and navigable.
 
 > Note: since `plan` expects you to process the result set via reduction, you should not use it for DDL or for SQL statements that only produce update counts.
 
