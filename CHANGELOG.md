@@ -4,12 +4,15 @@ Only accretive/fixative changes will be made from now on.
 
 ## Unreleased Changes
 
-The following changes have been made to **master** since the 1.0.395 build:
+The following changes have been made to **master** since the 1.0.405 build:
 
-* Improve documentation around `plan` so `reduce` etc is more obvious.
-* Attempt to drive readers to cljdoc.org instead of the GitHub version (which is harder to navigate).
+None.
 
 ## Stable Builds
+
+* 2020-03-14 -- 1.0.405 (no code changes -- just documentation)
+  * Improve documentation around `plan` so `reduce` etc is more obvious.
+  * Attempt to drive readers to cljdoc.org instead of the GitHub version (which is harder to navigate).
 
 * 2020-03-02 -- 1.0.395
   * Add `read-as-instant` and `read-as-local` functions to `next.jdbc.date-time` to extend `ReadableColumn` so that SQL `DATE` and `TIMESTAMP` columns can be read as Java Time types.
