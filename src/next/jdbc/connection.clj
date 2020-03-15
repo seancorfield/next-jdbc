@@ -82,6 +82,8 @@
                       :alias-for "sqlserver"
                       :dbname-separator ";DATABASENAME="
                       :port 1433}
+   "mariadb"         {:classname "org.mariadb.jdbc.Driver"
+                      :port 3306}
    "mysql"           {:classname ["com.mysql.cj.jdbc.Driver"
                                   "com.mysql.jdbc.Driver"]
                       :port 3306}

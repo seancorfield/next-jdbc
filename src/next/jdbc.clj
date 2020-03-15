@@ -109,6 +109,7 @@
   * `h2:mem` -- `org.h2.Driver` -- for an in-memory database
   * `hsqldb`, `hsql` -- `org.hsqldb.jdbcDriver`
   * `jtds:sqlserver`, `jtds` -- `net.sourceforge.jtds.jdbc.Driver` -- `1433`
+  * `mariadb` -- `org.mariadb.jdbc.Driver` -- `3306`
   * `mysql` -- `com.mysql.cj.jdbc.Driver`, `com.mysql.jdbc.Driver` -- `3306`
   * `oracle:oci` -- `oracle.jdbc.OracleDriver` -- `1521`
   * `oracle:thin`, `oracle` -- `oracle.jdbc.OracleDriver` -- `1521`
