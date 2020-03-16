@@ -4,11 +4,14 @@ Only accretive/fixative changes will be made from now on.
 
 ## Unreleased Changes
 
-The following changes have been made to **master** since the 1.0.405 build:
+The following changes have been made to **master** since the 1.0.409 build:
 
-* Address #100 by adding support for MariaDB (@green-coder). Set `NEXT_JDBC_TEST_MARIADB=true` as well as `NEXT_JDBC_TEST_MYSQL=true` in order to run tests against MariaDB.
+* None.
 
 ## Stable Builds
+
+* 2020-03-16 -- 1.0.409
+  * Address #100 by adding support for MariaDB (@green-coder). Set `NEXT_JDBC_TEST_MARIADB=true` as well as `NEXT_JDBC_TEST_MYSQL=true` in order to run tests against MariaDB.
 
 * 2020-03-14 -- 1.0.405 (no code changes -- just documentation)
   * Improve documentation around `plan` so `reduce` etc is more obvious.
