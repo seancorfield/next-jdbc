@@ -27,8 +27,11 @@
 (defonce embedded-pg (future (EmbeddedPostgres/start)))
 
 (def ^:private test-mysql-map
-  {:dbtype "mysql" :dbname "clojure_test" :useSSL false
-   :user "root" :password (System/getenv "MYSQL_ROOT_PASSWORD")})
+  (merge (if (System/getenv "NEXT_JDBC_TEST_MARIADB")
+           {:dbtype "mariadb"}
+           {:dbtype "mysql" :disableMariaDbDriver true})
+         {:dbname "clojure_test" :useSSL false
+          :user "root" :password (System/getenv "MYSQL_ROOT_PASSWORD")}))
 (def ^:private test-mysql
   (when (System/getenv "NEXT_JDBC_TEST_MYSQL") test-mysql-map))
 
@@ -47,9 +50,11 @@
 
 (defn derby? [] (= "derby" (:dbtype @test-db-spec)))
 
+(defn maria? [] (= "mariadb" (:dbtype @test-db-spec)))
+
 (defn mssql? [] (= "mssql" (:dbtype @test-db-spec)))
 
-(defn mysql? [] (= "mysql" (:dbtype @test-db-spec)))
+(defn mysql? [] (#{"mariadb" "mysql"} (:dbtype @test-db-spec)))
 
 (defn postgres? [] (= "embedded-postgres" (:dbtype @test-db-spec)))
 

@@ -297,7 +297,8 @@ VALUES ('Pear', 'green', 49, 47)
             ds (jdbc/get-datasource (assoc etc :jdbcUrl url))]
         (cond (derby?) (is (= {:create true} etc))
               (mssql?) (is (= #{:user :password} (set (keys etc))))
-              (mysql?) (is (= #{:user :password :useSSL} (set (keys etc))))
+              (mysql?) (is (= #{:user :password :useSSL}
+                              (disj (set (keys etc)) :disableMariaDbDriver)))
               :else    (is (= {} etc)))
         (is (instance? javax.sql.DataSource ds))
         (is (str/index-of (pr-str ds) (str "jdbc:"

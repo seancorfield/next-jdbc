@@ -6,7 +6,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been made to **master** since the 1.0.405 build:
 
-None.
+* Address #100 by adding support for MariaDB (@green-coder). Set `NEXT_JDBC_TEST_MARIADB=true` as well as `NEXT_JDBC_TEST_MYSQL=true` in order to run tests against MariaDB.
 
 ## Stable Builds
 
