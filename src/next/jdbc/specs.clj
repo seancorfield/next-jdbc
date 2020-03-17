@@ -42,7 +42,16 @@
                                       ::host ::port
                                       ::dbname-separator
                                       ::host-prefix]))
-(s/def ::jdbcUrl string?)
+(defn jdbc-url-format?
+  "JDBC URLs must begin with `jdbc:` followed by the `dbtype` and
+  a second colon. Note: `clojure.java.jdbc` incorrectly allowed
+  `jdbc:` to be omitted at the beginning of a JDBC URL."
+  [url]
+  (re-find #"^jdbc:[^:]+:" url))
+(s/def ::jdbcUrl (s/and string? jdbc-url-format?))
+(comment
+  (s/explain-data ::jdbcUrl "jdbc:somedb://some-host/dbname")
+  (s/explain-data ::jdbcUrl "somedb://some-host/dbname"))
 (s/def ::jdbc-url-map (s/keys :req-un [::jdbcUrl]))
 
 (s/def ::connection #(instance? Connection %))
@@ -52,7 +61,7 @@
 
 (s/def ::db-spec (s/or :db-spec  ::db-spec-map
                        :jdbc-url ::jdbc-url-map
-                       :string   string?
+                       :string   ::jdbcUrl
                        :ds       ::datasource))
 (s/def ::db-spec-or-jdbc (s/or :db-spec  ::db-spec-map
                                :jdbc-url ::jdbc-url-map))
