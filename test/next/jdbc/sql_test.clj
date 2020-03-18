@@ -67,8 +67,8 @@
 
 (deftest test-insert-delete
   (let [new-key (cond (derby?)    :1
-                      (mssql?)    :GENERATED_KEYS
                       (maria?)    :insert_id
+                      (mssql?)    :GENERATED_KEYS
                       (mysql?)    :GENERATED_KEY
                       (postgres?) :fruit/id
                       (sqlite?)   (keyword "last_insert_rowid()")
