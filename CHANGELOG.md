@@ -7,6 +7,7 @@ Only accretive/fixative changes will be made from now on.
 The following changes have been made to **master** since the 1.0.409 build:
 
 * Fixes #101 by tightening the spec on a JDBC URL to correctly reflect that it must start with `jdbc:`.
+* Add support for calling `.getLoginTimeout`/`.setLoginTimeout` on the reified `DataSource` returned by `get-datasource` when called on a hash map "db-spec" or JDBC URL string.
 
 ## Stable Builds
 

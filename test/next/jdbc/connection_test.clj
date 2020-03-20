@@ -101,6 +101,8 @@
             ds (p/get-datasource url)]
         (is (instance? javax.sql.DataSource ds))
         (is (str/index-of (pr-str ds) url))
+        (.setLoginTimeout ds 0)
+        (is (= 0 (.getLoginTimeout ds)))
         (with-open [con (p/get-connection ds {})]
           (is (instance? java.sql.Connection con)))))
     (testing "datasource via jdbcUrl"
@@ -113,6 +115,8 @@
         (is (str/index-of (pr-str ds) (str "jdbc:" (:dbtype db))))
         ;; checks get-datasource on a DataSource is identity
         (is (identical? ds (p/get-datasource ds)))
+        (.setLoginTimeout ds 1)
+        (is (= 1 (.getLoginTimeout ds)))
         (with-open [con (p/get-connection ds {})]
           (is (instance? java.sql.Connection con)))))
     (testing "datasource via HikariCP"

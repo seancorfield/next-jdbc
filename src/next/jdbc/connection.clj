@@ -132,7 +132,8 @@
 (defn- get-driver-connection
   "Common logic for loading the designated JDBC driver class and
   obtaining the appropriate `Connection` object."
-  [url etc]
+  [url timeout etc]
+  (when timeout (DriverManager/setLoginTimeout timeout))
   (DriverManager/getConnection url (as-properties etc)))
 
 (def ^:private driver-cache
@@ -238,15 +239,18 @@
   "Given a JDBC URL and a map of options, return a `DataSource` that can be
   used to obtain a new database connection."
   [[url etc]]
-  (reify DataSource
-    (getConnection [_]
-                   (get-driver-connection url etc))
-    (getConnection [_ username password]
-                   (get-driver-connection url
-                                          (assoc etc
-                                                 :user username
-                                                 :password password)))
-    (toString [_] url)))
+  (let [login-timeout (atom nil)]
+    (reify DataSource
+      (getConnection [_]
+                     (get-driver-connection url @login-timeout etc))
+      (getConnection [_ username password]
+                     (get-driver-connection url @login-timeout
+                                            (assoc etc
+                                                   :user username
+                                                   :password password)))
+      (getLoginTimeout [_] (or @login-timeout 0))
+      (setLoginTimeout [_ secs] (reset! login-timeout secs))
+      (toString [_] url))))
 
 (defn- make-connection
   "Given a `DataSource` and a map of options, get a connection and update it
