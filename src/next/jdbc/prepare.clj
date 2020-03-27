@@ -77,7 +77,7 @@
 
 (defn- ^{:tag (class (into-array String []))} string-array
   [return-keys]
-  (into-array String return-keys))
+  (into-array String (map name return-keys)))
 
 (defn create
   "This is an implementation detail -- use `next.jdbc/prepare` instead.
