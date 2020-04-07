@@ -9,9 +9,9 @@ Columns declared with the `CLOB` or `BLOB` SQL types are typically rendered into
 ```clojure
 (extend-protocol rs/ReadableColumn
   java.sql.Clob
-  (read-column-by-label ^String [^java.sql.Clob v _]
+  (read-column-by-label [^java.sql.Clob v _]
     (with-open [rdr (.getCharacterStream v)] (slurp rdr)))
-  (read-column-by-index ^String [^java.sql.Clob v _2 _3]
+  (read-column-by-index [^java.sql.Clob v _2 _3]
     (with-open [rdr (.getCharacterStream v)] (slurp rdr))))
 ```
 
@@ -20,9 +20,9 @@ There is a helper in `next.jdbc.result-set` to make this easier -- `clob->string
 ```clojure
 (extend-protocol rs/ReadableColumn
   java.sql.Clob
-  (read-column-by-label ^String [^java.sql.Clob v _]
+  (read-column-by-label [^java.sql.Clob v _]
     (clob->string v))
-  (read-column-by-index ^String [^java.sql.Clob v _2 _3]
+  (read-column-by-index [^java.sql.Clob v _2 _3]
     (clob->string v)))
 ```
 
