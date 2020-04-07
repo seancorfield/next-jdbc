@@ -76,6 +76,10 @@ You can get PostgreSQL to stream very large result sets (when you are reducing o
 By default, PostgreSQL's JDBC driver does not always perform conversions from `java.util.Date` to a SQL data type.
 You can enable this by extending `SettableParameter` to the appropriate (Java) types, or by simply requiring [`next.jdbc.date-time`](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.date-time).
 
+In addition, if you want `java.time.Instant`, `java.time.LocalDate`, and `java.time.LocalDateTime` to be automatically converted to SQL data types, requiring `next.jdbc.date-time` will enable those as well (by extending `SettableParameter` for you).
+
+`next.jdbc.date-time` also includes functions that you can call at application startup to extend `ReadableColumn` to either return `java.time.Instant` or `java.time.LocalDate`/`java.time.LocalDateTime` (as well as a function to restore the default behavior of returning `java.sql.Date` and `java.sql.Timestamp`).
+
 ### Working with JSON and JSONB
 
 PostgreSQL has good support for [storing, querying and manipulating JSON data](https://www.postgresql.org/docs/current/datatype-json.html). Basic Clojure data structures (lists, vectors, and maps) transform pretty well to JSON data. With a little help `next.jdbc` can automatically convert Clojure data to JSON and back for us.

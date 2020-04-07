@@ -363,7 +363,7 @@ In particular, PostgreSQL does not seem to perform a conversion from `java.util.
 
 If you are working with Java Time, some JDBC drivers will automatically convert `java.time.Instant` (and `java.time.LocalDate` and `java.time.LocalDateTime`) to a SQL data type automatically, but others will not. Requiring `next.jdbc.date-time` will enable those automatic conversions for all databases.
 
-> Note: `next.jdbc.date-time` does **not** provide automatic conversion of SQL data types to Clojure data types when reading result sets. If you want specific conversions to happen automatically, consider extending the `ReadableColumn` protocol, mentioned above.
+> Note: `next.jdbc.date-time` also provides functions you can call to enable automatic conversion of SQL date/timestamp types to Clojure data types when reading result sets. If you need specific conversions beyond that to happen automatically, consider extending the `ReadableColumn` protocol, mentioned above.
 
 ## Support from Specs
 

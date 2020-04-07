@@ -12,7 +12,11 @@
   A broad range of result set builder implementation functions are provided.
 
   Also provides the default implemenations for `Executable` and
-  the default `datafy`/`nav` behavior for rows from a result set."
+  the default `datafy`/`nav` behavior for rows from a result set.
+
+  See also https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.date-time
+  for implementations of `ReadableColumn` that provide automatic
+  conversion of some SQL data types to Java Time objects."
   (:require [clojure.core.protocols :as core-p]
             [next.jdbc.prepare :as prepare]
             [next.jdbc.protocols :as p])

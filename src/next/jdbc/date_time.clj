@@ -3,22 +3,25 @@
 (ns next.jdbc.date-time
   "Optional namespace that extends `next.jdbc.prepare/SettableParameter`
   to various date/time types so that they will all be treated as SQL
-  timestamps (which also supports date and time column types).
+  timestamps (which also supports date and time column types) and has
+  functions to extend `next.jdbc.result-set/ReadableColumn`.
 
   Simply requiring this namespace will extend the `SettableParameter` protocol
-  to the four types listed below. In addition, there are several `read-as-*`
-  functions here that will extend `next.jdbc.result-set/ReadableColumn` to
-  allow `java.sql.Date` and `java.sql.Timestamp` columns to be read as
-  (converted to) various Java Time types automatically. The expectation is
-  that you will call at most one of these, at application startup, to enable
-  the behavior you want.
+  to the four types listed below.
 
+  In addition, there are several `read-as-*` functions here that will
+  extend `next.jdbc.result-set/ReadableColumn` to allow `java.sql.Date`
+  and `java.sql.Timestamp` columns to be read as (converted to) various
+  Java Time types automatically. The expectation is that you will call at
+  most one of these, at application startup, to enable the behavior you want.
+
+  Database support for Java Time:
   * H2 and SQLite support conversion of Java Time (`Instant`, `LocalDate`,
     `LocalDateTime`) out of the box,
   * Nearly all databases support conversion of `java.util.Date` out of
     the box -- except PostgreSQL apparently!
 
-  Types supported:
+  Types supported by this namespace:
   * `java.time.Instant`
   * `java.time.LocalDate`
   * `java.time.LocalDateTime`
