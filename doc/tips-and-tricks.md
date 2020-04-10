@@ -38,6 +38,43 @@ Consult the [java.sql.Blob documentation](https://docs.oracle.com/javase/8/docs/
 
 > Note: the standard MySQL JDBC driver seems to return `BLOB` data as `byte[]` instead of `java.sql.Blob`.
 
+## Handling Timeouts
+
+JDBC provides a number of ways in which you can decide how long an operation should run before it times out. Some of these timeouts are specified in seconds and some are in milliseconds. Some are handled via connection properties (or JDBC URL parameters), some are handled via methods on various JDBC objects.
+
+Here's how to specify various timeouts using `next.jdbc`:
+
+* `connectTimeout` -- can be specified via the "db-spec" hash map or in a JDBC URL, it is the number of **milliseconds** that JDBC should wait for the initial (socket) connection to complete. Database-specific (may be MySQL only?).
+* `loginTimeout` -- can be set via `.setLoginTimeout()` on a `DriverManager` or `DataSource`, it is the number of **seconds** that JDBC should wait for a connection to the database to be made. `next.jdbc` exposes this on the `javax.sql.DataSource` object it reifies from calling `get-datasource` on a "db-spec" hash map or JDBC URL string.
+* `queryTimeout` -- can be set via `.setQueryTimeout()` on a `Statement` (or `PreparedStatement`), it is the number of **seconds** that JDBC should wait for a SQL statement to complete. Since this is the most commonly used type of timeout, `next.jdbc` exposes this via the `:timeout` option which can be passed to any function that may construct a `Statement` or `PreparedStatement`.
+* `socketTimeout` -- can be specified via the "db-spec" hash map or in a JDBC URL, it is the number of milliseconds that JDBC should wait for socket operations to complete. Database-specific (MS SQL Server and MySQL support this, other databases may too).
+
+Examples:
+
+```clojure
+;; connectTimeout / socketTimeout via db-spec:
+(def db-spec {:dbtype "mysql" :dbname "example" :user "root" :password "secret"
+              ;; milliseconds:
+              :connectTimeout 60000 :socketTimeout 30000}))
+
+;; socketTimeout via JDBC URL:
+(def db-url (str "jdbc:sqlserver://localhost;user=sa;password=secret"
+                 ;; milliseconds:
+                 ";database=master;socketTimeout=10000"))
+
+;; loginTimeout via DataSource:
+(def ds (jdbc/get-datasource db-spec))
+(.setLoginTimeout ds 20) ; seconds
+
+;; queryTimeout via options:
+(jdbc/execute! ds ["select * from some_table"] {:timeout 5}) ; seconds
+
+;; queryTimeout via method call:
+(let [ps (jdbc/prepare ds ["select * from some_table"])]
+  (.setQueryTimeout ps 10) ; seconds
+  (jdbc/execute! ps))
+```
+
 ## MS SQL Server
 
 In MS SQL Server, the generated key from an insert comes back as `:GENERATED_KEYS`.
