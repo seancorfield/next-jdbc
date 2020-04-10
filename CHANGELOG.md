@@ -2,18 +2,15 @@
 
 Only accretive/fixative changes will be made from now on.
 
-## Unreleased Changes
-
-The following changes have been made to **master** since the 1.0.409 build:
-
-* In **Tips & Tricks**, noted that MySQL returns `BLOB` columns as `byte[]` instead of `java.sql.Blob`.
-* Address #103, #104 by adding a section on timeouts to **Tips & Tricks**.
-* Fix #102 by allowing keywords or strings in `:return-keys`.
-* Fix #101 by tightening the spec on a JDBC URL to correctly reflect that it must start with `jdbc:`.
-* Add support for calling `.getLoginTimeout`/`.setLoginTimeout` on the reified `DataSource` returned by `get-datasource` when called on a hash map "db-spec" or JDBC URL string.
-* Documentation improvements based on feedback (mostly from Slack), including a section on database metadata near the end of **Getting Started**.
-
 ## Stable Builds
+
+* 2020-04-10 -- 1.0.424
+  * In **Tips & Tricks**, noted that MySQL returns `BLOB` columns as `byte[]` instead of `java.sql.Blob`.
+  * Address #103, #104 by adding a section on timeouts to **Tips & Tricks**.
+  * Fix #102 by allowing keywords or strings in `:return-keys`.
+  * Fix #101 by tightening the spec on a JDBC URL to correctly reflect that it must start with `jdbc:`.
+  * Add support for calling `.getLoginTimeout`/`.setLoginTimeout` on the reified `DataSource` returned by `get-datasource` when called on a hash map "db-spec" or JDBC URL string.
+  * Documentation improvements based on feedback (mostly from Slack), including a section on database metadata near the end of **Getting Started**.
 
 * 2020-03-16 -- 1.0.409
   * Address #100 by adding support for MariaDB (@green-coder). Set `NEXT_JDBC_TEST_MARIADB=true` as well as `NEXT_JDBC_TEST_MYSQL=true` in order to run tests against MariaDB.
