@@ -365,6 +365,21 @@ If you are working with Java Time, some JDBC drivers will automatically convert 
 
 > Note: `next.jdbc.date-time` also provides functions you can call to enable automatic conversion of SQL date/timestamp types to Clojure data types when reading result sets. If you need specific conversions beyond that to happen automatically, consider extending the `ReadableColumn` protocol, mentioned above.
 
+## Processing Database Metadata
+
+JDBC provides several features that let you introspect the database to obtain lists of tables, views, and so on. `next.jdbc` does not provide any specific functions for this but you can easily get this metadata from a `java.sql.Connection` and turn it into Clojure data as follows:
+
+```clojure
+(with-open [con (p/get-connection ds opts)]
+  (-> (.getMetaData con) ; produces java.sql.DatabaseMetaData
+      ;; return a java.sql.ResultSet describing all tables and views:
+      (.getTables nil nil nil (into-array ["TABLE" "VIEW"]))
+      (rs/datafiable-result-set ds opts)))
+```
+
+Several methods on `DatabaseMetaData` return a `ResultSet` object, e.g., `.getCatalogs()`, `.getClientInfoProperties()`, `.getSchemas()`.
+All of those can be handled in a similar manner to the above. See the [Oracle documentation for `java.sql.DatabaseMetaData`](https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/DatabaseMetaData.html) (Java 11) for more details.
+
 ## Support from Specs
 
 As you are developing with `next.jdbc`, it can be useful to have assistance from `clojure.spec` in checking calls to `next.jdbc`'s functions, to provide explicit argument checking and/or better error messages for some common mistakes, e.g., trying to pass a plain SQL string where a vector (containing a SQL string, and no parameters) is expected.
