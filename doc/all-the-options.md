@@ -58,7 +58,7 @@ Any function that creates a `Statement` or a `PreparedStatement` will accept the
 * `:fetch-size` -- an integer that guides the JDBC driver in terms of how many rows to fetch at once; sometimes you need to set `:fetch-size` to zero or a negative value in order to trigger streaming of result sets -- some JDBC drivers require additional options to be set on the connection _as well_,
 * `:max-rows` -- an integer that tells the JDBC driver to limit result sets to this many rows,
 * `:result-type` -- a keyword that affects how the `ResultSet` can be traversed: `:forward-only`, `:scroll-insensitive`, `:scroll-sensitive`,
-* `:timeout` -- an integer that specifies the (query) timeout allowed for SQL operations, in milliseconds.
+* `:timeout` -- an integer that specifies the (query) timeout allowed for SQL operations, in seconds. See [**Handling Timeouts**](/doc/tips-and-tricks.md#handling-timeouts) in **Tips & Tricks** for more details on this and other possible timeout settings.
 * `:statement` -- a hash map of camelCase properties to set on the `Statement` or `PreparedStatement` object after it is created; these correspond to `.set*` methods on the `Statement` class (which `PreparedStatement` inherits) and are set via the Java reflection API (using `org.clojure/java.data`). If `:fetchSize`, `:maxRows`, or `:queryTimeout` are provided, they will take precedence over the fast, specific options above.
 
 If you specify either `:concurrency` or `:result-type`, you must specify _both_ of them. If you specify `:cursors`, you must also specify `:result-type` _and_ `:concurrency`.
