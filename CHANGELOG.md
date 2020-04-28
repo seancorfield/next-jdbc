@@ -2,6 +2,11 @@
 
 Only accretive/fixative changes will be made from now on.
 
+The following changes have been made on **master** since the 1.0.424 release:
+
+* Add MySQL-specific result set streaming tip.
+* Investigate possible solutions for #106 (mutable transaction thread safety) -- experimental `locking` on `Connection` object.
+
 ## Stable Builds
 
 * 2020-04-10 -- 1.0.424

@@ -82,7 +82,8 @@
 (extend-protocol p/Transactable
   java.sql.Connection
   (-transact [this body-fn opts]
-             (transact* this body-fn opts))
+             (locking this
+                      (transact* this body-fn opts)))
   javax.sql.DataSource
   (-transact [this body-fn opts]
              (with-open [con (p/get-connection this opts)]
