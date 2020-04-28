@@ -89,6 +89,14 @@ MySQL generally stores tables as files so they are case-sensitive if your O/S is
 
 It's also worth noting that column comparisons are case-insensitive so `WHERE foo = 'BAR'` will match `"bar"` or `"BAR"` etc.
 
+### Streaming Result Sets
+
+You should be able to get MySQL to stream very large result sets (when you are reducing over `plan`) by setting the following options:
+
+* `:fetch-size Integer/MIN_VALUE` -- when running `plan` (or when creating a `PreparedStatement`).
+
+> Note: it's possible that other options may be required as well -- I have not verified this yet -- see, for example, the additional options PostgreSQL requires, below.
+
 ## Oracle
 
 Ah, dear old Oracle! Over the years of maintaining `clojure.java.jdbc` and now `next.jdbc`, I've had all sorts of bizarre and non-standard behavior reported from Oracle users. The main issue I'm aware of with `next.jdbc` is that Oracle's JDBC drivers all return an empty string from `ResultSetMetaData.getTableName()` so you won't get qualified keywords in the result set hash maps. Sorry!
