@@ -230,6 +230,82 @@
     (let [[url etc] (spec->url+etc db-spec)]
       (j/to-java clazz (assoc etc :jdbcUrl url)))))
 
+(defn- attempt-close
+  "Given an arbitrary object that almost certainly supports a `.close`
+  method that takes no arguments and returns `void`, try to find it
+  and call it."
+  [obj]
+  (let [^Class clazz (class obj)
+        ^java.lang.reflect.Method close
+        (->> (.getMethods clazz)
+             (filter (fn [^java.lang.reflect.Method m]
+                       (and (= "close" (.getName m))
+                            (empty? (.getParameterTypes m))
+                            (= "void" (.getName (.getReturnType m))))))
+             (first))]
+    (when close
+      (.invoke close obj (object-array [])))))
+
+(defn component
+  "Takes the same arguments as `->pool` but returns an entity compatible
+  with Stuart Sierra's Component: when `com.stuartsierra.component/start`
+  is called on it, it builds a connection pooled datasource, and returns
+  an entity that can either be invoked as a function with no arguments
+  to return that datasource, or can have `com.stuartsierra.component/stop`
+  called on it to shutdown the datasource (and return a new startable
+  entity).
+
+  By default, the datasource is shutdown by calling `.close` on it.
+  If the datasource class implements `java.io.Closeable` then a direct,
+  type-hinted call to `.close` will be used, with no reflection,
+  otherwise Java reflection will be used to find the first `.close`
+  method in the datasource class that takes no arguments and returns `void`.
+
+  If neither of those behaviors is appropriate, you may supply a third
+  argument to this function -- `close-fn` -- which performs whatever
+  action is appropriate to your chosen datasource class."
+  ([clazz db-spec]
+   (component clazz db-spec #(if (isa? clazz java.io.Closeable)
+                               (.close ^java.io.Closeable %)
+                               (attempt-close %))))
+  ([clazz db-spec close-fn]
+   (with-meta {}
+     {'com.stuartsierra.component/start
+      (fn [_]
+        (let [pool (->pool clazz db-spec)]
+          (with-meta (fn ^DataSource [] pool)
+            {'com.stuartsierra.component/stop
+             (fn [_]
+               (close-fn pool)
+               (component clazz db-spec close-fn))})))})))
+
+(comment
+  (require '[com.stuartsierra.component :as component])
+  (import '(com.mchange.v2.c3p0 ComboPooledDataSource PooledDataSource)
+          '(com.zaxxer.hikari HikariDataSource))
+  (isa? PooledDataSource java.io.Closeable) ;=> false
+  (isa? HikariDataSource java.io.Closeable) ;=> true
+  ;; use c3p0 with default reflection-based closing function:
+  (def dbc (component ComboPooledDataSource
+                      {:dbtype "mysql" :dbname "clojure_test"
+                       :user "clojure_test" :password "clojure_test"}))
+  ;; use c3p0 with a type-hinted closing function:
+  (def dbc (component ComboPooledDataSource
+                      {:dbtype "mysql" :dbname "clojure_test"
+                       :user "clojure_test" :password "clojure_test"}
+                      #(.close ^PooledDataSource %)))
+  ;; use HikariCP with default Closeable .close function:
+  (def dbc (component HikariDataSource
+                      {:dbtype "mysql" :dbname "clojure_test"
+                       ;; HikariCP requires :username, not :user
+                       :username "clojure_test" :password "clojure_test"}))
+  ;; start the chosen datasource component:
+  (def ds  (component/start dbc))
+  ;; invoke datasource component to get the underlying javax.sql.DataSource:
+  (next.jdbc.sql/get-by-id (ds) :fruit 1)
+  ;; stop the component and close the pooled datasource:
+  (component/stop ds))
+
 (defn- string->url+etc
   "Given a JDBC URL, return it with an empty set of options with no parsing."
   [s]
