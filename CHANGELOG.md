@@ -4,7 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been made on **master** since the 1.0.424 release:
 
-* Experimental support for Stuart Sierra's Component library, via `next.jdbc.connection/component`. Documentation coming soon!
+* Support for Stuart Sierra's Component library, via `next.jdbc.connection/component`. See updated **Getting Started** guide for usage.
 * Add MySQL-specific result set streaming tip.
 * Investigate possible solutions for #106 (mutable transaction thread safety) -- experimental `locking` on `Connection` object.
 

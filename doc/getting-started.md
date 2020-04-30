@@ -324,35 +324,31 @@ You will generally want to create the connection pooled datasource at the start 
 
 You only need the type hints on `ds` if you plan to call methods on it via Java interop, such as `.close` (or using `with-open` to auto-close it) and you want to avoid reflection.
 
-If you are using [Component](https://github.com/stuartsierra/component), a connection pooled datasource is a good candidate since it has a `start`/`stop` lifecycle:
+If you are using [Component](https://github.com/stuartsierra/component), a connection pooled datasource is a good candidate since it has a `start`/`stop` lifecycle. `next.jdbc` has support for Component built-in, via the `next.jdbc.connection/component` function which creates a Component-compatible entity which you can `start` and then invoke as a function with no arguments to obtain the `DataSource` within.
 
 ```clojure
-(ns ...
+(ns my.data.program
   (:require [com.stuartsierra.component :as component]
-            ...))
+            [next.jdbc :as jdbc]
+            [next.jdbc.connection :as connection])
+  (:import (com.zaxxer.hikari HikariDataSource)))
 
-(defrecord Database [db-spec ^HikariDataSource datasource]
-  component/Lifecycle
-  (start [this]
-    (if datasource
-      this ; already started
-      (assoc this :datasource (connection/->pool HikariDataSource db-spec))))
-  (stop [this]
-    (if datasource
-      (do
-        (.close datasource)
-        (assoc this :datasource nil))
-      this))) ; already stopped
+;; HikariCP requires :username instead of :user in the db-spec:
+(def ^:private db-spec {:dbtype "..." :dbname "..." :username "..." :password "..."})
 
 (defn -main [& args]
-  (let [db (component/start (map->Database {:db-spec db-spec}))]
+  ;; connection/component takes the same arguments as connection/->pool:
+  (let [ds (component/start (connection/component HikariDataSource db-spec))]
     (try
-      (jdbc/execute! (:datasource db) ...)
-      (jdbc/execute! (:datasource db) ...)
-      (do-other-stuff db args)
-      (into [] (map :column) (jdbc/plan (:datasource db) ...)))
-      (catch Throwable t)
-        (component/stop db)))
+      ;; "invoke" the data source component to get the javax.sql.DataSource:
+      (jdbc/execute! (ds) ...)
+      (jdbc/execute! (ds) ...)
+      ;; can pass the data source component around other code:
+      (do-other-stuff ds args)
+      (into [] (map :column) (jdbc/plan (ds) ...))
+      (finally
+        ;; stopping the component will close the connection pool:
+        (component/stop ds)))))
 ```
 
 ## Working with Additional Data Types
