@@ -173,15 +173,19 @@ Finally we extend `next.jdbc.prepare/SettableParameter` and `next.jdbc.result-se
 (require '[next.jdbc.prepare :as prepare])
 (require '[next.jdbc.result-set :as rs])
 
+(import  '[java.sql PreparedStatement])
+
+(set! *warn-on-reflection* true)
+
 ;; if a SQL parameter is a Clojure hash map or vector, it'll be transformed
 ;; to a PGobject for JSON/JSONB:
 (extend-protocol prepare/SettableParameter
   clojure.lang.IPersistentMap
-  (set-parameter [m s i]
+  (set-parameter [m ^PreparedStatement s i]
     (.setObject s i (->pgobject m)))
 
   clojure.lang.IPersistentVector
-  (set-parameter [v s i]
+  (set-parameter [v ^PreparedStatement s i]
     (.setObject s i (->pgobject v))))
 
 ;; if a row contains a PGobject then we'll convert them to Clojure data
