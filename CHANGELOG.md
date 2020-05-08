@@ -6,6 +6,7 @@ The following changes have been made on **master** since the 1.0.424 release:
 
 * Support for Stuart Sierra's Component library, via `next.jdbc.connection/component`. See updated **Getting Started** guide for usage.
 * Add MySQL-specific result set streaming tip.
+* Add array handling example to PostgreSQL **Tips & Tricks**. PR #108 from @maxp.
 * Investigate possible solutions for #106 (mutable transaction thread safety) -- experimental `locking` on `Connection` object.
 
 ## Stable Builds

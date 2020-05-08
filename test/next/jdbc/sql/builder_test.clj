@@ -2,7 +2,7 @@
 
 (ns next.jdbc.sql.builder-test
   "Tests for the SQL string building functions in next.jdbc.sql.builder."
-  (:require [clojure.test :refer [deftest is testing use-fixtures]]
+  (:require [clojure.test :refer [deftest is testing]]
             [next.jdbc.quoted :refer [mysql sql-server]]
             [next.jdbc.sql.builder :as builder]))
 
