@@ -150,7 +150,7 @@ create table example(
 ;; => #:example{:tags ["tag1" "tag2"]}
 ```
 
-Note: PostgreSQL JDBC driver supports only 7 primitive array types, but not such as UUID[] -
+Note: PostgreSQL JDBC driver supports only 7 primitive array types, but not such as `UUID[]` -  
 [PostgreSQL™ Extensions to the JDBC API](https://jdbc.postgresql.org/documentation/head/arrays.html).
 
 ### Working with Date and Time
