@@ -116,6 +116,43 @@ You can get PostgreSQL to stream very large result sets (when you are reducing o
 * `:auto-commit false` -- when opening the connection
 * `:fetch-size 4000, :concurrency :read-only, :cursors :close, :result-type :forward-only` -- when running `plan` (or when creating a `PreparedStatement`).
 
+### Working with Arrays
+
+ResultSet protocol extension to read SQL arrays as Clojure vectors.
+
+```clojure
+(import  '[java.sql Array])
+(require '[next.jdbc.result-set :as rs])
+
+(extend-protocol rs/ReadableColumn
+  Array
+  (read-column-by-label [^Array v _]    (vec (.getArray v)))
+  (read-column-by-index [^Array v _ _]  (vec (.getArray v))))
+
+```
+
+Insert and read vector example:
+
+```sql
+create table example(
+  tags varchar[]
+);
+```
+```clojure
+
+(execute-one! db-spec
+  ["insert into example(tags) values (?)" 
+    (into-array String ["tag1" "tag2"])) 
+
+(execute-one! db-spec
+  ["select * from example limit 1"])
+
+;; => #:example{:tags ["tag1" "tag2"]}
+```
+
+Note: PostgreSQL JDBC driver supports only 7 primitive array types, but not such as `UUID[]` -  
+[PostgreSQL™ Extensions to the JDBC API](https://jdbc.postgresql.org/documentation/head/arrays.html).
+
 ### Working with Date and Time
 
 By default, PostgreSQL's JDBC driver does not always perform conversions from `java.util.Date` to a SQL data type.
