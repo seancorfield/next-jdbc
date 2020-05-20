@@ -73,7 +73,7 @@ Not all databases or drivers support all of these options, or all values for any
 
 > Note: If `plan`, `execute!`, or `execute-one!` are passed a `DataSource`, a "db spec" hash map, or a JDBC URI string, they will call `prepare` to create a `PreparedStatement`, so they will accept the above options in those cases.
 
-In addition the the above, `next.jdbc.prepare/execute-batch!` accepts an options hash map that can also contain the following:
+In addition the the above, `next.jdbc.prepare/execute-batch!` (which does **not** create a `PreparedStatement`) accepts an options hash map that can also contain the following:
 
 * `:batch-size` -- an integer that determines how to partition the parameter groups for submitting to the database in batches,
 * `:large` -- a Boolean flag that indicates whether the batch will produce large update counts (`long` rather than `int` values).

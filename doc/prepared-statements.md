@@ -101,6 +101,23 @@ Both of those are somewhat ugly and contain a fair bit of boilerplate and Java i
 
 By default, this adds all the parameter groups and executes one batched command. It returns a (Clojure) vector of update counts (rather than `int[]`). If you provide an options hash map, you can specify a `:batch-size` and the parameter groups will be partitioned and executed as multiple batched commands. This is intended to allow very large sequences of parameter groups to be executed without running into limitations that may apply to a single batched command. If you expect the update counts to be very large (more than `Integer/MAX_VALUE`), you can specify `:large true` so that `.executeLargeBatch` is called instead of `.executeBatch`. Note: not all databases support `.executeLargeBatch`.
 
+If you want to get the generated keys from an `insert` done via `execute-batch!`, you need a couple of extras, compared to the above:
+
+```clojure
+(with-open [con (jdbc/get-connection ds)
+            ;; ensure the PreparedStatement will return the keys:
+            ps  (jdbc/prepare con ["insert into status (id,name) values (?,?)"]
+                              {:return-keys true})]
+  ;; this returns update counts (which we'll ignore)
+  (p/execute-batch! ps [[1 "Approved"] [2 "Rejected"] [3 "New"]])
+  ;; this produces the generated keys as a (datafiable) Clojure data structure:
+  (rs/datafiable-result-set (.getGeneratedKeys ps) con {}))
+```
+
+The call to `rs/datafiable-result-set` can be passed a `:builder-fn` option if you want something other than qualified as-is hash maps.
+
+> Note: not all databases support calling `.getGeneratedKeys` here (everything I test against seems to, except MS SQL Server).
+
 ### Caveats
 
 There are several caveats around using batched parameters. Some JDBC drivers need a "hint" in order to perform the batch operation as a single command for the database. In particular, PostgreSQL requires the `:reWriteBatchedInserts true` option and MySQL requires `:rewriteBatchedStatement true` (both non-standard JDBC options, of course!). These should be provided as part of the db-spec hash map when the datasource is created.
