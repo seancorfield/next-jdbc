@@ -33,8 +33,7 @@
   working with PostgreSQL."
   (:require [next.jdbc.prepare :as p]
             [next.jdbc.result-set :as rs])
-  (:import (java.sql PreparedStatement Timestamp)
-           (java.time Instant LocalDate LocalDateTime)))
+  (:import (java.sql PreparedStatement Timestamp)))
 
 (set! *warn-on-reflection* true)
 

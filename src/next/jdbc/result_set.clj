@@ -32,7 +32,7 @@
 (defn get-column-names
   "Given `ResultSetMetaData`, return a vector of column names, each qualified by
   the table from which it came."
-  [^ResultSetMetaData rsmeta opts]
+  [^ResultSetMetaData rsmeta _]
   (mapv (fn [^Integer i]
           (if-let [q (not-empty (.getTableName rsmeta i))]
             (keyword q (.getColumnLabel rsmeta i))
@@ -41,7 +41,7 @@
 
 (defn get-unqualified-column-names
   "Given `ResultSetMetaData`, return a vector of unqualified column names."
-  [^ResultSetMetaData rsmeta opts]
+  [^ResultSetMetaData rsmeta _]
   (mapv (fn [^Integer i] (keyword (.getColumnLabel rsmeta i)))
         (range 1 (inc (.getColumnCount rsmeta)))))
 
@@ -757,7 +757,7 @@
   [connectable opts]
   (fn [row]
     (with-meta row
-      {`core-p/nav (fn [coll k v]
+      {`core-p/nav (fn [_ k v]
                      (try
                        (let [[table fk cardinality]
                              (expand-schema k (or (get-in opts [:schema k])
