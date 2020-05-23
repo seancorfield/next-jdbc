@@ -244,7 +244,6 @@
                           (partition-all 2)
                           (map #(map rs/row-number %)))
                  (p/-execute (ds) ["select * from fruit"]
-                             ;; we do not need a real builder here...
                              (cond-> {:builder-fn rs/as-arrays}
                                      (derby?)
                                      (assoc :concurrency :read-only
