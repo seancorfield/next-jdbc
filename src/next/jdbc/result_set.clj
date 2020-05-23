@@ -385,6 +385,13 @@
 
 (definterface MapifiedResultSet)
 
+(defprotocol InspectableMapifiedResultSet :extend-via-metadata true
+  ""
+  (row-number [this]
+    "")
+  (column-names [this]
+    ""))
+
 (defn- mapify-result-set
   "Given a `ResultSet`, return an object that wraps the current row as a hash
   map. Note that a result set is mutable and the current row will change behind
@@ -402,6 +409,10 @@
 
       MapifiedResultSet
       ;; marker, just for printing resolution
+
+      InspectableMapifiedResultSet
+      (row-number   [this] (.getRow rs))
+      (column-names [this] (:cols @builder))
 
       clojure.lang.IPersistentMap
       (assoc [this k v]
@@ -458,9 +469,18 @@
 
       DatafiableRow
       (datafiable-row [this connectable opts]
-        (with-meta
-          (row-builder @builder)
-          {`core-p/datafy (navize-row connectable opts)}))
+        ;; since we have to call these eagerly, we trap any exceptions so
+        ;; that they can be thrown when the actual functions are called
+        (let [row  (try (.getRow rs)     (catch Throwable t t))
+              cols (try (:cols @builder) (catch Throwable t t))]
+          (with-meta
+            (row-builder @builder)
+            {`core-p/datafy
+             (navize-row connectable opts)
+             `row-number
+             (fn [_] (if (instance? Throwable row) (throw row) row))
+             `column-names
+             (fn [_] (if (instance? Throwable cols) (throw cols) cols))})))
 
       (toString [_]
         (try
