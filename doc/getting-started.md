@@ -18,7 +18,7 @@ for `deps.edn` or:
 ```
 for `project.clj` or `build.boot`.
 
-In addition, you will need to add dependencies for the JDBC drivers you wish to use for whatever databases you are using. You can see the drivers and versions that `next.jdbc` is tested against in [the project's `deps.edn` file](https://github.com/seancorfield/next-jdbc/blob/master/deps.edn#L11-L24), but many other JDBC drivers for other databases should also work (e.g., Oracle, Red Shift).
+**In addition, you will need to add dependencies for the JDBC drivers you wish to use for whatever databases you are using.** You can see the drivers and versions that `next.jdbc` is tested against in [the project's `deps.edn` file](https://github.com/seancorfield/next-jdbc/blob/master/deps.edn#L10-L25), but many other JDBC drivers for other databases should also work (e.g., Oracle, Red Shift).
 
 ## An Example REPL Session
 
@@ -74,7 +74,7 @@ If you already have a JDBC URL (string), you can use that as-is instead of the d
 
 We used `execute!` to create the `address` table, to insert a new row into it, and to query it. In all three cases, `execute!` returns a vector of hash maps with namespace-qualified keys, representing the result set from the operation, if available.
 If the result set contains no rows, `execute!` returns an empty vector `[]`.
-When no result set is produced, `next.jdbc` returns a "result set" containing the "update count" from the operation (which is usually the number of rows affected; note that `:builder-fn` does not affect this fake "result set"). By default, H2 uses uppercase names and `next.jdbc` returns these as-is.
+When no result set is available, `next.jdbc` returns a "result set" containing the "update count" from the operation (which is usually the number of rows affected; note that `:builder-fn` does not affect this fake "result set"). By default, H2 uses uppercase names and `next.jdbc` returns these as-is.
 
 If you only want a single row back -- the first row of any result set, generated keys, or update counts -- you can use `execute-one!` instead. Continuing the REPL session, we'll insert another address and ask for the generated keys to be returned, and then we'll query for a single row:
 
@@ -91,7 +91,7 @@ user=>
 
 Since we used `execute-one!`, we get just one row back (a hash map). This also shows how you provide parameters to SQL statements -- with `?` in the SQL and then the corresponding parameter values in the vector after the SQL string.
 If the result set contains no rows, `execute-one!` returns `nil`.
-When no result is produced, and `next.jdbc` returns a fake "result set" containing the "update count", `execute-one!` returns just a single hash map with the key `next.jdbc/update-count` and the number of rows updated.
+When no result is available, and `next.jdbc` returns a fake "result set" containing the "update count", `execute-one!` returns just a single hash map with the key `next.jdbc/update-count` and the number of rows updated.
 
 > Note: In general, you should use `execute-one!` for DDL operations since you will only get back an update count. If you have a SQL statement that you know will only return an update count, `execute-one!` is the right choice. If you have a SQL statement that you know will only return a single row in the result set, you probably want to use `execute-one!`. If you use `execute-one!` for a SQL statement that would return multiple rows in a result set, even though you will only get the first row back (as a hash map), the full result set will still be retrieved from the database -- it does not limit the SQL in any way.
 
@@ -219,6 +219,17 @@ user=> (into []
 ```
 
 The latter produces a vector of hash maps, just like the result of `execute!`, where each "row" follows the case conventions of the database, the keys are qualified by the table name, and the hash map is datafiable and navigable.
+
+In addition to the hash map operations described above, the abstraction over the `ResultSet` can also respond to a couple of functions in `next.jdbc.result-set`:
+
+* `next.jdbc.result-set/row-number` - returns the 1-based row number, by calling `.getRow()` on the `ResultSet`,
+* `next.jdbc.result-set/column-names` - returns a vector of column names from the `ResultSet`, as created by the result set builder specified.
+
+> Note: Apache Derby requires the following options to be provided in order to call `.getRow()` (and therefore `row-number`): `{:concurrency :read-only, :cursors :close, :result-type :scroll-insensitive}`
+
+If you realize a row, by calling `datafiable-row` on the abstract row passed into the reducing function, you can still call `row-number` and `column-names` on that realized row. These functions are _not_ available on the realized rows returned from `execute!` or `execute-one!`, only within reductions over `plan`.
+
+The order of the column names returned by `column-names` matches SQL's natural order, based on the operation performed, and will also match the order of column values provided in the reduction when using an array-based result set builder (`plan` provides just the column values, one row at a time, when using an array-based builder, without the leading vector of column names that you would get from `execute!`: if you call `datafiable-row` on such a row, you will get a realized vector of column values).
 
 > Note: since `plan` expects you to process the result set via reduction, you should not use it for DDL or for SQL statements that only produce update counts.
 

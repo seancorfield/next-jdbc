@@ -459,14 +459,35 @@
       (equiv [this obj]
         (.equiv ^clojure.lang.IPersistentCollection (row-builder @builder) obj))
 
+      ;; we support get with a numeric key for array-based builders:
       clojure.lang.ILookup
       (valAt [this k]
         (try
-          (read-column-by-label (.getObject rs (name k)) (name k))
+          (if (number? k)
+            (let [^Integer i (inc k)]
+              (read-column-by-index (.getObject rs i) (:rsmeta @builder) i))
+            (read-column-by-label (.getObject rs (name k)) (name k)))
           (catch SQLException _)))
       (valAt [this k not-found]
         (try
-          (read-column-by-label (.getObject rs (name k)) (name k))
+          (if (number? k)
+            (let [^Integer i (inc k)]
+              (read-column-by-index (.getObject rs i) (:rsmeta @builder) i))
+            (read-column-by-label (.getObject rs (name k)) (name k)))
+          (catch SQLException _
+            not-found)))
+
+      ;; we support nth for array-based builders (i is primitive int here!):
+      clojure.lang.Indexed
+      (nth [this i]
+        (try
+          (let [i (inc i)]
+            (read-column-by-index (.getObject rs i) (:rsmeta @builder) i))
+          (catch SQLException _)))
+      (nth [this i not-found]
+        (try
+          (let [i (inc i)]
+            (read-column-by-index (.getObject rs i) (:rsmeta @builder) i))
           (catch SQLException _
             not-found)))
 

@@ -72,13 +72,19 @@ Only `execute!` expects this protocol to be implemented. `execute-one!` and `pla
 
 The `as-*` functions described above are all implemented in terms of these protocols. They are passed the `ResultSet` object and the options hash map (as passed into various `next.jdbc` functions). They return an implementation of the protocols that is then used to build rows and the result set. Note that the `ResultSet` passed in is _mutable_ and is advanced from row to row by the SQL execution function, so each time `->row` is called, the underlying `ResultSet` object points at each new row in turn. By contrast, `->rs` (which is only called by `execute!`) is invoked _before_ the `ResultSet` is advanced to the first row.
 
-The options hash map for any `next.jdbc` function can contain a `:builder-fn` key and the value is used as the row/result set builder function. The tests for `next.jdbc.result-set` include a [record-based builder function](https://github.com/seancorfield/next-jdbc/blob/master/test/next/jdbc/result_set_test.clj#L162-L180) as an example of how you can extend this to satisfy your needs.
+The options hash map for any `next.jdbc` function can contain a `:builder-fn` key and the value is used as the row/result set builder function. The tests for `next.jdbc.result-set` include a [record-based builder function](https://github.com/seancorfield/next-jdbc/blob/master/test/next/jdbc/result_set_test.clj#L335-L353) as an example of how you can extend this to satisfy your needs.
 
 > Note: When `next.jdbc` cannot obtain a `ResultSet` object and returns `{:next.jdbc/count N}` instead, the builder function is not applied -- the `:builder-fn` option does not affect the shape of the result.
 
 The options hash map passed to the builder function will contain a `:next.jdbc/sql-params` key, whose value is the SQL + parameters vector passed into the top-level `next.jdbc` functions (`plan`, `execute!`, and `execute-one!`).
 
 There is also a convenience function, `datafiable-result-set`, that accepts a `ResultSet` object (and a connectable and an options hash map) and returns a fully realized result set, per the `:builder-fn` option (or `as-maps` if that option is omitted).
+
+The array-based builders warrant special mention:
+
+* When used with `execute!`, the array-based builders will produce a data structure that is a vector of vectors, with the first element being a vector of column names and subsequent elements being vectors of column values in the same corresponding order. The order of column names and values follows the "natural" order from the SQL operation, as determined by the underlying `ResultSet`.
+* When used with `execute-one!`, the array-based builders will produce a single vector containing the column values in the "natural" SQL order but you will not get the corresponding column names back.
+* When used with `plan`, the array-based builders will cause each abstract row to represent a vector of column values rather than a hash map which limits the operations you can perform on the abstraction to just `Associative` (`get` with a numeric key), `Counted` (`count`), and `Indexed` (`nth`). All other operations will either realize a vector, as if by calling `datafiable-row`, or will fail if the operation does not make sense on a vector (as opposed to a hash map).
 
 ## `next.jdbc.optional`
 

@@ -406,3 +406,15 @@ CREATE TABLE CLOBBER (
                                                rs/clob-column-reader)})
                  (first)
                  :stuff))))))
+
+(deftest test-get-n-array
+  (testing "get n on bare abstraction over arrays"
+    (is (= [1 2 3]
+           (into [] (map #(get % 0))
+                 (p/-execute (ds) ["select id from fruit where id < ?" 4]
+                             {:builder-fn rs/as-arrays})))))
+  (testing "nth on bare abstraction over arrays"
+    (is (= [1 2 3]
+           (into [] (map #(nth % 0))
+                 (p/-execute (ds) ["select id from fruit where id < ?" 4]
+                             {:builder-fn rs/as-arrays}))))))

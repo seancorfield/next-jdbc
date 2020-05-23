@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 The following changes have been made on **master** since the 1.0.424 release:
 
+* Enhanced support in `plan` for "metadata" access: `row-number` and `column-names` can be called on the abstract row (even after calling `datafiable-row`). In addition, `Associative` access via numeric "keys" will read columns by index, and row abstractions now support `Indexed` access via `nth` (which will also read columns by index). Fixes #110.
 * Support for Stuart Sierra's Component library, via `next.jdbc.connection/component`. See updated **Getting Started** guide for usage.
 * Add example of getting generated keys from `execute-batch!`.
 * Add MySQL-specific result set streaming tip.
