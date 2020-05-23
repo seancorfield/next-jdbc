@@ -14,7 +14,7 @@
             [next.jdbc.specs :as specs]
             [next.jdbc.test-fixtures :refer [with-test-db ds column
                                               default-options
-                                              mssql? mysql? postgres?]])
+                                              derby? mssql? mysql? postgres?]])
   (:import (java.sql ResultSet ResultSetMetaData)))
 
 (set! *warn-on-reflection* true)
@@ -184,6 +184,73 @@
       (is (= 3 ((column :FRUIT/id) row)))
       (is (= "Peach" ((column :FRUIT/name) row))))))
 
+(deftest test-row-number
+  ;; two notes here: we use as-arrays as a nod to issue #110 to make
+  ;; sure that actually works; also Apache Derby is the only database
+  ;; (that we test against) to restrict .getRow() calls to scroll cursors
+  (testing "row-numbers on bare abstraction"
+    (is (= [1 2 3]
+           (into [] (map rs/row-number)
+                 (p/-execute (ds) ["select * from fruit where id < ?" 4]
+                             ;; we do not need a real builder here...
+                             (cond-> {:builder-fn (constantly nil)}
+                                     (derby?)
+                                     (assoc :concurrency :read-only
+                                            :cursors     :close
+                                            :result-type :scroll-insensitive)))))))
+  (testing "row-numbers on realized row"
+    (is (= [1 2 3]
+           (into [] (comp (map #(rs/datafiable-row % (ds) {}))
+                          (map rs/row-number))
+                 (p/-execute (ds) ["select * from fruit where id < ?" 4]
+                             ;; ...but datafiable-row requires a real builder
+                             (cond-> {:builder-fn rs/as-arrays}
+                                     (derby?)
+                                     (assoc :concurrency :read-only
+                                            :cursors     :close
+                                            :result-type :scroll-insensitive))))))))
+
+(deftest test-column-names
+  (testing "column-names on bare abstraction"
+    (is (= #{"id" "appearance" "grade" "cost" "name"}
+           (reduce (fn [_ row]
+                     (-> row
+                         (->> (rs/column-names)
+                              (map (comp str/lower-case name))
+                              (set)
+                              (reduced))))
+                   nil
+                   (p/-execute (ds) ["select * from fruit where id < ?" 4]
+                               ;; column-names require a real builder
+                               {:builder-fn rs/as-arrays})))))
+  (testing "column-names on realized row"
+    (is (= #{"id" "appearance" "grade" "cost" "name"}
+           (reduce (fn [_ row]
+                     (-> row
+                         (rs/datafiable-row (ds) {})
+                         (->> (rs/column-names)
+                              (map (comp str/lower-case name))
+                              (set)
+                              (reduced))))
+                   nil
+                   (p/-execute (ds) ["select * from fruit where id < ?" 4]
+                               {:builder-fn rs/as-arrays}))))))
+
+(deftest test-over-partition-all
+  ;; this verifies that InspectableMapifiedResultSet survives partition-all
+  (testing "row-numbers on partitioned rows"
+    (is (= [[1 2] [3 4]]
+           (into [] (comp (map #(rs/datafiable-row % (ds) %))
+                          (partition-all 2)
+                          (map #(map rs/row-number %)))
+                 (p/-execute (ds) ["select * from fruit"]
+                             ;; we do not need a real builder here...
+                             (cond-> {:builder-fn rs/as-arrays}
+                                     (derby?)
+                                     (assoc :concurrency :read-only
+                                            :cursors     :close
+                                            :result-type :scroll-insensitive))))))))
+
 (deftest test-mapify
   (testing "no row builder is used"
     (is (= [true]
@@ -270,7 +337,7 @@
 
 (defrecord Fruit [id name appearance cost grade])
 
-(defn fruit-builder [^ResultSet rs opts]
+(defn fruit-builder [^ResultSet rs _]
   (reify
     rs/RowBuilder
     (->row [_] (->Fruit (.getObject rs "id")

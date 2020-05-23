@@ -386,11 +386,18 @@
 (definterface MapifiedResultSet)
 
 (defprotocol InspectableMapifiedResultSet :extend-via-metadata true
-  ""
+  "Protocol for exposing aspects of the (current) result set via functions.
+
+  The intent here is to expose information that is associated with either
+  the (current row of the) result set or the result set metadata, via
+  functions that can be called inside a reducing function being used over
+  `next.jdbc/plan`, including situations where the reducing function has
+  to realize a row by calling `datafiable-row` but still wants to call
+  these functions on the (realized) row."
   (row-number [this]
-    "")
+    "Return the current 1-based row number, if available.")
   (column-names [this]
-    ""))
+    "Return a vector of the column names from the result set."))
 
 (defn- mapify-result-set
   "Given a `ResultSet`, return an object that wraps the current row as a hash
