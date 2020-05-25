@@ -141,8 +141,8 @@ create table example(
 ```clojure
 
 (execute-one! db-spec
-  ["insert into example(tags) values (?)" 
-    (into-array String ["tag1" "tag2"])) 
+  ["insert into example(tags) values (?)"
+    (into-array String ["tag1" "tag2"])])
 
 (execute-one! db-spec
   ["select * from example limit 1"])
