@@ -12,6 +12,7 @@
             [next.jdbc.result-set :as rs])
   (:import (java.sql Connection
                      DatabaseMetaData
+                     ParameterMetaData
                      ResultSet ResultSetMetaData
                      Statement)))
 
@@ -27,6 +28,7 @@
    :scale     (fn [^ResultSetMetaData o i] (.getScale       o i))
    :schema    (fn [^ResultSetMetaData o i] (.getSchemaName  o i))
    :table     (fn [^ResultSetMetaData o i] (.getTableName   o i))
+   :type      (fn [^ResultSetMetaData o i] (.getColumnTypeName o i))
    ;; the is* fields:
    :nullability (fn [^ResultSetMetaData o i]
                   (condp = (.isNullable o i)
@@ -41,6 +43,25 @@
    :searchable     (fn [^ResultSetMetaData o i] (.isSearchable    o i))
    :signed         (fn [^ResultSetMetaData o i] (.isSigned        o i))
    :writable       (fn [^ResultSetMetaData o i] (.isWritable      o i))})
+
+(def ^:private parameter-meta
+  {:class     (fn [^ParameterMetaData o i] (.getParameterClassName o i))
+   :mode      (fn [^ParameterMetaData o i]
+                (condp = (.getParameterMode o i)
+                       ParameterMetaData/parameterModeIn    :in
+                       ParameterMetaData/parameterModeInOut :in-out
+                       ParameterMetaData/parameterModeOut   :out
+                       :unknown))
+   :precision (fn [^ParameterMetaData o i] (.getPrecision   o i))
+   :scale     (fn [^ParameterMetaData o i] (.getScale       o i))
+   :type      (fn [^ParameterMetaData o i] (.getParameterTypeName o i))
+   ;; the is* fields:
+   :nullability (fn [^ParameterMetaData o i]
+                  (condp = (.isNullable o i)
+                         ParameterMetaData/parameterNoNulls  :not-null
+                         ParameterMetaData/parameterNullable :null
+                         :unknown))
+   :signed         (fn [^ParameterMetaData o i] (.isSigned        o i))})
 
 (defn- safe-bean [o]
   (try
@@ -59,6 +80,13 @@
                     {}
                     column-meta)
         (range 1 (inc (.getColumnCount this)))))
+
+(defn- datafy-parameter-meta-data
+  [^ParameterMetaData this]
+  (mapv #(reduce-kv (fn [m k f] (assoc m k (f this %)))
+                    {}
+                    parameter-meta)
+        (range 1 (inc (.getParameterCount this)))))
 
 (extend-protocol core-p/Datafiable
   Connection
@@ -98,6 +126,8 @@
                        v))}))
   ResultSetMetaData
   (datafy [this] (datafy-result-set-meta-data this))
+  ParameterMetaData
+  (datafy [this] (datafy-parameter-meta-data this))
   ResultSet
   (datafy [this]
     ;; SQLite has a combination ResultSet/Metadata object...
@@ -108,4 +138,5 @@
         (cond-> (safe-bean this)
           c (assoc :rows (rs/datafiable-result-set this c {}))))))
   Statement
+  ;; danger: .getMoreResults() is a mutating function!
   (datafy [this] (safe-bean this)))

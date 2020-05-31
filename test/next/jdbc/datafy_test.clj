@@ -10,8 +10,7 @@
             [next.jdbc.result-set :as rs]
             [next.jdbc.specs :as specs]
             [next.jdbc.test-fixtures :refer [with-test-db db ds
-                                              derby? mysql? postgres? sqlite?]])
-  (:import (java.sql DatabaseMetaData)))
+                                              derby? mysql? postgres? sqlite?]]))
 
 (set! *warn-on-reflection* true)
 
