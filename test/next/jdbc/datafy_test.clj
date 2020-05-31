@@ -1,18 +1,16 @@
-;; copyright (c) 2019-2020 Sean Corfield, all rights reserved
+;; copyright (c) 2020 Sean Corfield, all rights reserved
 
 (ns next.jdbc.datafy-test
   "Tests for the datafy extensions over JDBC types."
-  (:require [clojure.core.protocols :as core-p]
+  (:require [clojure.datafy :as d]
             [clojure.set :as set]
-            [clojure.string :as str]
             [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc :as jdbc]
             [next.jdbc.datafy]
+            [next.jdbc.specs :as specs]
             [next.jdbc.test-fixtures :refer [with-test-db db ds
-                                              derby?
-                                              mssql?]]
-            [next.jdbc.specs :as specs])
-  (:import (java.sql ResultSet)))
+                                              derby?]])
+  (:import (java.sql DatabaseMetaData)))
 
 (set! *warn-on-reflection* true)
 
@@ -33,15 +31,19 @@
   (testing "basic datafication"
     (if (derby?)
       (is (= #{:exception :cause} ; at least one property not supported
-             (set (keys (core-p/datafy (jdbc/get-connection (ds)))))))
-      (let [data (set (keys (core-p/datafy (jdbc/get-connection (ds)))))]
+             (set (keys (d/datafy (jdbc/get-connection (ds)))))))
+      (let [data (set (keys (d/datafy (jdbc/get-connection (ds)))))]
         (when-let [diff (seq (set/difference data basic-connection-keys))]
           (println (:dbtype (db)) (sort diff)))
         (is (= basic-connection-keys
                (set/intersection basic-connection-keys data))))))
   (testing "nav to metadata yields object"
     (when-not (derby?)
-      (is (instance? java.sql.DatabaseMetaData
-                     (core-p/nav (core-p/datafy (jdbc/get-connection (ds)))
-                                 :metaData
-                                 nil))))))
+      (is (instance? DatabaseMetaData
+                     (d/nav (d/datafy (jdbc/get-connection (ds)))
+                            :metaData
+                            nil))))))
+
+(deftest database-metadata-datafy-tests)
+
+(deftest result-set-metadata-datafy-tests)

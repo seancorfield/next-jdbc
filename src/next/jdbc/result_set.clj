@@ -18,6 +18,7 @@
   for implementations of `ReadableColumn` that provide automatic
   conversion of some SQL data types to Java Time objects."
   (:require [clojure.core.protocols :as core-p]
+            [clojure.datafy :as d]
             [next.jdbc.prepare :as prepare]
             [next.jdbc.protocols :as p])
   (:import (java.sql Clob
@@ -427,7 +428,7 @@
       InspectableMapifiedResultSet
       (row-number   [this] (.getRow rs))
       (column-names [this] (:cols @builder))
-      (metadata     [this] (core-p/datafy (:rsmeta @builder)))
+      (metadata     [this] (d/datafy (:rsmeta @builder)))
 
       clojure.lang.IPersistentMap
       (assoc [this k v]
@@ -509,7 +510,7 @@
         ;; that they can be thrown when the actual functions are called
         (let [row  (try (.getRow rs)     (catch Throwable t t))
               cols (try (:cols @builder) (catch Throwable t t))
-              meta (try (core-p/datafy (:rsmeta @builder)) (catch Throwable t t))]
+              meta (try (d/datafy (:rsmeta @builder)) (catch Throwable t t))]
           (with-meta
             (row-builder @builder)
             {`core-p/datafy
