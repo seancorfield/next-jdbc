@@ -10,7 +10,7 @@
             [next.jdbc.result-set :as rs]
             [next.jdbc.specs :as specs]
             [next.jdbc.test-fixtures :refer [with-test-db db ds
-                                              derby? postgres? sqlite?]])
+                                              derby? mysql? postgres? sqlite?]])
   (:import (java.sql DatabaseMetaData)))
 
 (set! *warn-on-reflection* true)
@@ -38,12 +38,7 @@
           (when-let [diff (seq (set/difference data basic-connection-keys))]
             (println (:dbtype (db)) :connection (sort diff)))
           (is (= basic-connection-keys
-                 (set/intersection basic-connection-keys data)))))))
-  (testing "nav to metadata yields object"
-    (when-not (derby?)
-      (with-open [con (jdbc/get-connection (ds))]
-        (is (instance? DatabaseMetaData
-                       (d/nav (d/datafy con) :metaData nil)))))))
+                 (set/intersection basic-connection-keys data))))))))
 
 (def ^:private basic-database-metadata-keys
   "Generic JDBC Connection fields."
@@ -96,8 +91,17 @@
   (testing "result set metadata datafication"
     (let [data (reduce (fn [_ row] (reduced (rs/metadata row)))
                        nil
-                       (jdbc/plan (ds) ["select * from fruit"]))]
+                       (jdbc/plan (ds) [(str "SELECT * FROM "
+                                             (if (mysql?) "fruit" "FRUIT"))]))]
       (is (vector? data))
       (is (= 5 (count data)))
       (is (every? map? data))
       (is (every? :label data)))))
+
+(comment
+  (def con (jdbc/get-connection (ds)))
+  (rs/datafiable-result-set (.getTables (.getMetaData con) nil nil nil nil) con {})
+  (def ps (jdbc/prepare con ["SELECT * FROM fruit"]))
+  (.execute ps)
+  (.getResultSet ps)
+  (.close con))

@@ -12,7 +12,8 @@
             [next.jdbc.result-set :as rs])
   (:import (java.sql Connection
                      DatabaseMetaData
-                     ResultSetMetaData)))
+                     ResultSet ResultSetMetaData
+                     Statement)))
 
 (set! *warn-on-reflection* true)
 
@@ -46,22 +47,34 @@
     ;; ensure we return a basic hash map:
     (merge {} (bean o))
     (catch Throwable t
-      {:exception (ex-message t)
-       :cause (ex-message (ex-cause t))})))
+      (let [dex   (juxt type (comp str ex-message))
+            cause (ex-cause t)]
+        (with-meta (cond-> {:exception (dex t)}
+                     cause (assoc :cause (dex cause)))
+          {:exception t})))))
+
+(defn- datafy-result-set-meta-data
+  [^ResultSetMetaData this]
+  (mapv #(reduce-kv (fn [m k f] (assoc m k (f this %)))
+                    {}
+                    column-meta)
+        (range 1 (inc (.getColumnCount this)))))
 
 (extend-protocol core-p/Datafiable
   Connection
-  (datafy [this]
-    (with-meta (safe-bean this)
-      {`core-p/nav (fn [_ k v]
-                     (if (= :metaData k)
-                       (.getMetaData this)
-                       v))}))
+  (datafy [this] (safe-bean this))
   DatabaseMetaData
   (datafy [this]
-    (with-meta (safe-bean this)
+    (with-meta (let [data (safe-bean this)]
+                 (cond-> data
+                   (not (:exception (meta data)))
+                   (assoc :all-tables [])))
       {`core-p/nav (fn [_ k v]
                      (condp = k
+                       :all-tables
+                       (rs/datafiable-result-set (.getTables this nil nil nil nil)
+                                                 (.getConnection this)
+                                                 {})
                        :catalogs
                        (rs/datafiable-result-set (.getCatalogs this)
                                                  (.getConnection this)
@@ -84,8 +97,15 @@
                                                  {})
                        v))}))
   ResultSetMetaData
+  (datafy [this] (datafy-result-set-meta-data this))
+  ResultSet
   (datafy [this]
-    (mapv #(reduce-kv (fn [m k f] (assoc m k (f this %)))
-                      {}
-                      column-meta)
-          (range 1 (inc (.getColumnCount this))))))
+    ;; SQLite has a combination ResultSet/Metadata object...
+    (if (instance? ResultSetMetaData this)
+      (datafy-result-set-meta-data this)
+      (let [s (.getStatement this)
+            c (when s (.getConnection s))]
+        (cond-> (safe-bean this)
+          c (assoc :rows (rs/datafiable-result-set this c {}))))))
+  Statement
+  (datafy [this] (safe-bean this)))
