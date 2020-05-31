@@ -397,7 +397,14 @@
   (row-number [this]
     "Return the current 1-based row number, if available.")
   (column-names [this]
-    "Return a vector of the column names from the result set."))
+    "Return a vector of the column names from the result set.")
+  (metadata [this]
+    "Return the raw `ResultSetMetaData` object from the result set.
+
+    If `next.jdbc.datafy` has been required, this will be fully-realized
+    as a Clojure data structure, otherwise this should not be allowed to
+    'leak' outside of the reducing function as it may depend on the
+    connection remaining open, in order to be valid."))
 
 (defn- mapify-result-set
   "Given a `ResultSet`, return an object that wraps the current row as a hash
@@ -420,6 +427,7 @@
       InspectableMapifiedResultSet
       (row-number   [this] (.getRow rs))
       (column-names [this] (:cols @builder))
+      (metadata     [this] (core-p/datafy (:rsmeta @builder)))
 
       clojure.lang.IPersistentMap
       (assoc [this k v]
@@ -500,7 +508,8 @@
         ;; since we have to call these eagerly, we trap any exceptions so
         ;; that they can be thrown when the actual functions are called
         (let [row  (try (.getRow rs)     (catch Throwable t t))
-              cols (try (:cols @builder) (catch Throwable t t))]
+              cols (try (:cols @builder) (catch Throwable t t))
+              meta (try (core-p/datafy (:rsmeta @builder)) (catch Throwable t t))]
           (with-meta
             (row-builder @builder)
             {`core-p/datafy
@@ -508,7 +517,9 @@
              `row-number
              (fn [_] (if (instance? Throwable row) (throw row) row))
              `column-names
-             (fn [_] (if (instance? Throwable cols) (throw cols) cols))})))
+             (fn [_] (if (instance? Throwable cols) (throw cols) cols))
+             `metadata
+             (fn [_] (if (instance? Throwable meta) (throw meta) meta))})))
 
       (toString [_]
         (try

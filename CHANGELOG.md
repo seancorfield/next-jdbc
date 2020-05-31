@@ -2,6 +2,10 @@
 
 Only accretive/fixative changes will be made from now on.
 
+Changes made since release 1.0.445:
+* Addition of `next.jdbc.datafy` to provide more `datafy`/`nav` introspection (work in progress; documentation pending).
+* Addition of `next.jdbc.result-set/metadata` to provide (datafied) result set metadata within `plan`.
+
 ## Stable Builds
 
 * 2020-05-23 -- 1.0.445
