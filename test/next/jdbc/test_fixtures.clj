@@ -4,10 +4,8 @@
   "Multi-database testing fixtures."
   (:require [clojure.string :as str]
             [next.jdbc :as jdbc]
-            [next.jdbc.prepare :as prep]
             [next.jdbc.sql :as sql])
-  (:import (com.opentable.db.postgres.embedded EmbeddedPostgres)
-           (javax.sql DataSource)))
+  (:import (com.opentable.db.postgres.embedded EmbeddedPostgres)))
 
 (set! *warn-on-reflection* true)
 
