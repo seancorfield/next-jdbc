@@ -7,6 +7,7 @@
             [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc :as jdbc]
             [next.jdbc.datafy]
+            [next.jdbc.result-set :as rs]
             [next.jdbc.specs :as specs]
             [next.jdbc.test-fixtures :refer [with-test-db db ds
                                               derby? postgres? sqlite?]])
@@ -91,4 +92,12 @@
               (is (vector? rs))
               (is (every? map? rs)))))))))
 
-(deftest result-set-metadata-datafy-tests)
+(deftest result-set-metadata-datafy-tests
+  (testing "result set metadata datafication"
+    (let [data (reduce (fn [_ row] (reduced (rs/metadata row)))
+                       nil
+                       (jdbc/plan (ds) ["select * from fruit"]))]
+      (is (vector? data))
+      (is (= 5 (count data)))
+      (is (every? map? data))
+      (is (every? :label data)))))
