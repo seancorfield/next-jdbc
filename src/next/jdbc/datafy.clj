@@ -9,6 +9,7 @@
         are navigable to produce fully-realized datafiable result sets.
   * `java.sql.ResultSetMetaData` -- datafies as a vector of column descriptions."
   (:require [clojure.core.protocols :as core-p]
+            [clojure.java.data :as j]
             [next.jdbc.result-set :as rs])
   (:import (java.sql Connection
                      DatabaseMetaData
@@ -63,10 +64,9 @@
                          :unknown))
    :signed         (fn [^ParameterMetaData o i] (.isSigned        o i))})
 
-(defn- safe-bean [o]
+(defn- safe-bean [o opts]
   (try
-    ;; ensure we return a basic hash map:
-    (merge {} (bean o))
+    (j/from-java-shallow o (assoc opts :add-class true))
     (catch Throwable t
       (let [dex   (juxt type (comp str ex-message))
             cause (ex-cause t)]
@@ -90,10 +90,10 @@
 
 (extend-protocol core-p/Datafiable
   Connection
-  (datafy [this] (safe-bean this))
+  (datafy [this] (safe-bean this {}))
   DatabaseMetaData
   (datafy [this]
-    (with-meta (let [data (safe-bean this)]
+    (with-meta (let [data (safe-bean this {})]
                  (cond-> data
                    (not (:exception (meta data)))
                    (assoc :all-tables [])))
@@ -135,8 +135,7 @@
       (datafy-result-set-meta-data this)
       (let [s (.getStatement this)
             c (when s (.getConnection s))]
-        (cond-> (safe-bean this)
+        (cond-> (safe-bean this {})
           c (assoc :rows (rs/datafiable-result-set this c {}))))))
   Statement
-  ;; danger: .getMoreResults() is a mutating function!
-  (datafy [this] (safe-bean this)))
+  (datafy [this] (safe-bean this {:omit #{:moreResults}})))
