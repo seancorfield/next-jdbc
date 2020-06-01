@@ -4,9 +4,8 @@
   "This namespace provides datafication of several JDBC object types,
   all within the `java.sql` package:
 
-  * `Connection` -- datafies as a bean; `:metaData` is navigable
-        and produces `java.sql.DatabaseMetaData`.
-  * `DatabaseMetaData` -- datafies as a bean; five properties
+  * `Connection` -- datafies as a bean.
+  * `DatabaseMetaData` -- datafies as a bean; six properties
         are navigable to produce fully-realized datafiable result sets.
   * `ParameterMetaData` -- datafies as a vector of parameter descriptions.
   * `ResultSet` -- datafies as a bean; if the `ResultSet` has an associated
