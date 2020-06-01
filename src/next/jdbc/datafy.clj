@@ -1,13 +1,33 @@
 ;; copyright (c) 2020 Sean Corfield, all rights reserved
 
 (ns next.jdbc.datafy
-  "This namespace provides datafication of several JDBC object types:
+  "This namespace provides datafication of several JDBC object types,
+  all within the `java.sql` package:
 
-  * `java.sql.Connection` -- datafies as a bean; `:metaData` is navigable
+  * `Connection` -- datafies as a bean; `:metaData` is navigable
         and produces `java.sql.DatabaseMetaData`.
-  * `java.sql.DatabaseMetaData` -- datafies as a bean; five properties
+  * `DatabaseMetaData` -- datafies as a bean; five properties
         are navigable to produce fully-realized datafiable result sets.
-  * `java.sql.ResultSetMetaData` -- datafies as a vector of column descriptions."
+  * `ParameterMetaData` -- datafies as a vector of parameter descriptions.
+  * `ResultSet` -- datafies as a bean; if the `ResultSet` has an associated
+        `Statement` and that in turn has an associated `Connection` then an
+        additional key of `:rows` is provided which is a datafied result set,
+        from `next.jdbc.result-set/datafiable-result-set` with default options.
+        This is provided as a convenience, purely for datafication of other
+        JDBC data types -- in normal `next.jdbc` usage, result sets are
+        datafied under full user control.
+  * `ResultSetMetaData` -- datafies as a vector of column descriptions.
+  * `Statement` -- datafies as a bean.
+
+  Because different database drivers may throw `SQLException` for various
+  unimplemented or unavailable propertiies on objects in various states,
+  the default behavior is to return those exceptions using the `:qualify`
+  option for `clojure.java.data/from-java-shallow`, so for a property
+  `:foo`, if its corresponding getter throws an exception, it would instead
+  be returned as `:foo/exception`. This behavior can be overridden by
+  `binding` `next.jdbc.datafy/*datafy-failure*` to any of the other options
+  supported: `:group`, `:omit`, or `:return`. See the `clojure.java.data`
+  documentation for more details."
   (:require [clojure.core.protocols :as core-p]
             [clojure.java.data :as j]
             [next.jdbc.result-set :as rs])
@@ -64,9 +84,15 @@
                          :unknown))
    :signed         (fn [^ParameterMetaData o i] (.isSigned        o i))})
 
+(def ^:dynamic *datafy-failure*
+  "How datafication failures should be handled, based on `clojure.java.data`.
+
+  Defaults to `:qualify`, but can be `:group`, `:omit`, `:qualify`, or `:return`."
+  :qualify)
+
 (defn- safe-bean [o opts]
   (try
-    (j/from-java-shallow o (assoc opts :add-class true))
+    (j/from-java-shallow o (assoc opts :add-class true :exceptions *datafy-failure*))
     (catch Throwable t
       (let [dex   (juxt type (comp str ex-message))
             cause (ex-cause t)]
@@ -96,7 +122,8 @@
     (with-meta (let [data (safe-bean this {})]
                  (cond-> data
                    (not (:exception (meta data)))
-                   (assoc :all-tables [])))
+                   ;; add an opaque object that nav will "replace"
+                   (assoc :all-tables (Object.))))
       {`core-p/nav (fn [_ k v]
                      (condp = k
                        :all-tables
@@ -124,8 +151,6 @@
                                                  (.getConnection this)
                                                  {})
                        v))}))
-  ResultSetMetaData
-  (datafy [this] (datafy-result-set-meta-data this))
   ParameterMetaData
   (datafy [this] (datafy-parameter-meta-data this))
   ResultSet
@@ -137,5 +162,7 @@
             c (when s (.getConnection s))]
         (cond-> (safe-bean this {})
           c (assoc :rows (rs/datafiable-result-set this c {}))))))
+  ResultSetMetaData
+  (datafy [this] (datafy-result-set-meta-data this))
   Statement
   (datafy [this] (safe-bean this {:omit #{:moreResults}})))
