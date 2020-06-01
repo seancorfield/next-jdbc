@@ -33,7 +33,7 @@
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>java.data</artifactId>
-      <version>1.0.64</version>
+      <version>1.0.78</version>
     </dependency>
   </dependencies>
   <build>
