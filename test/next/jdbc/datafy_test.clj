@@ -24,20 +24,20 @@
     :networkTimeout :schema :transactionIsolation :typeMap :warnings
     ;; boolean properties
     :closed :readOnly
-    ;; added by bean itself
+    ;; configured to be added as if by clojure.core/bean
     :class})
 
 (deftest connection-datafy-tests
   (testing "connection datafication"
     (with-open [con (jdbc/get-connection (ds))]
-      (if (derby?)
-        (is (= #{:exception :cause} ; at least one property not supported
-               (set (keys (d/datafy con)))))
-        (let [data (set (keys (d/datafy con)))]
-          (when-let [diff (seq (set/difference data basic-connection-keys))]
-            (println (:dbtype (db)) :connection (sort diff)))
-          (is (= basic-connection-keys
-                 (set/intersection basic-connection-keys data))))))))
+      (let [reference-keys (cond-> basic-connection-keys
+                             (derby?) (-> (disj :networkTimeout)
+                                          (conj :networkTimeout/exception)))
+            data (set (keys (d/datafy con)))]
+        (when-let [diff (seq (set/difference data reference-keys))]
+          (println (:dbtype (db)) :connection (sort diff)))
+        (is (= reference-keys
+               (set/intersection reference-keys data)))))))
 
 (def ^:private basic-database-metadata-keys
   "Generic JDBC Connection fields."
@@ -63,28 +63,33 @@
     :typeInfo :userName
     ;; boolean properties
     :catalogAtStart :readOnly
-    ;; added by bean itself
-    :class})
+    ;; configured to be added as if by clojure.core/bean
+    :class
+    ;; added by next.jdbc.datafy if the datafication succeeds
+    :all-tables})
 
 (deftest database-metadata-datafy-tests
   (testing "database metadata datafication"
     (with-open [con (jdbc/get-connection (ds))]
-      (if (or (postgres?) (sqlite?))
-        (is (= #{:exception :cause} ; at least one property not supported
-               (set (keys (d/datafy (.getMetaData con))))))
-        (let [data (set (keys (d/datafy (.getMetaData con))))]
-          (when-let [diff (seq (set/difference data basic-database-metadata-keys))]
-            (println (:dbtype (db)) :db-meta (sort diff)))
-          (is (= basic-database-metadata-keys
-                 (set/intersection basic-database-metadata-keys data)))))))
+      (let [reference-keys (cond-> basic-database-metadata-keys
+                             (postgres?) (-> (disj :rowIdLifetime)
+                                             (conj :rowIdLifetime/exception))
+                             (sqlite?) (-> (disj :clientInfoProperties :rowIdLifetime)
+                                           (conj :clientInfoProperties/exception
+                                                 :rowIdLifetime/exception)))
+            data (set (keys (d/datafy (.getMetaData con))))]
+        (when-let [diff (seq (set/difference data reference-keys))]
+          (println (:dbtype (db)) :db-meta (sort diff)))
+        (is (= reference-keys
+               (set/intersection reference-keys data))))))
   (testing "nav to catalogs yields object"
-    (when-not (or (postgres?) (sqlite?))
-      (with-open [con (jdbc/get-connection (ds))]
-        (let [data (d/datafy (.getMetaData con))]
-          (doseq [k [:catalogs :clientInfoProperties :schemas :tableTypes :typeInfo]]
-            (let [rs (d/nav data k nil)]
-              (is (vector? rs))
-              (is (every? map? rs)))))))))
+    (with-open [con (jdbc/get-connection (ds))]
+      (let [data (d/datafy (.getMetaData con))]
+        (doseq [k (cond-> #{:catalogs :clientInfoProperties :schemas :tableTypes :typeInfo}
+                    (sqlite?) (disj :clientInfoProperties))]
+          (let [rs (d/nav data k nil)]
+            (is (vector? rs))
+            (is (every? map? rs))))))))
 
 (deftest result-set-metadata-datafy-tests
   (testing "result set metadata datafication"
