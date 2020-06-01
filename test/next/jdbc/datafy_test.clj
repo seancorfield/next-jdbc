@@ -100,7 +100,10 @@
 (comment
   (def con (jdbc/get-connection (ds)))
   (rs/datafiable-result-set (.getTables (.getMetaData con) nil nil nil nil) con {})
-  (def ps (jdbc/prepare con ["SELECT * FROM fruit"]))
+  (def ps (jdbc/prepare con ["SELECT * FROM fruit WHERE grade > ?"]))
+  (require '[next.jdbc.prepare :as prep])
+  (prep/set-parameters ps [30])
   (.execute ps)
   (.getResultSet ps)
+  (.close ps)
   (.close con))
