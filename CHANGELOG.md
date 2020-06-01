@@ -2,11 +2,11 @@
 
 Only accretive/fixative changes will be made from now on.
 
-Changes made since release 1.0.445:
-* Addition of `next.jdbc.datafy` to provide more `datafy`/`nav` introspection (see the additional section in **datafy, nav, and :schema** for details).
-* Addition of `next.jdbc.result-set/metadata` to provide (datafied) result set metadata within `plan`.
-
 ## Stable Builds
+
+* 2020-05-31 -- 1.0.462
+  * Addition of `next.jdbc.datafy` to provide more `datafy`/`nav` introspection (see the additional section in **datafy, nav, and :schema** for details).
+  * Addition of `next.jdbc.result-set/metadata` to provide (datafied) result set metadata within `plan`.
 
 * 2020-05-23 -- 1.0.445
   * Enhanced support in `plan` for "metadata" access: `row-number` and `column-names` can be called on the abstract row (even after calling `datafiable-row`). In addition, `Associative` access via numeric "keys" will read columns by index, and row abstractions now support `Indexed` access via `nth` (which will also read columns by index). Fixes #110.

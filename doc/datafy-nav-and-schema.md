@@ -4,7 +4,7 @@ Clojure 1.10 introduced a new namespace, [`clojure.datafy`](http://clojure.githu
 
 Shortly after REBL's release, I added experimental support to `clojure.java.jdbc` for `datafy` and `nav` that supported lazy navigation through result sets into foreign key relationships and connected rows and tables. `next.jdbc` bakes that support into result sets produced by `execute!` and `execute-one!`.
 
-In addition to `datafy` and `nav` support in the result sets, as of version 1.0.next, there is a `next.jdbc.datafy` namespace that can be required to extend these protocols to a number of JDBC object types. See **JDBC Datafication** near the end of this page for more detail of this.
+In addition to `datafy` and `nav` support in the result sets, as of version 1.0.462, there is a `next.jdbc.datafy` namespace that can be required to extend these protocols to a number of JDBC object types. See **JDBC Datafication** near the end of this page for more detail of this.
 
 ## The `datafy`/`nav` Lifecycle on Result Sets
 
