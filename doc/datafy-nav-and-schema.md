@@ -78,4 +78,6 @@ If you require `next.jdbc.datafy`, the `Datafiable` protocol is extended to seve
 
 See the Java documentation for these JDBC types for further details on what all the properties from each of these classes mean and which are `int`, `String`, or some other JDBC object type.
 
+In addition, requiring this namespace will affect how `next.jdbc.result-set/metadata` behaves inside the reducing function applied to the result of `plan`. Without this namespace loaded, that function will return a raw `ResultSetMetaData` object (which must not leak outside the reducing function). With this namespace loaded, that function will, instead, return a Clojure data structure describing the columns in the result set.
+
 [<: All The Options](/doc/all-the-options.md) | [Migration from `clojure.java.jdbc` :>](/doc/migration-from-clojure-java-jdbc.md)
