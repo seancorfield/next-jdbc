@@ -79,15 +79,41 @@
              (.setReadOnly con old-readonly)
              (catch Exception _))))))))
 
+(defonce ^:dynamic ^{:doc ""} *nested-tx* :allow)
+(defonce ^:private ^:dynamic ^{:doc ""} *active-tx* false)
+
 (extend-protocol p/Transactable
   java.sql.Connection
   (-transact [this body-fn opts]
-             (locking this
-                      (transact* this body-fn opts)))
+    (cond (or (not *active-tx*) (= :allow *nested-tx*))
+      (locking this
+        (binding [*active-tx* true]
+          (transact* this body-fn opts)))
+      (= :ignore *nested-tx*)
+      (body-fn this)
+      (= :prohibit *nested-tx*)
+      (throw (IllegalStateException. "Nested transactions are prohibited"))
+      :else
+      (throw (IllegalArgumentException.
+              (str "*nested-tx* ("
+                   *nested-tx*
+                   ") was not :allow, :ignore, or :prohibit")))))
   javax.sql.DataSource
   (-transact [this body-fn opts]
-             (with-open [con (p/get-connection this opts)]
-               (transact* con body-fn opts)))
+    (cond (or (not *active-tx*) (= :allow *nested-tx*))
+      (binding [*active-tx* true]
+        (with-open [con (p/get-connection this opts)]
+          (transact* con body-fn opts)))
+      (= :ignore *nested-tx*)
+      (with-open [con (p/get-connection this opts)]
+        (body-fn con))
+      (= :prohibit *nested-tx*)
+      (throw (IllegalStateException. "Nested transactions are prohibited"))
+      :else
+      (throw (IllegalArgumentException.
+              (str "*nested-tx* ("
+                   *nested-tx*
+                   ") was not :allow, :ignore, or :prohibit")))))
   Object
   (-transact [this body-fn opts]
-             (p/-transact (p/get-datasource this) body-fn opts)))
+    (p/-transact (p/get-datasource this) body-fn opts)))
