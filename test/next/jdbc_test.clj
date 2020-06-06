@@ -315,10 +315,10 @@ VALUES ('Pear', 'green', 49, 47)
   (when (stored-proc?)
     (testing "stored proc; multiple result sets"
       (try
+        (println "====" (:dbtype (db)) "====")
         (clojure.pprint/pprint
-         (jdbc/execute! (ds) [(if (mssql?)
-                                "EXEC FRUITP"
-                                "CALL FRUITP()")]))
+         (jdbc/execute! (ds) [(if (mssql?) "EXEC FRUITP" "CALL FRUITP()")]
+                        {:multi-rs true}))
         (catch Throwable t
           (println 'call-proc (:dbtype (db)) (ex-message t) (some-> t (ex-cause) (ex-message))))))))
 

@@ -575,6 +575,18 @@
         (.getGeneratedKeys stmt)
         (catch Exception _)))))
 
+(defn- stmt->result-set'
+  "Given a `PreparedStatement` and options, execute it and return a `ResultSet`
+  if possible."
+  ^ResultSet
+  [^PreparedStatement stmt go opts]
+  (if go
+    (.getResultSet stmt)
+    (when (:return-keys opts)
+      (try
+        (.getGeneratedKeys stmt)
+        (catch Exception _)))))
+
 (defn- reduce-stmt
   "Execute the `PreparedStatement`, attempt to get either its `ResultSet` or
   its generated keys (as a `ResultSet`), and reduce that using the supplied
@@ -687,9 +699,26 @@
                                      (first sql-params)
                                      (rest sql-params)
                                      opts)]
+      (if (:multi-rs opts)
+        (loop [go (.execute stmt) acc nil rsn 0]
+          (let [rs (if-let [rs (stmt->result-set' stmt go opts)]
+                     (datafiable-result-set rs this opts)
+                     (let [n (.getUpdateCount stmt)]
+                       (if (= -1 n)
+                         nil
+                         [{:next.jdbc/update-count (.getUpdateCount stmt)}])))]
+            (if-not rs
+              acc
+              (recur (.getMoreResults stmt)
+                     (if acc
+                       (-> acc
+                           (conj {:next.jdbc/result-set rsn})
+                           (into rs))
+                       rs)
+                     (inc rsn)))))
         (if-let [rs (stmt->result-set stmt opts)]
           (datafiable-result-set rs this opts)
-          [{:next.jdbc/update-count (.getUpdateCount stmt)}])))
+          [{:next.jdbc/update-count (.getUpdateCount stmt)}]))))
 
   java.sql.PreparedStatement
   ;; we can't tell if this PreparedStatement will return generated
