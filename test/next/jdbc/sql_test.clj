@@ -7,7 +7,7 @@
             [next.jdbc.sql :as sql]
             [next.jdbc.test-fixtures
              :refer [with-test-db ds column default-options
-                      derby? maria? mssql? mysql? postgres? sqlite?]]))
+                      derby? jtds? maria? mssql? mysql? postgres? sqlite?]]))
 
 (set! *warn-on-reflection* true)
 
@@ -67,6 +67,7 @@
 
 (deftest test-insert-delete
   (let [new-key (cond (derby?)    :1
+                      (jtds?)     :ID
                       (maria?)    :insert_id
                       (mssql?)    :GENERATED_KEYS
                       (mysql?)    :GENERATED_KEY

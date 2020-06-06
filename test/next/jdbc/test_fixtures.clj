@@ -48,6 +48,8 @@
 
 (defn derby? [] (= "derby" (:dbtype @test-db-spec)))
 
+(defn jtds? [] (= "jtds" (:dbtype @test-db-spec)))
+
 (defn maria? [] (= "mariadb" (:dbtype @test-db-spec)))
 
 (defn mssql? [] (= "mssql" (:dbtype @test-db-spec)))
