@@ -33,7 +33,7 @@
                       org.apache.logging.log4j/log4j-jcl {:mvn/version "2.13.3"}
                       org.apache.logging.log4j/log4j-jul {:mvn/version "2.13.3"}
                       org.apache.logging.log4j/log4j-slf4j-impl {:mvn/version "2.13.3"}}
-         :jvm-opts ["-Dlog4j2.configurationFile=log4j2-jdbc.properties"]}
+         :jvm-opts ["-Dlog4j2.configurationFile=log4j2-info.properties"]}
   :runner
   {:extra-deps {com.cognitect/test-runner
                 {:git/url "https://github.com/cognitect-labs/test-runner"
