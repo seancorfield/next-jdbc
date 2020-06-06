@@ -699,8 +699,8 @@
                                      (first sql-params)
                                      (rest sql-params)
                                      opts)]
-      (if (:multi-rs opts)
-        (loop [go (.execute stmt) acc nil rsn 0]
+      (if-let [multi (:multi-rs opts)]
+        (loop [go (.execute stmt) acc (if (= :delimited multi) nil []) rsn 0]
           (let [rs (if-let [rs (stmt->result-set' stmt go opts)]
                      (datafiable-result-set rs this opts)
                      (let [n (.getUpdateCount stmt)]
@@ -710,11 +710,14 @@
             (if-not rs
               acc
               (recur (.getMoreResults stmt)
-                     (if acc
-                       (-> acc
-                           (conj {:next.jdbc/result-set rsn})
-                           (into rs))
-                       rs)
+                     (cond (not= :delimited multi)
+                           (conj acc rs)
+                           acc
+                           (-> acc
+                               (conj {:next.jdbc/result-set rsn})
+                               (into rs))
+                           :else
+                           rs)
                      (inc rsn)))))
         (if-let [rs (stmt->result-set stmt opts)]
           (datafiable-result-set rs this opts)
