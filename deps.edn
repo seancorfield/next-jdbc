@@ -19,12 +19,19 @@
                       org.mariadb.jdbc/mariadb-java-client {:mvn/version "2.5.4"}
                       mysql/mysql-connector-java {:mvn/version "8.0.19"}
                       org.postgresql/postgresql {:mvn/version "42.2.10"}
-                      com.opentable.components/otj-pg-embedded {:mvn/version "0.13.3"}
-                      com.impossibl.pgjdbc-ng/pgjdbc-ng {:mvn/version "0.8.3"}
+                      io.zonky.test/embedded-postgres {:mvn/version "1.2.6"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-darwin-amd64 {:mvn/version "12.2.0"}
                       org.xerial/sqlite-jdbc {:mvn/version "3.30.1"}
                       com.microsoft.sqlserver/mssql-jdbc {:mvn/version "8.2.1.jre8"}
                       ;; supplementary test stuff
-                      org.slf4j/slf4j-nop {:mvn/version "1.7.30"}}}
+                      ;; use log4j 2.x:
+                      org.apache.logging.log4j/log4j-api {:mvn/version "2.13.3"}
+                      ;; bridge into log4j:
+                      org.apache.logging.log4j/log4j-1.2-api {:mvn/version "2.13.3"}
+                      org.apache.logging.log4j/log4j-jcl {:mvn/version "2.13.3"}
+                      org.apache.logging.log4j/log4j-jul {:mvn/version "2.13.3"}
+                      org.apache.logging.log4j/log4j-slf4j-impl {:mvn/version "2.13.3"}}
+         :jvm-opts ["-Dlog4j2.configurationFile=log4j2-jdbc.properties"]}
   :runner
   {:extra-deps {com.cognitect/test-runner
                 {:git/url "https://github.com/cognitect-labs/test-runner"

@@ -7,7 +7,7 @@
             [next.jdbc :as jdbc]
             [next.jdbc.connection :as c]
             [next.jdbc.test-fixtures :refer [with-test-db db ds column
-                                              default-options
+                                              default-options stored-proc?
                                               derby? mssql? mysql? postgres?]]
             [next.jdbc.prepare :as prep]
             [next.jdbc.result-set :as rs]
@@ -302,13 +302,26 @@ VALUES ('Pear', 'green', 49, 47)
               :else    (is (= {} etc)))
         (is (instance? javax.sql.DataSource ds))
         (is (str/index-of (pr-str ds) (str "jdbc:"
-                                           (if (mssql?)
-                                             "sqlserver" ; mssql is the alias
-                                             (:dbtype (db))))))
+                                           (condp = (:dbtype (db))
+                                                  "mssql" "sqlserver"
+                                                  "jtds"  "jtds:sqlserver"
+                                                  (:dbtype (db))))))
         ;; checks get-datasource on a DataSource is identity
         (is (identical? ds (jdbc/get-datasource ds)))
         (with-open [con (jdbc/get-connection ds {})]
           (is (instance? java.sql.Connection con)))))))
+
+(deftest multi-rs
+  (when (stored-proc?)
+    (testing "stored proc; multiple result sets"
+      (try
+        (clojure.pprint/pprint
+         (jdbc/execute! (ds) [(if (mssql?)
+                                "EXEC FRUITP"
+                                "CALL FRUITP()")]))
+        (catch Throwable t
+          (println 'call-proc (:dbtype (db)) (ex-message t) (some-> t (ex-cause) (ex-message))))))))
+
 
 (deftest plan-misuse
   (let [s (pr-str (jdbc/plan (ds) ["select * from fruit"]))]

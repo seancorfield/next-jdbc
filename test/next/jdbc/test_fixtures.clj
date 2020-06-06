@@ -5,7 +5,7 @@
   (:require [clojure.string :as str]
             [next.jdbc :as jdbc]
             [next.jdbc.sql :as sql])
-  (:import (com.opentable.db.postgres.embedded EmbeddedPostgres)))
+  (:import (io.zonky.test.db.postgres.embedded EmbeddedPostgres)))
 
 (set! *warn-on-reflection* true)
 
@@ -39,10 +39,16 @@
 (def ^:private test-mssql
   (when (System/getenv "NEXT_JDBC_TEST_MSSQL") test-mssql-map))
 
+(def ^:private test-jtds-map
+  {:dbtype "jtds" :dbname "model"
+   :user "sa" :password (System/getenv "MSSQL_SA_PASSWORD")})
+(def ^:private test-jtds
+  (when (System/getenv "NEXT_JDBC_TEST_MSSQL") test-jtds-map))
+
 (def ^:private test-db-specs
   (cond-> [test-derby test-h2-mem test-h2 test-hsql test-sqlite test-postgres]
     test-mysql (conj test-mysql)
-    test-mssql (conj test-mssql)))
+    test-mssql (conj test-mssql test-jtds)))
 
 (def ^:private test-db-spec (atom nil))
 
@@ -50,13 +56,15 @@
 
 (defn maria? [] (= "mariadb" (:dbtype @test-db-spec)))
 
-(defn mssql? [] (= "mssql" (:dbtype @test-db-spec)))
+(defn mssql? [] (#{"jtds" "mssql"} (:dbtype @test-db-spec)))
 
 (defn mysql? [] (#{"mariadb" "mysql"} (:dbtype @test-db-spec)))
 
 (defn postgres? [] (= "embedded-postgres" (:dbtype @test-db-spec)))
 
 (defn sqlite? [] (= "sqlite" (:dbtype @test-db-spec)))
+
+(defn stored-proc? [] (not (#{"derby" "h2" "h2:mem" "sqlite"} (:dbtype @test-db-spec))))
 
 (defn column [k]
   (let [n (namespace k)]
@@ -113,9 +121,13 @@
                 :else
                 "AUTO_INCREMENT PRIMARY KEY")]
       (with-open [con (jdbc/get-connection (ds))]
+        (when (stored-proc?)
+          (try
+            (jdbc/execute-one! con ["DROP PROCEDURE FRUITP"])
+            (catch Throwable _)))
         (try
           (jdbc/execute-one! con [(str "DROP TABLE " fruit)])
-          (catch Exception _))
+          (catch Throwable _))
         (jdbc/execute-one! con [(str "
 CREATE TABLE " fruit " (
   ID INTEGER " auto-inc-pk ",
@@ -124,14 +136,35 @@ CREATE TABLE " fruit " (
   COST INT DEFAULT NULL,
   GRADE REAL DEFAULT NULL
 )")])
-        (sql/insert-multi! con :fruit
-                           [:name :appearance :cost :grade]
-                           [["Apple" "red" 59 nil]
-                            ["Banana" "yellow" nil 92.2]
-                            ["Peach" nil 139 90.0]
-                            ["Orange" "juicy" 89 88.6]]
-                           {:return-keys false})
-        (t)))))
+        (when (stored-proc?)
+          (let [[begin end] (if (postgres?) ["$$" "$$"] ["BEGIN" "END"])]
+            (try
+              (jdbc/execute-one! con [(str "
+CREATE PROCEDURE FRUITP" (cond (= "hsqldb" (:dbtype db)) "() READS SQL DATA DYNAMIC RESULT SETS 2 "
+                               (mssql?) " AS "
+                               (postgres?) "() LANGUAGE SQL AS "
+                               :else "() ") "
+ " begin " " (if (= "hsqldb" (:dbtype db))
+               (str "ATOMIC
+  DECLARE result1 CURSOR WITH RETURN FOR SELECT * FROM " fruit " WHERE COST < 90;
+  DECLARE result2 CURSOR WITH RETURN FOR SELECT * FROM " fruit " WHERE GRADE >= 90.0;
+  OPEN result1;
+  OPEN result2;")
+               (str "
+  SELECT * FROM " fruit " WHERE COST < 90;
+  SELECT * FROM " fruit " WHERE GRADE >= 90.0;")) "
+ " end "
+")])
+              (catch Throwable t
+                (println 'procedure (:dbtype db) (ex-message t))))))
+       (sql/insert-multi! con :fruit
+                          [:name :appearance :cost :grade]
+                          [["Apple" "red" 59 nil]
+                           ["Banana" "yellow" nil 92.2]
+                           ["Peach" nil 139 90.0]
+                           ["Orange" "juicy" 89 88.6]]
+                          {:return-keys false})
+       (t)))))
 
 (comment
   ;; this is a convenience to bring next.jdbc's test dependencies
