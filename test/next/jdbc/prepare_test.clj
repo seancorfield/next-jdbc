@@ -8,7 +8,8 @@
   `execute-batch!` here."
   (:require [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc :as jdbc]
-            [next.jdbc.test-fixtures :refer [with-test-db ds postgres? sqlite?]]
+            [next.jdbc.test-fixtures
+             :refer [with-test-db ds jtds? postgres? sqlite?]]
             [next.jdbc.prepare :as prep]
             [next.jdbc.specs :as specs]))
 
@@ -73,7 +74,7 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
                  (conj result (count (jdbc/execute! t ["select * from fruit"]))))))))
     (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
   (testing "large batch insert"
-    (when-not (or (postgres?) (sqlite?))
+    (when-not (or (jtds?) (postgres?) (sqlite?))
       (is (= [1 1 1 1 1 1 1 1 1 13]
              (jdbc/with-transaction [t (ds) {:rollback-only true}]
                (with-open [ps (jdbc/prepare t ["
