@@ -303,7 +303,7 @@ VALUES ('Pear', 'green', 49, 47)
         (is (instance? javax.sql.DataSource ds))
         (is (str/index-of (pr-str ds) (str "jdbc:"
                                            (cond (jtds?)
-                                                 "jtds:server"
+                                                 "jtds:sqlserver"
                                                  (mssql?)
                                                  "sqlserver"
                                                  :else
