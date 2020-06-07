@@ -4,6 +4,7 @@
   "Multi-database testing fixtures."
   (:require [clojure.string :as str]
             [next.jdbc :as jdbc]
+            [next.jdbc.prepare :as prep]
             [next.jdbc.sql :as sql])
   (:import (io.zonky.test.db.postgres.embedded EmbeddedPostgres)))
 
@@ -92,6 +93,16 @@
   []
   @test-datasource)
 
+(defn- do-commands
+  "Example from migration docs: this serves as a test for it."
+  [connectable commands]
+  (if (instance? java.sql.Connection connectable)
+    (with-open [stmt (prep/statement connectable)]
+      (run! #(.addBatch stmt %) commands)
+      (into [] (.executeBatch stmt)))
+    (with-open [conn (jdbc/get-connection connectable)]
+      (do-commands conn commands))))
+
 (defn with-test-db
   "Given a test function (or suite), run it in the context of an in-memory
   H2 database set up with a simple fruit table containing four rows of data.
@@ -122,9 +133,9 @@
                 "AUTO_INCREMENT PRIMARY KEY")]
       (with-open [con (jdbc/get-connection (ds))]
         (try
-          (jdbc/execute-one! con [(str "DROP TABLE " fruit)])
+          (do-commands con [(str "DROP TABLE " fruit)])
           (catch Exception _))
-        (jdbc/execute-one! con [(str "
+        (do-commands con [(str "
 CREATE TABLE " fruit " (
   ID INTEGER " auto-inc-pk ",
   NAME VARCHAR(32),
