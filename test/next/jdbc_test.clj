@@ -8,7 +8,7 @@
             [next.jdbc.connection :as c]
             [next.jdbc.test-fixtures :refer [with-test-db db ds column
                                               default-options
-                                              derby? mssql? mysql? postgres?]]
+                                              derby? jtds? mssql? mysql? postgres?]]
             [next.jdbc.prepare :as prep]
             [next.jdbc.result-set :as rs]
             [next.jdbc.specs :as specs])
@@ -302,9 +302,12 @@ VALUES ('Pear', 'green', 49, 47)
               :else    (is (= {} etc)))
         (is (instance? javax.sql.DataSource ds))
         (is (str/index-of (pr-str ds) (str "jdbc:"
-                                           (if (mssql?)
-                                             "sqlserver" ; mssql is the alias
-                                             (:dbtype (db))))))
+                                           (cond (jtds?)
+                                                 "jtds:sqlserver"
+                                                 (mssql?)
+                                                 "sqlserver"
+                                                 :else
+                                                 (:dbtype (db))))))
         ;; checks get-datasource on a DataSource is identity
         (is (identical? ds (jdbc/get-datasource ds)))
         (with-open [con (jdbc/get-connection ds {})]

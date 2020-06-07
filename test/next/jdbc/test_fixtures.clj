@@ -5,7 +5,7 @@
   (:require [clojure.string :as str]
             [next.jdbc :as jdbc]
             [next.jdbc.sql :as sql])
-  (:import (com.opentable.db.postgres.embedded EmbeddedPostgres)))
+  (:import (io.zonky.test.db.postgres.embedded EmbeddedPostgres)))
 
 (set! *warn-on-reflection* true)
 
@@ -39,18 +39,26 @@
 (def ^:private test-mssql
   (when (System/getenv "NEXT_JDBC_TEST_MSSQL") test-mssql-map))
 
+(def ^:private test-jtds-map
+  {:dbtype "jtds" :dbname "model"
+   :user "sa" :password (System/getenv "MSSQL_SA_PASSWORD")})
+(def ^:private test-jtds
+  (when (System/getenv "NEXT_JDBC_TEST_MSSQL") test-jtds-map))
+
 (def ^:private test-db-specs
   (cond-> [test-derby test-h2-mem test-h2 test-hsql test-sqlite test-postgres]
     test-mysql (conj test-mysql)
-    test-mssql (conj test-mssql)))
+    test-mssql (conj test-mssql test-jtds)))
 
 (def ^:private test-db-spec (atom nil))
 
 (defn derby? [] (= "derby" (:dbtype @test-db-spec)))
 
+(defn jtds? [] (= "jtds" (:dbtype @test-db-spec)))
+
 (defn maria? [] (= "mariadb" (:dbtype @test-db-spec)))
 
-(defn mssql? [] (= "mssql" (:dbtype @test-db-spec)))
+(defn mssql? [] (#{"jtds" "mssql"} (:dbtype @test-db-spec)))
 
 (defn mysql? [] (#{"mariadb" "mysql"} (:dbtype @test-db-spec)))
 

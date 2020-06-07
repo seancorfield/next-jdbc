@@ -9,8 +9,9 @@
             [next.jdbc.datafy]
             [next.jdbc.result-set :as rs]
             [next.jdbc.specs :as specs]
-            [next.jdbc.test-fixtures :refer [with-test-db db ds
-                                              derby? mysql? postgres? sqlite?]]))
+            [next.jdbc.test-fixtures
+             :refer [with-test-db db ds
+                      derby? jtds? mysql? postgres? sqlite?]]))
 
 (set! *warn-on-reflection* true)
 
@@ -32,7 +33,11 @@
     (with-open [con (jdbc/get-connection (ds))]
       (let [reference-keys (cond-> basic-connection-keys
                              (derby?) (-> (disj :networkTimeout)
-                                          (conj :networkTimeout/exception)))
+                                          (conj :networkTimeout/exception))
+                             (jtds?)  (-> (disj :clientInfo :networkTimeout :schema)
+                                          (conj :clientInfo/exception
+                                                :networkTimeout/exception
+                                                :schema/exception)))
             data (set (keys (d/datafy con)))]
         (when-let [diff (seq (set/difference data reference-keys))]
           (println (:dbtype (db)) :connection (sort diff)))
@@ -72,11 +77,14 @@
   (testing "database metadata datafication"
     (with-open [con (jdbc/get-connection (ds))]
       (let [reference-keys (cond-> basic-database-metadata-keys
+                             (jtds?)     (-> (disj :clientInfoProperties :rowIdLifetime)
+                                             (conj :clientInfoProperties/exception
+                                                   :rowIdLifetime/exception))
                              (postgres?) (-> (disj :rowIdLifetime)
                                              (conj :rowIdLifetime/exception))
-                             (sqlite?) (-> (disj :clientInfoProperties :rowIdLifetime)
-                                           (conj :clientInfoProperties/exception
-                                                 :rowIdLifetime/exception)))
+                             (sqlite?)   (-> (disj :clientInfoProperties :rowIdLifetime)
+                                             (conj :clientInfoProperties/exception
+                                                   :rowIdLifetime/exception)))
             data (set (keys (d/datafy (.getMetaData con))))]
         (when-let [diff (seq (set/difference data reference-keys))]
           (println (:dbtype (db)) :db-meta (sort diff)))
@@ -86,6 +94,7 @@
     (with-open [con (jdbc/get-connection (ds))]
       (let [data (d/datafy (.getMetaData con))]
         (doseq [k (cond-> #{:catalogs :clientInfoProperties :schemas :tableTypes :typeInfo}
+                    (jtds?)   (disj :clientInfoProperties)
                     (sqlite?) (disj :clientInfoProperties))]
           (let [rs (d/nav data k nil)]
             (is (vector? rs))
