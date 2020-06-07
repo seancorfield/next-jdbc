@@ -152,7 +152,7 @@ CREATE TABLE " fruit " (
         (when (stored-proc?)
           (let [[begin end] (if (postgres?) ["$$" "$$"] ["BEGIN" "END"])]
             (try
-              (jdbc/execute-one! con [(str "
+              (do-commands con [(str "
 CREATE PROCEDURE FRUITP" (cond (= "hsqldb" (:dbtype db)) "() READS SQL DATA DYNAMIC RESULT SETS 2 "
                                (mssql?) " AS "
                                (postgres?) "() LANGUAGE SQL AS "

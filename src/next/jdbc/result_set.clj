@@ -582,17 +582,25 @@
         (.getGeneratedKeys stmt)
         (catch Exception _)))))
 
-(defn- stmt->result-set'
-  "Given a `PreparedStatement` and options, execute it and return a `ResultSet`
-  if possible."
-  ^ResultSet
-  [^PreparedStatement stmt go opts]
-  (if go
-    (.getResultSet stmt)
-    (when (:return-keys opts)
-      (try
-        (.getGeneratedKeys stmt)
-        (catch Exception _)))))
+(defn- stmt->result-set-update-count
+  "Given a connectable, a `Statement`, a flag indicating there might
+  be a result set, and options, return a (datafiable) result set if possible
+  (either from the statement or from generated keys). If no result set is
+  available, return a 'fake' result set containing the update count.
+
+  If no update count is available either, return nil."
+  [connectable ^Statement stmt go opts]
+  (if-let [^ResultSet
+           rs (if go
+                (.getResultSet stmt)
+                (when (:return-keys opts)
+                  (try
+                    (.getGeneratedKeys stmt)
+                    (catch Exception _))))]
+    (datafiable-result-set rs connectable opts)
+    (let [n (.getUpdateCount stmt)]
+      (when-not (= -1 n)
+        [{:next.jdbc/update-count n}]))))
 
 (defn- reduce-stmt
   "Execute the `PreparedStatement`, attempt to get either its `ResultSet` or
@@ -616,15 +624,14 @@
 
 (defn- stmt-sql->result-set
   "Given a `Statement`, a SQL command, and options, execute it and return a
-  `ResultSet` if possible."
+  `ResultSet` if possible. We always attempt to return keys."
   ^ResultSet
   [^Statement stmt ^String sql opts]
   (if (.execute stmt sql)
     (.getResultSet stmt)
-    (when (:return-keys opts)
-      (try
-        (.getGeneratedKeys stmt)
-        (catch Exception _)))))
+    (try
+      (.getGeneratedKeys stmt)
+      (catch Exception _))))
 
 (defn- reduce-stmt-sql
   "Execute the SQL command on the given `Statement`, attempt to get either
@@ -673,9 +680,14 @@
                                      (first sql-params)
                                      (rest sql-params)
                                      opts)]
-      (if-let [rs (stmt->result-set stmt opts)]
-        (datafiable-result-set rs this opts)
-        [{:next.jdbc/update-count (.getUpdateCount stmt)}])))
+      (if (:multi-rs opts)
+        (loop [go (.execute stmt) acc [] rsn 0]
+          (if-let [rs (stmt->result-set-update-count this stmt go opts)]
+            (recur (.getMoreResults stmt) (conj acc rs) (inc rsn))
+            acc))
+        (if-let [rs (stmt->result-set stmt opts)]
+          (datafiable-result-set rs this opts)
+          [{:next.jdbc/update-count (.getUpdateCount stmt)}]))))
 
   javax.sql.DataSource
   (-execute [this sql-params opts]
@@ -706,26 +718,11 @@
                                      (first sql-params)
                                      (rest sql-params)
                                      opts)]
-      (if-let [multi (:multi-rs opts)]
-        (loop [go (.execute stmt) acc (if (= :delimited multi) nil []) rsn 0]
-          (let [rs (if-let [rs (stmt->result-set' stmt go opts)]
-                     (datafiable-result-set rs this opts)
-                     (let [n (.getUpdateCount stmt)]
-                       (if (= -1 n)
-                         nil
-                         [{:next.jdbc/update-count (.getUpdateCount stmt)}])))]
-            (if-not rs
-              acc
-              (recur (.getMoreResults stmt)
-                     (cond (not= :delimited multi)
-                           (conj acc rs)
-                           acc
-                           (-> acc
-                               (conj {:next.jdbc/result-set rsn})
-                               (into rs))
-                           :else
-                           rs)
-                     (inc rsn)))))
+      (if (:multi-rs opts)
+        (loop [go (.execute stmt) acc [] rsn 0]
+          (if-let [rs (stmt->result-set-update-count this stmt go opts)]
+            (recur (.getMoreResults stmt) (conj acc rs) (inc rsn))
+            acc))
         (if-let [rs (stmt->result-set stmt opts)]
           (datafiable-result-set rs this opts)
           [{:next.jdbc/update-count (.getUpdateCount stmt)}]))))
@@ -748,25 +745,27 @@
                           (.getConnection this) opts)))
       {:next.jdbc/update-count (.getUpdateCount this)}))
   (-execute-all [this _ opts]
-    (if-let [rs (stmt->result-set this opts)]
-      (datafiable-result-set rs (.getConnection this) opts)
-      [{:next.jdbc/update-count (.getUpdateCount this)}]))
+    (if (:multi-rs opts)
+      (loop [go (.execute this) acc [] rsn 0]
+        (if-let [rs (stmt->result-set-update-count (.getConnection this) this go opts)]
+          (recur (.getMoreResults this) (conj acc rs) (inc rsn))
+          acc))
+      (if-let [rs (stmt->result-set this opts)]
+        (datafiable-result-set rs (.getConnection this) opts)
+        [{:next.jdbc/update-count (.getUpdateCount this)}])))
 
   java.sql.Statement
-  ;; we can't tell if this Statement will return generated
-  ;; keys so we pass a truthy value to at least attempt it if we
-  ;; do not get a ResultSet back from the execute call
   (-execute [this sql-params opts]
     (assert (= 1 (count sql-params))
             "Parameters cannot be provided when executing a non-prepared Statement")
     (reify clojure.lang.IReduceInit
       (reduce [_ f init]
-              (reduce-stmt-sql this (first sql-params) f init (assoc opts :return-keys true)))
+              (reduce-stmt-sql this (first sql-params) f init opts))
       (toString [_] "`IReduceInit` from `plan` -- missing reduction?")))
   (-execute-one [this sql-params opts]
     (assert (= 1 (count sql-params))
             "Parameters cannot be provided when executing a non-prepared Statement")
-    (if-let [rs (stmt-sql->result-set this (first sql-params) (assoc opts :return-keys true))]
+    (if-let [rs (stmt-sql->result-set this (first sql-params) opts)]
       (let [builder-fn (get opts :builder-fn as-maps)
             builder    (builder-fn rs opts)]
         (when (.next rs)
@@ -776,9 +775,15 @@
   (-execute-all [this sql-params opts]
     (assert (= 1 (count sql-params))
             "Parameters cannot be provided when executing a non-prepared Statement")
-    (if-let [rs (stmt-sql->result-set this (first sql-params) opts)]
-      (datafiable-result-set rs (.getConnection this) opts)
-      [{:next.jdbc/update-count (.getUpdateCount this)}]))
+    (if (:multi-rs opts)
+      (loop [go (.execute this (first sql-params)) acc [] rsn 0]
+        (if-let [rs (stmt->result-set-update-count
+                     (.getConnection this) this go (assoc opts :return-keys true))]
+          (recur (.getMoreResults this) (conj acc rs) (inc rsn))
+          acc))
+      (if-let [rs (stmt-sql->result-set this (first sql-params) opts)]
+        (datafiable-result-set rs (.getConnection this) opts)
+        [{:next.jdbc/update-count (.getUpdateCount this)}])))
 
   Object
   (-execute [this sql-params opts]
