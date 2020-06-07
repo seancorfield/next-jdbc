@@ -396,16 +396,23 @@
   to realize a row by calling `datafiable-row` but still wants to call
   these functions on the (realized) row."
   (row-number [this]
-    "Return the current 1-based row number, if available.")
+    "Return the current 1-based row number, if available.
+
+    Should not cause any row realization.")
   (column-names [this]
-    "Return a vector of the column names from the result set.")
+    "Return a vector of the column names from the result set.
+
+    Reifies the result builder, in order to construct column names,
+    but should not cause any row realization.")
   (metadata [this]
     "Return the raw `ResultSetMetaData` object from the result set.
 
-    If `next.jdbc.datafy` has been required, this will be fully-realized
-    as a Clojure data structure, otherwise this should not be allowed to
-    'leak' outside of the reducing function as it may depend on the
-    connection remaining open, in order to be valid."))
+    Should not cause any row realization.
+
+    If `next.jdbc.datafy` has been required, this metadata will be
+    fully-realized as a Clojure data structure, otherwise this should
+    not be allowed to 'leak' outside of the reducing function as it may
+    depend on the connection remaining open, in order to be valid."))
 
 (defn- mapify-result-set
   "Given a `ResultSet`, return an object that wraps the current row as a hash
@@ -428,7 +435,7 @@
       InspectableMapifiedResultSet
       (row-number   [this] (.getRow rs))
       (column-names [this] (:cols @builder))
-      (metadata     [this] (d/datafy (:rsmeta @builder)))
+      (metadata     [this] (d/datafy (.getMetaData rs)))
 
       clojure.lang.IPersistentMap
       (assoc [this k v]
@@ -510,7 +517,7 @@
         ;; that they can be thrown when the actual functions are called
         (let [row  (try (.getRow rs)     (catch Throwable t t))
               cols (try (:cols @builder) (catch Throwable t t))
-              meta (try (d/datafy (:rsmeta @builder)) (catch Throwable t t))]
+              meta (try (d/datafy (.getMetaData rs)) (catch Throwable t t))]
           (with-meta
             (row-builder @builder)
             {`core-p/datafy
