@@ -149,12 +149,13 @@
 
 (defn statement
   "Given a `Connection` and some options, return a `Statement`."
-  ^java.sql.Statement
-  ([con] (statement con {}))
-  ([^Connection con
-    {:keys [result-type concurrency cursors
-            fetch-size max-rows timeout]
-     :as opts}]
+  (^java.sql.Statement
+    [con] (statement con {}))
+  (^java.sql.Statement
+    [^Connection con
+     {:keys [result-type concurrency cursors
+             fetch-size max-rows timeout]
+      :as opts}]
    (let [^Statement stmt
          (cond
           (and result-type concurrency)

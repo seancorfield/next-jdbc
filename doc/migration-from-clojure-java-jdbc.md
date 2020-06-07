@@ -55,6 +55,18 @@ The `next.jdbc.sql` namespace contains several functions with similarities to `c
 * `update!` -- similar to `clojure.java.jdbc/update!` but will also accept a hash map of column name/value pairs instead of a partial where clause (vector),
 * `delete!` -- similar to `clojure.java.jdbc/delete!` but will also accept a hash map of column name/value pairs instead of a partial where clause (vector).
 
+If you were using `db-do-commands` in `clojure.java.jdbc` to execute DDL, the following is the equivalent in `next.jdbc`:
+
+```clojure
+(defn do-commands [connectable commands]
+  (if (instance? java.sql.Connection connectable)
+    (with-open [stmt (next.jdbc.prepare/statement connectable)]
+      (run! #(.addBatch stmt %) commands)
+      (into [] (.executeBatch stmt)))
+    (with-open [conn (next.jdbc/get-connection connectable)]
+      (do-commands conn commands))))
+```
+
 ### `:identifiers` and `:qualifier`
 
 If you are using `:identifiers`, you will need to change to the appropriate `:builder-fn` option with one of `next.jdbc.result-set`'s `as-*` functions.
