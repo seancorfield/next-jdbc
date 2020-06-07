@@ -623,10 +623,10 @@
     (f init {:next.jdbc/update-count (.getUpdateCount stmt)})))
 
 (defn- stmt-sql->result-set
-  "Given a `Statement`, a SQL command, and options, execute it and return a
+  "Given a `Statement`, a SQL command, execute it and return a
   `ResultSet` if possible. We always attempt to return keys."
   ^ResultSet
-  [^Statement stmt ^String sql opts]
+  [^Statement stmt ^String sql]
   (if (.execute stmt sql)
     (.getResultSet stmt)
     (try
@@ -642,7 +642,7 @@
   a hash map containing `:next.jdbc/update-count` and the number of rows
   updated, with the supplied function and initial value applied."
   [^Statement stmt sql f init opts]
-  (if-let [rs (stmt-sql->result-set stmt sql opts)]
+  (if-let [rs (stmt-sql->result-set stmt sql)]
     (let [rs-map (mapify-result-set rs opts)]
       (loop [init' init]
         (if (.next rs)
@@ -747,14 +747,18 @@
   (-execute-all [this _ opts]
     (if (:multi-rs opts)
       (loop [go (.execute this) acc [] rsn 0]
-        (if-let [rs (stmt->result-set-update-count (.getConnection this) this go opts)]
+        (if-let [rs (stmt->result-set-update-count
+                     (.getConnection this) this go (assoc opts :return-keys true))]
           (recur (.getMoreResults this) (conj acc rs) (inc rsn))
           acc))
-      (if-let [rs (stmt->result-set this opts)]
+      (if-let [rs (stmt->result-set this (assoc opts :return-keys true))]
         (datafiable-result-set rs (.getConnection this) opts)
         [{:next.jdbc/update-count (.getUpdateCount this)}])))
 
   java.sql.Statement
+  ;; we can't tell if this Statement will return generated keys
+  ;; but the stmt-sql routines pass a truthy value to at least
+  ;; attempt it -- so we must explicitly pass it to the other calls
   (-execute [this sql-params opts]
     (assert (= 1 (count sql-params))
             "Parameters cannot be provided when executing a non-prepared Statement")
@@ -765,7 +769,7 @@
   (-execute-one [this sql-params opts]
     (assert (= 1 (count sql-params))
             "Parameters cannot be provided when executing a non-prepared Statement")
-    (if-let [rs (stmt-sql->result-set this (first sql-params) opts)]
+    (if-let [rs (stmt-sql->result-set this (first sql-params))]
       (let [builder-fn (get opts :builder-fn as-maps)
             builder    (builder-fn rs opts)]
         (when (.next rs)
@@ -781,7 +785,7 @@
                      (.getConnection this) this go (assoc opts :return-keys true))]
           (recur (.getMoreResults this) (conj acc rs) (inc rsn))
           acc))
-      (if-let [rs (stmt-sql->result-set this (first sql-params) opts)]
+      (if-let [rs (stmt-sql->result-set this (first sql-params))]
         (datafiable-result-set rs (.getConnection this) opts)
         [{:next.jdbc/update-count (.getUpdateCount this)}])))
 
