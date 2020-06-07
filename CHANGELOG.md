@@ -2,6 +2,12 @@
 
 Only accretive/fixative changes will be made from now on.
 
+Changes made on master since 1.0.462:
+* Add tests for `"jtds"` database driver (against MS SQL Server), making it officially supported.
+* Switch from OpenTable Embedded PostgreSQL to Zonky's version, so that testing can move forward from PostgreSQL 10.11 to 12.2.0.
+* Add log4j2 as a test dependency so that I have better control over logging (which makes debugging easier!).
+* WIP: support for stored procedures and multiple result sets!
+
 ## Stable Builds
 
 * 2020-05-31 -- 1.0.462
