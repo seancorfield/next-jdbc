@@ -72,4 +72,5 @@
                                      :sql-params-fn start-fn
                                      :execute-fn    exec-fn})
                    sql-p)
-    (println (:dbtype (db)) (:calls @timing) "calls took" (long (:total @timing)) "nanoseconds")))
+    (println (format "%6s %d calls took %,10d nanoseconds"
+                     (:dbtype (db)) (:calls @timing) (long (:total @timing))))))

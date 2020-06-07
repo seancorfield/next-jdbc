@@ -40,7 +40,8 @@
                                                 :schema/exception)))
             data (set (keys (d/datafy con)))]
         (when-let [diff (seq (set/difference data reference-keys))]
-          (println (:dbtype (db)) :connection (sort diff)))
+          (println (format "%6s :%-10s %s"
+                           (:dbtype (db)) "connection" (str (sort diff)))))
         (is (= reference-keys
                (set/intersection reference-keys data)))))))
 
@@ -87,7 +88,8 @@
                                                    :rowIdLifetime/exception)))
             data (set (keys (d/datafy (.getMetaData con))))]
         (when-let [diff (seq (set/difference data reference-keys))]
-          (println (:dbtype (db)) :db-meta (sort diff)))
+          (println (format "%6s :%-10s %s"
+                           (:dbtype (db)) "db-meta" (str (sort diff)))))
         (is (= reference-keys
                (set/intersection reference-keys data))))))
   (testing "nav to catalogs yields object"
