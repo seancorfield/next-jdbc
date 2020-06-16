@@ -2,7 +2,7 @@
 
 Only accretive/fixative changes will be made from now on.
 
-Changes made on master since 1.0.462:
+Changes made on develop since 1.0.462:
 * Add tests for `"jtds"` database driver (against MS SQL Server), making it officially supported.
 * Switch from OpenTable Embedded PostgreSQL to Zonky's version, so that testing can move forward from PostgreSQL 10.11 to 12.2.0.
 * Fix potential reflection warnings caused by `next.jdbc.prepare/statement` being incorrectly type-hinted.
