@@ -9,7 +9,7 @@ It is designed to work with Clojure 1.10 or later, supports `datafy`/`nav`, and 
 You can add `next.jdbc` to your project with either:
 
 ```clojure
-{seancorfield/next.jdbc {:mvn/version "1.0.462"}}
+seancorfield/next.jdbc {:mvn/version "1.0.462"}
 ```
 for `deps.edn` or:
 
