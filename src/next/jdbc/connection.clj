@@ -56,7 +56,7 @@
 
   or:
 
-     `{com.acme/jdbc {:mvn/version \"1.2.3\"}} ; CLI/deps.edn`
+     `com.acme/jdbc {:mvn/version \"1.2.3\"} ; CLI/deps.edn`
 
   Note: the `:classname` value can be a string or a vector of strings. If
   a vector of strings is provided, an attempt will be made to load each
