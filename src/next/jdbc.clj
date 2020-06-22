@@ -58,6 +58,7 @@
   In addition, wherever a `PreparedStatement` is created, you may specify:
   * `:return-keys` -- either `true` or a vector of key names to return."
   (:require [next.jdbc.connection]
+            [next.jdbc.default-options :as opts]
             [next.jdbc.prepare]
             [next.jdbc.protocols :as p]
             [next.jdbc.result-set]
@@ -265,3 +266,10 @@
   [[sym transactable opts] & body]
   (let [con (vary-meta sym assoc :tag 'java.sql.Connection)]
    `(transact ~transactable (^{:once true} fn* [~con] ~@body) ~(or opts {}))))
+
+(defn with-options
+  "Given a connectable/transactable object and a set of (default) options
+  that should be used on all operations on that object, return a new
+  wrapper object that can be used in its place."
+  [connectable opts]
+  (opts/->DefaultOptions connectable opts))

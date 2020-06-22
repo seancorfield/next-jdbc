@@ -21,120 +21,120 @@
 (specs/instrument)
 
 (deftest basic-tests
-  (testing "plan"
-    (is (= "Apple"
-           (reduce (fn [_ row] (reduced (:name row)))
-                   nil
-                   (jdbc/plan
-                    (ds)
-                    ["select * from fruit where appearance = ?" "red"])))))
-  (testing "execute-one!"
-    (is (nil? (jdbc/execute-one!
-               (ds)
-               ["select * from fruit where appearance = ?" "neon-green"])))
-    (is (= "Apple" ((column :FRUIT/NAME)
-                    (jdbc/execute-one!
-                     (ds)
-                     ["select * from fruit where appearance = ?" "red"]
-                     (default-options))))))
-  (testing "execute!"
-    (let [rs (jdbc/execute!
-              (ds)
-              ["select * from fruit where appearance = ?" "neon-green"])]
-      (is (vector? rs))
-      (is (= [] rs)))
-    (let [rs (jdbc/execute!
-              (ds)
-              ["select * from fruit where appearance = ?" "red"]
-              (default-options))]
-      (is (= 1 (count rs)))
-      (is (= 1 ((column :FRUIT/ID) (first rs)))))
-    (let [rs (jdbc/execute!
-              (ds)
-              ["select * from fruit order by id"]
-              (assoc (default-options) :builder-fn rs/as-maps))]
-      (is (every? map? rs))
-      (is (every? meta rs))
-      (is (= 4 (count rs)))
-      (is (= 1 ((column :FRUIT/ID) (first rs))))
-      (is (= 4 ((column :FRUIT/ID) (last rs)))))
-    (let [rs (jdbc/execute!
-              (ds)
-              ["select * from fruit order by id"]
-              (assoc (default-options) :builder-fn rs/as-arrays))]
-      (is (every? vector? rs))
-      (is (= 5 (count rs)))
-      (is (every? #(= 5 (count %)) rs))
-      ;; columns come first
-      (is (every? qualified-keyword? (first rs)))
-      ;; :FRUIT/ID should be first column
-      (is (= (column :FRUIT/ID) (ffirst rs)))
-      ;; and all its corresponding values should be ints
-      (is (every? int? (map first (rest rs))))
-      (is (every? string? (map second (rest rs))))))
-  (testing "execute! with adapter"
-    (let [rs (jdbc/execute! ; test again, with adapter and lower columns
-              (ds)
-              ["select * from fruit order by id"]
-              (assoc (default-options)
-                     :builder-fn (rs/as-arrays-adapter
-                                  rs/as-lower-arrays
-                                  (fn [^ResultSet rs _ ^Integer i]
-                                    (.getObject rs i)))))]
-      (is (every? vector? rs))
-      (is (= 5 (count rs)))
-      (is (every? #(= 5 (count %)) rs))
-      ;; columns come first
-      (is (every? qualified-keyword? (first rs)))
-      ;; :fruit/id should be first column
-      (is (= :fruit/id (ffirst rs)))
-      ;; and all its corresponding values should be ints
-      (is (every? int? (map first (rest rs))))
-      (is (every? string? (map second (rest rs))))))
-  (testing "execute! with unqualified"
-    (let [rs (jdbc/execute!
-              (ds)
-              ["select * from fruit order by id"]
-              {:builder-fn rs/as-unqualified-maps})]
-      (is (every? map? rs))
-      (is (every? meta rs))
-      (is (= 4 (count rs)))
-      (is (= 1 ((column :ID) (first rs))))
-      (is (= 4 ((column :ID) (last rs)))))
-    (let [rs (jdbc/execute!
-              (ds)
-              ["select * from fruit order by id"]
-              {:builder-fn rs/as-unqualified-arrays})]
-      (is (every? vector? rs))
-      (is (= 5 (count rs)))
-      (is (every? #(= 5 (count %)) rs))
-      ;; columns come first
-      (is (every? simple-keyword? (first rs)))
-      ;; :ID should be first column
-      (is (= (column :ID) (ffirst rs)))
-      ;; and all its corresponding values should be ints
-      (is (every? int? (map first (rest rs))))
-      (is (every? string? (map second (rest rs))))))
-  (testing "execute! with :max-rows / :maxRows"
-    (let [rs (jdbc/execute!
-              (ds)
-              ["select * from fruit order by id"]
-              (assoc (default-options) :max-rows 2))]
-      (is (every? map? rs))
-      (is (every? meta rs))
-      (is (= 2 (count rs)))
-      (is (= 1 ((column :FRUIT/ID) (first rs))))
-      (is (= 2 ((column :FRUIT/ID) (last rs)))))
-    (let [rs (jdbc/execute!
-              (ds)
-              ["select * from fruit order by id"]
-              (assoc (default-options) :statement {:maxRows 2}))]
-      (is (every? map? rs))
-      (is (every? meta rs))
-      (is (= 2 (count rs)))
-      (is (= 1 ((column :FRUIT/ID) (first rs))))
-      (is (= 2 ((column :FRUIT/ID) (last rs))))))
+  ;; use ds-opts instead of (ds) anywhere you want default options applied:
+  (let [ds-opts (jdbc/with-options (ds) (default-options))]
+    (testing "plan"
+      (is (= "Apple"
+             (reduce (fn [_ row] (reduced (:name row)))
+                     nil
+                     (jdbc/plan
+                      ds-opts
+                      ["select * from fruit where appearance = ?" "red"])))))
+    (testing "execute-one!"
+      (is (nil? (jdbc/execute-one!
+                 (ds)
+                 ["select * from fruit where appearance = ?" "neon-green"])))
+      (is (= "Apple" ((column :FRUIT/NAME)
+                      (jdbc/execute-one!
+                       ds-opts
+                       ["select * from fruit where appearance = ?" "red"])))))
+    (testing "execute!"
+      (let [rs (jdbc/execute!
+                ds-opts
+                ["select * from fruit where appearance = ?" "neon-green"])]
+        (is (vector? rs))
+        (is (= [] rs)))
+      (let [rs (jdbc/execute!
+                ds-opts
+                ["select * from fruit where appearance = ?" "red"])]
+        (is (= 1 (count rs)))
+        (is (= 1 ((column :FRUIT/ID) (first rs)))))
+      (let [rs (jdbc/execute!
+                ds-opts
+                ["select * from fruit order by id"]
+                {:builder-fn rs/as-maps})]
+        (is (every? map? rs))
+        (is (every? meta rs))
+        (is (= 4 (count rs)))
+        (is (= 1 ((column :FRUIT/ID) (first rs))))
+        (is (= 4 ((column :FRUIT/ID) (last rs)))))
+      (let [rs (jdbc/execute!
+                ds-opts
+                ["select * from fruit order by id"]
+                {:builder-fn rs/as-arrays})]
+        (is (every? vector? rs))
+        (is (= 5 (count rs)))
+        (is (every? #(= 5 (count %)) rs))
+        ;; columns come first
+        (is (every? qualified-keyword? (first rs)))
+        ;; :FRUIT/ID should be first column
+        (is (= (column :FRUIT/ID) (ffirst rs)))
+        ;; and all its corresponding values should be ints
+        (is (every? int? (map first (rest rs))))
+        (is (every? string? (map second (rest rs))))))
+    (testing "execute! with adapter"
+      (let [rs (jdbc/execute! ; test again, with adapter and lower columns
+                ds-opts
+                ["select * from fruit order by id"]
+                {:builder-fn (rs/as-arrays-adapter
+                              rs/as-lower-arrays
+                              (fn [^ResultSet rs _ ^Integer i]
+                                (.getObject rs i)))})]
+        (is (every? vector? rs))
+        (is (= 5 (count rs)))
+        (is (every? #(= 5 (count %)) rs))
+        ;; columns come first
+        (is (every? qualified-keyword? (first rs)))
+        ;; :fruit/id should be first column
+        (is (= :fruit/id (ffirst rs)))
+        ;; and all its corresponding values should be ints
+        (is (every? int? (map first (rest rs))))
+        (is (every? string? (map second (rest rs))))))
+    (testing "execute! with unqualified"
+      (let [rs (jdbc/execute!
+                (ds)
+                ["select * from fruit order by id"]
+                {:builder-fn rs/as-unqualified-maps})]
+        (is (every? map? rs))
+        (is (every? meta rs))
+        (is (= 4 (count rs)))
+        (is (= 1 ((column :ID) (first rs))))
+        (is (= 4 ((column :ID) (last rs)))))
+      (let [rs (jdbc/execute!
+                ds-opts
+                ["select * from fruit order by id"]
+                {:builder-fn rs/as-unqualified-arrays})]
+        (is (every? vector? rs))
+        (is (= 5 (count rs)))
+        (is (every? #(= 5 (count %)) rs))
+        ;; columns come first
+        (is (every? simple-keyword? (first rs)))
+        ;; :ID should be first column
+        (is (= (column :ID) (ffirst rs)))
+        ;; and all its corresponding values should be ints
+        (is (every? int? (map first (rest rs))))
+        (is (every? string? (map second (rest rs))))))
+    (testing "execute! with :max-rows / :maxRows"
+      (let [rs (jdbc/execute!
+                ds-opts
+                ["select * from fruit order by id"]
+                {:max-rows 2})]
+        (is (every? map? rs))
+        (is (every? meta rs))
+        (is (= 2 (count rs)))
+        (is (= 1 ((column :FRUIT/ID) (first rs))))
+        (is (= 2 ((column :FRUIT/ID) (last rs)))))
+      (let [rs (jdbc/execute!
+                ds-opts
+                ["select * from fruit order by id"]
+                {:statement {:maxRows 2}})]
+        (is (every? map? rs))
+        (is (every? meta rs))
+        (is (= 2 (count rs)))
+        (is (= 1 ((column :FRUIT/ID) (first rs))))
+        (is (= 2 ((column :FRUIT/ID) (last rs)))))))
   (testing "prepare"
+    ;; default options do not flow over get-connection
     (let [rs (with-open [con (jdbc/get-connection (ds))
                          ps  (jdbc/prepare
                               con
@@ -146,6 +146,7 @@
       (is (= 4 (count rs)))
       (is (= 1 ((column :FRUIT/ID) (first rs))))
       (is (= 4 ((column :FRUIT/ID) (last rs)))))
+    ;; default options do not flow over get-connection
     (let [rs (with-open [con (jdbc/get-connection (ds))
                          ps  (jdbc/prepare
                               con
@@ -157,6 +158,7 @@
       (is (= 1 (count rs)))
       (is (= 4 ((column :FRUIT/ID) (first rs))))))
   (testing "statement"
+    ;; default options do not flow over get-connection
     (let [rs (with-open [con (jdbc/get-connection (ds))]
                (jdbc/execute! (prep/statement con (default-options))
                               ["select * from fruit order by id"]))]
@@ -165,6 +167,7 @@
       (is (= 4 (count rs)))
       (is (= 1 ((column :FRUIT/ID) (first rs))))
       (is (= 4 ((column :FRUIT/ID) (last rs)))))
+    ;; default options do not flow over get-connection
     (let [rs (with-open [con (jdbc/get-connection (ds))]
                (jdbc/execute! (prep/statement con (default-options))
                               ["select * from fruit where id = 4"]))]

@@ -108,10 +108,10 @@ user=> (jdbc/execute-one! ds ["
 insert into address(name,email)
   values('Someone Else','some@elsewhere.com')
 "] {:return-keys true :builder-fn rs/as-unqualified-lower-maps})
-{:id 2}
-user=> (jdbc/execute-one! ds ["select * from address where id = ?" 2]
+{:id 3}
+user=> (jdbc/execute-one! ds ["select * from address where id = ?" 3]
                           {:builder-fn rs/as-unqualified-lower-maps})
-{:id 2, :name "Someone Else", :email "some@elsewhere.com"}
+{:id 3, :name "Someone Else", :email "some@elsewhere.com"}
 user=>
 ```
 
@@ -120,6 +120,23 @@ Relying on the default result set builder -- and table-qualified column names --
 * Oracle's JDBC driver doesn't support `.getTableName()` so it will only produce unqualified column names (also mentioned in **Tips & Tricks**),
 * If your SQL query joins tables in a way that produces duplicate column names, and you use unqualified column names, then those duplicated column names will conflict and you will get only one of them in your result -- use aliases in SQL (`as`) to make the column names distinct,
 * If your SQL query joins a table to itself under different aliases, the _qualified_ column names will conflict because they are based on the underlying table name provided by the JDBC driver rather the alias you used in your query -- again, use aliases in SQL to make those column names distinct.
+
+If you want to pass the same set of options into several operations, you can use `next.jdbc/with-options` to wrap your datasource (or connection) in a way that will pass "default options". Here's the example above rewritten with that:
+
+```clojure
+user=> (require '[next.jdbc.result-set :as rs])
+nil
+user=> (def ds-opts (jdbc/with-options ds {:builder-fn rs/as-unqualified-lower-maps}))
+#'user/ds-opts
+user=> (jdbc/execute-one! ds-opts ["
+insert into address(name,email)
+  values('Someone Else','some@elsewhere.com')
+"] {:return-keys true})
+{:id 4}
+user=> (jdbc/execute-one! ds-opts ["select * from address where id = ?" 4])
+{:id 4, :name "Someone Else", :email "some@elsewhere.com"}
+user=>
+```
 
 ### `plan` & Reducing Result Sets
 
@@ -268,6 +285,21 @@ If `with-transaction` is given a datasource, it will create and close the connec
 ```
 
 You can read more about [working with transactions](/doc/transactions.md) further on in the documentation.
+
+> Note: Because `get-datasource` and `get-connection` return plain JDBC objects (`javax.sql.DataSource` and `java.sql.Connection` respectively), `next.jdbc/with-options` cannot flow options across those calls, so if you are explicitly managing connections or transactions as above, you would need to have local bindings for the wrapped versions:
+
+```clojure
+(with-open [con (jdbc/get-connection ds)]
+  (let [con-opts (jdbc/with-options con some-options)]
+    (jdbc/execute! con-opts ...) ; committed
+    ;; either use unwrapped version here or (:connectable con-opts)
+    (jdbc/with-transaction [tx con] ; will commit or rollback this group:
+      (let [tx-opts (jdbc/with-options tx some-options)]
+        (jdbc/execute! tx-opts ...)
+        (jdbc/execute! tx-opts ...)
+        (into [] (map :column) (jdbc/plan tx-opts ...))))
+    (jdbc/execute! con-opts ...))) ; committed
+```
 
 ### Prepared Statement Caveat
 
