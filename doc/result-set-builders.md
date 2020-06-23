@@ -72,7 +72,7 @@ Only `execute!` expects this protocol to be implemented. `execute-one!` and `pla
 
 The `as-*` functions described above are all implemented in terms of these protocols. They are passed the `ResultSet` object and the options hash map (as passed into various `next.jdbc` functions). They return an implementation of the protocols that is then used to build rows and the result set. Note that the `ResultSet` passed in is _mutable_ and is advanced from row to row by the SQL execution function, so each time `->row` is called, the underlying `ResultSet` object points at each new row in turn. By contrast, `->rs` (which is only called by `execute!`) is invoked _before_ the `ResultSet` is advanced to the first row.
 
-The options hash map for any `next.jdbc` function can contain a `:builder-fn` key and the value is used as the row/result set builder function. The tests for `next.jdbc.result-set` include a [record-based builder function](https://github.com/seancorfield/next-jdbc/blob/master/test/next/jdbc/result_set_test.clj#L335-L353) as an example of how you can extend this to satisfy your needs.
+The options hash map for any `next.jdbc` function can contain a `:builder-fn` key and the value is used as the row/result set builder function. The tests for `next.jdbc.result-set` include a [record-based builder function](https://github.com/seancorfield/next-jdbc/blob/develop/test/next/jdbc/result_set_test.clj#L335-L353) as an example of how you can extend this to satisfy your needs.
 
 > Note: When `next.jdbc` cannot obtain a `ResultSet` object and returns `{:next.jdbc/count N}` instead, the builder function is not applied -- the `:builder-fn` option does not affect the shape of the result.
 
