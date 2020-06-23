@@ -37,9 +37,10 @@
   ([connectable table key-map]
    (insert! connectable table key-map {}))
   ([connectable table key-map opts]
-   (execute-one! connectable
-                 (for-insert table key-map opts)
-                 (merge {:return-keys true} opts))))
+   (let [opts (merge (:options connectable) opts)]
+     (execute-one! connectable
+                   (for-insert table key-map opts)
+                   (merge {:return-keys true} opts)))))
 
 (defn insert-multi!
   "Syntactic sugar over `execute!` to make inserting columns/rows easier.
@@ -57,9 +58,10 @@
    (insert-multi! connectable table cols rows {}))
   ([connectable table cols rows opts]
    (if (seq rows)
-     (execute! connectable
-               (for-insert-multi table cols rows opts)
-               (merge {:return-keys true} opts))
+     (let [opts (merge (:options connectable) opts)]
+       (execute! connectable
+                 (for-insert-multi table cols rows opts)
+                 (merge {:return-keys true} opts)))
      [])))
 
 (defn query
@@ -70,7 +72,8 @@
   ([connectable sql-params]
    (query connectable sql-params {}))
   ([connectable sql-params opts]
-   (execute! connectable sql-params opts)))
+   (let [opts (merge (:options connectable) opts)]
+     (execute! connectable sql-params opts))))
 
 (defn find-by-keys
   "Syntactic sugar over `execute!` to make certain common queries easier.
@@ -85,7 +88,8 @@
   ([connectable table key-map]
    (find-by-keys connectable table key-map {}))
   ([connectable table key-map opts]
-   (execute! connectable (for-query table key-map opts) opts)))
+   (let [opts (merge (:options connectable) opts)]
+     (execute! connectable (for-query table key-map opts) opts))))
 
 (defn get-by-id
   "Syntactic sugar over `execute-one!` to make certain common queries easier.
@@ -100,7 +104,8 @@
   ([connectable table pk opts]
    (get-by-id connectable table pk :id opts))
   ([connectable table pk pk-name opts]
-   (execute-one! connectable (for-query table {pk-name pk} opts) opts)))
+   (let [opts (merge (:options connectable) opts)]
+     (execute-one! connectable (for-query table {pk-name pk} opts) opts))))
 
 (defn update!
   "Syntactic sugar over `execute-one!` to make certain common updates easier.
@@ -111,9 +116,10 @@
   ([connectable table key-map where-params]
    (update! connectable table key-map where-params {}))
   ([connectable table key-map where-params opts]
-   (execute-one! connectable
-                 (for-update table key-map where-params opts)
-                 opts)))
+   (let [opts (merge (:options connectable) opts)]
+     (execute-one! connectable
+                   (for-update table key-map where-params opts)
+                   opts))))
 
 (defn delete!
   "Syntactic sugar over `execute-one!` to make certain common deletes easier.
@@ -124,4 +130,5 @@
   ([connectable table where-params]
    (delete! connectable table where-params {}))
   ([connectable table where-params opts]
-   (execute-one! connectable (for-delete table where-params opts) opts)))
+   (let [opts (merge (:options connectable) opts)]
+     (execute-one! connectable (for-delete table where-params opts) opts))))
