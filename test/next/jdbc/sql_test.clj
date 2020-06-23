@@ -3,6 +3,7 @@
 (ns next.jdbc.sql-test
   "Tests for the syntactic sugar SQL functions."
   (:require [clojure.test :refer [deftest is testing use-fixtures]]
+            [next.jdbc :as jdbc]
             [next.jdbc.specs :as specs]
             [next.jdbc.sql :as sql]
             [next.jdbc.test-fixtures
@@ -16,8 +17,8 @@
 (specs/instrument)
 
 (deftest test-query
-  (let [rs (sql/query (ds) ["select * from fruit order by id"]
-                      (default-options))]
+  (let [ds-opts (jdbc/with-options (ds) (default-options))
+        rs      (sql/query ds-opts ["select * from fruit order by id"])]
     (is (= 4 (count rs)))
     (is (every? map? rs))
     (is (every? meta rs))
@@ -25,45 +26,47 @@
     (is (= 4 ((column :FRUIT/ID) (last rs))))))
 
 (deftest test-find-by-keys
-  (let [rs (sql/find-by-keys (ds) :fruit {:appearance "neon-green"})]
-    (is (vector? rs))
-    (is (= [] rs)))
-  (let [rs (sql/find-by-keys (ds) :fruit {:appearance "yellow"}
-                             (default-options))]
-    (is (= 1 (count rs)))
-    (is (every? map? rs))
-    (is (every? meta rs))
-    (is (= 2 ((column :FRUIT/ID) (first rs))))))
+  (let [ds-opts (jdbc/with-options (ds) (default-options))]
+    (let [rs (sql/find-by-keys ds-opts :fruit {:appearance "neon-green"})]
+      (is (vector? rs))
+      (is (= [] rs)))
+    (let [rs (sql/find-by-keys ds-opts :fruit {:appearance "yellow"})]
+      (is (= 1 (count rs)))
+      (is (every? map? rs))
+      (is (every? meta rs))
+      (is (= 2 ((column :FRUIT/ID) (first rs)))))))
 
 (deftest test-get-by-id
-  (is (nil? (sql/get-by-id (ds) :fruit -1)))
-  (let [row (sql/get-by-id (ds) :fruit 3 (default-options))]
-    (is (map? row))
-    (is (= "Peach" ((column :FRUIT/NAME) row))))
-  (let [row (sql/get-by-id (ds) :fruit "juicy" :appearance (default-options))]
-    (is (map? row))
-    (is (= 4 ((column :FRUIT/ID) row)))
-    (is (= "Orange" ((column :FRUIT/NAME) row))))
-  (let [row (sql/get-by-id (ds) :fruit "Banana" :FRUIT/NAME (default-options))]
-    (is (map? row))
-    (is (= 2 ((column :FRUIT/ID) row)))))
+  (let [ds-opts (jdbc/with-options (ds) (default-options))]
+    (is (nil? (sql/get-by-id ds-opts :fruit -1)))
+    (let [row (sql/get-by-id ds-opts :fruit 3)]
+      (is (map? row))
+      (is (= "Peach" ((column :FRUIT/NAME) row))))
+    (let [row (sql/get-by-id ds-opts :fruit "juicy" :appearance {})]
+      (is (map? row))
+      (is (= 4 ((column :FRUIT/ID) row)))
+      (is (= "Orange" ((column :FRUIT/NAME) row))))
+    (let [row (sql/get-by-id ds-opts :fruit "Banana" :FRUIT/NAME {})]
+      (is (map? row))
+      (is (= 2 ((column :FRUIT/ID) row))))))
 
 (deftest test-update!
-  (try
-    (is (= {:next.jdbc/update-count 1}
-           (sql/update! (ds) :fruit {:appearance "brown"} {:id 2})))
-    (is (= "brown" ((column :FRUIT/APPEARANCE)
-                    (sql/get-by-id (ds) :fruit 2 (default-options)))))
-    (finally
-      (sql/update! (ds) :fruit {:appearance "yellow"} {:id 2})))
-  (try
-    (is (= {:next.jdbc/update-count 1}
-           (sql/update! (ds) :fruit {:appearance "green"}
-                        ["name = ?" "Banana"])))
-    (is (= "green" ((column :FRUIT/APPEARANCE)
-                    (sql/get-by-id (ds) :fruit 2 (default-options)))))
-    (finally
-      (sql/update! (ds) :fruit {:appearance "yellow"} {:id 2}))))
+  (let [ds-opts (jdbc/with-options (ds) (default-options))]
+    (try
+      (is (= {:next.jdbc/update-count 1}
+             (sql/update! ds-opts :fruit {:appearance "brown"} {:id 2})))
+      (is (= "brown" ((column :FRUIT/APPEARANCE)
+                      (sql/get-by-id ds-opts :fruit 2))))
+      (finally
+        (sql/update! ds-opts :fruit {:appearance "yellow"} {:id 2})))
+    (try
+      (is (= {:next.jdbc/update-count 1}
+             (sql/update! ds-opts :fruit {:appearance "green"}
+                          ["name = ?" "Banana"])))
+      (is (= "green" ((column :FRUIT/APPEARANCE)
+                      (sql/get-by-id ds-opts :fruit 2))))
+      (finally
+        (sql/update! ds-opts :fruit {:appearance "yellow"} {:id 2})))))
 
 (deftest test-insert-delete
   (let [new-key (cond (derby?)    :1

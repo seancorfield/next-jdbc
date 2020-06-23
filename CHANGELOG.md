@@ -4,6 +4,9 @@ Only accretive/fixative changes will be made from now on.
 
 ## Stable Builds
 
+* 2020-06-22 -- 1.0.476
+  * Extend default options behavior to `next.jdbc.sql` functions.
+
 * 2020-06-22 -- 1.0.475
   * Add tests for `"jtds"` database driver (against MS SQL Server), making it officially supported.
   * Switch from OpenTable Embedded PostgreSQL to Zonky's version, so that testing can move forward from PostgreSQL 10.11 to 12.2.0.
