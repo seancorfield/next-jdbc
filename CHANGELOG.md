@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+Changes made on master since 1.0.475:
+* WIP: nested transaction support!
+
 ## Stable Builds
 
 * 2020-06-22 -- 1.0.475
