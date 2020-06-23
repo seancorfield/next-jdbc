@@ -2,7 +2,7 @@
 
 Only accretive/fixative changes will be made from now on.
 
-Changes made on master since 1.0.475:
+Changes made on master since 1.0.476:
 * WIP: nested transaction support!
 
 ## Stable Builds
