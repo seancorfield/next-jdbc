@@ -9,16 +9,16 @@ It is designed to work with Clojure 1.10 or later, supports `datafy`/`nav`, and 
 You can add `next.jdbc` to your project with either:
 
 ```clojure
-{seancorfield/next.jdbc {:mvn/version "1.0.462"}}
+seancorfield/next.jdbc {:mvn/version "1.0.475"}
 ```
 for `deps.edn` or:
 
 ```clojure
-[seancorfield/next.jdbc "1.0.462"]
+[seancorfield/next.jdbc "1.0.475"]
 ```
 for `project.clj` or `build.boot`.
 
-**In addition, you will need to add dependencies for the JDBC drivers you wish to use for whatever databases you are using.** You can see the drivers and versions that `next.jdbc` is tested against in [the project's `deps.edn` file](https://github.com/seancorfield/next-jdbc/blob/master/deps.edn#L10-L25), but many other JDBC drivers for other databases should also work (e.g., Oracle, Red Shift).
+**In addition, you will need to add dependencies for the JDBC drivers you wish to use for whatever databases you are using.** You can see the drivers and versions that `next.jdbc` is tested against in [the project's `deps.edn` file](https://github.com/seancorfield/next-jdbc/blob/develop/deps.edn#L10-L27), but many other JDBC drivers for other databases should also work (e.g., Oracle, Red Shift).
 
 ## An Example REPL Session
 
@@ -29,7 +29,7 @@ For the examples in this documentation, we will use a local H2 database on disk,
 ```clojure
 ;; deps.edn
 {:deps {org.clojure/clojure {:mvn/version "1.10.1"}
-        seancorfield/next.jdbc {:mvn/version "1.0.462"}
+        seancorfield/next.jdbc {:mvn/version "1.0.475"}
         com.h2database/h2 {:mvn/version "1.4.199"}}}
 ```
 
@@ -108,10 +108,10 @@ user=> (jdbc/execute-one! ds ["
 insert into address(name,email)
   values('Someone Else','some@elsewhere.com')
 "] {:return-keys true :builder-fn rs/as-unqualified-lower-maps})
-{:id 2}
-user=> (jdbc/execute-one! ds ["select * from address where id = ?" 2]
+{:id 3}
+user=> (jdbc/execute-one! ds ["select * from address where id = ?" 3]
                           {:builder-fn rs/as-unqualified-lower-maps})
-{:id 2, :name "Someone Else", :email "some@elsewhere.com"}
+{:id 3, :name "Someone Else", :email "some@elsewhere.com"}
 user=>
 ```
 
@@ -120,6 +120,23 @@ Relying on the default result set builder -- and table-qualified column names --
 * Oracle's JDBC driver doesn't support `.getTableName()` so it will only produce unqualified column names (also mentioned in **Tips & Tricks**),
 * If your SQL query joins tables in a way that produces duplicate column names, and you use unqualified column names, then those duplicated column names will conflict and you will get only one of them in your result -- use aliases in SQL (`as`) to make the column names distinct,
 * If your SQL query joins a table to itself under different aliases, the _qualified_ column names will conflict because they are based on the underlying table name provided by the JDBC driver rather the alias you used in your query -- again, use aliases in SQL to make those column names distinct.
+
+If you want to pass the same set of options into several operations, you can use `next.jdbc/with-options` to wrap your datasource (or connection) in a way that will pass "default options". Here's the example above rewritten with that:
+
+```clojure
+user=> (require '[next.jdbc.result-set :as rs])
+nil
+user=> (def ds-opts (jdbc/with-options ds {:builder-fn rs/as-unqualified-lower-maps}))
+#'user/ds-opts
+user=> (jdbc/execute-one! ds-opts ["
+insert into address(name,email)
+  values('Someone Else','some@elsewhere.com')
+"] {:return-keys true})
+{:id 4}
+user=> (jdbc/execute-one! ds-opts ["select * from address where id = ?" 4])
+{:id 4, :name "Someone Else", :email "some@elsewhere.com"}
+user=>
+```
 
 ### `plan` & Reducing Result Sets
 
@@ -268,6 +285,21 @@ If `with-transaction` is given a datasource, it will create and close the connec
 ```
 
 You can read more about [working with transactions](/doc/transactions.md) further on in the documentation.
+
+> Note: Because `get-datasource` and `get-connection` return plain JDBC objects (`javax.sql.DataSource` and `java.sql.Connection` respectively), `next.jdbc/with-options` cannot flow options across those calls, so if you are explicitly managing connections or transactions as above, you would need to have local bindings for the wrapped versions:
+
+```clojure
+(with-open [con (jdbc/get-connection ds)]
+  (let [con-opts (jdbc/with-options con some-options)]
+    (jdbc/execute! con-opts ...) ; committed
+    ;; either use unwrapped version here or (:connectable con-opts)
+    (jdbc/with-transaction [tx con] ; will commit or rollback this group:
+      (let [tx-opts (jdbc/with-options tx some-options)]
+        (jdbc/execute! tx-opts ...)
+        (jdbc/execute! tx-opts ...)
+        (into [] (map :column) (jdbc/plan tx-opts ...))))
+    (jdbc/execute! con-opts ...))) ; committed
+```
 
 ### Prepared Statement Caveat
 

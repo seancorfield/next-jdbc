@@ -4,7 +4,8 @@
   "Standard implementations of `get-datasource` and `get-connection`.
 
   Also provides `dbtypes` as a map of all known database types, and
-  the `->pool` function for creating pooled datasource objects."
+  the `->pool` and `component` functions for creating pooled datasource
+  objects."
   (:require [clojure.java.data :as j]
             [next.jdbc.protocols :as p])
   (:import (java.sql Connection DriverManager)
@@ -56,7 +57,7 @@
 
   or:
 
-     `{com.acme/jdbc {:mvn/version \"1.2.3\"}} ; CLI/deps.edn`
+     `com.acme/jdbc {:mvn/version \"1.2.3\"} ; CLI/deps.edn`
 
   Note: the `:classname` value can be a string or a vector of strings. If
   a vector of strings is provided, an attempt will be made to load each

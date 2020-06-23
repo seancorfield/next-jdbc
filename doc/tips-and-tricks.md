@@ -60,7 +60,7 @@ Examples:
 ;; socketTimeout via JDBC URL:
 (def db-url (str "jdbc:sqlserver://localhost;user=sa;password=secret"
                  ;; milliseconds:
-                 ";database=master;socketTimeout=10000"))
+                 ";database=model;socketTimeout=10000"))
 
 ;; loginTimeout via DataSource:
 (def ds (jdbc/get-datasource db-spec))
