@@ -7,6 +7,9 @@ Changes made on master since 1.0.476:
 
 ## Stable Builds
 
+* 2020-06-24 -- 1.0.478
+  * Address #123 by adding `next.jdbc.types` namespace, full of auto-generated `as-xxx` functions, one for each of the `java.sql.Types` values.
+
 * 2020-06-22 -- 1.0.476
   * Extend default options behavior to `next.jdbc.sql` functions.
 

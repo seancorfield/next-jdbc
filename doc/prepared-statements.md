@@ -54,6 +54,8 @@ You can also extend this protocol via metadata so you can do it on a per-object 
 (with-meta obj {'next.jdbc.prepare/set-parameter (fn [v ps i]...)})
 ```
 
+The `next.jdbc.types` namespace provides functions to wrap values with per-object implementations of `set-parameter` for every standard `java.sql.Types` value. Each is named `as-xxx` corresponding to `java.sql.Types/XXX`.
+
 The converse, converting database-specific types to Clojure values is handled by the `ReadableColumn` protocol, discussed in the previous section ([Result Set Builders](/doc/result-set-builders.md#readablecolumn)).
 
 As noted above, `next.jdbc.prepare/set-parameters` is available for you to call on any existing `PreparedStatement` to set or update the parameters that will be used when the statement is executed:
