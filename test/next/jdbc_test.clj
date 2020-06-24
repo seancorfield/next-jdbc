@@ -6,9 +6,10 @@
             [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc :as jdbc]
             [next.jdbc.connection :as c]
-            [next.jdbc.test-fixtures :refer [with-test-db db ds column
-                                              default-options stored-proc?
-                                              derby? jtds? mssql? mysql? postgres?]]
+            [next.jdbc.test-fixtures
+             :refer [with-test-db db ds column
+                      default-options stored-proc?
+                      derby? hsqldb? jtds? mssql? mysql? postgres?]]
             [next.jdbc.prepare :as prep]
             [next.jdbc.result-set :as rs]
             [next.jdbc.specs :as specs])
@@ -320,10 +321,25 @@ VALUES ('Pear', 'green', 49, 47)
   (when (stored-proc?)
     (testing "stored proc; multiple result sets"
       (try
-        (println "====" (:dbtype (db)) "====")
-        (clojure.pprint/pprint
-         (jdbc/execute! (ds) [(if (mssql?) "EXEC FRUITP" "CALL FRUITP()")]
-                        {:multi-rs true}))
+        (let [multi-rs
+              (jdbc/execute! (ds)
+                             [(if (mssql?) "EXEC FRUITP" "CALL FRUITP()")]
+                             {:multi-rs true})
+              zero-updates [{:next.jdbc/update-count 0}]]
+          (cond (postgres?) ; does not support multiple result sets yet
+                (do
+                  (is (= 1 (count multi-rs)))
+                  (is (= zero-updates (first multi-rs))))
+                (hsqldb?)
+                (do
+                  (is (= 3 (count multi-rs)))
+                  (is (= zero-updates (first multi-rs))))
+                (mysql?)
+                (do
+                  (is (= 3 (count multi-rs)))
+                  (is (= zero-updates (last multi-rs))))
+                :else
+                (is (= 2 (count multi-rs)))))
         (catch Throwable t
           (println 'call-proc (:dbtype (db)) (ex-message t) (some-> t (ex-cause) (ex-message))))))))
 

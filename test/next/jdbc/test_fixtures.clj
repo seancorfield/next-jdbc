@@ -55,6 +55,8 @@
 
 (defn derby? [] (= "derby" (:dbtype @test-db-spec)))
 
+(defn hsqldb? [] (= "hsqldb" (:dbtype @test-db-spec)))
+
 (defn jtds? [] (= "jtds" (:dbtype @test-db-spec)))
 
 (defn maria? [] (= "mariadb" (:dbtype @test-db-spec)))
@@ -120,7 +122,7 @@
       (reset! test-datasource (jdbc/get-datasource db)))
     (let [fruit (if (mysql?) "fruit" "FRUIT") ; MySQL is case sensitive!
           auto-inc-pk
-          (cond (or (derby?) (= "hsqldb" (:dbtype db)))
+          (cond (or (derby?) (hsqldb?))
                 (str "GENERATED ALWAYS AS IDENTITY"
                      " (START WITH 1, INCREMENT BY 1)"
                      " PRIMARY KEY")
@@ -165,11 +167,11 @@ CREATE TABLE " fruit " (
           (let [[begin end] (if (postgres?) ["$$" "$$"] ["BEGIN" "END"])]
             (try
               (do-commands con [(str "
-CREATE PROCEDURE FRUITP" (cond (= "hsqldb" (:dbtype db)) "() READS SQL DATA DYNAMIC RESULT SETS 2 "
+CREATE PROCEDURE FRUITP" (cond (hsqldb?) "() READS SQL DATA DYNAMIC RESULT SETS 2 "
                                (mssql?) " AS "
                                (postgres?) "() LANGUAGE SQL AS "
                                :else "() ") "
- " begin " " (if (= "hsqldb" (:dbtype db))
+ " begin " " (if (hsqldb?)
                (str "ATOMIC
   DECLARE result1 CURSOR WITH RETURN FOR SELECT * FROM " fruit " WHERE COST < 90;
   DECLARE result2 CURSOR WITH RETURN FOR SELECT * FROM " fruit " WHERE GRADE >= 90.0;
