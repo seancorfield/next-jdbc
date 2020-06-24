@@ -8,7 +8,8 @@
             [next.jdbc.sql :as sql]
             [next.jdbc.test-fixtures
              :refer [with-test-db ds column default-options
-                      derby? jtds? maria? mssql? mysql? postgres? sqlite?]]))
+                      derby? jtds? maria? mssql? mysql? postgres? sqlite?]]
+            [next.jdbc.types :refer [as-other as-real as-varchar]]))
 
 (set! *warn-on-reflection* true)
 
@@ -79,8 +80,9 @@
                       :else       :FRUIT/ID)]
     (testing "single insert/delete"
       (is (== 5 (new-key (sql/insert! (ds) :fruit
-                                      {:name "Kiwi" :appearance "green & fuzzy"
-                                       :cost 100 :grade 99.9}))))
+                                      {:name (as-varchar "Kiwi")
+                                       :appearance "green & fuzzy"
+                                       :cost 100 :grade (as-real 99.9)}))))
       (is (= 5 (count (sql/query (ds) ["select * from fruit"]))))
       (is (= {:next.jdbc/update-count 1}
              (sql/delete! (ds) :fruit {:id 5})))
@@ -156,3 +158,8 @@
   (when (postgres?)
     (let [data (sql/find-by-keys (ds) :fruit ["id = any(?)" (int-array [1 2 3 4])])]
       (is (= 4 (count data))))))
+
+(deftest enum-pg
+  (when (postgres?)
+    (let [r (sql/insert! (ds) :lang_test {:lang (as-other "fr")})]
+      (is (= {:lang_test/lang "fr"} r)))))

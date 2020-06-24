@@ -109,6 +109,27 @@ If you have a query where you want to select where a column is `IN` a sequence o
 
 What does this mean for your use of `next.jdbc`? In `plan`, `execute!`, and `execute-one!`, you can use `col = ANY(?)` in the SQL string and a single primitive array parameter, such as `(int-array [1 2 3 4])`. That means that in `next.jdbc.sql`'s functions that take a where clause (`find-by-keys`, `update!`, and `delete!`) you can specify `["col = ANY(?)" (int-array data)]` for what would be a `col IN (?,?,?,,,?)` where clause for other databases and require multiple values.
 
+PostgreSQL has a SQL extension for defining enumerated types and the default `set-parameter` implementation will not work for those. You can use `next.jdbc.types/as-other` to wrap string values in a way that the JDBC driver will convert them to enumerated type values:
+
+```sql
+CREATE TYPE language AS ENUM('en','fr','de');
+
+CREATE TABLE person (
+  ...
+  speaks language NOT NULL,
+  ...
+);
+```
+
+```clojure
+(require '[next.jdbc.sql :as sql]
+         '[next.jdbc.types :refer [as-other]])
+
+(sql/insert! ds :person {:speaks (as-other "fr")})
+```
+
+That call produces a vector `["fr"]` with metadata that implements `set-parameter` such that `.setObject()` is called with `java.sql.Types/OTHER` which allows PostgreSQL to "convert" the string `"fr"` to the corresponding `language` enumerated type value.
+
 ### Streaming Result Sets
 
 You can get PostgreSQL to stream very large result sets (when you are reducing over `plan`) by setting the following options:
@@ -150,7 +171,7 @@ create table example(
 ;; => #:example{:tags ["tag1" "tag2"]}
 ```
 
-Note: PostgreSQL JDBC driver supports only 7 primitive array types, but not such as `UUID[]` -  
+> Note: PostgreSQL JDBC driver supports only 7 primitive array types, but not array types like `UUID[]` -  
 [PostgreSQL™ Extensions to the JDBC API](https://jdbc.postgresql.org/documentation/head/arrays.html).
 
 ### Working with Date and Time

@@ -140,7 +140,19 @@
             (catch Throwable _)))
         (try
           (do-commands con [(str "DROP TABLE " fruit)])
-          (catch Throwable _))
+          (catch Exception _))
+        (when (postgres?)
+          (try
+            (do-commands con ["DROP TABLE LANG_TEST"])
+            (catch Exception _))
+          (try
+            (do-commands con ["DROP TYPE LANGUAGE"])
+            (catch Exception _))
+          (do-commands con ["CREATE TYPE LANGUAGE AS ENUM('en','fr','de')"])
+          (do-commands con ["
+CREATE TABLE LANG_TEST (
+  LANG LANGUAGE NOT NULL
+)"]))
         (do-commands con [(str "
 CREATE TABLE " fruit " (
   ID INTEGER " auto-inc-pk ",
