@@ -4,7 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 ## Stable Builds
 
-* 2020-06-24 -- 1.0.next
+* 2020-06-24 -- 1.0.478
   * Address #123 by adding `next.jdbc.types` namespace, full of auto-generated `as-xxx` functions, one for each of the `java.sql.Types` values.
 
 * 2020-06-22 -- 1.0.476
