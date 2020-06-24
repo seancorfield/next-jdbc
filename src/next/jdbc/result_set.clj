@@ -681,9 +681,9 @@
                                      (rest sql-params)
                                      opts)]
       (if (:multi-rs opts)
-        (loop [go (.execute stmt) acc [] rsn 0]
+        (loop [go (.execute stmt) acc []]
           (if-let [rs (stmt->result-set-update-count this stmt go opts)]
-            (recur (.getMoreResults stmt) (conj acc rs) (inc rsn))
+            (recur (.getMoreResults stmt) (conj acc rs))
             acc))
         (if-let [rs (stmt->result-set stmt opts)]
           (datafiable-result-set rs this opts)
@@ -719,9 +719,9 @@
                                      (rest sql-params)
                                      opts)]
       (if (:multi-rs opts)
-        (loop [go (.execute stmt) acc [] rsn 0]
+        (loop [go (.execute stmt) acc []]
           (if-let [rs (stmt->result-set-update-count this stmt go opts)]
-            (recur (.getMoreResults stmt) (conj acc rs) (inc rsn))
+            (recur (.getMoreResults stmt) (conj acc rs))
             acc))
         (if-let [rs (stmt->result-set stmt opts)]
           (datafiable-result-set rs this opts)
@@ -746,10 +746,10 @@
       {:next.jdbc/update-count (.getUpdateCount this)}))
   (-execute-all [this _ opts]
     (if (:multi-rs opts)
-      (loop [go (.execute this) acc [] rsn 0]
+      (loop [go (.execute this) acc []]
         (if-let [rs (stmt->result-set-update-count
                      (.getConnection this) this go (assoc opts :return-keys true))]
-          (recur (.getMoreResults this) (conj acc rs) (inc rsn))
+          (recur (.getMoreResults this) (conj acc rs))
           acc))
       (if-let [rs (stmt->result-set this (assoc opts :return-keys true))]
         (datafiable-result-set rs (.getConnection this) opts)
@@ -780,10 +780,10 @@
     (assert (= 1 (count sql-params))
             "Parameters cannot be provided when executing a non-prepared Statement")
     (if (:multi-rs opts)
-      (loop [go (.execute this (first sql-params)) acc [] rsn 0]
+      (loop [go (.execute this (first sql-params)) acc []]
         (if-let [rs (stmt->result-set-update-count
                      (.getConnection this) this go (assoc opts :return-keys true))]
-          (recur (.getMoreResults this) (conj acc rs) (inc rsn))
+          (recur (.getMoreResults this) (conj acc rs))
           acc))
       (if-let [rs (stmt-sql->result-set this (first sql-params))]
         (datafiable-result-set rs (.getConnection this) opts)
