@@ -398,11 +398,13 @@ If you are using [Component](https://github.com/stuartsierra/component), a conne
 
 By default, `next.jdbc` relies on the JDBC driver to handle all data type conversions when reading from a result set (to produce Clojure values from SQL values) or setting parameters (to produce SQL values from Clojure values). Sometimes that means that you will get back a database-specific Java object that would need to be manually converted to a Clojure data structure, or that certain database column types require you to manually construct the appropriate database-specific Java object to pass into a SQL operation. You can usually automate those conversions using either the [`ReadableColumn` protocol](/doc/result-set-builders.md#readablecolumn) (for converting database-specific types to Clojure values) or the [`SettableParameter` protocol](/doc/prepared-statements.md#prepared-statement-parameters) (for converting Clojure values to database-specific types).
 
-In particular, PostgreSQL does not seem to perform a conversion from `java.util.Date` to a SQL data type automatically. You must `require` the [`next.jdbc.date-time` namespace](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.date-time) to enable that conversion.
+In particular, PostgreSQL does not seem to perform a conversion from `java.util.Date` to a SQL data type automatically. You can `require` the [`next.jdbc.date-time` namespace](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.date-time) to enable that conversion.
 
 If you are working with Java Time, some JDBC drivers will automatically convert `java.time.Instant` (and `java.time.LocalDate` and `java.time.LocalDateTime`) to a SQL data type automatically, but others will not. Requiring `next.jdbc.date-time` will enable those automatic conversions for all databases.
 
 > Note: `next.jdbc.date-time` also provides functions you can call to enable automatic conversion of SQL date/timestamp types to Clojure data types when reading result sets. If you need specific conversions beyond that to happen automatically, consider extending the `ReadableColumn` protocol, mentioned above.
+
+The `next.jdbc.types` namespace provides over three dozen convenience functions for "type hinting" values so that the JDBC driver might automatically handle some conversions that the default parameter setting function does not. Each function is named for the corresponding SQL type, prefixed by `as-`: `as-bigint`, `as-other`, `as-real`, etc. An example of where this helps is when dealing with PostgreSQL enumerated types: the default behavior, when passed a string that should correspond to an enumerated type, is to throw an exception that `column "..." is of type ... but expression is of type character varying`. You can wrap such strings with `(as-other "...")` which tells PostgreSQL to treat this as `java.sql.Types/OTHER` when setting the parameter.
 
 ## Processing Database Metadata
 
