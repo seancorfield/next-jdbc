@@ -82,8 +82,8 @@
   columns and values to search on or a vector of a SQL where clause and
   parameters, returns a vector of hash maps of rows that match.
 
-  If the vector is empty -- no SQL and no parameters -- the query will
-  select all rows in the table: be warned!
+  If `:all` is passed instead of a hash map or vector -- the query will
+  select all rows in the table, subject to any pagination options below.
 
   If the `:order-by` option is present, add an `ORDER BY` clause. `:order-by`
   should be a vector of column names or pairs of column name / direction,

@@ -152,11 +152,13 @@
   `SELECT ...` statement."
   [table where-params opts]
   (let [entity-fn    (:table-fn opts identity)
-        where-params (if (map? where-params)
-                       (by-keys where-params :where opts)
-                       (into [(when-let [clause (first where-params)]
-                                (str "WHERE " clause))]
-                             (rest where-params)))
+        where-params (cond (map? where-params)
+                           (by-keys where-params :where opts)
+                           (= :all where-params)
+                           []
+                           :else
+                           (into [(str "WHERE " (first where-params))]
+                                 (rest where-params)))
         where-params (cond-> (if (:top opts)
                                (into [(first where-params)]
                                      (cons (:top opts) (rest where-params)))

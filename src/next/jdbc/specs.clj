@@ -138,6 +138,10 @@
         :args (s/cat :clazz #(instance? Class %)
                      :db-spec ::db-spec-or-jdbc))
 
+(s/fdef connection/component
+        :args (s/cat :clazz #(instance? Class %)
+                     :db-spec ::db-spec-or-jdbc))
+
 (s/fdef prepare/execute-batch!
         :args (s/cat :ps ::prepared-statement
                      :param-groups (s/coll-of ::params :kind sequential?)
@@ -174,7 +178,8 @@
         :args (s/cat :connectable ::connectable
                      :table keyword?
                      :key-map (s/or :example ::example-map
-                                    :where ::sql-params)
+                                    :where ::sql-params
+                                    :all #{:all})
                      :opts (s/? ::opts-map)))
 
 (s/fdef sql/get-by-id

@@ -45,15 +45,10 @@
             {:table-fn sql-server :column-fn mysql :order-by [:a [:b :desc]]})
            [(str "SELECT * FROM [user] WHERE id = ? and opt is null"
                  " ORDER BY `a`, `b` DESC") 9])))
-  (testing "with nil where clause"
+  (testing "by :all"
     (is (= (builder/for-query
             :user
-            nil
-            {:table-fn sql-server :column-fn mysql :order-by [:a [:b :desc]]})
-           ["SELECT * FROM [user] ORDER BY `a`, `b` DESC"]))
-    (is (= (builder/for-query
-            :user
-            [nil]
+            :all
             {:table-fn sql-server :column-fn mysql :order-by [:a [:b :desc]]})
            ["SELECT * FROM [user] ORDER BY `a`, `b` DESC"])))
   (testing "top N"
