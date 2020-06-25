@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+Changes made since the 1.0.478 release:
+* Address #124 by extending `next.jdbc.sql.builder/for-query` to support `:top` (SQL Server), `:limit` / `:offset` (MySQL/PostgreSQL), `:offset` / `:fetch` (SQL Standard).
+
 ## Stable Builds
 
 * 2020-06-24 -- 1.0.478

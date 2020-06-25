@@ -82,9 +82,23 @@
   columns and values to search on or a vector of a SQL where clause and
   parameters, returns a vector of hash maps of rows that match.
 
+  If the vector is empty -- no SQL and no parameters -- the query will
+  select all rows in the table: be warned!
+
   If the `:order-by` option is present, add an `ORDER BY` clause. `:order-by`
   should be a vector of column names or pairs of column name / direction,
-  which can be `:asc` or `:desc`."
+  which can be `:asc` or `:desc`.
+
+  If the `:top` option is present, the SQL Server `SELECT TOP ?` syntax
+  is used and the value of the option is inserted as an additional parameter.
+
+  If the `:limit` option is present, the MySQL `LIMIT ? OFFSET ?` syntax
+  is used (using the `:offset` option if present, else `OFFSET ?` is omitted).
+  PostgreSQL also supports this syntax.
+
+  If the `:offset` option is present (without `:limit`), the standard
+  `OFFSET ? ROWS FETCH NEXT ? ROWS ONLY` syntax is used (using the `:fetch`
+  option if present, else `FETCH...` is omitted)."
   ([connectable table key-map]
    (find-by-keys connectable table key-map {}))
   ([connectable table key-map opts]
@@ -98,7 +112,11 @@
   a hash map of the first row that matches.
 
   By default, the primary key is assumed to be `id` but that can be overridden
-  in the five-argument call."
+  in the five-argument call.
+
+  Technically, this also supports `:order-by`, `:top`, `:limit`, `:offset`,
+  and `:fetch` -- like `find-by-keys` -- but they don't make as much sense
+  here since only one row is ever returned."
   ([connectable table pk]
    (get-by-id connectable table pk :id {}))
   ([connectable table pk opts]

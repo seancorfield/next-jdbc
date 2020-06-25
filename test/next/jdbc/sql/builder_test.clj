@@ -44,7 +44,64 @@
             ["id = ? and opt is null" 9]
             {:table-fn sql-server :column-fn mysql :order-by [:a [:b :desc]]})
            [(str "SELECT * FROM [user] WHERE id = ? and opt is null"
-                 " ORDER BY `a`, `b` DESC") 9]))))
+                 " ORDER BY `a`, `b` DESC") 9])))
+  (testing "with nil where clause"
+    (is (= (builder/for-query
+            :user
+            nil
+            {:table-fn sql-server :column-fn mysql :order-by [:a [:b :desc]]})
+           ["SELECT * FROM [user] ORDER BY `a`, `b` DESC"]))
+    (is (= (builder/for-query
+            :user
+            [nil]
+            {:table-fn sql-server :column-fn mysql :order-by [:a [:b :desc]]})
+           ["SELECT * FROM [user] ORDER BY `a`, `b` DESC"])))
+  (testing "top N"
+    (is (= (builder/for-query
+            :user
+            {:id 9}
+            {:table-fn sql-server :column-fn mysql :order-by [:a [:b :desc]]
+             :top 42})
+           ["SELECT TOP ? * FROM [user] WHERE `id` = ? ORDER BY `a`, `b` DESC"
+            42 9])))
+  (testing "limit"
+    (testing "without offset"
+      (is (= (builder/for-query
+              :user
+              {:id 9}
+              {:table-fn sql-server :column-fn mysql :order-by [:a [:b :desc]]
+               :limit 42})
+             [(str "SELECT * FROM [user] WHERE `id` = ?"
+                   " ORDER BY `a`, `b` DESC LIMIT ?")
+              9 42])))
+    (testing "with offset"
+      (is (= (builder/for-query
+              :user
+              {:id 9}
+              {:table-fn sql-server :column-fn mysql :order-by [:a [:b :desc]]
+               :limit 42 :offset 13})
+             [(str "SELECT * FROM [user] WHERE `id` = ?"
+                   " ORDER BY `a`, `b` DESC LIMIT ? OFFSET ?")
+              9 42 13]))))
+  (testing "offset"
+    (testing "without fetch"
+      (is (= (builder/for-query
+              :user
+              {:id 9}
+              {:table-fn sql-server :column-fn mysql :order-by [:a [:b :desc]]
+               :offset 13})
+             [(str "SELECT * FROM [user] WHERE `id` = ?"
+                   " ORDER BY `a`, `b` DESC OFFSET ? ROWS")
+              9 13])))
+    (testing "with fetch"
+      (is (= (builder/for-query
+              :user
+              {:id 9}
+              {:table-fn sql-server :column-fn mysql :order-by [:a [:b :desc]]
+               :offset 13 :fetch 42})
+             [(str "SELECT * FROM [user] WHERE `id` = ?"
+                   " ORDER BY `a`, `b` DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY")
+              9 13 42])))))
 
 (deftest test-for-delete
   (testing "by example"

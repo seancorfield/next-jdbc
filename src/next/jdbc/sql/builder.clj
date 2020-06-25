@@ -154,12 +154,32 @@
   (let [entity-fn    (:table-fn opts identity)
         where-params (if (map? where-params)
                        (by-keys where-params :where opts)
-                       (into [(str "WHERE " (first where-params))]
-                             (rest where-params)))]
-    (into [(str "SELECT * FROM " (entity-fn (name table))
-                " " (first where-params)
+                       (into [(when-let [clause (first where-params)]
+                                (str "WHERE " clause))]
+                             (rest where-params)))
+        where-params (cond-> (if (:top opts)
+                               (into [(first where-params)]
+                                     (cons (:top opts) (rest where-params)))
+                               where-params)
+                       (:limit opts)  (conj (:limit opts))
+                       (:offset opts) (conj (:offset opts))
+                       (:fetch opts)  (conj (:fetch opts)))]
+    (into [(str "SELECT "
+                (when (:top opts)
+                  "TOP ? ")
+                "* FROM " (entity-fn (name table))
+                (when-let [clause (first where-params)]
+                  (str " " clause))
                 (when-let [order-by (:order-by opts)]
                   (str " " (for-order order-by opts)))
+                (when (:limit opts)
+                  " LIMIT ?")
+                (when (:offset opts)
+                  (if (:limit opts)
+                    " OFFSET ?"
+                    " OFFSET ? ROWS"))
+                (when (:fetch opts)
+                  " FETCH NEXT ? ROWS ONLY")
                 (when-let [suffix (:suffix opts)]
                   (str " " suffix)))]
           (rest where-params))))
