@@ -113,6 +113,26 @@ Given a table name (as a keyword) and either a hash map of column names and valu
                    "Stella" "stella@artois.beer"])
 ```
 
+The default behavior is to return all the columns in each row. You can specify a subset of columns to return using the `:columns` option. It takes a vector and each element of the vector can be:
+
+* a simple keyword representing the column name (`:column-fn` will be applied, if provided),
+* a pair of keywords representing the column name and an alias (`:column-fn` will be applied to both, if provided),
+* a pair consisting of a string and a keyword, representing a SQL expression and an alias (`:column-fn` will be applied to the alias, if provided).
+
+```clojure
+(sql/find-by-keys ds :address {:name "Stella"} {:columns [[:email :address]]})
+;; equivalent to
+(jdbc/execute! ds ["SELECT email AS address FROM address WHERE name = ?"
+                   "Stella"])
+
+(sql/find-by-keys ds :address {:name "Stella"} {:columns [["count(*)" :n]]})
+;; equivalent to
+(jdbc/execute! ds ["SELECT count(*) AS n FROM address WHERE name = ?"
+                   "Stella"])
+```
+
+> Note: the SQL string provided for a column is copied exactly as-is into the generated SQL -- you are responsible for ensuring it is legal SQL!
+
 `find-by-keys` supports an `:order-by` option which can specify a vector of column names to sort the results by. Elements may be column names or pairs of a column name and the direction to sort: `:asc` or `:desc`:
 
 ```clojure
