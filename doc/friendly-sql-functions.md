@@ -124,6 +124,10 @@ Given a table name (as a keyword) and either a hash map of column names and valu
                    "Stella" "stella@artois.beer"])
 ```
 
+`find-by-keys` also supports basic pagination with `:offset` and `:fetch` options which both accept numeric values and adds `OFFSET ? ROWS FETCH NEXT ? ROWS ONLY` to the generated query. To support MySQL and SQLite, you can specify `:limit` instead `:fetch` which adds `LIMIT ? OFFSET ?` to the generated query instead.
+
+If you want to match all rows in a table -- perhaps with the pagination options in effect -- you can pass the keyword `:all` instead of either a hash map of column names and values or a vector containing a partial `WHERE` clause and parameters.
+
 If no rows match, `find-by-keys` returns `[]`, just like `execute!`.
 
 ## `get-by-id`
