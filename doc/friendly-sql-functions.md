@@ -128,6 +128,12 @@ Given a table name (as a keyword) and either a hash map of column names and valu
 
 If you want to match all rows in a table -- perhaps with the pagination options in effect -- you can pass the keyword `:all` instead of either a hash map of column names and values or a vector containing a partial `WHERE` clause and parameters.
 
+```clojure
+(sql/find-by-keys ds :address :all {:order-by [:id] :offset 5 :fetch 10})
+;; equivalent to
+(jdbc/execute! ds ["SELECT * FROM address ORDER BY id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY" 5 10])
+```
+
 If no rows match, `find-by-keys` returns `[]`, just like `execute!`.
 
 ## `get-by-id`
