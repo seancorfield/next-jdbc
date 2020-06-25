@@ -26,6 +26,19 @@
     (is (= 1 ((column :FRUIT/ID) (first rs))))
     (is (= 4 ((column :FRUIT/ID) (last rs))))))
 
+(deftest test-find-all-offset
+  (let [ds-opts (jdbc/with-options (ds) (default-options))
+        rs      (sql/find-by-keys ds-opts :fruit :all
+                                  (assoc (if (or (mysql?) (sqlite?))
+                                           {:limit  2 :offset 1}
+                                           {:offset 1 :fetch  2})
+                                         :order-by [:id]))]
+    (is (= 2 (count rs)))
+    (is (every? map? rs))
+    (is (every? meta rs))
+    (is (= 2 ((column :FRUIT/ID) (first rs))))
+    (is (= 3 ((column :FRUIT/ID) (last rs))))))
+
 (deftest test-find-by-keys
   (let [ds-opts (jdbc/with-options (ds) (default-options))]
     (let [rs (sql/find-by-keys ds-opts :fruit {:appearance "neon-green"})]

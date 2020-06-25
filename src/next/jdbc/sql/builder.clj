@@ -155,7 +155,7 @@
         where-params (cond (map? where-params)
                            (by-keys where-params :where opts)
                            (= :all where-params)
-                           []
+                           [nil]
                            :else
                            (into [(str "WHERE " (first where-params))]
                                  (rest where-params)))
