@@ -13,8 +13,38 @@
 (defn as-?
   "Given a hash map of column names and values, or a vector of column names,
   return a string of `?` placeholders for them."
-  [key-map opts]
+  [key-map _]
   (str/join ", " (repeat (count key-map) "?")))
+
+(defn as-cols
+  "Given a sequence of raw column names, return a string of all the
+  formatted column names.
+
+  If a raw column name is a keyword, apply `:column-fn` to its name,
+  from the options if present.
+
+  If a raw column name is a vector pair, treat it as an expression with
+  an alias. If the first item is a keyword, apply `:column-fn` to its
+  name, else accept it as-is. The second item should be a keyword and
+  that will have `:column-fn` applied to its name.
+
+  This allows columns to be specified as simple names, e.g., `:foo`,
+  as simple aliases, e.g., `[:foo :bar]`, or as expressions with an
+  alias, e.g., `[\"count(*)\" :total]`."
+  [cols opts]
+  (let [col-fn (:column-fn opts identity)]
+    (str/join ", " (map (fn [raw]
+                          (if (vector? raw)
+                            (if (keyword? (first raw))
+                              (str (col-fn (name (first raw)))
+                                   " AS "
+                                   (col-fn (name (second raw))))
+                              (str (first raw)
+                                   " AS "
+                                   (col-fn (name (second raw)))))
+                            (col-fn (name raw))))
+                        cols))))
+
 
 (defn as-keys
   "Given a hash map of column names and values, return a string of all the
@@ -22,7 +52,7 @@
 
   Applies any `:column-fn` supplied in the options."
   [key-map opts]
-  (str/join ", " (map (comp (:column-fn opts identity) name) (keys key-map))))
+  (as-cols (keys key-map) opts))
 
 (defn by-keys
   "Given a hash map of column names and values and a clause type
@@ -148,6 +178,12 @@
 
   Applies any `:table-fn` / `:column-fn` supplied in the options.
 
+  Handles pagination options (`:top`, `:limit` / `:offset`, or `:offset` /
+  `:fetch`) for SQL Server, MySQL / SQLite, ANSI SQL respectively.
+
+  By default, this selects all columns, but if the `:columns` option is
+  present the select will only be those columns.
+
   If `:suffix` is provided in `opts`, that string is appended to the
   `SELECT ...` statement."
   [table where-params opts]
@@ -169,7 +205,10 @@
     (into [(str "SELECT "
                 (when (:top opts)
                   "TOP ? ")
-                "* FROM " (entity-fn (name table))
+                (if-let [cols (seq (:columns opts))]
+                  (as-cols cols opts)
+                  "*")
+                " FROM " (entity-fn (name table))
                 (when-let [clause (first where-params)]
                   (str " " clause))
                 (when-let [order-by (:order-by opts)]

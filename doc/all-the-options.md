@@ -43,8 +43,13 @@ They also support a `:suffix` argument which can be used to specify a SQL string
 
 In addition, `find-by-keys` accepts the following options (see its docstring for more details):
 
+* `:columns` -- specify one or more columns to `SELECT` to override selecting all columns,
 * `:order-by` -- specify one or more columns, on which to sort the results,
 * `:top` / `:limit` / `:offset` / `:fetch` to support pagination of results.
+
+In the simple case, the `:columns` option expects a vector of keywords and each will be processed according to `:column-fn`, if provided. A column alias can be specified using a vector pair of keywords and both will be processed according to `:column-fn`, e.g., `[:foo [:bar :quux]]` would expand to `foo, bar AS quux`. You can also specify the first element of the pair as a string which will be used as-is in the generated SQL, e.g., `[:foo ["COUNT(*)" :total]]` would expand to `foo, COUNT(*) AS total`. In the latter case, the alias keyword will still be processed according to `:column-fn` but the string will be untouched -- you are responsible for any quoting and/or other formatting that might be required to produce a valid SQL expression.
+
+> Note: `get-by-id` accepts the same options as `find-by-keys` but it will only ever produce one row, as a hash map, so sort order and pagination are less applicable, although `:columns` may be useful.
 
 ## Generating Rows and Result Sets
 

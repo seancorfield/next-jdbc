@@ -16,6 +16,14 @@
     (is (= (builder/by-keys {:a nil :b 42 :c "s"} :set {})
            ["SET a = ?, b = ?, c = ?" nil 42 "s"]))))
 
+(deftest test-as-cols
+  (is (= (builder/as-cols [:a :b :c] {})
+         "a, b, c"))
+  (is (= (builder/as-cols [[:a :aa] :b ["count(*)" :c]] {})
+         "a AS aa, b, count(*) AS c"))
+  (is (= (builder/as-cols [[:a :aa] :b ["count(*)" :c]] {:column-fn mysql})
+         "`a` AS `aa`, `b`, count(*) AS `c`")))
+
 (deftest test-as-keys
   (is (= (builder/as-keys {:a nil :b 42 :c "s"} {})
          "a, b, c")))

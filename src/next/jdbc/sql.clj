@@ -85,6 +85,9 @@
   If `:all` is passed instead of a hash map or vector -- the query will
   select all rows in the table, subject to any pagination options below.
 
+  If `:columns` is passed, only that specified subset of columns will be
+  returned in each row (otherwise all columns are selected).
+
   If the `:order-by` option is present, add an `ORDER BY` clause. `:order-by`
   should be a vector of column names or pairs of column name / direction,
   which can be `:asc` or `:desc`.
@@ -113,6 +116,9 @@
 
   By default, the primary key is assumed to be `id` but that can be overridden
   in the five-argument call.
+
+  As with `find-by-keys`, you can specify `:columns` to return just a
+  subset of the columns in the returned row.
 
   Technically, this also supports `:order-by`, `:top`, `:limit`, `:offset`,
   and `:fetch` -- like `find-by-keys` -- but they don't make as much sense
