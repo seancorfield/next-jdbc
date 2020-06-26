@@ -70,12 +70,22 @@
 (s/def ::key-map (s/map-of keyword? any?))
 (s/def ::example-map (s/map-of keyword? any? :min-count 1))
 
+;; can be a simple column name (keyword) or a pair of something and as alias
+;; and that something can be a simple column name (keyword) or an arbitrary
+;; expression (string) where we assume you know what you're doing
+(s/def ::column-spec (s/or :column keyword?
+                           :alias  (s/and vector?
+                                          (s/cat :expr   (s/or :col keyword?
+                                                               :str string?)
+                                                 :column keyword?))))
+(s/def ::columns (s/coll-of ::column-spec :kind vector?))
+
 (s/def ::order-by-col (s/or :col keyword?
                             :dir (s/cat :col keyword?
                                         :dir #{:asc :desc})))
 (s/def ::order-by (s/coll-of ::order-by-col :kind vector? :min-count 1))
 (s/def ::opts-map (s/and (s/map-of keyword? any?)
-                         (s/keys :opt-un [::order-by])))
+                         (s/keys :opt-un [::columns ::order-by])))
 
 (s/def ::transactable any?)
 
@@ -138,6 +148,10 @@
         :args (s/cat :clazz #(instance? Class %)
                      :db-spec ::db-spec-or-jdbc))
 
+(s/fdef connection/component
+        :args (s/cat :clazz #(instance? Class %)
+                     :db-spec ::db-spec-or-jdbc))
+
 (s/fdef prepare/execute-batch!
         :args (s/cat :ps ::prepared-statement
                      :param-groups (s/coll-of ::params :kind sequential?)
@@ -174,7 +188,8 @@
         :args (s/cat :connectable ::connectable
                      :table keyword?
                      :key-map (s/or :example ::example-map
-                                    :where ::sql-params)
+                                    :where ::sql-params
+                                    :all #{:all})
                      :opts (s/? ::opts-map)))
 
 (s/fdef sql/get-by-id
