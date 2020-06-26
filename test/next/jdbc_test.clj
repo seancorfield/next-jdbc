@@ -318,6 +318,18 @@ VALUES ('Pear', 'green', 49, 47)
           (is (instance? java.sql.Connection con)))))))
 
 (deftest multi-rs
+  (when (mssql?)
+    (testing "script with multiple result sets"
+      (let [multi-rs
+            (jdbc/execute! (ds)
+                           [(str "begin"
+                                 " select * from fruit;"
+                                 " select * from fruit where id < 4;"
+                                 " end")]
+                           {:multi-rs true})]
+        (is (= 2 (count multi-rs)))
+        (is (= 4 (count (first multi-rs))))
+        (is (= 3 (count (second multi-rs)))))))
   (when (stored-proc?)
     (testing "stored proc; multiple result sets"
       (try
