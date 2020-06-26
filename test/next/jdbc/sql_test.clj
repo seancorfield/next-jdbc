@@ -8,6 +8,7 @@
             [next.jdbc.sql :as sql]
             [next.jdbc.test-fixtures
              :refer [with-test-db ds column default-options
+                      db
                       derby? jtds? maria? mssql? mysql? postgres? sqlite?]]
             [next.jdbc.types :refer [as-other as-real as-varchar]]))
 
@@ -25,6 +26,27 @@
     (is (every? meta rs))
     (is (= 1 ((column :FRUIT/ID) (first rs))))
     (is (= 4 ((column :FRUIT/ID) (last rs))))))
+
+(deftest test-find-all-offset
+  (let [ds-opts (jdbc/with-options (ds) (default-options))
+        rs      (sql/find-by-keys
+                 ds-opts :fruit :all
+                 (assoc
+                  (if (or (mysql?) (sqlite?))
+                    {:limit  2 :offset 1}
+                    {:offset 1 :fetch  2})
+                  :columns [:ID
+                            ["CASE WHEN grade > 91 THEN 'ok ' ELSE 'bad' END"
+                             :QUALITY]]
+                  :order-by [:id]))]
+    (is (= 2 (count rs)))
+    (is (every? map? rs))
+    (is (every? meta rs))
+    (is (every? #(= 2 (count %)) rs))
+    (is (= 2 ((column :FRUIT/ID) (first rs))))
+    (is (= "ok " ((column :QUALITY) (first rs))))
+    (is (= 3 ((column :FRUIT/ID) (last rs))))
+    (is (= "bad" ((column :QUALITY) (last rs))))))
 
 (deftest test-find-by-keys
   (let [ds-opts (jdbc/with-options (ds) (default-options))]
