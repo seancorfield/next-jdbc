@@ -214,7 +214,10 @@
 (defn execute!
   "General SQL execution function.
 
-  Returns a fully-realized result set.
+  Returns a fully-realized result set. When `:multi-rs true` is provided, will
+  return multiple result sets, as a vector of result sets. Each result set is
+  a vector of hash maps, by default, but can be controlled by the `:builder-fn`
+  option.
 
   Can be called on a `PreparedStatement`, a `Connection`, or something that can
   produce a `Connection` via a `DataSource`."
