@@ -10,7 +10,7 @@ One of the benefits of reducing over `plan` is that you can stream very large re
 
 The result of `plan` is also foldable in the [clojure.core.reducers](https://clojure.org/reference/reducers) sense. While you could use `execute!` to produce a vector of fully-realized rows as hash maps and then fold that vector (Clojure's vectors support fork-join parallel reduce-combine), that wouldn't be possible for very large result sets. If you fold the result of `plan`, the result set will be partitioned and processed using fork-join parallel reduce-combine. Unlike reducing over `plan`, each row **is** realized into a Clojure data structure and each batch is forked for reduction as soon as that many rows have been realized. By default, `fold`'s batch size is 512 but you can specify a different value in the 4-arity call. Once the entire result set has been read, the last (partial) batch is forked for reduction and then all of the reduced batches are combined.
 
-There is no back pressure here so if your reducing function is slow, you may end up with more of the realized result set in memory than your system can cope with. There is also currently no attempt to combine the reduced batches until the entire result set has been processed which may also add to this issue.
+There is no back pressure here so if your reducing function is slow, you may end up with more of the realized result set in memory than your system can cope with.
 
 ## CLOB & BLOB SQL Types
 

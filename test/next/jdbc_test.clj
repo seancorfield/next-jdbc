@@ -314,6 +314,14 @@ VALUES ('Pear', 'green', 49, 47)
                                       (default-options))))]
         (is (= 4 (count result)))
         (is (= "Apple" (first result)))
+        (is (= "Orange" (last result))))
+      (let [result
+            (r/fold 1 r/cat r/append!
+                    (r/map (column :FRUIT/NAME)
+                           (jdbc/plan (ds) ["select * from fruit order by id"]
+                                      (default-options))))]
+        (is (= 4 (count result)))
+        (is (= "Apple" (first result)))
         (is (= "Orange" (last result)))))
     (testing "from a PreparedStatement"
       (let [result

@@ -616,14 +616,26 @@
     (let [rs-map  (mapify-result-set rs opts)
           chunk   (fn [batch] (#'r/fjtask #(r/reduce reducef (combinef) batch)))
           realize (fn [row] (datafiable-row row connectable opts))]
-      (loop [batch [] tasks []]
+      (loop [batch [] task nil]
         (if (.next rs)
           (if (= n (count batch))
-            (recur [(realize rs-map)] (conj tasks (#'r/fjfork (chunk batch))))
-            (recur (conj batch (realize rs-map)) tasks))
-          (#'r/fjinvoke
-            #(r/reduce combinef (combinef)
-                       (map #'r/fjjoin (conj tasks (#'r/fjfork (chunk batch)))))))))
+            (recur [(realize rs-map)]
+                   (let [t (#'r/fjfork (chunk batch))]
+                     (if task
+                       (#'r/fjfork
+                         (#'r/fjtask #(combinef (#'r/fjjoin task)
+                                                (#'r/fjjoin t))))
+                       t)))
+            (recur (conj batch (realize rs-map)) task))
+          (if (seq batch)
+            (let [t (#'r/fjfork (chunk batch))]
+              (#'r/fjinvoke
+                #(combinef (if task (#'r/fjjoin task) (combinef))
+                           (#'r/fjjoin t))))
+            (if task
+              (#'r/fjinvoke
+                #(combinef (combinef) (#'r/fjjoin task)))
+              (combinef))))))
     (reducef (combinef) {:next.jdbc/update-count (.getUpdateCount stmt)})))
 
 (defn- stmt-sql->result-set
@@ -671,14 +683,26 @@
     (let [rs-map  (mapify-result-set rs opts)
           chunk   (fn [batch] (#'r/fjtask #(r/reduce reducef (combinef) batch)))
           realize (fn [row] (datafiable-row row connectable opts))]
-      (loop [batch [] tasks []]
+      (loop [batch [] task nil]
         (if (.next rs)
           (if (= n (count batch))
-            (recur [(realize rs-map)] (conj tasks (#'r/fjfork (chunk batch))))
-            (recur (conj batch (realize rs-map)) tasks))
-          (#'r/fjinvoke
-            #(r/reduce combinef (combinef)
-                       (map #'r/fjjoin (conj tasks (#'r/fjfork (chunk batch)))))))))
+            (recur [(realize rs-map)]
+                   (let [t (#'r/fjfork (chunk batch))]
+                     (if task
+                       (#'r/fjfork
+                         (#'r/fjtask #(combinef (#'r/fjjoin task)
+                                                (#'r/fjjoin t))))
+                       t)))
+            (recur (conj batch (realize rs-map)) task))
+          (if (seq batch)
+            (let [t (#'r/fjfork (chunk batch))]
+              (#'r/fjinvoke
+                #(combinef (if task (#'r/fjjoin task) (combinef))
+                           (#'r/fjjoin t))))
+            (if task
+              (#'r/fjinvoke
+                #(combinef (combinef) (#'r/fjjoin task)))
+              (combinef))))))
     (reducef (combinef) {:next.jdbc/update-count (.getUpdateCount stmt)})))
 
 (extend-protocol p/Executable
