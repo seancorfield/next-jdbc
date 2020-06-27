@@ -623,7 +623,7 @@
             (recur (conj batch (realize rs-map)) tasks))
           (#'r/fjinvoke
             #(r/reduce combinef (combinef)
-                       (mapv #'r/fjjoin (conj tasks (#'r/fjfork (chunk batch)))))))))
+                       (map #'r/fjjoin (conj tasks (#'r/fjfork (chunk batch)))))))))
     (reducef (combinef) {:next.jdbc/update-count (.getUpdateCount stmt)})))
 
 (defn- stmt-sql->result-set
@@ -678,7 +678,7 @@
             (recur (conj batch (realize rs-map)) tasks))
           (#'r/fjinvoke
             #(r/reduce combinef (combinef)
-                       (mapv #'r/fjjoin (conj tasks (#'r/fjfork (chunk batch)))))))))
+                       (map #'r/fjjoin (conj tasks (#'r/fjfork (chunk batch)))))))))
     (reducef (combinef) {:next.jdbc/update-count (.getUpdateCount stmt)})))
 
 (extend-protocol p/Executable
