@@ -176,6 +176,9 @@
   "General SQL execution function (for working with result sets).
 
   Returns a reducible that, when reduced, runs the SQL and yields the result.
+  The reducible is also foldable (in the `clojure.core.reducers` sense) but
+  see the **Tips & Tricks** section of the documentation for some important
+  caveats about that.
 
   Can be called on a `PreparedStatement`, a `Connection`, or something that can
   produce a `Connection` via a `DataSource`.
