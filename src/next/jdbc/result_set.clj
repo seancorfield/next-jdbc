@@ -18,6 +18,7 @@
   for implementations of `ReadableColumn` that provide automatic
   conversion of some SQL data types to Java Time objects."
   (:require [clojure.core.protocols :as core-p]
+            [clojure.core.reducers :as r]
             [clojure.datafy :as d]
             [next.jdbc.prepare :as prepare]
             [next.jdbc.protocols :as p])
@@ -622,6 +623,41 @@
           init')))
     (f init {:next.jdbc/update-count (.getUpdateCount stmt)})))
 
+(defn- fold-stmt
+  "Execute the `PreparedStatement`, attempt to get either its `ResultSet` or
+  its generated keys (as a `ResultSet`), and fold that using the supplied
+  batch size, combining function, and reducing function.
+
+  If the statement yields neither a `ResultSet` nor generated keys, produce
+  a hash map containing `:next.jdbc/update-count` and the number of rows
+  updated, and fold that as a single element collection."
+  [^PreparedStatement stmt n combinef reducef connectable opts]
+  (if-let [rs (stmt->result-set stmt opts)]
+    (let [rs-map  (mapify-result-set rs opts)
+          chunk   (fn [batch] (#'r/fjtask #(r/reduce reducef (combinef) batch)))
+          realize (fn [row] (datafiable-row row connectable opts))]
+      (loop [batch [] task nil]
+        (if (.next rs)
+          (if (= n (count batch))
+            (recur [(realize rs-map)]
+                   (let [t (#'r/fjfork (chunk batch))]
+                     (if task
+                       (#'r/fjfork
+                         (#'r/fjtask #(combinef (#'r/fjjoin task)
+                                                (#'r/fjjoin t))))
+                       t)))
+            (recur (conj batch (realize rs-map)) task))
+          (if (seq batch)
+            (let [t (#'r/fjfork (chunk batch))]
+              (#'r/fjinvoke
+                #(combinef (if task (#'r/fjjoin task) (combinef))
+                           (#'r/fjjoin t))))
+            (if task
+              (#'r/fjinvoke
+                #(combinef (combinef) (#'r/fjjoin task)))
+              (combinef))))))
+    (reducef (combinef) {:next.jdbc/update-count (.getUpdateCount stmt)})))
+
 (defn- stmt-sql->result-set
   "Given a `Statement`, a SQL command, execute it and return a
   `ResultSet` if possible. We always attempt to return keys."
@@ -653,16 +689,59 @@
           init')))
     (f init {:next.jdbc/update-count (.getUpdateCount stmt)})))
 
+(defn- fold-stmt-sql
+  "Execute the SQL command on the given `Statement`, attempt to get either
+  its `ResultSet` or its generated keys (as a `ResultSet`), and fold that
+  using the supplied batch size, combining function, and reducing function.
+
+  If the statement yields neither a `ResultSet` nor generated keys, produce
+  a hash map containing `:next.jdbc/update-count` and the number of rows
+  updated, and fold that as a single element collection."
+  [^Statement stmt sql n combinef reducef connectable opts]
+  (if-let [rs (stmt-sql->result-set stmt sql opts)]
+    (let [rs-map  (mapify-result-set rs opts)
+          chunk   (fn [batch] (#'r/fjtask #(r/reduce reducef (combinef) batch)))
+          realize (fn [row] (datafiable-row row connectable opts))]
+      (loop [batch [] task nil]
+        (if (.next rs)
+          (if (= n (count batch))
+            (recur [(realize rs-map)]
+                   (let [t (#'r/fjfork (chunk batch))]
+                     (if task
+                       (#'r/fjfork
+                         (#'r/fjtask #(combinef (#'r/fjjoin task)
+                                                (#'r/fjjoin t))))
+                       t)))
+            (recur (conj batch (realize rs-map)) task))
+          (if (seq batch)
+            (let [t (#'r/fjfork (chunk batch))]
+              (#'r/fjinvoke
+                #(combinef (if task (#'r/fjjoin task) (combinef))
+                           (#'r/fjjoin t))))
+            (if task
+              (#'r/fjinvoke
+                #(combinef (combinef) (#'r/fjjoin task)))
+              (combinef))))))
+    (reducef (combinef) {:next.jdbc/update-count (.getUpdateCount stmt)})))
+
 (extend-protocol p/Executable
   java.sql.Connection
   (-execute [this sql-params opts]
-    (reify clojure.lang.IReduceInit
+    (reify
+      clojure.lang.IReduceInit
       (reduce [_ f init]
-              (with-open [stmt (prepare/create this
-                                               (first sql-params)
-                                               (rest sql-params)
-                                               opts)]
-                (reduce-stmt stmt f init opts)))
+        (with-open [stmt (prepare/create this
+                                         (first sql-params)
+                                         (rest sql-params)
+                                         opts)]
+          (reduce-stmt stmt f init opts)))
+      r/CollFold
+      (coll-fold [_ n combinef reducef]
+        (with-open [stmt (prepare/create this
+                                         (first sql-params)
+                                         (rest sql-params)
+                                         opts)]
+          (fold-stmt stmt n combinef reducef this opts)))
       (toString [_] "`IReduceInit` from `plan` -- missing reduction?")))
   (-execute-one [this sql-params opts]
     (with-open [stmt (prepare/create this
@@ -691,14 +770,23 @@
 
   javax.sql.DataSource
   (-execute [this sql-params opts]
-    (reify clojure.lang.IReduceInit
+    (reify
+      clojure.lang.IReduceInit
       (reduce [_ f init]
-              (with-open [con  (p/get-connection this opts)
-                          stmt (prepare/create con
-                                               (first sql-params)
-                                               (rest sql-params)
-                                               opts)]
-                  (reduce-stmt stmt f init opts)))
+        (with-open [con  (p/get-connection this opts)
+                    stmt (prepare/create con
+                                         (first sql-params)
+                                         (rest sql-params)
+                                         opts)]
+            (reduce-stmt stmt f init opts)))
+      r/CollFold
+      (coll-fold [_ n combinef reducef]
+        (with-open [con  (p/get-connection this opts)
+                    stmt (prepare/create con
+                                         (first sql-params)
+                                         (rest sql-params)
+                                         opts)]
+          (fold-stmt stmt n combinef reducef this opts)))
       (toString [_] "`IReduceInit` from `plan` -- missing reduction?")))
   (-execute-one [this sql-params opts]
     (with-open [con  (p/get-connection this opts)
@@ -732,9 +820,14 @@
   ;; keys so we pass a truthy value to at least attempt it if we
   ;; do not get a ResultSet back from the execute call
   (-execute [this _ opts]
-    (reify clojure.lang.IReduceInit
+    (reify
+      clojure.lang.IReduceInit
       (reduce [_ f init]
-              (reduce-stmt this f init (assoc opts :return-keys true)))
+        (reduce-stmt this f init (assoc opts :return-keys true)))
+      r/CollFold
+      (coll-fold [_ n combinef reducef]
+        (fold-stmt this n combinef reducef (.getConnection this)
+                   (assoc opts :return-keys true)))
       (toString [_] "`IReduceInit` from `plan` -- missing reduction?")))
   (-execute-one [this _ opts]
     (if-let [rs (stmt->result-set this (assoc opts :return-keys true))]
@@ -762,9 +855,16 @@
   (-execute [this sql-params opts]
     (assert (= 1 (count sql-params))
             "Parameters cannot be provided when executing a non-prepared Statement")
-    (reify clojure.lang.IReduceInit
+    (reify
+      clojure.lang.IReduceInit
       (reduce [_ f init]
-              (reduce-stmt-sql this (first sql-params) f init opts))
+        (reduce-stmt-sql this (first sql-params) f init
+                         (assoc opts :return-keys true)))
+      r/CollFold
+      (coll-fold [_ n combinef reducef]
+        (fold-stmt-sql this (first sql-params) n combinef reducef
+                       (.getConnection this)
+                       (assoc opts :return-keys true)))
       (toString [_] "`IReduceInit` from `plan` -- missing reduction?")))
   (-execute-one [this sql-params opts]
     (assert (= 1 (count sql-params))

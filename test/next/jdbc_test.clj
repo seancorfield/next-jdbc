@@ -2,7 +2,8 @@
 
 (ns next.jdbc-test
   "Basic tests for the primary API of `next.jdbc`."
-  (:require [clojure.string :as str]
+  (:require [clojure.core.reducers :as r]
+            [clojure.string :as str]
             [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc :as jdbc]
             [next.jdbc.connection :as c]
@@ -293,6 +294,59 @@ VALUES ('Pear', 'green', 49, 47)
                    result))))
         (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
         (is (= ac (.getAutoCommit con)))))))
+
+(deftest folding-test
+  (testing "foldable result set"
+    (testing "from a Connection"
+      (let [result
+            (with-open [con (jdbc/get-connection (ds))]
+              (r/fold 2 r/cat r/append!
+                      (r/map (column :FRUIT/NAME)
+                             (jdbc/plan con ["select * from fruit order by id"]
+                                        (default-options)))))]
+        (is (= 4 (count result)))
+        (is (= "Apple" (first result)))
+        (is (= "Orange" (last result)))))
+    (testing "from a DataSource"
+      (let [result
+            (r/fold 2 r/cat r/append!
+                    (r/map (column :FRUIT/NAME)
+                           (jdbc/plan (ds) ["select * from fruit order by id"]
+                                      (default-options))))]
+        (is (= 4 (count result)))
+        (is (= "Apple" (first result)))
+        (is (= "Orange" (last result))))
+      (let [result
+            (r/fold 1 r/cat r/append!
+                    (r/map (column :FRUIT/NAME)
+                           (jdbc/plan (ds) ["select * from fruit order by id"]
+                                      (default-options))))]
+        (is (= 4 (count result)))
+        (is (= "Apple" (first result)))
+        (is (= "Orange" (last result)))))
+    (testing "from a PreparedStatement"
+      (let [result
+            (with-open [con (jdbc/get-connection (ds))
+                        stmt (jdbc/prepare con
+                                           ["select * from fruit order by id"]
+                                           (default-options))]
+              (r/fold 2 r/cat r/append!
+                      (r/map (column :FRUIT/NAME)
+                             (jdbc/plan stmt nil (default-options)))))]
+        (is (= 4 (count result)))
+        (is (= "Apple" (first result)))
+        (is (= "Orange" (last result)))))
+    (testing "from a Statement"
+      (let [result
+            (with-open [con (jdbc/get-connection (ds))
+                        stmt (prep/statement con (default-options))]
+              (r/fold 2 r/cat r/append!
+                      (r/map (column :FRUIT/NAME)
+                             (jdbc/plan stmt ["select * from fruit order by id"]
+                                        (default-options)))))]
+        (is (= 4 (count result)))
+        (is (= "Apple" (first result)))
+        (is (= "Orange" (last result)))))))
 
 (deftest connection-tests
   (testing "datasource via jdbcUrl"
