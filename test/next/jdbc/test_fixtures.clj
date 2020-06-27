@@ -49,7 +49,7 @@
   (when (System/getenv "NEXT_JDBC_TEST_MSSQL") test-jtds-map))
 
 (def ^:private test-db-specs
-  (cond-> [test-derby test-h2-mem test-h2 test-hsql test-sqlite test-postgres]
+  (cond-> [test-derby test-h2-mem test-h2 test-hsql test-sqlite]
     test-postgres (conj test-postgres)
     test-mysql    (conj test-mysql)
     test-mssql    (conj test-mssql test-jtds)))
