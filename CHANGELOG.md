@@ -2,8 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
-Changes made since the 1.0.478 release:
 * WIP support multiple result sets.
+
+Changes made since the 1.0.478 release:
 * Address #125 by making the result of `plan` foldable (in the `clojure.core.reducers` sense).
 * Address #124 by extending `next.jdbc.sql.builder/for-query` to support `:top` (SQL Server), `:limit` / `:offset` (MySQL/PostgreSQL), `:offset` / `:fetch` (SQL Standard).
 * Allow `:all` to be passed into `find-by-keys` instead of an example hash map or a where clause vector so all rows will be returned (expected to be used with `:offset` etc to support simple pagination of an entire table).
