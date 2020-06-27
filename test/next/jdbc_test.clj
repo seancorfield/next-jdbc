@@ -2,7 +2,8 @@
 
 (ns next.jdbc-test
   "Basic tests for the primary API of `next.jdbc`."
-  (:require [clojure.string :as str]
+  (:require [clojure.core.reducers :as r]
+            [clojure.string :as str]
             [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc :as jdbc]
             [next.jdbc.connection :as c]
@@ -292,6 +293,17 @@ VALUES ('Pear', 'green', 49, 47)
                    result))))
         (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
         (is (= ac (.getAutoCommit con)))))))
+
+(deftest fold-rs-test
+  (let [ds-opts (jdbc/with-options (ds) (default-options))]
+    (testing "foldable result set"
+      (let [result
+            (r/fold 2 r/cat r/append!
+                    (r/map (column :FRUIT/NAME)
+                           (jdbc/plan ds-opts ["select * from fruit order by id"])))]
+        (is (= 4 (count result)))
+        (is (= "Apple" (first result)))
+        (is (= "Orange" (last result)))))))
 
 (deftest connection-tests
   (testing "datasource via jdbcUrl"

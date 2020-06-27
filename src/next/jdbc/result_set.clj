@@ -18,6 +18,7 @@
   for implementations of `ReadableColumn` that provide automatic
   conversion of some SQL data types to Java Time objects."
   (:require [clojure.core.protocols :as core-p]
+            [clojure.core.reducers :as r]
             [clojure.datafy :as d]
             [next.jdbc.prepare :as prepare]
             [next.jdbc.protocols :as p])
@@ -602,6 +603,29 @@
           init')))
     (f init {:next.jdbc/update-count (.getUpdateCount stmt)})))
 
+(defn- fold-stmt
+  "Execute the `PreparedStatement`, attempt to get either its `ResultSet` or
+  its generated keys (as a `ResultSet`), and fold that using the supplied
+  batch size, combining function, and reducing function.
+
+  If the statement yields neither a `ResultSet` nor generated keys, produce
+  a hash map containing `:next.jdbc/update-count` and the number of rows
+  updated, and fold that as a single element collection."
+  [^PreparedStatement stmt n combinef reducef connectable opts]
+  (if-let [rs (stmt->result-set stmt opts)]
+    (let [rs-map  (mapify-result-set rs opts)
+          chunk   (fn [batch] (#'r/fjtask #(reduce reducef (combinef) batch)))
+          realize (fn [row] (datafiable-row row connectable opts))]
+      (loop [batch [] tasks []]
+        (if (.next rs)
+          (if (= n (count batch))
+            (recur [(realize rs-map)] (conj tasks (#'r/fjfork (chunk batch))))
+            (recur (conj batch (realize rs-map)) tasks))
+          (#'r/fjinvoke
+            #(reduce combinef (combinef)
+                     (mapv #'r/fjjoin (conj tasks (#'r/fjfork (chunk batch)))))))))
+    (reducef (combinef) {:next.jdbc/update-count (.getUpdateCount stmt)})))
+
 (defn- stmt-sql->result-set
   "Given a `Statement`, a SQL command, and options, execute it and return a
   `ResultSet` if possible."
@@ -667,14 +691,23 @@
 
   javax.sql.DataSource
   (-execute [this sql-params opts]
-    (reify clojure.lang.IReduceInit
+    (reify
+      clojure.lang.IReduceInit
       (reduce [_ f init]
-              (with-open [con  (p/get-connection this opts)
-                          stmt (prepare/create con
-                                               (first sql-params)
-                                               (rest sql-params)
-                                               opts)]
-                  (reduce-stmt stmt f init opts)))
+        (with-open [con  (p/get-connection this opts)
+                    stmt (prepare/create con
+                                         (first sql-params)
+                                         (rest sql-params)
+                                         opts)]
+            (reduce-stmt stmt f init opts)))
+      r/CollFold
+      (coll-fold [_ n combinef reducef]
+        (with-open [con  (p/get-connection this opts)
+                    stmt (prepare/create con
+                                         (first sql-params)
+                                         (rest sql-params)
+                                         opts)]
+            (fold-stmt stmt n combinef reducef this opts)))
       (toString [_] "`IReduceInit` from `plan` -- missing reduction?")))
   (-execute-one [this sql-params opts]
     (with-open [con  (p/get-connection this opts)
