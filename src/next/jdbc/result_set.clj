@@ -642,13 +642,12 @@
   "Given a `Statement`, a SQL command, and options, execute it and return a
   `ResultSet` if possible."
   ^ResultSet
-  [^Statement stmt ^String sql opts]
+  [^Statement stmt ^String sql]
   (if (.execute stmt sql)
     (.getResultSet stmt)
-    (when (:return-keys opts)
-      (try
-        (.getGeneratedKeys stmt)
-        (catch Exception _)))))
+    (try
+      (.getGeneratedKeys stmt)
+      (catch Exception _))))
 
 (defn- reduce-stmt-sql
   "Execute the SQL command on the given `Statement`, attempt to get either
@@ -659,7 +658,7 @@
   a hash map containing `:next.jdbc/update-count` and the number of rows
   updated, with the supplied function and initial value applied."
   [^Statement stmt sql f init opts]
-  (if-let [rs (stmt-sql->result-set stmt sql opts)]
+  (if-let [rs (stmt-sql->result-set stmt sql)]
     (let [rs-map (mapify-result-set rs opts)]
       (loop [init' init]
         (if (.next rs)
@@ -679,7 +678,7 @@
   a hash map containing `:next.jdbc/update-count` and the number of rows
   updated, and fold that as a single element collection."
   [^Statement stmt sql n combinef reducef connectable opts]
-  (if-let [rs (stmt-sql->result-set stmt sql opts)]
+  (if-let [rs (stmt-sql->result-set stmt sql)]
     (let [rs-map  (mapify-result-set rs opts)
           chunk   (fn [batch] (#'r/fjtask #(r/reduce reducef (combinef) batch)))
           realize (fn [row] (datafiable-row row connectable opts))]
@@ -814,27 +813,22 @@
       [{:next.jdbc/update-count (.getUpdateCount this)}]))
 
   java.sql.Statement
-  ;; we can't tell if this Statement will return generated
-  ;; keys so we pass a truthy value to at least attempt it if we
-  ;; do not get a ResultSet back from the execute call
   (-execute [this sql-params opts]
     (assert (= 1 (count sql-params))
             "Parameters cannot be provided when executing a non-prepared Statement")
     (reify
       clojure.lang.IReduceInit
       (reduce [_ f init]
-        (reduce-stmt-sql this (first sql-params) f init
-                         (assoc opts :return-keys true)))
+        (reduce-stmt-sql this (first sql-params) f init opts))
       r/CollFold
       (coll-fold [_ n combinef reducef]
         (fold-stmt-sql this (first sql-params) n combinef reducef
-                       (.getConnection this)
-                       (assoc opts :return-keys true)))
+                       (.getConnection this) opts))
       (toString [_] "`IReduceInit` from `plan` -- missing reduction?")))
   (-execute-one [this sql-params opts]
     (assert (= 1 (count sql-params))
             "Parameters cannot be provided when executing a non-prepared Statement")
-    (if-let [rs (stmt-sql->result-set this (first sql-params) (assoc opts :return-keys true))]
+    (if-let [rs (stmt-sql->result-set this (first sql-params))]
       (let [builder-fn (get opts :builder-fn as-maps)
             builder    (builder-fn rs opts)]
         (when (.next rs)
@@ -844,7 +838,7 @@
   (-execute-all [this sql-params opts]
     (assert (= 1 (count sql-params))
             "Parameters cannot be provided when executing a non-prepared Statement")
-    (if-let [rs (stmt-sql->result-set this (first sql-params) opts)]
+    (if-let [rs (stmt-sql->result-set this (first sql-params))]
       (datafiable-result-set rs (.getConnection this) opts)
       [{:next.jdbc/update-count (.getUpdateCount this)}]))
 
