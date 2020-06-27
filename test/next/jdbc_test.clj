@@ -294,13 +294,47 @@ VALUES ('Pear', 'green', 49, 47)
         (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
         (is (= ac (.getAutoCommit con)))))))
 
-(deftest fold-rs-test
-  (let [ds-opts (jdbc/with-options (ds) (default-options))]
-    (testing "foldable result set"
+(deftest folding-test
+  (testing "foldable result set"
+    (testing "from a Connection"
+      (let [result
+            (with-open [con (jdbc/get-connection (ds))]
+              (r/fold 2 r/cat r/append!
+                      (r/map (column :FRUIT/NAME)
+                             (jdbc/plan con ["select * from fruit order by id"]
+                                        (default-options)))))]
+        (is (= 4 (count result)))
+        (is (= "Apple" (first result)))
+        (is (= "Orange" (last result)))))
+    (testing "from a DataSource"
       (let [result
             (r/fold 2 r/cat r/append!
                     (r/map (column :FRUIT/NAME)
-                           (jdbc/plan ds-opts ["select * from fruit order by id"])))]
+                           (jdbc/plan (ds) ["select * from fruit order by id"]
+                                      (default-options))))]
+        (is (= 4 (count result)))
+        (is (= "Apple" (first result)))
+        (is (= "Orange" (last result)))))
+    (testing "from a PreparedStatement"
+      (let [result
+            (with-open [con (jdbc/get-connection (ds))
+                        stmt (jdbc/prepare con
+                                           ["select * from fruit order by id"]
+                                           (default-options))]
+              (r/fold 2 r/cat r/append!
+                      (r/map (column :FRUIT/NAME)
+                             (jdbc/plan stmt nil (default-options)))))]
+        (is (= 4 (count result)))
+        (is (= "Apple" (first result)))
+        (is (= "Orange" (last result)))))
+    (testing "from a Statement"
+      (let [result
+            (with-open [con (jdbc/get-connection (ds))
+                        stmt (prep/statement con (default-options))]
+              (r/fold 2 r/cat r/append!
+                      (r/map (column :FRUIT/NAME)
+                             (jdbc/plan stmt ["select * from fruit order by id"]
+                                        (default-options)))))]
         (is (= 4 (count result)))
         (is (= "Apple" (first result)))
         (is (= "Orange" (last result)))))))
