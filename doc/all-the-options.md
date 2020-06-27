@@ -59,6 +59,8 @@ Any function that might realize a row or a result set will accept:
 * `:label-fn` -- if `:builder-fn` is specified as one of `next.jdbc.result-set`'s `as-modified-*` builders, this option must be present and should specify a string-to-string transformation that will be applied to the column label for each returned column name.
 * `:qualifier-fn` -- if `:builder-fn` is specified as one of `next.jdbc.result-set`'s `as-modified-*` builders, this option should specify a string-to-string transformation that will be applied to the table name for each returned column name. It will be called with an empty string if the table name is not available. It can be omitted for the `as-unqualified-modified-*` variants.
 
+In addition, `execute!` accepts the `:multi-rs true` option to return multiple result sets -- as a vector of result sets.
+
 > Note: Subject to the caveats above about `:builder-fn`, that means that `plan`, `execute!`, `execute-one!`, and the "friendly" SQL functions will all accept these options for generating rows and result sets.
 
 ## Statements & Prepared Statements
