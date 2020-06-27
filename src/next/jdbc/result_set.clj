@@ -614,7 +614,7 @@
   [^PreparedStatement stmt n combinef reducef connectable opts]
   (if-let [rs (stmt->result-set stmt opts)]
     (let [rs-map  (mapify-result-set rs opts)
-          chunk   (fn [batch] (#'r/fjtask #(reduce reducef (combinef) batch)))
+          chunk   (fn [batch] (#'r/fjtask #(r/reduce reducef (combinef) batch)))
           realize (fn [row] (datafiable-row row connectable opts))]
       (loop [batch [] tasks []]
         (if (.next rs)
@@ -622,8 +622,8 @@
             (recur [(realize rs-map)] (conj tasks (#'r/fjfork (chunk batch))))
             (recur (conj batch (realize rs-map)) tasks))
           (#'r/fjinvoke
-            #(reduce combinef (combinef)
-                     (mapv #'r/fjjoin (conj tasks (#'r/fjfork (chunk batch)))))))))
+            #(r/reduce combinef (combinef)
+                       (mapv #'r/fjjoin (conj tasks (#'r/fjfork (chunk batch)))))))))
     (reducef (combinef) {:next.jdbc/update-count (.getUpdateCount stmt)})))
 
 (defn- stmt-sql->result-set
@@ -669,7 +669,7 @@
   [^Statement stmt sql n combinef reducef connectable opts]
   (if-let [rs (stmt-sql->result-set stmt sql opts)]
     (let [rs-map  (mapify-result-set rs opts)
-          chunk   (fn [batch] (#'r/fjtask #(reduce reducef (combinef) batch)))
+          chunk   (fn [batch] (#'r/fjtask #(r/reduce reducef (combinef) batch)))
           realize (fn [row] (datafiable-row row connectable opts))]
       (loop [batch [] tasks []]
         (if (.next rs)
@@ -677,8 +677,8 @@
             (recur [(realize rs-map)] (conj tasks (#'r/fjfork (chunk batch))))
             (recur (conj batch (realize rs-map)) tasks))
           (#'r/fjinvoke
-            #(reduce combinef (combinef)
-                     (mapv #'r/fjjoin (conj tasks (#'r/fjfork (chunk batch)))))))))
+            #(r/reduce combinef (combinef)
+                       (mapv #'r/fjjoin (conj tasks (#'r/fjfork (chunk batch)))))))))
     (reducef (combinef) {:next.jdbc/update-count (.getUpdateCount stmt)})))
 
 (extend-protocol p/Executable
