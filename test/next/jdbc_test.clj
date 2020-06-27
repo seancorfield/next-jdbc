@@ -2,7 +2,8 @@
 
 (ns next.jdbc-test
   "Basic tests for the primary API of `next.jdbc`."
-  (:require [clojure.string :as str]
+  (:require [clojure.core.reducers :as r]
+            [clojure.string :as str]
             [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc :as jdbc]
             [next.jdbc.connection :as c]
@@ -16,7 +17,8 @@
 
 (set! *warn-on-reflection* true)
 
-(use-fixtures :once with-test-db)
+;; around each test because of the folding tests using 1,000 rows
+(use-fixtures :each with-test-db)
 
 (specs/instrument)
 
@@ -292,6 +294,57 @@ VALUES ('Pear', 'green', 49, 47)
                    result))))
         (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
         (is (= ac (.getAutoCommit con)))))))
+
+(deftest folding-test
+  (jdbc/execute-one! (ds) ["delete from fruit"])
+  (with-open [con (jdbc/get-connection (ds))
+              ps  (jdbc/prepare con ["insert into fruit(name) values (?)"])]
+    (prep/execute-batch! ps (mapv #(vector (str "Fruit-" %)) (range 1 1001))))
+  (testing "foldable result set"
+    (testing "from a Connection"
+      (let [result
+            (with-open [con (jdbc/get-connection (ds))]
+              (r/foldcat
+               (r/map (column :FRUIT/NAME)
+                      (jdbc/plan con ["select * from fruit order by id"]
+                                 (default-options)))))]
+        (is (= 1000 (count result)))
+        (is (= "Fruit-1" (first result)))
+        (is (= "Fruit-1000" (last result)))))
+    (testing "from a DataSource"
+      (doseq [n [1 2 3 4 5 100 300 500 700 900 1000 1100]]
+        (testing (str "folding with n = " n)
+          (let [result
+                (r/fold n r/cat r/append!
+                        (r/map (column :FRUIT/NAME)
+                               (jdbc/plan (ds) ["select * from fruit order by id"]
+                                          (default-options))))]
+            (is (= 1000 (count result)))
+            (is (= "Fruit-1" (first result)))
+            (is (= "Fruit-1000" (last result)))))))
+    (testing "from a PreparedStatement"
+      (let [result
+            (with-open [con (jdbc/get-connection (ds))
+                        stmt (jdbc/prepare con
+                                           ["select * from fruit order by id"]
+                                           (default-options))]
+              (r/foldcat
+               (r/map (column :FRUIT/NAME)
+                      (jdbc/plan stmt nil (default-options)))))]
+        (is (= 1000 (count result)))
+        (is (= "Fruit-1" (first result)))
+        (is (= "Fruit-1000" (last result)))))
+    (testing "from a Statement"
+      (let [result
+            (with-open [con (jdbc/get-connection (ds))
+                        stmt (prep/statement con (default-options))]
+              (r/foldcat
+               (r/map (column :FRUIT/NAME)
+                      (jdbc/plan stmt ["select * from fruit order by id"]
+                                 (default-options)))))]
+        (is (= 1000 (count result)))
+        (is (= "Fruit-1" (first result)))
+        (is (= "Fruit-1000" (last result)))))))
 
 (deftest connection-tests
   (testing "datasource via jdbcUrl"
