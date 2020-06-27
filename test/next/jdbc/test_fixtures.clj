@@ -21,9 +21,11 @@
 (def ^:private test-sqlite {:dbtype "sqlite" :dbname "clojure_test_sqlite"})
 
 ;; this is just a dummy db-spec -- it's handled in with-test-db below
-(def ^:private test-postgres {:dbtype "embedded-postgres"})
+(def ^:private test-postgres-map {:dbtype "embedded-postgres"})
+(def ^:private test-postgres
+  (when-not (System/getenv "NEXT_JDBC_NO_POSTGRES") test-postgres-map))
 ;; it takes a while to spin up so we kick it off at startup
-(defonce embedded-pg (future (EmbeddedPostgres/start)))
+(defonce embedded-pg (when test-postgres (future (EmbeddedPostgres/start))))
 
 (def ^:private test-mysql-map
   (merge (if (System/getenv "NEXT_JDBC_TEST_MARIADB")
@@ -48,8 +50,9 @@
 
 (def ^:private test-db-specs
   (cond-> [test-derby test-h2-mem test-h2 test-hsql test-sqlite test-postgres]
-    test-mysql (conj test-mysql)
-    test-mssql (conj test-mssql test-jtds)))
+    test-postgres (conj test-postgres)
+    test-mysql    (conj test-mysql)
+    test-mssql    (conj test-mssql test-jtds)))
 
 (def ^:private test-db-spec (atom nil))
 
