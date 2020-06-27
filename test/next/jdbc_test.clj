@@ -296,12 +296,10 @@ VALUES ('Pear', 'green', 49, 47)
         (is (= ac (.getAutoCommit con)))))))
 
 (deftest folding-test
-  (println "=== folding-test setup for" (:dbtype (db)))
   (jdbc/execute-one! (ds) ["delete from fruit"])
   (with-open [con (jdbc/get-connection (ds))
               ps  (jdbc/prepare con ["insert into fruit(name) values (?)"])]
     (prep/execute-batch! ps (mapv #(vector (str "Fruit-" %)) (range 1 1001))))
-  (println "=== folding-test running for" (:dbtype (db)))
   (testing "foldable result set"
     (testing "from a Connection"
       (let [result
@@ -315,7 +313,6 @@ VALUES ('Pear', 'green', 49, 47)
         (is (= "Fruit-1000" (last result)))))
     (testing "from a DataSource"
       (doseq [n [1 2 3 4 5 100 300 500 700 900 1000 1100]]
-        (println "   === partition size" n)
         (testing (str "folding with n = " n)
           (let [result
                 (r/fold n r/cat r/append!
