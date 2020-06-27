@@ -662,12 +662,13 @@
   "Given a `Statement`, a SQL command, execute it and return a
   `ResultSet` if possible. We always attempt to return keys."
   ^ResultSet
-  [^Statement stmt ^String sql]
+  [^Statement stmt ^String sql opts]
   (if (.execute stmt sql)
     (.getResultSet stmt)
-    (try
-      (.getGeneratedKeys stmt)
-      (catch Exception _))))
+    (when (:return-keys opts)
+      (try
+        (.getGeneratedKeys stmt)
+        (catch Exception _)))))
 
 (defn- reduce-stmt-sql
   "Execute the SQL command on the given `Statement`, attempt to get either
@@ -678,7 +679,7 @@
   a hash map containing `:next.jdbc/update-count` and the number of rows
   updated, with the supplied function and initial value applied."
   [^Statement stmt sql f init opts]
-  (if-let [rs (stmt-sql->result-set stmt sql)]
+  (if-let [rs (stmt-sql->result-set stmt sql opts)]
     (let [rs-map (mapify-result-set rs opts)]
       (loop [init' init]
         (if (.next rs)
@@ -698,7 +699,7 @@
   a hash map containing `:next.jdbc/update-count` and the number of rows
   updated, and fold that as a single element collection."
   [^Statement stmt sql n combinef reducef connectable opts]
-  (if-let [rs (stmt-sql->result-set stmt sql)]
+  (if-let [rs (stmt-sql->result-set stmt sql opts)]
     (let [rs-map  (mapify-result-set rs opts)
           chunk   (fn [batch] (#'r/fjtask #(r/reduce reducef (combinef) batch)))
           realize (fn [row] (datafiable-row row connectable opts))]
