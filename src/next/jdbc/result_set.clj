@@ -880,8 +880,7 @@
                      (.getConnection this) this go (assoc opts :return-keys true))]
           (recur (.getMoreResults this) (conj acc rs))
           acc))
-      (if-let [rs (stmt-sql->result-set this (first sql-params)
-                                        (assoc opts :return-keys true))]
+      (if-let [rs (stmt-sql->result-set this (first sql-params))]
         (datafiable-result-set rs (.getConnection this) opts)
         [{:next.jdbc/update-count (.getUpdateCount this)}])))
 
