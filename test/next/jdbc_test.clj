@@ -17,7 +17,8 @@
 
 (set! *warn-on-reflection* true)
 
-(use-fixtures :once with-test-db)
+;; around each test because of the folding tests using 1,000 rows
+(use-fixtures :each with-test-db)
 
 (specs/instrument)
 
@@ -295,57 +296,58 @@ VALUES ('Pear', 'green', 49, 47)
         (is (= ac (.getAutoCommit con)))))))
 
 (deftest folding-test
+  (println "=== folding-test setup for" (:dbtype (db)))
+  (jdbc/execute-one! (ds) ["delete from fruit"])
+  (doseq [n (range 1 1001)]
+    (jdbc/execute-one! (ds) ["insert into fruit(name) values (?)"
+                             (str "Fruit-" n)]))
+  (println "=== folding-test running for" (:dbtype (db)))
   (testing "foldable result set"
     (testing "from a Connection"
       (let [result
             (with-open [con (jdbc/get-connection (ds))]
-              (r/fold 2 r/cat r/append!
-                      (r/map (column :FRUIT/NAME)
-                             (jdbc/plan con ["select * from fruit order by id"]
-                                        (default-options)))))]
-        (is (= 4 (count result)))
-        (is (= "Apple" (first result)))
-        (is (= "Orange" (last result)))))
+              (r/foldcat
+               (r/map (column :FRUIT/NAME)
+                      (jdbc/plan con ["select * from fruit order by id"]
+                                 (default-options)))))]
+        (is (= 1000 (count result)))
+        (is (= "Fruit-1" (first result)))
+        (is (= "Fruit-1000" (last result)))))
     (testing "from a DataSource"
-      (let [result
-            (r/fold 2 r/cat r/append!
-                    (r/map (column :FRUIT/NAME)
-                           (jdbc/plan (ds) ["select * from fruit order by id"]
-                                      (default-options))))]
-        (is (= 4 (count result)))
-        (is (= "Apple" (first result)))
-        (is (= "Orange" (last result))))
-      (let [result
-            (r/fold 1 r/cat r/append!
-                    (r/map (column :FRUIT/NAME)
-                           (jdbc/plan (ds) ["select * from fruit order by id"]
-                                      (default-options))))]
-        (is (= 4 (count result)))
-        (is (= "Apple" (first result)))
-        (is (= "Orange" (last result)))))
+      (doseq [n [1 2 3 4 5 100 300 500 700 900 1000 1100]]
+        (println "   === partition size" n)
+        (testing (str "folding with n = " n)
+          (let [result
+                (r/fold n r/cat r/append!
+                        (r/map (column :FRUIT/NAME)
+                               (jdbc/plan (ds) ["select * from fruit order by id"]
+                                          (default-options))))]
+            (is (= 1000 (count result)))
+            (is (= "Fruit-1" (first result)))
+            (is (= "Fruit-1000" (last result)))))))
     (testing "from a PreparedStatement"
       (let [result
             (with-open [con (jdbc/get-connection (ds))
                         stmt (jdbc/prepare con
                                            ["select * from fruit order by id"]
                                            (default-options))]
-              (r/fold 2 r/cat r/append!
-                      (r/map (column :FRUIT/NAME)
-                             (jdbc/plan stmt nil (default-options)))))]
-        (is (= 4 (count result)))
-        (is (= "Apple" (first result)))
-        (is (= "Orange" (last result)))))
+              (r/foldcat
+               (r/map (column :FRUIT/NAME)
+                      (jdbc/plan stmt nil (default-options)))))]
+        (is (= 1000 (count result)))
+        (is (= "Fruit-1" (first result)))
+        (is (= "Fruit-1000" (last result)))))
     (testing "from a Statement"
       (let [result
             (with-open [con (jdbc/get-connection (ds))
                         stmt (prep/statement con (default-options))]
-              (r/fold 2 r/cat r/append!
-                      (r/map (column :FRUIT/NAME)
-                             (jdbc/plan stmt ["select * from fruit order by id"]
-                                        (default-options)))))]
-        (is (= 4 (count result)))
-        (is (= "Apple" (first result)))
-        (is (= "Orange" (last result)))))))
+              (r/foldcat
+               (r/map (column :FRUIT/NAME)
+                      (jdbc/plan stmt ["select * from fruit order by id"]
+                                 (default-options)))))]
+        (is (= 1000 (count result)))
+        (is (= "Fruit-1" (first result)))
+        (is (= "Fruit-1000" (last result)))))))
 
 (deftest connection-tests
   (testing "datasource via jdbcUrl"
