@@ -298,9 +298,9 @@ VALUES ('Pear', 'green', 49, 47)
 (deftest folding-test
   (println "=== folding-test setup for" (:dbtype (db)))
   (jdbc/execute-one! (ds) ["delete from fruit"])
-  (doseq [n (range 1 1001)]
-    (jdbc/execute-one! (ds) ["insert into fruit(name) values (?)"
-                             (str "Fruit-" n)]))
+  (with-open [con (jdbc/get-connection (ds))
+              ps  (jdbc/prepare con ["insert into fruit(name) values (?)"])]
+    (prep/execute-batch! ps (mapv #(vector (str "Fruit-" %)) (range 1 1001))))
   (println "=== folding-test running for" (:dbtype (db)))
   (testing "foldable result set"
     (testing "from a Connection"
