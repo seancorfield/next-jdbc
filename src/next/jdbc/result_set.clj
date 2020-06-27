@@ -698,7 +698,7 @@
   a hash map containing `:next.jdbc/update-count` and the number of rows
   updated, and fold that as a single element collection."
   [^Statement stmt sql n combinef reducef connectable opts]
-  (if-let [rs (stmt-sql->result-set stmt sql opts)]
+  (if-let [rs (stmt-sql->result-set stmt sql)]
     (let [rs-map  (mapify-result-set rs opts)
           chunk   (fn [batch] (#'r/fjtask #(r/reduce reducef (combinef) batch)))
           realize (fn [row] (datafiable-row row connectable opts))]
