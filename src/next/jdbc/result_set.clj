@@ -870,7 +870,8 @@
   (-execute-one [this sql-params opts]
     (assert (= 1 (count sql-params))
             "Parameters cannot be provided when executing a non-prepared Statement")
-    (if-let [rs (stmt-sql->result-set this (first sql-params))]
+    (if-let [rs (stmt-sql->result-set this (first sql-params)
+                                      (assoc opts :return-keys true))]
       (let [builder-fn (get opts :builder-fn as-maps)
             builder    (builder-fn rs opts)]
         (when (.next rs)
@@ -886,7 +887,8 @@
                      (.getConnection this) this go (assoc opts :return-keys true))]
           (recur (.getMoreResults this) (conj acc rs))
           acc))
-      (if-let [rs (stmt-sql->result-set this (first sql-params))]
+      (if-let [rs (stmt-sql->result-set this (first sql-params)
+                                        (assoc opts :return-keys true))]
         (datafiable-result-set rs (.getConnection this) opts)
         [{:next.jdbc/update-count (.getUpdateCount this)}])))
 
