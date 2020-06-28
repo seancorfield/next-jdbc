@@ -1,11 +1,44 @@
 ;; copyright (c) 2018-2020 Sean Corfield, all rights reserved
 
-(ns ^:no-doc next.jdbc.transaction
-  "Implementation of SQL transaction logic."
+(ns next.jdbc.transaction
+  "Implementation of SQL transaction logic.
+
+  In general, you cannot nest transactions. `clojure.java.jdbc` would
+  ignore any attempt to create a nested transaction, even tho' some
+  databases do support it. `next.jdbc` allows you to call `with-transaction`
+  even while you are inside an active transaction, but the behavior may
+  vary across databases and the commit or rollback boundaries may not be
+  what you expect. In order to avoid two transactions constructed on the
+  same connection from interfering with each other, `next.jdbc` locks on
+  the `Connection` object (this prevents concurrent transactions on separate
+  threads from interfering but will cause deadlock on a single thread --
+  so beware).
+
+  Consequently, this namespace exposes a dynamic variable, `*nested-tx*`,
+  which can be used to vary the behavior when an attempt is made to start
+  a transaction when you are already inside a transaction."
   (:require [next.jdbc.protocols :as p])
   (:import (java.sql Connection)))
 
 (set! *warn-on-reflection* true)
+
+(defonce ^:dynamic
+  ^{:doc "Controls the behavior when a nested transaction is attempted.
+
+  Possible values are:
+  * `:allow` -- the default: assumes you know what you are doing!
+  * `:ignore` -- the same behavior as `clojure.java.jdbc`: the nested
+      transaction is simply ignored and any SQL operations inside it are
+      executed in the context of the outer transaction.
+  * `:prohibit` -- any attempt to create a nested transaction will throw
+      an exception: this is the safest but most restrictive approach so
+      that you can make sure you don't accidentally have any attempts
+      to create nested transactions (since that might be a bug in your code)."}
+  *nested-tx*
+  :allow)
+
+(defonce ^:private ^:dynamic ^{:doc "Used to detect nested transactions."}
+  *active-tx* false)
 
 (def ^:private isolation-levels
   "Transaction isolation levels."
@@ -82,12 +115,35 @@
 (extend-protocol p/Transactable
   java.sql.Connection
   (-transact [this body-fn opts]
-             (locking this
-                      (transact* this body-fn opts)))
+    (cond (or (not *active-tx*) (= :allow *nested-tx*))
+      (locking this
+        (binding [*active-tx* true]
+          (transact* this body-fn opts)))
+      (= :ignore *nested-tx*)
+      (body-fn this)
+      (= :prohibit *nested-tx*)
+      (throw (IllegalStateException. "Nested transactions are prohibited"))
+      :else
+      (throw (IllegalArgumentException.
+              (str "*nested-tx* ("
+                   *nested-tx*
+                   ") was not :allow, :ignore, or :prohibit")))))
   javax.sql.DataSource
   (-transact [this body-fn opts]
-             (with-open [con (p/get-connection this opts)]
-               (transact* con body-fn opts)))
+    (cond (or (not *active-tx*) (= :allow *nested-tx*))
+      (binding [*active-tx* true]
+        (with-open [con (p/get-connection this opts)]
+          (transact* con body-fn opts)))
+      (= :ignore *nested-tx*)
+      (with-open [con (p/get-connection this opts)]
+        (body-fn con))
+      (= :prohibit *nested-tx*)
+      (throw (IllegalStateException. "Nested transactions are prohibited"))
+      :else
+      (throw (IllegalArgumentException.
+              (str "*nested-tx* ("
+                   *nested-tx*
+                   ") was not :allow, :ignore, or :prohibit")))))
   Object
   (-transact [this body-fn opts]
-             (p/-transact (p/get-datasource this) body-fn opts)))
+    (p/-transact (p/get-datasource this) body-fn opts)))
