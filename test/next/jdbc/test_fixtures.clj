@@ -58,6 +58,8 @@
 
 (defn derby? [] (= "derby" (:dbtype @test-db-spec)))
 
+(defn hsqldb? [] (= "hsqldb" (:dbtype @test-db-spec)))
+
 (defn jtds? [] (= "jtds" (:dbtype @test-db-spec)))
 
 (defn maria? [] (= "mariadb" (:dbtype @test-db-spec)))
@@ -69,6 +71,8 @@
 (defn postgres? [] (= "embedded-postgres" (:dbtype @test-db-spec)))
 
 (defn sqlite? [] (= "sqlite" (:dbtype @test-db-spec)))
+
+(defn stored-proc? [] (not (#{"derby" "h2" "h2:mem" "sqlite"} (:dbtype @test-db-spec))))
 
 (defn column [k]
   (let [n (namespace k)]
@@ -121,7 +125,7 @@
       (reset! test-datasource (jdbc/get-datasource db)))
     (let [fruit (if (mysql?) "fruit" "FRUIT") ; MySQL is case sensitive!
           auto-inc-pk
-          (cond (or (derby?) (= "hsqldb" (:dbtype db)))
+          (cond (or (derby?) (hsqldb?))
                 (str "GENERATED ALWAYS AS IDENTITY"
                      " (START WITH 1, INCREMENT BY 1)"
                      " PRIMARY KEY")
@@ -135,6 +139,10 @@
                 :else
                 "AUTO_INCREMENT PRIMARY KEY")]
       (with-open [con (jdbc/get-connection (ds))]
+        (when (stored-proc?)
+          (try
+            (jdbc/execute-one! con ["DROP PROCEDURE FRUITP"])
+            (catch Throwable _)))
         (try
           (do-commands con [(str "DROP TABLE " fruit)])
           (catch Exception _))
@@ -158,14 +166,35 @@ CREATE TABLE " fruit " (
   COST INT DEFAULT NULL,
   GRADE REAL DEFAULT NULL
 )")])
-        (sql/insert-multi! con :fruit
-                           [:name :appearance :cost :grade]
-                           [["Apple" "red" 59 nil]
-                            ["Banana" "yellow" nil 92.2]
-                            ["Peach" nil 139 90.0]
-                            ["Orange" "juicy" 89 88.6]]
-                           {:return-keys false})
-        (t)))))
+        (when (stored-proc?)
+          (let [[begin end] (if (postgres?) ["$$" "$$"] ["BEGIN" "END"])]
+            (try
+              (do-commands con [(str "
+CREATE PROCEDURE FRUITP" (cond (hsqldb?) "() READS SQL DATA DYNAMIC RESULT SETS 2 "
+                               (mssql?) " AS "
+                               (postgres?) "() LANGUAGE SQL AS "
+                               :else "() ") "
+ " begin " " (if (hsqldb?)
+               (str "ATOMIC
+  DECLARE result1 CURSOR WITH RETURN FOR SELECT * FROM " fruit " WHERE COST < 90;
+  DECLARE result2 CURSOR WITH RETURN FOR SELECT * FROM " fruit " WHERE GRADE >= 90.0;
+  OPEN result1;
+  OPEN result2;")
+               (str "
+  SELECT * FROM " fruit " WHERE COST < 90;
+  SELECT * FROM " fruit " WHERE GRADE >= 90.0;")) "
+ " end "
+")])
+              (catch Throwable t
+                (println 'procedure (:dbtype db) (ex-message t))))))
+       (sql/insert-multi! con :fruit
+                          [:name :appearance :cost :grade]
+                          [["Apple" "red" 59 nil]
+                           ["Banana" "yellow" nil 92.2]
+                           ["Peach" nil 139 90.0]
+                           ["Orange" "juicy" 89 88.6]]
+                          {:return-keys false})
+       (t)))))
 
 (comment
   ;; this is a convenience to bring next.jdbc's test dependencies
