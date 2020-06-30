@@ -31,7 +31,7 @@ In particular, this means that you can't globally override the default options (
 `next.jdbc` has a deliberately narrow primary API that has (almost) no direct overlap with `clojure.java.jdbc`:
 
 * `get-datasource` -- has no equivalent in `clojure.java.jdbc` but is intended to emphasize `javax.sql.DataSource` as a starting point,
-* `get-connection` -- overlaps with `clojure.java.jdbc` (and returns a `java.sql.Connection`) but accepts only a subset of the options (`:dbtype`/`:dbname` hash map, `String` JDBC URI); `clojure.java.jdbc/get-connection` accepts `{:datasource ds}` whereas `next.jdbc/get-connection` accepts the `javax.sql.DataSource` object directly,
+* `get-connection` -- overlaps with `clojure.java.jdbc` (and returns a `java.sql.Connection`) but accepts only a subset of the options (`:dbtype`/`:dbname` hash map, `String` JDBC URL); `clojure.java.jdbc/get-connection` accepts `{:datasource ds}` whereas `next.jdbc/get-connection` accepts the `javax.sql.DataSource` object directly,
 * `prepare` -- somewhat similar to `clojure.java.jdbc/prepare-statement` but it accepts a vector of SQL and parameters (compared to just a raw SQL string),
 * `plan` -- somewhat similar to `clojure.java.jdbc/reducible-query` but accepts arbitrary SQL statements for execution,
 * `execute!` -- has no direct equivalent in `clojure.java.jdbc` (but it can replace most uses of both `query` and `db-do-commands`),
@@ -40,7 +40,7 @@ In particular, this means that you can't globally override the default options (
 * `with-transaction` -- similar to `clojure.java.jdbc/with-db-transaction`,
 * `with-options` -- provides a way to specify "default options" over a group of operations, by wrapping the connectable (datasource or connection).
 
-If you were using a bare `db-spec` hash map with `:dbtype`/`:dbname`, or a JDBC URI string everywhere, that should mostly work with `next.jdbc` since most functions accept a "connectable", but it would be better to create a datasource first, and then pass that around. Note that `clojure.java.jdbc` allowed the `jdbc:` prefix in a JDBC URI to be omitted but `next.jdbc` _requires that prefix!_
+If you were using a bare `db-spec` hash map with `:dbtype`/`:dbname`, or a JDBC URL string everywhere, that should mostly work with `next.jdbc` since most functions accept a "connectable", but it would be better to create a datasource first, and then pass that around. Note that `clojure.java.jdbc` allowed the `jdbc:` prefix in a JDBC URL to be omitted but `next.jdbc` _requires that prefix!_
 
 If you were already creating `db-spec` as a pooled connection datasource -- a `{:datasource ds}` hashmap -- then passing `(:datasource db-spec)` to the `next.jdbc` functions is the simplest migration path. If you are migrating piecemeal and want to support _both_ `clojure.java.jdbc` _and_ `next.jdbc` at the same time in your code, you should consider using a datasource as the common way to work with both libraries. You can using `next.jdbc`'s `get-datasource` or the `->pool` function (in `next.jdbc.connection`) to create the a `javax.sql.DataSource` and then build a `db-spec` hash map with it (`{:datasource ds}`) and pass that around your program. `clojure.java.jdbc` calls can use that as-is, `next.jdbc` calls can use `(:datasource db-spec)`, so you don't have to adjust any of your call chains (assuming you're passing `db-spec` around) and you can migrate one function at a time.
 

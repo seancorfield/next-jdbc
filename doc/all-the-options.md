@@ -30,7 +30,7 @@ Any path that calls `get-connection` will accept the following options:
 
 If you need additional options set on a connection, you can either use Java interop to set them directly, or provide them as part of the "db spec" hash map passed to `get-datasource` (although then they will apply to _all_ connections obtained from that datasource).
 
-> Note: If `plan`, `execute!`, or `execute-one!` are passed a `DataSource`, a "db spec" hash map, or a JDBC URI string, they will call `get-connection`, so they will accept the above options in those cases.
+> Note: If `plan`, `execute!`, or `execute-one!` are passed a `DataSource`, a "db spec" hash map, or a JDBC URL string, they will call `get-connection`, so they will accept the above options in those cases.
 
 ## Generating SQL
 
@@ -85,7 +85,7 @@ Any function that creates a `PreparedStatement` will additionally accept the fol
 
 Not all databases or drivers support all of these options, or all values for any given option. If `:return-keys` is a vector of column names and that is not supported, `next.jdbc` will attempt a generic "return generated keys" option instead. If that is not supported, `next.jdbc` will fall back to a regular SQL operation. If other options are not supported, you may get a `SQLException`.
 
-> Note: If `plan`, `execute!`, or `execute-one!` are passed a `DataSource`, a "db spec" hash map, or a JDBC URI string, they will call `prepare` to create a `PreparedStatement`, so they will accept the above options in those cases.
+> Note: If `plan`, `execute!`, or `execute-one!` are passed a `DataSource`, a "db spec" hash map, or a JDBC URL string, they will call `prepare` to create a `PreparedStatement`, so they will accept the above options in those cases.
 
 In addition the the above, `next.jdbc.prepare/execute-batch!` (which does **not** create a `PreparedStatement`) accepts an options hash map that can also contain the following:
 

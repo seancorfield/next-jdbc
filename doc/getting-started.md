@@ -22,7 +22,7 @@ for `project.clj` or `build.boot`.
 
 ## An Example REPL Session
 
-To start using `next.jdbc`, you need to create a datasource (an instance of `javax.sql.DataSource`). You can use `next.jdbc/get-datasource` with either a "db-spec" -- a hash map describing the database you wish to connect to -- or a JDBC URI string. Or you can construct a datasource from one of the connection pooling libraries out there, such as [HikariCP](https://brettwooldridge.github.io/HikariCP/) or [c3p0](https://www.mchange.com/projects/c3p0/) -- see [Connection Pooling](#connection-pooling) below.
+To start using `next.jdbc`, you need to create a datasource (an instance of `javax.sql.DataSource`). You can use `next.jdbc/get-datasource` with either a "db-spec" -- a hash map describing the database you wish to connect to -- or a JDBC URL string. Or you can construct a datasource from one of the connection pooling libraries out there, such as [HikariCP](https://brettwooldridge.github.io/HikariCP/) or [c3p0](https://www.mchange.com/projects/c3p0/) -- see [Connection Pooling](#connection-pooling) below.
 
 For the examples in this documentation, we will use a local H2 database on disk, and we'll use the [Clojure CLI tools](https://clojure.org/guides/deps_and_cli) and `deps.edn`:
 

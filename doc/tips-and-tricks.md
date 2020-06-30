@@ -2,16 +2,6 @@
 
 This page contains various tips and tricks that make it easier to use `next.jdbc` with a variety of databases. It is mostly organized by database, but there are a few that are cross-database and those are listed first.
 
-## Reducing and Folding with `plan`
-
-Most of this documentation describes using `plan` specifically for reducing and notes that you can avoid the overhead of realizing rows from the `ResultSet` into Clojure data structures if your reducing function uses only functions that get column values by name. If you perform any function on the row that would require an actual hash map or a sequence, the row will be realized into a full Clojure hash map via the builder function passed in the options (or via `next.jdbc.result-set/as-maps` by default).
-
-One of the benefits of reducing over `plan` is that you can stream very large result sets, very efficiently, without having the entire result set in memory (assuming your reducing function doesn't build a data structure that is too large!). See the tips below on **Streaming Result Sets**.
-
-The result of `plan` is also foldable in the [clojure.core.reducers](https://clojure.org/reference/reducers) sense. While you could use `execute!` to produce a vector of fully-realized rows as hash maps and then fold that vector (Clojure's vectors support fork-join parallel reduce-combine), that wouldn't be possible for very large result sets. If you fold the result of `plan`, the result set will be partitioned and processed using fork-join parallel reduce-combine. Unlike reducing over `plan`, each row **is** realized into a Clojure data structure and each batch is forked for reduction as soon as that many rows have been realized. By default, `fold`'s batch size is 512 but you can specify a different value in the 4-arity call. Once the entire result set has been read, the last (partial) batch is forked for reduction. The combining operations are forked and interleaved with the reducing operations, so the order (of forked tasks) is batch-1, batch-2, combine-1-2, batch-3, combine-1&2-3, batch-4, combine-1&2&3-4, etc. The amount of parallelization you get will depend on many factors including the number of processors, the speed of your reducing function, the speed of your combining function, and the speed with which result sets can actually be streamed from your database.
-
-There is no back pressure here so if your reducing function is slow, you may end up with more of the realized result set in memory than your system can cope with.
-
 ## CLOB & BLOB SQL Types
 
 Columns declared with the `CLOB` or `BLOB` SQL types are typically rendered into Clojure result sets as database-specific custom types but they should implement `java.sql.Clob` or `java.sql.Blob` (as appropriate). In general, you can only read the data out of those Java objects during the current transaction, which effectively means that you need to do it either inside the reduction (for `plan`) or inside the result set builder (for `execute!` or `execute-one!`). If you always treat these types the same way for all columns across the whole of your application, you could simply extend `next.jdbc.result-set/ReadableColumn` to `java.sql.Clob` (and/or `java.sql.Blob`). Here's an example for reading `CLOB` into a `String`:
@@ -85,6 +75,16 @@ Examples:
   (jdbc/execute! ps))
 ```
 
+## Reducing and Folding with `plan`
+
+Most of this documentation describes using `plan` specifically for reducing and notes that you can avoid the overhead of realizing rows from the `ResultSet` into Clojure data structures if your reducing function uses only functions that get column values by name. If you perform any function on the row that would require an actual hash map or a sequence, the row will be realized into a full Clojure hash map via the builder function passed in the options (or via `next.jdbc.result-set/as-maps` by default).
+
+One of the benefits of reducing over `plan` is that you can stream very large result sets, very efficiently, without having the entire result set in memory (assuming your reducing function doesn't build a data structure that is too large!). See the tips below on **Streaming Result Sets**.
+
+The result of `plan` is also foldable in the [clojure.core.reducers](https://clojure.org/reference/reducers) sense. While you could use `execute!` to produce a vector of fully-realized rows as hash maps and then fold that vector (Clojure's vectors support fork-join parallel reduce-combine), that wouldn't be possible for very large result sets. If you fold the result of `plan`, the result set will be partitioned and processed using fork-join parallel reduce-combine. Unlike reducing over `plan`, each row **is** realized into a Clojure data structure and each batch is forked for reduction as soon as that many rows have been realized. By default, `fold`'s batch size is 512 but you can specify a different value in the 4-arity call. Once the entire result set has been read, the last (partial) batch is forked for reduction. The combining operations are forked and interleaved with the reducing operations, so the order (of forked tasks) is batch-1, batch-2, combine-1-2, batch-3, combine-1&2-3, batch-4, combine-1&2&3-4, etc. The amount of parallelization you get will depend on many factors including the number of processors, the speed of your reducing function, the speed of your combining function, and the speed with which result sets can actually be streamed from your database.
+
+There is no back pressure here so if your reducing function is slow, you may end up with more of the realized result set in memory than your system can cope with.
+
 ## MS SQL Server
 
 In MS SQL Server, the generated key from an insert comes back as `:GENERATED_KEYS`.
@@ -98,6 +98,10 @@ In MySQL, the generated key from an insert comes back as `:GENERATED_KEY`. In Ma
 MySQL generally stores tables as files so they are case-sensitive if your O/S is (Linux) or case-insensitive if your O/S is not (Mac, Windows) but the column names are generally case-insensitive. This can matter when if you use `next.jdbc.result-set/as-lower-maps` because that will lower-case the table names (as well as the column names) so if you are round-tripping based on the keys you get back, you may produce an incorrect table name in terms of case. You'll also need to be careful about `:table-fn`/`:column-fn` because of this.
 
 It's also worth noting that column comparisons are case-insensitive so `WHERE foo = 'BAR'` will match `"bar"` or `"BAR"` etc.
+
+### Batch Statements
+
+Even when using `next.jdbc.prepare/execute-batch!`, MySQL will still send multiple statements to the database unless you specify `:rewriteBatchedStatements true` as part of the db-spec hash map or JDBC URL when the datasource is created.
 
 ### Streaming Result Sets
 
@@ -119,26 +123,9 @@ If you have a query where you want to select where a column is `IN` a sequence o
 
 What does this mean for your use of `next.jdbc`? In `plan`, `execute!`, and `execute-one!`, you can use `col = ANY(?)` in the SQL string and a single primitive array parameter, such as `(int-array [1 2 3 4])`. That means that in `next.jdbc.sql`'s functions that take a where clause (`find-by-keys`, `update!`, and `delete!`) you can specify `["col = ANY(?)" (int-array data)]` for what would be a `col IN (?,?,?,,,?)` where clause for other databases and require multiple values.
 
-PostgreSQL has a SQL extension for defining enumerated types and the default `set-parameter` implementation will not work for those. You can use `next.jdbc.types/as-other` to wrap string values in a way that the JDBC driver will convert them to enumerated type values:
+### Batch Statements
 
-```sql
-CREATE TYPE language AS ENUM('en','fr','de');
-
-CREATE TABLE person (
-  ...
-  speaks language NOT NULL,
-  ...
-);
-```
-
-```clojure
-(require '[next.jdbc.sql :as sql]
-         '[next.jdbc.types :refer [as-other]])
-
-(sql/insert! ds :person {:speaks (as-other "fr")})
-```
-
-That call produces a vector `["fr"]` with metadata that implements `set-parameter` such that `.setObject()` is called with `java.sql.Types/OTHER` which allows PostgreSQL to "convert" the string `"fr"` to the corresponding `language` enumerated type value.
+Even when using `next.jdbc.prepare/execute-batch!`, PostgreSQL will still send multiple statements to the database unless you specify `:reWriteBatchedInserts true` as part of the db-spec hash map or JDBC URL when the datasource is created.
 
 ### Streaming Result Sets
 
@@ -192,6 +179,29 @@ You can enable this by extending `SettableParameter` to the appropriate (Java) t
 In addition, if you want `java.time.Instant`, `java.time.LocalDate`, and `java.time.LocalDateTime` to be automatically converted to SQL data types, requiring `next.jdbc.date-time` will enable those as well (by extending `SettableParameter` for you).
 
 `next.jdbc.date-time` also includes functions that you can call at application startup to extend `ReadableColumn` to either return `java.time.Instant` or `java.time.LocalDate`/`java.time.LocalDateTime` (as well as a function to restore the default behavior of returning `java.sql.Date` and `java.sql.Timestamp`).
+
+### Working with Enumerated Types
+
+PostgreSQL has a SQL extension for defining enumerated types and the default `set-parameter` implementation will not work for those. You can use `next.jdbc.types/as-other` to wrap string values in a way that the JDBC driver will convert them to enumerated type values:
+
+```sql
+CREATE TYPE language AS ENUM('en','fr','de');
+
+CREATE TABLE person (
+  ...
+  speaks language NOT NULL,
+  ...
+);
+```
+
+```clojure
+(require '[next.jdbc.sql :as sql]
+         '[next.jdbc.types :refer [as-other]])
+
+(sql/insert! ds :person {:speaks (as-other "fr")})
+```
+
+That call produces a vector `["fr"]` with metadata that implements `set-parameter` such that `.setObject()` is called with `java.sql.Types/OTHER` which allows PostgreSQL to "convert" the string `"fr"` to the corresponding `language` enumerated type value.
 
 ### Working with JSON and JSONB
 

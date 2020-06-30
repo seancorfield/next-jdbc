@@ -2,6 +2,11 @@
 
 Only accretive/fixative changes will be made from now on.
 
+Changes made on **develop** since the 1.1.547 release:
+* Correct MySQL batch statement rewrite tip: it's `:rewriteBatchedStatements true` (plural). Also surface the batch statement tips in the **Tips & Tricks** page.
+* Clarify how combining is interleaving with reducing in **Reducing and Folding with `plan`**.
+* Use "JDBC URL" consistently everywhere (instead of "JDBC URI" in several places).
+
 ## Stable Builds
 
 * 2020-06-29 -- 1.1.547
