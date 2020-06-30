@@ -22,7 +22,7 @@ Only accretive/fixative changes will be made from now on.
   * Add tests for `"jtds"` database driver (against MS SQL Server), making it officially supported.
   * Switch from OpenTable Embedded PostgreSQL to Zonky's version, so that testing can move forward from PostgreSQL 10.11 to 12.2.0.
   * Fix potential reflection warnings caused by `next.jdbc.prepare/statement` being incorrectly type-hinted.
-  * Address #122 by adding `next.jdbc.with-options` that lets you wrap up a connectable along with default options that should be applied to all operations on that connectable.
+  * Address #122 by adding `next.jdbc/with-options` that lets you wrap up a connectable along with default options that should be applied to all operations on that connectable.
   * Address #119 by clarifying realization actions in the docstrings for `row-number`, `column-names`, and `metadata`.
   * Address #115 by adding equivalent of `db-do-commands` in the `clojure.java.jdbc` migration guide.
   * Add log4j2 as a test dependency so that I have better control over logging (which makes debugging easier!).
