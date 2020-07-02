@@ -163,9 +163,9 @@ Given a table name (as a keyword) and a primary key value, with an optional prim
 ```clojure
 (sql/get-by-id ds :address 2)
 ;; equivalent to
-(sql/get-by-id ds :address 2 {})
+(sql/get-by-id ds :address 2 {}) ; empty options map
 ;; equivalent to
-(sql/get-by-id ds :address 2 :id {})
+(sql/get-by-id ds :address 2 :id {}) ; empty options map
 ;; equivalent to
 (jdbc/execute-one! ds ["SELECT * FROM address WHERE id = ?" 2])
 ```
