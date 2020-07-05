@@ -125,4 +125,7 @@
         rs/ResultSetBuilder
         (->rs [this] (rs/->rs mrsb))
         (with-row [this mrs row] (rs/with-row mrsb mrs row))
-        (rs! [this mrs] (rs/rs! mrsb mrs))))))
+        (rs! [this mrs] (rs/rs! mrsb mrs))
+        clojure.lang.ILookup
+        (valAt [this k] (get mrsb k))
+        (valAt [this k not-found] (get mrsb k not-found))))))

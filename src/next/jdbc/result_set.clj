@@ -244,7 +244,10 @@
         ResultSetBuilder
         (->rs [this] (->rs mrsb))
         (with-row [this mrs row] (with-row mrsb mrs row))
-        (rs! [this mrs] (rs! mrsb mrs))))))
+        (rs! [this mrs] (rs! mrsb mrs))
+        clojure.lang.ILookup
+        (valAt [this k] (get mrsb k))
+        (valAt [this k not-found] (get mrsb k not-found))))))
 
 (defn clob->string
   "Given a CLOB column value, read it as a string."
@@ -360,7 +363,10 @@
         ResultSetBuilder
         (->rs [this] (->rs arsb))
         (with-row [this mrs row] (with-row arsb mrs row))
-        (rs! [this mrs] (rs! arsb mrs))))))
+        (rs! [this mrs] (rs! arsb mrs))
+        clojure.lang.ILookup
+        (valAt [this k] (get arsb k))
+        (valAt [this k not-found] (get arsb k not-found))))))
 
 (declare navize-row)
 

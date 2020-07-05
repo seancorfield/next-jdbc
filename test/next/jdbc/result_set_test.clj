@@ -182,6 +182,32 @@
       (is (contains? row (column :FRUIT/appearance)))
       (is (nil? ((column :FRUIT/appearance) row)))
       (is (= 3 ((column :FRUIT/id) row)))
+      (is (= "Peach" ((column :FRUIT/name) row))))
+    (let [builder (rs/as-maps-adapter
+                   rs/as-modified-maps
+                   (fn [^ResultSet rs _ ^Integer i]
+                     (.getObject rs i)))
+          row (p/-execute-one (ds)
+                              ["select * from fruit where id = ?" 3]
+                              (assoc
+                               (default-options)
+                               :builder-fn (rs/as-maps-adapter
+                                            builder
+                                            (fn [^ResultSet rs
+                                                 ^ResultSetMetaData rsmeta
+                                                 ^Integer i]
+                                              (condp = (.getColumnType rsmeta i)
+                                                     java.sql.Types/VARCHAR
+                                                     (.getString rs i)
+                                                     java.sql.Types/INTEGER
+                                                     (.getLong rs i)
+                                                     (.getObject rs i))))
+                               :label-fn str/lower-case
+                               :qualifier-fn identity))]
+      (is (map? row))
+      (is (contains? row (column :FRUIT/appearance)))
+      (is (nil? ((column :FRUIT/appearance) row)))
+      (is (= 3 ((column :FRUIT/id) row)))
       (is (= "Peach" ((column :FRUIT/name) row))))))
 
 (deftest test-row-number
