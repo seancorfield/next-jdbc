@@ -32,6 +32,12 @@
                      nil
                      (jdbc/plan
                       ds-opts
+                      ["select * from fruit where appearance = ?" "red"]))))
+      (is (= "Banana"
+             (reduce (fn [_ row] (reduced (:no-such-column row "Banana")))
+                     nil
+                     (jdbc/plan
+                      ds-opts
                       ["select * from fruit where appearance = ?" "red"])))))
     (testing "execute-one!"
       (is (nil? (jdbc/execute-one!
