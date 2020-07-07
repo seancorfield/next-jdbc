@@ -362,7 +362,7 @@
 
 (defrecord Fruit [id name appearance cost grade])
 
-(defn fruit-builder [^ResultSet rs _]
+(defn fruit-builder [^ResultSet rs ^ResultSetMetaData rsmeta]
   (reify
     rs/RowBuilder
     (->row [_] (->Fruit (.getObject rs "id")
@@ -370,13 +370,21 @@
                         (.getObject rs "appearance")
                         (.getObject rs "cost")
                         (.getObject rs "grade")))
-    (with-column [_ row i] row)
     (column-count [_] 0) ; no need to iterate over columns
+    (with-column [_ row i] row)
+    (with-column-value [_ row col v] row)
     (row! [_ row] row)
     rs/ResultSetBuilder
     (->rs [_] (transient []))
     (with-row [_ rs row] (conj! rs row))
-    (rs! [_ rs] (persistent! rs))))
+    (rs! [_ rs] (persistent! rs))
+    clojure.lang.ILookup ; only supports :cols and :rsmeta
+    (valAt [this k] (get this k nil))
+    (valAt [this k not-found]
+      (case k
+        :cols [:id :name :appearance :cost :grade]
+        :rsmeta rsmeta
+        not-found))))
 
 (deftest custom-map-builder
   (let [row (p/-execute-one (ds)

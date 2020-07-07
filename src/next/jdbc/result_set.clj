@@ -96,11 +96,12 @@
   (get-unqualified-modified-column-names rsmeta
                                          (assoc opts :label-fn lower-case)))
 
-(defprotocol ReadableColumn
+(defprotocol ReadableColumn :extend-via-metadata true
   "Protocol for reading objects from the `java.sql.ResultSet`. Default
   implementations (for `Object` and `nil`) return the argument, and the
   `Boolean` implementation ensures a canonicalized `true`/`false` value,
-  but it can be extended to provide custom behavior for special types."
+  but it can be extended to provide custom behavior for special types.
+  Extension via metadata is supported."
   (read-column-by-label [val label]
     "Function for transforming values after reading them via a column label.")
   (read-column-by-index [val rsmeta idx]
@@ -130,6 +131,9 @@
   (with-column [_ row i]
     "Called with the row and the index of the column to be added;
     this is expected to read the column value from the `ResultSet`!")
+  (with-column-value [_ row col v]
+    "Called with the row, the column name, and the value to be added;
+    this is a low-level function, typically used by `with-column`.")
   (row! [_ row]
     "Called once per row to finalize each row once it is complete."))
 
@@ -145,14 +149,54 @@
   (rs! [_ rs]
     "Called to finalize the result set once it is complete."))
 
+(defn builder-adapter
+  "Given any builder function (e.g., `as-lower-maps`) and a column reading
+  function, return a new builder function that uses that column reading
+  function instead of `.getObject` and `read-column-by-index` so you can
+  override the default behavior.
+
+  The default column-by-index-fn behavior would be equivalent to:
+
+      (defn default-column-by-index-fn
+        [builder ^ResultSet rs ^Integer i]
+        (read-column-by-index (.getObject rs i) (:rsmeta builder) i))
+
+  Your column-by-index-fn can use the result set metadata `(:rsmeta builder)`
+  and/or the (processed) column name `(nth (:cols builder) (dec i))` to
+  determine whether to call `.getObject` or some other method to read the
+  column's value, and can choose whether or not to use the `ReadableColumn`
+  protocol-based value processor (and could add metadata to the value to
+  satify that protocol on a per-instance basis)."
+  [builder-fn column-by-index-fn]
+  (fn [rs opts]
+    (let [builder (builder-fn rs opts)]
+      (reify
+        RowBuilder
+        (->row [this] (->row builder))
+        (column-count [this] (column-count builder))
+        (with-column [this row i]
+          (with-column-value this row (nth (:cols builder) (dec i))
+            (column-by-index-fn builder rs i)))
+        (with-column-value [this row col v]
+          (with-column-value builder row col v))
+        (row! [this row] (row! builder row))
+        ResultSetBuilder
+        (->rs [this] (->rs builder))
+        (with-row [this mrs row] (with-row builder mrs row))
+        (rs! [this mrs] (rs! builder mrs))
+        clojure.lang.ILookup
+        (valAt [this k] (get builder k))
+        (valAt [this k not-found] (get builder k not-found))))))
+
 (defrecord MapResultSetBuilder [^ResultSet rs rsmeta cols]
   RowBuilder
   (->row [this] (transient {}))
   (column-count [this] (count cols))
   (with-column [this row i]
-    (assoc! row
-            (nth cols (dec i))
-            (read-column-by-index (.getObject rs ^Integer i) rsmeta i)))
+    (with-column-value this row (nth cols (dec i))
+      (read-column-by-index (.getObject rs ^Integer i) rsmeta i)))
+  (with-column-value [this row col v]
+    (assoc! row col v))
   (row! [this row] (persistent! row))
   ResultSetBuilder
   (->rs [this] (transient []))
@@ -226,28 +270,16 @@
   Your column-reader can use the result set metadata to determine whether
   to call `.getObject` or some other method to read the column's value.
 
-  `read-column-by-index` is still called on the result of that read."
+  `read-column-by-index` is still called on the result of that read.
+
+  Note: this is different behavior to `builder-adapter`'s `column-by-index-fn`."
   [builder-fn column-reader]
-  (fn [rs opts]
-    (let [mrsb (builder-fn rs opts)]
-      (reify
-        RowBuilder
-        (->row [this] (->row mrsb))
-        (column-count [this] (column-count mrsb))
-        (with-column [this row i]
-          (assoc! row
-                  (nth (:cols mrsb) (dec i))
-                  (read-column-by-index (column-reader rs (:rsmeta mrsb) i)
-                                        (:rsmeta mrsb)
-                                        i)))
-        (row! [this row] (row! mrsb row))
-        ResultSetBuilder
-        (->rs [this] (->rs mrsb))
-        (with-row [this mrs row] (with-row mrsb mrs row))
-        (rs! [this mrs] (rs! mrsb mrs))
-        clojure.lang.ILookup
-        (valAt [this k] (get mrsb k))
-        (valAt [this k not-found] (get mrsb k not-found))))))
+  (builder-adapter builder-fn
+                   (fn [builder rs i]
+                     (let [^ResultSetMetaData rsmeta (:rsmeta builder)]
+                       (read-column-by-index (column-reader rs rsmeta i)
+                                             rsmeta
+                                             i)))))
 
 (defn clob->string
   "Given a CLOB column value, read it as a string."
@@ -269,7 +301,10 @@
   (->row [this] (transient []))
   (column-count [this] (count cols))
   (with-column [this row i]
-    (conj! row (read-column-by-index (.getObject rs ^Integer i) rsmeta i)))
+    (with-column-value this row nil
+      (read-column-by-index (.getObject rs ^Integer i) rsmeta i)))
+  (with-column-value [this row _ v]
+    (conj! row v))
   (row! [this row] (persistent! row))
   ResultSetBuilder
   (->rs [this] (transient [cols]))
@@ -346,27 +381,16 @@
   Your column-reader can use the result set metadata to determine whether
   to call `.getObject` or some other method to read the column's value.
 
-  `read-column-by-index` is still called on the result of that read."
+  `read-column-by-index` is still called on the result of that read.
+
+  Note: this is different behavior to `builder-adapter`'s `column-by-index-fn`."
   [builder-fn column-reader]
-  (fn [rs opts]
-    (let [arsb (builder-fn rs opts)]
-      (reify
-        RowBuilder
-        (->row [this] (->row arsb))
-        (column-count [this] (column-count arsb))
-        (with-column [this row i]
-          (conj! row
-                 (read-column-by-index (column-reader rs (:rsmeta arsb) i)
-                                       (:rsmeta arsb)
-                                       i)))
-        (row! [this row] (row! arsb row))
-        ResultSetBuilder
-        (->rs [this] (->rs arsb))
-        (with-row [this mrs row] (with-row arsb mrs row))
-        (rs! [this mrs] (rs! arsb mrs))
-        clojure.lang.ILookup
-        (valAt [this k] (get arsb k))
-        (valAt [this k not-found] (get arsb k not-found))))))
+  (builder-adapter builder-fn
+                   (fn [builder rs i]
+                     (let [^ResultSetMetaData rsmeta (:rsmeta builder)]
+                       (read-column-by-index (column-reader rs rsmeta i)
+                                             rsmeta
+                                             i)))))
 
 (declare navize-row)
 

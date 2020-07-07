@@ -34,10 +34,19 @@ An example builder that converts `snake_case` database table/column names to `ke
     (result-set/as-modified-maps rs (assoc opts :qualifier-fn kebab :label-fn kebab))))
 ```
 
-And finally there are adapters for the existing builders that let you override the default way that columns are read from result sets:
+And finally there are two styles of adapters for the existing builders that let you override the default way that columns are read from result sets.
+The first style takes a `column-reader` function, which is called with the `ResultSet`, the `ResultSetMetaData`, and the column index, and is expected to read the raw column value from the result set and return it. The result is then passed through `read-column-by-index` (from `ReadableColumn`, which may be implemented directly via protocol extension or via metadata on the result of the `column-reader` function):
 
 * `as-maps-adapter` -- adapts an existing map builder function with a new column reader,
 * `as-arrays-adapter` -- adapts an existing array builder function with a new column reader.
+
+The default `column-reader` function behavior would be:
+
+```clojure
+(defn default-column-reader
+  [^ResultSet rs ^ResultSetMetaData rsmeta ^Integer i]
+  (.getObject rs i))
+```
 
 An example column reader is provided -- `clob-column-reader` -- that still uses `.getObject` but will expand `java.sql.Clob` values into string (using the `clob->string` helper function):
 
@@ -47,6 +56,22 @@ An example column reader is provided -- `clob-column-reader` -- that still uses 
                   result-set/clob-column-reader)}
 ```
 
+As of 1.1.next, the second style of adapter relies on `with-column-value` from `RowBuilder` (see below) and allows you to take complete control of the column reading process. This style takes a `column-by-index-fn` function, which is called with the builder itself, the `ResultSet`, and the column index, and is expected to read the raw column value from the result set and perform any and all processing on it, before returning it. The result is added directly to the current row with no further processing.
+
+* `builder-adapter` -- adapts any existing builder function with a new column reading function.
+
+The default `column-by-index-fn` function behavior would be:
+
+```clojure
+(defn default-column-by-index-fn
+  [builder ^ResultSet rs ^Integer i]
+  (result-set/read-column-by-index (.getObject rs i) (:rsmeta builder) i))
+```
+
+Because the builder itself is passed in, the vector of processed column names is available as `(:cols builder)` (in addition to the `ResultSetMetaData` as `(:rsmeta builder)`). This allows you to take different actions based on the metadata or the column name, as well as bypassing the `read-column-by-index` call if you wish.
+
+The older `as-*-adapter` functions are now implemented in terms of this `builder-adapter` because `with-column-value` abstracts away _how_ the new column's value is added to the row being built.
+
 ## RowBuilder Protocol
 
 This protocol defines four functions and is used whenever `next.jdbc` needs to materialize a row from a `ResultSet` as a Clojure data structure:
@@ -54,6 +79,7 @@ This protocol defines four functions and is used whenever `next.jdbc` needs to m
 * `(->row builder)` -- produces a new row (a `(transient {})` by default),
 * `(column-count builder)` -- returns the number of columns in each row,
 * `(with-column builder row i)` -- given the row so far, fetches column `i` from the current row of the `ResultSet`, converts it to a Clojure value, and adds it to the row (for `as-maps` this is a call to `.getObject`, a call to `read-column-by-index` -- see the `ReadableColumn` protocol below, and a call to `assoc!`),
+* `(with-column-value builder row col v)` -- given the row so far, the column name, and the column value, add the column name/value to the row in the appropriate way: this is a low-level utility, intended to be used in builders (or adapters) that want to control more of the value handling process,
 * `(row! builder row)` -- completes the row (a `(persistent! row)` call by default).
 
 `execute!` and `execute-one!` call these functions for each row they need to build. `plan` _may_ call these functions if the reducing function causes a row to be materialized.
