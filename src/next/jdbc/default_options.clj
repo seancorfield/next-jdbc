@@ -1,7 +1,7 @@
 ;; copyright (c) 2020 Sean Corfield, all rights reserved
 
 (ns ^:no-doc next.jdbc.default-options
-  "Implementation of SQL transaction logic."
+  "Implementation of default options logic."
   (:require [next.jdbc.protocols :as p]))
 
 (defrecord DefaultOptions [connectable options])
