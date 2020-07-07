@@ -74,12 +74,12 @@ The older `as-*-adapter` functions are now implemented in terms of this `builder
 
 ## RowBuilder Protocol
 
-This protocol defines four functions and is used whenever `next.jdbc` needs to materialize a row from a `ResultSet` as a Clojure data structure:
+This protocol defines five functions and is used whenever `next.jdbc` needs to materialize a row from a `ResultSet` as a Clojure data structure:
 
 * `(->row builder)` -- produces a new row (a `(transient {})` by default),
 * `(column-count builder)` -- returns the number of columns in each row,
 * `(with-column builder row i)` -- given the row so far, fetches column `i` from the current row of the `ResultSet`, converts it to a Clojure value, and adds it to the row (for `as-maps` this is a call to `.getObject`, a call to `read-column-by-index` -- see the `ReadableColumn` protocol below, and a call to `assoc!`),
-* `(with-column-value builder row col v)` -- given the row so far, the column name, and the column value, add the column name/value to the row in the appropriate way: this is a low-level utility, intended to be used in builders (or adapters) that want to control more of the value handling process,
+* `(with-column-value builder row col v)` -- given the row so far, the column name, and the column value, add the column name/value to the row in the appropriate way: this is a low-level utility, intended to be used in builders (or adapters) that want to control more of the value handling process -- in general, `with-column` will be implemented by calling `with-column-value`,
 * `(row! builder row)` -- completes the row (a `(persistent! row)` call by default).
 
 `execute!` and `execute-one!` call these functions for each row they need to build. `plan` _may_ call these functions if the reducing function causes a row to be materialized.
@@ -97,6 +97,8 @@ Only `execute!` expects this protocol to be implemented. `execute-one!` and `pla
 ## Result Set Builder Functions
 
 The `as-*` functions described above are all implemented in terms of these protocols. They are passed the `ResultSet` object and the options hash map (as passed into various `next.jdbc` functions). They return an implementation of the protocols that is then used to build rows and the result set. Note that the `ResultSet` passed in is _mutable_ and is advanced from row to row by the SQL execution function, so each time `->row` is called, the underlying `ResultSet` object points at each new row in turn. By contrast, `->rs` (which is only called by `execute!`) is invoked _before_ the `ResultSet` is advanced to the first row.
+
+The result set builder implementation is also assumed to implement `clojure.lang.ILookup` such that the keys `:cols` and `:rsmeta` are supported and should map to the vector of column names that the builder will produce and the `ResultSetMetaData` object (which can be obtained from the `ResultSet`, if necessary). This is intended to allow `plan` and various builder adapters to access certain information that may be needed for processing results. The default builder implementations (for maps and arrays) are both records with fields `rsmeta` and `cols` (in addition to `rs` -- the `ResultSet` itself). The adapters provided in `next.jdbc.result-set` returned reified implementations that delegate field lookup to the underlying builder implementation.
 
 The options hash map for any `next.jdbc` function can contain a `:builder-fn` key and the value is used as the row/result set builder function. The tests for `next.jdbc.result-set` include a [record-based builder function](https://github.com/seancorfield/next-jdbc/blob/develop/test/next/jdbc/result_set_test.clj#L335-L353) as an example of how you can extend this to satisfy your needs.
 
