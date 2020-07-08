@@ -279,3 +279,26 @@
   wrapper object that can be used in its place."
   [connectable opts]
   (opts/->DefaultOptions connectable opts))
+
+(defmacro ^:private def-snake-kebab []
+  (try
+    (let [kebab-case (requiring-resolve 'camel-snake-kebab.core/->kebab-case)
+          snake-case (requiring-resolve 'camel-snake-kebab.core/->snake_case)]
+      `(do
+         (def snake-kebab-opts
+           "A hash map of options that will convert Clojure identifiers to
+  snake_case SQL entities (`:table-fn`, `:column-fn`), and will convert
+  SQL entities to qualified kebab-case Clojure identifiers (`:builder-fn`)."
+           {:column-fn  ~snake-case :table-fn     ~snake-case
+            :label-fn   ~kebab-case :qualifier-fn ~kebab-case
+            :builder-fn (resolve 'next.jdbc.result-set/as-kebab-maps)})
+         (def unqualified-snake-kebab-opts
+           "A hash map of options that will convert Clojure identifiers to
+  snake_case SQL entities (`:table-fn`, `:column-fn`), and will convert
+  SQL entities to unqualified kebab-case Clojure identifiers (`:builder-fn`)."
+           {:column-fn  ~snake-case :table-fn     ~snake-case
+            :label-fn   ~kebab-case :qualifier-fn ~kebab-case
+            :builder-fn (resolve 'next.jdbc.result-set/as-unqualified-kebab-maps)})))
+    (catch Throwable _)))
+
+(def-snake-kebab)

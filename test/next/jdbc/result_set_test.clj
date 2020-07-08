@@ -134,6 +134,25 @@
       (is (map? row))
       (is (= 4 (:id row)))
       (is (= "Orange" (:name row)))))
+  (testing "kebab-case row builder"
+    (let [row (p/-execute-one (ds)
+                              ["select id,name,appearance as looks_like from fruit where id = ?" 3]
+                              (assoc (default-options)
+                                     :builder-fn rs/as-kebab-maps))]
+      (is (map? row))
+      (is (contains? row :fruit/looks-like))
+      (is (nil? (:fruit/looks-like row)))
+      (is (= 3 (:fruit/id row)))
+      (is (= "Peach" (:fruit/name row)))))
+  (testing "unqualified kebab-case row builder"
+    (let [row (p/-execute-one (ds)
+                              ["select id,name,appearance as looks_like from fruit where id = ?" 4]
+                              {:builder-fn rs/as-unqualified-kebab-maps})]
+      (is (map? row))
+      (is (contains? row :looks-like))
+      (is (= "juicy" (:looks-like row)))
+      (is (= 4 (:id row)))
+      (is (= "Orange" (:name row)))))
   (testing "custom row builder 1"
     (let [row (p/-execute-one (ds)
                               ["select fruit.*, id + 100 as newid from fruit where id = ?" 3]

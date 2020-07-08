@@ -256,6 +256,27 @@
   [rs opts]
   (as-unqualified-modified-maps rs (assoc opts :label-fn lower-case)))
 
+(defmacro ^:private def-snake-kebab []
+  (try
+    (let [kebab-case (requiring-resolve 'camel-snake-kebab.core/->kebab-case)]
+      `(do
+         (defn ~'as-kebab-maps
+           {:doc "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
+  that produces bare vectors of hash map rows, with kebab-case keys."
+            :arglists '([~'rs ~'opts])}
+           [rs# opts#]
+           (as-modified-maps rs# (assoc opts#
+                                        :qualifier-fn ~kebab-case
+                                        :label-fn ~kebab-case)))
+         (defn ~'as-unqualified-kebab-maps
+           {:doc "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
+  that produces bare vectors of hash map rows, with simple, kebab-case keys."
+            :arglists '([~'rs ~'opts])}
+           [rs# opts#]
+           (as-unqualified-modified-maps rs# (assoc opts# :label-fn ~kebab-case)))))
+    (catch Throwable _)))
+(def-snake-kebab)
+
 (defn as-maps-adapter
   "Given a map builder function (e.g., `as-lower-maps`) and a column reading
   function, return a new builder function that uses that column reading

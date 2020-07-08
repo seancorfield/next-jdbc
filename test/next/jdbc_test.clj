@@ -46,7 +46,17 @@
       (is (= "Apple" ((column :FRUIT/NAME)
                       (jdbc/execute-one!
                        ds-opts
-                       ["select * from fruit where appearance = ?" "red"])))))
+                       ["select * from fruit where appearance = ?" "red"]))))
+      (is (= "red" (:fruit/looks-like
+                    (jdbc/execute-one!
+                     ds-opts
+                     ["select appearance as looks_like from fruit where id = ?" 1]
+                     jdbc/snake-kebab-opts))))
+      (is (= "red" (:looks-like
+                    (jdbc/execute-one!
+                     ds-opts
+                     ["select appearance as looks_like from fruit where id = ?" 1]
+                     jdbc/unqualified-snake-kebab-opts)))))
     (testing "execute!"
       (let [rs (jdbc/execute!
                 ds-opts

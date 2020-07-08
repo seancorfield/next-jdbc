@@ -8,7 +8,6 @@
             [next.jdbc.sql :as sql]
             [next.jdbc.test-fixtures
              :refer [with-test-db ds column default-options
-                      db
                       derby? jtds? maria? mssql? mysql? postgres? sqlite?]]
             [next.jdbc.types :refer [as-other as-real as-varchar]]))
 
@@ -183,5 +182,6 @@
 
 (deftest enum-pg
   (when (postgres?)
-    (let [r (sql/insert! (ds) :lang_test {:lang (as-other "fr")})]
-      (is (= {:lang_test/lang "fr"} r)))))
+    (let [r (sql/insert! (ds) :lang-test {:lang (as-other "fr")}
+                         jdbc/snake-kebab-opts)]
+      (is (= {:lang-test/lang "fr"} r)))))
