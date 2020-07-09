@@ -230,23 +230,36 @@ Any operation that can perform key-based lookup can be used here without creatin
 
 This means that `select-keys` can be used to create regular Clojure hash map from (a subset of) columns in the row, without realizing the row, and it will not implement `Datafiable` or `Navigable`.
 
-If you wish to create a Clojure hash map that supports that lazy navigation, you can call `next.jdbc.result-set/datafiable-row`, passing in the current row, a `connectable`, and an options hash map, just as you passed into `plan`. Compare the difference in output between these three expressions:
+If you wish to create a Clojure hash map that supports that lazy navigation, you can call `next.jdbc.result-set/datafiable-row`, passing in the current row, a `connectable`, and an options hash map, just as you passed into `plan`. Compare the difference in output between these four expressions:
 
 ```clojure
+;; selects specific keys (as simple keywords):
 user=> (into []
              (map #(select-keys % [:id :product :unit_price :unit_cost :customer_id]))
              (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
+;; selects specific keys (as qualified keywords):
 user=> (into []
              (map #(select-keys % [:invoice/id :invoice/product
                                    :invoice/unit_price :invoice/unit_cost
                                    :invoice/customer_id]))
              (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
+;; selects specific keys (as qualified keywords -- ignoring the table name):
+user=> (into []
+             (map #(select-keys % [:foo/id :bar/product
+                                   :quux/unit_price :wibble/unit_cost
+                                   :blah/customer_id]))
+             (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
+;; do not do this:
+user=> (into []
+             (map #(into {} %))
+             (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
+;; do this if you just want realized rows with default qualified names:
 user=> (into []
              (map #(rs/datafiable-row % ds {}))
              (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
 ```
 
-The latter produces a vector of hash maps, just like the result of `execute!`, where each "row" follows the case conventions of the database, the keys are qualified by the table name, and the hash map is datafiable and navigable.
+The latter produces a vector of hash maps, just like the result of `execute!`, where each "row" follows the case conventions of the database, the keys are qualified by the table name, and the hash map is datafiable and navigable. The third expression produces a result that looks identical but has stripped all the metadata away: it has still called `rs/datafiable-row` to fully-realize a datafiable and navigable hash map but it has then "poured" that into a new, empty hash map, losing the metadata.
 
 In addition to the hash map operations described above, the abstraction over the `ResultSet` can also respond to a couple of functions in `next.jdbc.result-set`:
 
