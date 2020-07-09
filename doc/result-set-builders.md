@@ -34,6 +34,8 @@ An example builder that converts `snake_case` database table/column names to `ke
     (result-set/as-modified-maps rs (assoc opts :qualifier-fn kebab :label-fn kebab))))
 ```
 
+If you have [camel-snake-kebab](https://clj-commons.org/camel-snake-kebab/) on your classpath, two additional builders will be available: `as-kebab-maps` and `as-unqualified-kebab-maps` which use the `->kebab-case` function from that library with `as-modified-maps` and `as-unqualified-modified-maps` respectively.
+
 And finally there are two styles of adapters for the existing builders that let you override the default way that columns are read from result sets.
 The first style takes a `column-reader` function, which is called with the `ResultSet`, the `ResultSetMetaData`, and the column index, and is expected to read the raw column value from the result set and return it. The result is then passed through `read-column-by-index` (from `ReadableColumn`, which may be implemented directly via protocol extension or via metadata on the result of the `column-reader` function):
 
