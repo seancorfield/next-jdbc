@@ -140,6 +140,15 @@ user=> (jdbc/execute-one! ds-opts ["select * from address where id = ?" 4])
 user=>
 ```
 
+If you have [camel-snake-kebab](https://clj-commons.org/camel-snake-kebab/) on your classpath, two pre-built option hash maps are available in `next.jdbc`:
+* `snake-kebab-opts` -- provides `:column-fn`, `:table-fn`, `:label-fn`, `:qualifier-fn`, and `:builder-fn` that will convert Clojure identifiers in `:kebab-case` to SQL entities in `snake_case` and will produce result sets with qualified `:kebab-case` names from SQL entities that use `snake_case`,
+* `unqualified-snake-kebab-opts` -- provides `:column-fn`, `:table-fn`, `:label-fn`, `:qualifier-fn`, and `:builder-fn` that will convert Clojure identifiers in `:kebab-case` to SQL entities in `snake_case` and will produce result sets with _unqualified_ `:kebab-case` names from SQL entities that use `snake_case`.
+
+In addition, `next.jdbc.result-set` will have `as-kebab-maps` and `as-unqualified-kebab-maps` defined.
+
+> Note: Using `camel-snake-kebab` might also be helpful if your database has `camelCase` table and column names, although you'll have to provide `:column-fn` and `:table-fn` yourself as `->camelCase` from that library. Either way, consider relying on the _default_ result set builder first and avoid converting column and table names (see [Advantages of 'snake case': portability and ubiquity](https://vvvvalvalval.github.io/posts/clojure-key-namespacing-convention-considered-harmful.html#advantages_of_'snake_case':_portability_and_ubiquity) for an interesting discussion on kebab-case vs snake_case -- I do not agree with all of the author's points in that article, particularly his position against qualified keywords, but his argument for retaining snake_case around system boundaries is compelling).
+
+
 ### `plan` & Reducing Result Sets
 
 While the `execute!` and `execute-one!` functions are fine for retrieving result sets as data, most of the time you want to process that data efficiently without necessarily converting the entire result set into a Clojure data structure, so `next.jdbc` provides a SQL execution function that works with `reduce` and with transducers to consume the result set without the intermediate overhead of creating Clojure data structures for every row.
