@@ -101,7 +101,7 @@ In the same way that you would use `execute-one!` if you only want one row or on
 
 All functions in `next.jdbc` (except `get-datasource`) can accept, as the optional last argument, a hash map containing a [variety of options](/doc/all-the-options.md) that control the behavior of the `next.jdbc` functions.
 
-We saw `:return-keys` provided as an option to the `execute-one!` function above and mentioned the `:builder-fn` option just above that. As noted, the default behavior it to return rows as hash maps with namespace-qualified keywords identifying the column names with the table name as the qualifier. There's a whole chapter on [result set builders](/doc/result-set-builders.md) but here's a quick example showing how to get unqualified, lower case keywords instead:
+We saw `:return-keys` provided as an option to the `execute-one!` function above and mentioned the `:builder-fn` option just above that. As noted, the default behavior is to return rows as hash maps with namespace-qualified keywords identifying the column names with the table name as the qualifier. There's a whole chapter on [result set builders](/doc/result-set-builders.md) but here's a quick example showing how to get unqualified, lower case keywords instead:
 
 ```clojure
 user=> (require '[next.jdbc.result-set :as rs])
