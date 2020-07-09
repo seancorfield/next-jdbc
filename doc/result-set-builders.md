@@ -122,10 +122,10 @@ This namespace contains variants of the six `as-maps`-style builders above that 
 
 # ReadableColumn
 
-As mentioned above, when `with-column` is called, the expectation is that the row builder will call `.getObject` on the current state of the `ResultSet` object with the column index and will then call `read-column-by-index`, passing the column value, the `ResultSetMetaData`, and the column index. That function is part of the `ReadableColumn` protocol that you can extend to handle conversion of arbitrary database-specific types to Clojure values.
+As mentioned above, when `with-column` is called, the expectation is that the row builder will call `.getObject` on the current state of the `ResultSet` object with the column index and will then call `read-column-by-index`, passing the column value, the `ResultSetMetaData`, and the column index. That function is part of the `ReadableColumn` protocol that you can extend to handle conversion of arbitrary database-specific types to Clojure values. It is extensible via metadata so the value you return can have metadata specifying the implementation of `read-column-by-index`.
 
-If you need more control over how values are read from the `ResultSet` object, you can use `next.jdbc.result-set/as-maps-adapter` (or `next.jdbc.result-set/as-arrays-adapter`) which takes an existing builder function and a column reading function and returns a new builder function that calls your column reading function (with the `ResultSet` object, the `ResultSetMetaData` object, and the column index) instead of calling `.getObject` directly.
-Note that the adapters still call `read-column-by-index` on the value your column reading function returns.
+If you need more control over how values are read from the `ResultSet` object, you can use `next.jdbc.result-set/as-maps-adapter` (or `next.jdbc.result-set/as-arrays-adapter`, or the more low-level but more generic `next.jdbc.result-set/builder-adapter`) which takes an existing builder function and a column reading function and returns a new builder function that calls your column reading function (with the `ResultSet` object, the `ResultSetMetaData` object, and the column index -- or the builder itself, the `ResultSet` object, and the column index in the case of `builder-adapter`) instead of calling `.getObject` directly.
+Note that the `as-*` adapters still call `read-column-by-index` on the value your column reading function returns.
 
 In addition, inside `plan`, as each value is looked up by name in the current state of the `ResultSet` object, the `read-column-by-label` function is called, again passing the column value and the column label (the name used in the SQL to identify that column). This function is also part of the `ReadableColumn` protocol.
 
@@ -147,7 +147,7 @@ The default implementation of this protocol is for these two functions to return
     (.toInstant v)))
 ```
 
-Remember that a protocol extension will apply to all code running in your application so with the above code **all** timestamp values coming from the database will be converted to `java.time.Instant` for all queries. If you want to control behavior across different calls, consider the adapters described above (`as-maps-adapter` and `as-arrays-adapter`).
+Remember that a protocol extension will apply to all code running in your application so with the above code **all** timestamp values coming from the database will be converted to `java.time.Instant` for all queries. If you want to control behavior across different calls, consider the adapters described above (`as-maps-adapter`, `as-arrays-adapter`, and `builder-adapter`, and think about using metadata to implement the `rs/ReadableColumn` protocol instead of extending it).
 
 Note that the converse, converting Clojure values to database-specific types is handled by the `SettableParameter` protocol, discussed in the next section ([Prepared Statements](/doc/prepared-statements.md#prepared-statement-parameters)).
 
