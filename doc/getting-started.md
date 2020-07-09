@@ -264,7 +264,8 @@ The latter produces a vector of hash maps, just like the result of `execute!`, w
 In addition to the hash map operations described above, the abstraction over the `ResultSet` can also respond to a couple of functions in `next.jdbc.result-set`:
 
 * `next.jdbc.result-set/row-number` - returns the 1-based row number, by calling `.getRow()` on the `ResultSet`,
-* `next.jdbc.result-set/column-names` - returns a vector of column names from the `ResultSet`, as created by the result set builder specified.
+* `next.jdbc.result-set/column-names` - returns a vector of column names from the `ResultSet`, as created by the result set builder specified,
+* `next.jdbc.result-set/metadata` - returns the `ResultSetMetaData` object, datafied (so the result will depend on whether you have required `next.jdbc.datafy`).
 
 > Note: Apache Derby requires the following options to be provided in order to call `.getRow()` (and therefore `row-number`): `{:concurrency :read-only, :cursors :close, :result-type :scroll-insensitive}`
 
