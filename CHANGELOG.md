@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 Changes made on **develop** since the 1.1.547 release:
+* Fix #132 by adding specs for `next.jdbc/with-options` and `next.jdbc.prepare/statement`; correct spec for `next.jdbc.connection/component`. PR #131 from @Briaoeuidhtns.
 * Fix #130 by implementing `clojure.lang.ILookup` on the three builder adapters.
 * Fix #129 by adding `with-column-value` to `RowBuilder` and a more generic `builder-adapter`.
 * Fix #128 by adding a test for the "not found" arity of lookup on mapified result sets.

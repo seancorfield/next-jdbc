@@ -110,10 +110,6 @@
                      :sql-params ::sql-params
                      :opts (s/? ::opts-map)))
 
-(s/fdef jdbc/statement
-        :args (s/cat :connection ::connection
-                     :opts (s/? ::opts-map)))
-
 (s/fdef jdbc/plan
         :args (s/alt :prepared (s/cat :stmt ::statement)
                      :sql (s/cat :connectable ::connectable
@@ -137,6 +133,10 @@
                      :f fn?
                      :opts (s/? ::opts-map)))
 
+(s/fdef jdbc/with-options
+        :args (s/cat :connectable ::connectable
+                     :opts ::opts-map))
+
 (s/fdef jdbc/with-transaction
         :args (s/cat :binding (s/and vector?
                                      (s/cat :sym simple-symbol?
@@ -151,7 +151,7 @@
 (s/fdef connection/component
         :args (s/cat :clazz #(instance? Class %)
                      :db-spec ::db-spec-or-jdbc
-                     :close-fn (s/? ifn?)))
+                     :close-fn (s/? fn?)))
 
 (s/fdef prepare/execute-batch!
         :args (s/cat :ps ::prepared-statement
@@ -161,6 +161,10 @@
 (s/fdef prepare/set-parameters
         :args (s/cat :ps ::prepared-statement
                      :params ::params))
+
+(s/fdef prepare/statement
+        :args (s/cat :connection ::connection
+                     :opts (s/? ::opts-map)))
 
 (s/fdef sql/insert!
         :args (s/cat :connectable ::connectable
@@ -228,7 +232,9 @@
    `jdbc/execute-one!
    `jdbc/transact
    `jdbc/with-transaction
+   `jdbc/with-options
    `connection/->pool
+   `connection/component
    `prepare/execute-batch!
    `prepare/set-parameters
    `prepare/statement
