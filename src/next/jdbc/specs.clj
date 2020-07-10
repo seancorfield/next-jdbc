@@ -150,7 +150,8 @@
 
 (s/fdef connection/component
         :args (s/cat :clazz #(instance? Class %)
-                     :db-spec ::db-spec-or-jdbc))
+                     :db-spec ::db-spec-or-jdbc
+                     :close-fn (s/? ifn?)))
 
 (s/fdef prepare/execute-batch!
         :args (s/cat :ps ::prepared-statement
