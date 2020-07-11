@@ -58,7 +58,7 @@ An example column reader is provided -- `clob-column-reader` -- that still uses 
                   result-set/clob-column-reader)}
 ```
 
-As of 1.1.next, the second style of adapter relies on `with-column-value` from `RowBuilder` (see below) and allows you to take complete control of the column reading process. This style takes a `column-by-index-fn` function, which is called with the builder itself, the `ResultSet`, and the column index, and is expected to read the raw column value from the result set and perform any and all processing on it, before returning it. The result is added directly to the current row with no further processing.
+As of 1.1.569, the second style of adapter relies on `with-column-value` from `RowBuilder` (see below) and allows you to take complete control of the column reading process. This style takes a `column-by-index-fn` function, which is called with the builder itself, the `ResultSet`, and the column index, and is expected to read the raw column value from the result set and perform any and all processing on it, before returning it. The result is added directly to the current row with no further processing.
 
 * `builder-adapter` -- adapts any existing builder function with a new column reading function.
 
