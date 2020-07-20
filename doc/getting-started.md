@@ -317,9 +317,8 @@ You can read more about [working with transactions](/doc/transactions.md) furthe
 (with-open [con (jdbc/get-connection ds)]
   (let [con-opts (jdbc/with-options con some-options)]
     (jdbc/execute! con-opts ...) ; committed
-    ;; either use unwrapped version here or (:connectable con-opts)
-    (jdbc/with-transaction [tx con] ; will commit or rollback this group:
-      (let [tx-opts (jdbc/with-options tx some-options)]
+    (jdbc/with-transaction [tx con-opts] ; will commit or rollback this group:
+      (let [tx-opts (jdbc/with-options tx (:options con-opts)]
         (jdbc/execute! tx-opts ...)
         (jdbc/execute! tx-opts ...)
         (into [] (map :column) (jdbc/plan tx-opts ...))))
