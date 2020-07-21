@@ -11,6 +11,8 @@ Columns declared with the `CLOB` or `BLOB` SQL types are typically rendered into
   java.sql.Clob
   (read-column-by-label [^java.sql.Clob v _]
     (with-open [rdr (.getCharacterStream v)] (slurp rdr)))
+  (read-column-by-label [^java.sql.Clob v _2 _3]
+    (with-open [rdr (.getCharacterStream v)] (slurp rdr)))
   (read-column-by-index [^java.sql.Clob v _2 _3]
     (with-open [rdr (.getCharacterStream v)] (slurp rdr))))
 ```
@@ -21,6 +23,8 @@ There is a helper in `next.jdbc.result-set` to make this easier -- `clob->string
 (extend-protocol rs/ReadableColumn
   java.sql.Clob
   (read-column-by-label [^java.sql.Clob v _]
+    (clob->string v))
+  (read-column-by-label [^java.sql.Clob v _2 _3_]
     (clob->string v))
   (read-column-by-index [^java.sql.Clob v _2 _3]
     (clob->string v)))
@@ -145,6 +149,7 @@ ResultSet protocol extension to read SQL arrays as Clojure vectors.
 (extend-protocol rs/ReadableColumn
   Array
   (read-column-by-label [^Array v _]    (vec (.getArray v)))
+  (read-column-by-label [^Array v _ _]  (vec (.getArray v)))
   (read-column-by-index [^Array v _ _]  (vec (.getArray v))))
 
 ```
@@ -271,6 +276,8 @@ Finally we extend `next.jdbc.prepare/SettableParameter` and `next.jdbc.result-se
 (extend-protocol rs/ReadableColumn
   org.postgresql.util.PGobject
   (read-column-by-label [^org.postgresql.util.PGobject v _]
+    (<-pgobject v))
+  (read-column-by-label [^org.postgresql.util.PGobject v _2 _3]
     (<-pgobject v))
   (read-column-by-index [^org.postgresql.util.PGobject v _2 _3]
     (<-pgobject v)))

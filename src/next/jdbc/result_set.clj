@@ -102,7 +102,9 @@
   `Boolean` implementation ensures a canonicalized `true`/`false` value,
   but it can be extended to provide custom behavior for special types.
   Extension via metadata is supported."
-  (read-column-by-label [val label]
+  (read-column-by-label
+    [val label]
+    [val rsmeta label]
     "Function for transforming values after reading them via a column label.")
   (read-column-by-index [val rsmeta idx]
     "Function for transforming values after reading them via a column index."))
@@ -110,14 +112,17 @@
 (extend-protocol ReadableColumn
   Object
   (read-column-by-label [x _] x)
+  (read-column-by-label [x _2 _3] x)
   (read-column-by-index [x _2 _3] x)
 
   Boolean
   (read-column-by-label [x _] (if (= true x) true false))
+  (read-column-by-label [x _2 _3] (if (= true x) true false))
   (read-column-by-index [x _2 _3] (if (= true x) true false))
 
   nil
   (read-column-by-label [_1 _2] nil)
+  (read-column-by-label [_1 _2 _3] nil)
   (read-column-by-index [_1 _2 _3] nil))
 
 (defprotocol RowBuilder
@@ -513,6 +518,7 @@
         (try
           (clojure.lang.MapEntry. k (read-column-by-label
                                      (.getObject rs (name k))
+                                     (:rsmeta @builder)
                                      (name k)))
           (catch SQLException _)))
 
@@ -535,14 +541,14 @@
           (if (number? k)
             (let [^Integer i (inc k)]
               (read-column-by-index (.getObject rs i) (:rsmeta @builder) i))
-            (read-column-by-label (.getObject rs (name k)) (name k)))
+            (read-column-by-label (.getObject rs (name k)) (:rsmeta @builder) (name k)))
           (catch SQLException _)))
       (valAt [this k not-found]
         (try
           (if (number? k)
             (let [^Integer i (inc k)]
               (read-column-by-index (.getObject rs i) (:rsmeta @builder) i))
-            (read-column-by-label (.getObject rs (name k)) (name k)))
+            (read-column-by-label (.getObject rs (name k)) (:rsmeta @builder) (name k)))
           (catch SQLException _
             not-found)))
 
