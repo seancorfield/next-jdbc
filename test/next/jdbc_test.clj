@@ -347,6 +347,8 @@ VALUES ('Pear', 'green', 49, 47)
                                       (fn [builder ^ResultSet rs ^Integer i]
                                         (let [rsm ^ResultSetMetaData (:rsmeta builder)]
                                           (rs/read-column-by-index
+                                           ;; we only use bit and bool for
+                                           ;; sqlite (not boolean)
                                            (if (#{"BIT" "BOOL"} (.getColumnTypeName rsm i))
                                              (.getBoolean rs i)
                                              (.getObject rs i))

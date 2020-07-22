@@ -364,7 +364,7 @@ You can work around this using a builder that handles reading the column directl
                              (fn [builder ^ResultSet rs ^Integer i]
                                (let [rsm ^ResultSetMetaData (:rsmeta builder)]
                                  (rs/read-column-by-index
-                                   (if (#{"BIT" "BOOL"} (.getColumnTypeName rsm i))
+                                   (if (#{"BIT" "BOOL" "BOOLEAN"} (.getColumnTypeName rsm i))
                                      (.getBoolean rs i)
                                      (.getObject rs i))
                                    rsm
