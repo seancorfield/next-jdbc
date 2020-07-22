@@ -371,4 +371,14 @@ You can work around this using a builder that handles reading the column directl
                                    i))))})
 ```
 
+If you are using `plan`, you'll most likely be accessing columns by just the label (as a keyword) and avoiding the result set building machinery completely. In such cases, you'll still get `bool` and `bit` columns back as `0` or `1` and you'll need to explicitly convert them on a per-column basis since you should know which columns need converting:
+
+```clojure
+(reduce (fn [acc row]
+          (conj acc (-> (select-keys row [:name :is_active])
+                        (update :is_active pos?))))
+        []
+        (jdbc/plan ds ["select * from some_table"]))
+```
+
 [<: Friendly SQL Functions](/doc/friendly-sql-functions.md) | [Result Set Builders :>](/doc/result-set-builders.md)
