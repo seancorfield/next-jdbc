@@ -9,7 +9,7 @@
   (:require [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc :as jdbc]
             [next.jdbc.test-fixtures
-             :refer [with-test-db db ds jtds? mssql? postgres? sqlite?]]
+             :refer [with-test-db ds jtds? mssql? sqlite?]]
             [next.jdbc.prepare :as prep]
             [next.jdbc.specs :as specs]))
 
