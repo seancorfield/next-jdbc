@@ -355,7 +355,17 @@ VALUES ('Pear', 'green', 49, 47)
     (is (every? boolean? (map (column :BTEST/IS_IT) data)))
     (if (derby?)
       (is (every? number?  (map (column :BTEST/TWIDDLE) data)))
-      (is (every? boolean? (map (column :BTEST/TWIDDLE) data))))))
+      (is (every? boolean? (map (column :BTEST/TWIDDLE) data)))))
+  (let [data (reduce (fn [acc row]
+                       (conj acc (cond-> (select-keys row [:is_it :twiddle])
+                                   (sqlite?)
+                                   (update :is_it pos?)
+                                   (or (sqlite?) (derby?))
+                                   (update :twiddle pos?))))
+                     []
+                     (jdbc/plan (ds) ["select * from btest"]))]
+    (is (every? boolean? (map :is_it data)))
+    (is (every? boolean? (map :twiddle data)))))
 
 (deftest folding-test
   (jdbc/execute-one! (ds) ["delete from fruit"])
