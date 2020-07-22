@@ -351,4 +351,24 @@ And those columns are nicely transformed into Clojure data when querying:
 
 If you're unsure whether you want to use json or jsonb, use jsonb.
 
+## SQLite
+
+SQLite supports both `bool` and `bit` column types but, unlike pretty much every other database out there, it yields `0` or `1` as the column value instead of `false` or `true`. This means that with SQLite alone, you can't just rely on `bool` or `bit` columns being treated as truthy/falsey values in Clojure.
+
+You can work around this using a builder that handles reading the column directly as a `Boolean`:
+
+```clojure
+(jdbc/execute! ds ["select * from some_table"]
+               {:builder-fn (rs/builder-adapter
+                             rs/as-maps
+                             (fn [builder ^ResultSet rs ^Integer i]
+                               (let [rsm ^ResultSetMetaData (:rsmeta builder)]
+                                 (rs/read-column-by-index
+                                   (if (#{"BIT" "BOOL"} (.getColumnTypeName rsm i))
+                                     (.getBoolean rs i)
+                                     (.getObject rs i))
+                                   rsm
+                                   i))))})
+```
+
 [<: Friendly SQL Functions](/doc/friendly-sql-functions.md) | [Result Set Builders :>](/doc/result-set-builders.md)

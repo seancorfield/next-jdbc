@@ -15,7 +15,7 @@
             [next.jdbc.result-set :as rs]
             [next.jdbc.specs :as specs]
             [next.jdbc.types :as types])
-  (:import (java.sql ResultSet)))
+  (:import (java.sql ResultSet ResultSetMetaData Types)))
 
 (set! *warn-on-reflection* true)
 
@@ -336,6 +336,24 @@ VALUES ('Pear', 'green', 49, 47)
       (is (every? number?  (map (column :BTEST/IS_IT) data)))
       (is (every? boolean? (map (column :BTEST/IS_IT) data))))
     (if (or (sqlite?) (derby?))
+      (is (every? number?  (map (column :BTEST/TWIDDLE) data)))
+      (is (every? boolean? (map (column :BTEST/TWIDDLE) data)))))
+  (let [data (jdbc/execute! (ds) ["select * from btest"]
+                            (cond-> (default-options)
+                              (sqlite?)
+                              (assoc :builder-fn
+                                     (rs/builder-adapter
+                                      rs/as-maps
+                                      (fn [builder ^ResultSet rs ^Integer i]
+                                        (let [rsm ^ResultSetMetaData (:rsmeta builder)]
+                                          (rs/read-column-by-index
+                                           (if (#{"BIT" "BOOL"} (.getColumnTypeName rsm i))
+                                             (.getBoolean rs i)
+                                             (.getObject rs i))
+                                           rsm
+                                           i)))))))]
+    (is (every? boolean? (map (column :BTEST/IS_IT) data)))
+    (if (derby?)
       (is (every? number?  (map (column :BTEST/TWIDDLE) data)))
       (is (every? boolean? (map (column :BTEST/TWIDDLE) data))))))
 
