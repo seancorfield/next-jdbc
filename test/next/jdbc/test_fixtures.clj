@@ -124,6 +124,7 @@
               (.getPostgresDatabase ^EmbeddedPostgres @embedded-pg))
       (reset! test-datasource (jdbc/get-datasource db)))
     (let [fruit (if (mysql?) "fruit" "FRUIT") ; MySQL is case sensitive!
+          btest (if (mysql?) "btest" "BTEST")
           auto-inc-pk
           (cond (or (derby?) (hsqldb?))
                 (str "GENERATED ALWAYS AS IDENTITY"
@@ -146,6 +147,9 @@
         (try
           (do-commands con [(str "DROP TABLE " fruit)])
           (catch Exception _))
+        (try
+          (do-commands con [(str "DROP TABLE " btest)])
+          (catch Exception _))
         (when (postgres?)
           (try
             (do-commands con ["DROP TABLE LANG_TEST"])
@@ -166,6 +170,24 @@ CREATE TABLE " fruit " (
   COST INT DEFAULT NULL,
   GRADE REAL DEFAULT NULL
 )")])
+        (let [created (atom false)]
+          ;; MS SQL Server does not support bool/boolean:
+          (doseq [btype ["BOOL" "BOOLEAN" "BIT"]]
+            ;; Derby does not support bit:
+            (doseq [bitty ["BIT" "SMALLINT"]]
+              (try
+                (when-not @created
+                  (do-commands con [(str "
+CREATE TABLE " btest " (
+  NAME VARCHAR(32),
+  IS_IT " btype ",
+  TWIDDLE " bitty "
+)")])
+                  (reset! created true))
+                (catch Throwable _))))
+          (when-not @created
+            (println (:dbtype db) "failed btest creation")
+            #_(throw (ex-info (str (:dbtype db) " has no boolean type?") {}))))
         (when (stored-proc?)
           (let [[begin end] (if (postgres?) ["$$" "$$"] ["BEGIN" "END"])]
             (try

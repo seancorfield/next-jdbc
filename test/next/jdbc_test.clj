@@ -10,10 +10,11 @@
             [next.jdbc.test-fixtures
              :refer [with-test-db db ds column
                       default-options stored-proc?
-                      derby? hsqldb? jtds? mssql? mysql? postgres?]]
+                      derby? hsqldb? jtds? mssql? mysql? postgres? sqlite?]]
             [next.jdbc.prepare :as prep]
             [next.jdbc.result-set :as rs]
-            [next.jdbc.specs :as specs])
+            [next.jdbc.specs :as specs]
+            [next.jdbc.types :as types])
   (:import (java.sql ResultSet)))
 
 (set! *warn-on-reflection* true)
@@ -311,6 +312,32 @@ VALUES ('Pear', 'green', 49, 47)
                    result))))
         (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
         (is (= ac (.getAutoCommit con)))))))
+
+(deftest bool-tests
+  (doseq [[n b] [["zero" 0] ["one" 1] ["false" false] ["true" true]]
+          :let [v-bit  (if (number? b) b (if b 1 0))
+                v-bool (if (number? b) (pos? b) b)]]
+    (jdbc/execute-one!
+     (ds)
+     ["insert into btest (name,is_it,twiddle) values (?,?,?)"
+      n
+      (if (postgres?)
+        (types/as-boolean b)
+        b) ; 0, 1, false, true are all acceptable
+      (cond (hsqldb?)
+            v-bool ; hsqldb requires a boolean here
+            (postgres?)
+            (types/as-other v-bit) ; really postgres??
+            :else
+            v-bit)]))
+  (let [data (jdbc/execute! (ds) ["select * from btest"]
+                            (default-options))]
+    (if (sqlite?)
+      (is (every? number?  (map (column :BTEST/IS_IT) data)))
+      (is (every? boolean? (map (column :BTEST/IS_IT) data))))
+    (if (or (sqlite?) (derby?))
+      (is (every? number?  (map (column :BTEST/TWIDDLE) data)))
+      (is (every? boolean? (map (column :BTEST/TWIDDLE) data))))))
 
 (deftest folding-test
   (jdbc/execute-one! (ds) ["delete from fruit"])
