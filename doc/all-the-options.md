@@ -90,7 +90,8 @@ Not all databases or drivers support all of these options, or all values for any
 In addition the the above, `next.jdbc.prepare/execute-batch!` (which does **not** create a `PreparedStatement`) accepts an options hash map that can also contain the following:
 
 * `:batch-size` -- an integer that determines how to partition the parameter groups for submitting to the database in batches,
-* `:large` -- a Boolean flag that indicates whether the batch will produce large update counts (`long` rather than `int` values).
+* `:large` -- a Boolean flag that indicates whether the batch will produce large update counts (`long` rather than `int` values),
+* `:return-generated-keys` -- a Boolean flag that indicates whether `.getGeneratedKeys` should be called on the `PreparedStatement` after each batch is executed (if `true`, `execute-batch!` will return a vector of hash maps containing generated keys).
 
 ## Transactions
 

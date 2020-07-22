@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+Changes made to **develop** since the 1.1.569 release:
+* Address #133 by adding `:return-generated-keys` as an option on `execute-batch!`.
+
 ## Stable Builds
 
 * 2020-07-10 -- 1.1.569

@@ -101,7 +101,9 @@ Both of those are somewhat ugly and contain a fair bit of boilerplate and Java i
   (p/execute-batch! ps [[1 "Approved"] [2 "Rejected"] [3 "New"]]))
 ```
 
-By default, this adds all the parameter groups and executes one batched command. It returns a (Clojure) vector of update counts (rather than `int[]`). If you provide an options hash map, you can specify a `:batch-size` and the parameter groups will be partitioned and executed as multiple batched commands. This is intended to allow very large sequences of parameter groups to be executed without running into limitations that may apply to a single batched command. If you expect the update counts to be very large (more than `Integer/MAX_VALUE`), you can specify `:large true` so that `.executeLargeBatch` is called instead of `.executeBatch`. Note: not all databases support `.executeLargeBatch`.
+By default, this adds all the parameter groups and executes one batched command. It returns a (Clojure) vector of update counts (rather than `int[]`). If you provide an options hash map, you can specify a `:batch-size` and the parameter groups will be partitioned and executed as multiple batched commands. This is intended to allow very large sequences of parameter groups to be executed without running into limitations that may apply to a single batched command. If you expect the update counts to be very large (more than `Integer/MAX_VALUE`), you can specify `:large true` so that `.executeLargeBatch` is called instead of `.executeBatch`.
+
+> Note: not all databases support `.executeLargeBatch`.
 
 If you want to get the generated keys from an `insert` done via `execute-batch!`, you need a couple of extras, compared to the above:
 
@@ -110,15 +112,15 @@ If you want to get the generated keys from an `insert` done via `execute-batch!`
             ;; ensure the PreparedStatement will return the keys:
             ps  (jdbc/prepare con ["insert into status (id,name) values (?,?)"]
                               {:return-keys true})]
-  ;; this returns update counts (which we'll ignore)
-  (p/execute-batch! ps [[1 "Approved"] [2 "Rejected"] [3 "New"]])
-  ;; this produces the generated keys as a (datafiable) Clojure data structure:
-  (rs/datafiable-result-set (.getGeneratedKeys ps) con {}))
+  ;; this will call .getGeneratedKeys for each batch and return them as a
+  ;; vector of datafiable result sets (the keys in map are database-specific):
+  (p/execute-batch! ps [[1 "Approved"] [2 "Rejected"] [3 "New"]]
+                    {:return-generated-keys true}))
 ```
 
-The call to `rs/datafiable-result-set` can be passed a `:builder-fn` option if you want something other than qualified as-is hash maps.
+This calls `rs/datafiable-result-set` behind the scenes so you can also pass a `:builder-fn` option to `execute-batch!` if you want something other than qualified as-is hash maps.
 
-> Note: not all databases support calling `.getGeneratedKeys` here (everything I test against seems to, except MS SQL Server).
+> Note: not all databases support calling `.getGeneratedKeys` here (everything I test against seems to, except MS SQL Server). Some databases will only return one generated key per batch, rather than a generated key for every row inserted.
 
 ### Caveats
 

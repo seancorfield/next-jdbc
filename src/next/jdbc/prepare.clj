@@ -203,7 +203,15 @@
   you can specify `:large true` and `.executeLargeBatch` will be called
   instead.
 
-  Returns a Clojure vector of update counts.
+  By default, returns a Clojure vector of update counts. Some databases
+  allow batch statements to also return generated keys and you can attempt that
+  if you ensure the `PreparedStatement` is created with `:return-keys true`
+  and you also provide `:return-generated-keys true` in the options passed
+  to `execute-batch!`. Some databases will only return one generated key
+  per batch, some return all the generated keys, some will throw an exception.
+  If that is supported, `execute-batch!` will return a vector of hash maps
+  containing the generated keys as fully-realized, datafiable result sets,
+  whose content is database-dependent.
 
   May throw `java.sql.BatchUpdateException` if any part of the batch fails.
   You may be able to call `.getUpdateCounts` on that exception object to
@@ -216,7 +224,15 @@
   ([ps param-groups]
    (execute-batch! ps param-groups {}))
   ([^PreparedStatement ps param-groups opts]
-   (let [params (if-let [n (:batch-size opts)]
+   (let [gen-ks (when (:return-generated-keys opts)
+                  (try
+                    (let [drs (requiring-resolve
+                               'next.jdbc.result-set/datafiable-result-set)]
+                      #(drs (.getGeneratedKeys ^PreparedStatement %)
+                            (p/get-connection ps {})
+                            opts))
+                    (catch Throwable _)))
+         params (if-let [n (:batch-size opts)]
                   (if (and (number? n) (pos? n))
                     (partition-all n param-groups)
                     (throw (IllegalArgumentException.
@@ -225,7 +241,8 @@
      (into []
            (mapcat (fn [group]
                      (run! #(.addBatch (set-parameters ps %)) group)
-                     (if (:large opts)
-                       (.executeLargeBatch ps)
-                       (.executeBatch ps))))
+                     (let [result (if (:large opts)
+                                    (.executeLargeBatch ps)
+                                    (.executeBatch ps))]
+                       (if gen-ks (gen-ks ps) result))))
            params))))
