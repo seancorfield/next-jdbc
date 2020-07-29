@@ -34,7 +34,7 @@
                       org.apache.logging.log4j/log4j-jul {:mvn/version "2.13.3"}
                       org.apache.logging.log4j/log4j-slf4j-impl {:mvn/version "2.13.3"}
                       ;; test auto-added snake/kebab builders and options
-                      camel-snake-kebab {:mvn/version "0.4.1"}}
+                      camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.1"}}
          :jvm-opts ["-Dlog4j2.configurationFile=log4j2-info.properties"]}
   :runner
   {:extra-deps {com.cognitect/test-runner
@@ -46,5 +46,5 @@
   {:extra-deps {seancorfield/depstar {:mvn/version "1.0.94"}}
    :main-opts ["-m" "hf.depstar.jar" "next-jdbc.jar"]}
   :deploy
-  {:extra-deps {deps-deploy {:mvn/version "0.0.9"}}
+  {:extra-deps {deps-deploy/deps-deploy {:mvn/version "0.0.9"}}
    :main-opts ["-m" "deps-deploy.deps-deploy" "deploy" "next-jdbc.jar"]}}}
