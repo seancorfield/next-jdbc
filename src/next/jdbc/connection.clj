@@ -341,7 +341,11 @@
       via reflection, e.g., :autoCommit, :readOnly, :schema..."
   ^Connection
   [^DataSource datasource opts]
-  (let [^Connection connection (.getConnection datasource)]
+  (let [^Connection connection (if (and (:user opts) (:password opts))
+                                 (.getConnection datasource
+                                                 (:user opts)
+                                                 (:password opts))
+                                 (.getConnection datasource))]
     ;; fast, specific option handling:
     (when (contains? opts :auto-commit)
       (.setAutoCommit connection (boolean (:auto-commit opts))))

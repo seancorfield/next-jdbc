@@ -144,13 +144,23 @@
   and applies the `:auto-commit` and/or `:read-only` options, if provided.
 
   If you call `get-connection` on anything else, it will call `get-datasource`
-  first to try to get a `DataSource`, and then call `get-connection` on that."
+  first to try to get a `DataSource`, and then call `get-connection` on that.
+
+  If you want different per-connection username/password values, you can
+  either put `:user` and `:password` into the `opts` hash map or pass them
+  as positional arguments."
   (^java.sql.Connection
     [spec]
     (p/get-connection spec {}))
   (^java.sql.Connection
     [spec opts]
-    (p/get-connection spec opts)))
+    (p/get-connection spec opts))
+  (^java.sql.Connection
+    [spec user password]
+    (p/get-connection spec {:user user :password password}))
+  (^java.sql.Connection
+    [spec user password opts]
+    (p/get-connection spec (assoc opts :user user :password password))))
 
 (defn prepare
   "Given a connection to a database, and a vector containing SQL and any

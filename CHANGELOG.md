@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 Changes made to **develop** since the 1.1.569 release:
+* Fix #137 by adding support for specifying username and password per-connection (if your datasource supports this).
 * Document SQLite handling of `bool` and `bit` columns in a new **Tips & Tricks** section, inspired by #134.
 * Address #133 by adding `:return-generated-keys` as an option on `execute-batch!`.
 
