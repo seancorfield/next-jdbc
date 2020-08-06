@@ -7,6 +7,7 @@
   the `->pool` and `component` functions for creating pooled datasource
   objects."
   (:require [clojure.java.data :as j]
+            [clojure.string :as str]
             [next.jdbc.protocols :as p])
   (:import (java.sql Connection DriverManager)
            (javax.sql DataSource)
@@ -206,6 +207,40 @@
                                ", and :classname not provided.")
                           db-spec)))
         [url etc]))))
+
+(defn jdbc-url
+  "Given a database spec (as a hash map), return a JDBC URL with all the
+  attributes added to the query string. The result is suitable for use in
+  calls to `->pool` and `component` as the `:jdbcUrl` key in the parameter
+  map for the connection pooling library.
+
+  This allows you to build a connection-pooled datasource that needs
+  additional settings that the pooling library does not support, such as
+  `:serverTimezone`:
+
+```clojure
+  (def db-spec {:dbtype .. :dbname .. :user .. :password ..
+                :serverTimezone \"UTC\"})
+  (def ds (next.jdbc.connection/->pool
+           HikariCP {:jdbcUrl (next.jdbc.connection/jdbc-url db-spec)
+                     :maximumPoolSize 15}))
+```
+
+  This also clearly separates the attributes that should be part of the
+  JDBC URL from the attributes that should be configured on the pool.
+
+  Since JDBC drivers can handle URL encoding differently, if you are
+  trying to pass attributes that might need encoding, you should make
+  sure they are properly URL-encoded as values in the database spec hash map.
+  This function does **not** attempt to URL-encode values for you!"
+  [db-spec]
+  (let [[url etc] (spec->url+etc db-spec)
+        url-and   (if (str/index-of url "?") "&" "?")]
+    (str url url-and (str/join "&"
+                               (reduce-kv (fn [pairs k v]
+                                            (conj pairs (str (name k) "=" v)))
+                                          []
+                                          etc)))))
 
 (defn ->pool
   "Given a (connection pooled datasource) class and a database spec, return a

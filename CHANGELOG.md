@@ -4,6 +4,9 @@ Only accretive/fixative changes will be made from now on.
 
 ## Stable Builds
 
+* 2020-08-05 -- 1.1.582
+  * Fix #138 by exposing `next.jdbc.connection/jdbc-url` to build `:jdbcUrl` values that can be passed to `->pool` or `component`.
+
 * 2020-08-03 -- 1.1.581
   * Fix #137 by adding support for specifying username and password per-connection (if your datasource supports this).
   * Document SQLite handling of `bool` and `bit` columns in a new **Tips & Tricks** section, inspired by #134.
