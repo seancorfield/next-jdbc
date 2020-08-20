@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+Changes made on **develop** since the 1.1.582 release:
+* If `ResultSet.getMetaData()` returns `null`, we assume the column count is zero, i.e., an empty result set.
+
 ## Stable Builds
 
 * 2020-08-05 -- 1.1.582

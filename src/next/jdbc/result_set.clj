@@ -40,13 +40,13 @@
           (if-let [q (not-empty (.getTableName rsmeta i))]
             (keyword q (.getColumnLabel rsmeta i))
             (keyword (.getColumnLabel rsmeta i))))
-        (range 1 (inc (.getColumnCount rsmeta)))))
+        (range 1 (inc (try (.getColumnCount rsmeta) (catch Throwable _ 0))))))
 
 (defn get-unqualified-column-names
   "Given `ResultSetMetaData`, return a vector of unqualified column names."
   [^ResultSetMetaData rsmeta _]
   (mapv (fn [^Integer i] (keyword (.getColumnLabel rsmeta i)))
-        (range 1 (inc (.getColumnCount rsmeta)))))
+        (range 1 (inc (try (.getColumnCount rsmeta) (catch Throwable _ 0))))))
 
 (defn get-modified-column-names
   "Given `ResultSetMetaData`, return a vector of modified column names, each
@@ -62,7 +62,7 @@
             (if-let [q (some-> (.getTableName rsmeta i) (qf) (not-empty))]
               (keyword q (-> (.getColumnLabel rsmeta i) (lf)))
               (keyword (-> (.getColumnLabel rsmeta i) (lf)))))
-          (range 1 (inc (.getColumnCount rsmeta))))))
+          (range 1 (inc (try (.getColumnCount rsmeta) (catch Throwable _ 0)))))))
 
 (defn get-unqualified-modified-column-names
   "Given `ResultSetMetaData`, return a vector of unqualified modified column
@@ -73,7 +73,7 @@
   (let [lf (:label-fn opts)]
     (assert lf ":label-fn is required")
     (mapv (fn [^Integer i] (keyword (lf (.getColumnLabel rsmeta i))))
-          (range 1 (inc (.getColumnCount rsmeta))))))
+          (range 1 (inc (try (.getColumnCount rsmeta) (catch Throwable _ 0)))))))
 
 (defn- lower-case
   "Converts a string to lower case in the US locale to avoid problems in
