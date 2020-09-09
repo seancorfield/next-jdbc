@@ -8,6 +8,7 @@ pom.xml.asc
 /.eastwood
 /.lein-*
 /.nrepl-history
+/.rebl
 /.nrepl-port
 .hgignore
 .hg/

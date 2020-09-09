@@ -2,6 +2,8 @@
 
 The next generation of `clojure.java.jdbc`: a new low-level Clojure wrapper for JDBC-based access to databases.
 
+**Featured in [Jacek Schae's Learn Reitit Pro online course](https://www.jacekschae.com/learn-reitit-pro/pfec2)!**
+
 ## TL;DR
 
 The latest versions on Clojars and on cljdoc:
