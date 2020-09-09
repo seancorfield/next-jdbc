@@ -3,7 +3,8 @@
 Only accretive/fixative changes will be made from now on.
 
 Changes made on **develop** since the 1.1.582 release:
-* If `ResultSet.getMetaData()` returns `null`, we assume the column count is zero, i.e., an empty result set.
+* Fix #139 by adding `next.jdbc.plan/select-one!` and `next.jdbc.plan/select!`.
+* If `ResultSet.getMetaData()` returns `null`, we assume the column count is zero, i.e., an empty result set. This should "never happen" but some JDBC drivers are badly behaved and their idea of an "empty result set" does not match the JDBC API spec.
 
 ## Stable Builds
 

@@ -230,7 +230,7 @@ Any operation that can perform key-based lookup can be used here without creatin
 
 This means that `select-keys` can be used to create regular Clojure hash map from (a subset of) columns in the row, without realizing the row, and it will not implement `Datafiable` or `Navigable`.
 
-If you wish to create a Clojure hash map that supports that lazy navigation, you can call `next.jdbc.result-set/datafiable-row`, passing in the current row, a `connectable`, and an options hash map, just as you passed into `plan`. Compare the difference in output between these four expressions:
+If you wish to create a Clojure hash map that supports that lazy navigation, you can call `next.jdbc.result-set/datafiable-row`, passing in the current row, a `connectable`, and an options hash map, just as you passed into `plan`. Compare the difference in output between these four expressions (see below for a simpler way to do this):
 
 ```clojure
 ;; selects specific keys (as simple keywords):
@@ -274,6 +274,93 @@ If you realize a row, by calling `datafiable-row` on the abstract row passed int
 The order of the column names returned by `column-names` matches SQL's natural order, based on the operation performed, and will also match the order of column values provided in the reduction when using an array-based result set builder (`plan` provides just the column values, one row at a time, when using an array-based builder, without the leading vector of column names that you would get from `execute!`: if you call `datafiable-row` on such a row, you will get a realized vector of column values).
 
 > Note: since `plan` expects you to process the result set via reduction, you should not use it for DDL or for SQL statements that only produce update counts.
+
+As of 1.1.next, two helper functions are available to make some `plan` operations easier:
+
+* `next.jdbc.plan/select-one!` -- reduces over `plan` and returns part of just the first row,
+* `next.jdbc.plan/select!` -- reduces over `plan` and returns a sequence of parts of each row.
+
+`select!` accepts a vector of column names to extract or a function to apply to each row. It is equivalent to the following:
+
+```clojure
+;; select! with vector of column names:
+user=> (into [] (map #(select-keys % cols)) (jdbc/plan ...))
+;; select! with a function:
+user=> (into [] (map f) (jdbc/plan ...))
+```
+
+The `:into` option lets you override the default of `[]` as the first argument to `into`.
+
+`select-one!` performs the same transformation on just the first row returned from a reduction over `plan`, equivalent to the following:
+
+```clojure
+;; select-one! with vector of column names:
+user=> (reduce (fn [_ row] (reduced (select-keys row cols))) nil (jdbc/plan ...))
+;; select-one! with a function:
+user=> (reduce (fn [_ row] (reduced (f row))) nil (jdbc/plan ...))
+```
+
+For example:
+
+```clojure
+;; select columns:
+user=> (plan/select-one!
+        ds [:n] ["select count(*) as n from invoice where customer_id = ?" 100])
+{:n 3}
+;; apply a function:
+user=> (plan/select-one!
+        ds :n ["select count(*) as n from invoice where customer_id = ?" 100])
+3
+```
+
+Here are some of the above sequence-producing operations, showing their `select!` equivalent:
+
+```clojure
+user=> (require '[next.jdbc.plan :as plan])
+nil
+user=> (into #{}
+             (map :product)
+             (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
+#{"apple" "banana" "cucumber"}
+;; or:
+user=> (plan/select! ds
+                     :product
+                     ["select * from invoice where customer_id = ?" 100]
+                     {:into #{}}) ; product a set, rather than a vector
+#{"apple" "banana" "cucumber"}
+;; selects specific keys (as simple keywords):
+user=> (into []
+             (map #(select-keys % [:id :product :unit_price :unit_cost :customer_id]))
+             (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
+;; or:
+user=> (plan/select! ds
+                     [:id :product :unit_price :unit_cost :customer_id]
+                     ["select * from invoice where customer_id = ?" 100])
+;; selects specific keys (as qualified keywords):
+user=> (into []
+             (map #(select-keys % [:invoice/id :invoice/product
+                                   :invoice/unit_price :invoice/unit_cost
+                                   :invoice/customer_id]))
+             (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
+;; or:
+user=> (plan/select! ds
+                     [:invoice/id :invoice/product
+                      :invoice/unit_price :invoice/unit_cost
+                      :invoice/customer_id]
+                     ["select * from invoice where customer_id = ?" 100])
+;; selects specific keys (as qualified keywords -- ignoring the table name):
+user=> (into []
+             (map #(select-keys % [:foo/id :bar/product
+                                   :quux/unit_price :wibble/unit_cost
+                                   :blah/customer_id]))
+             (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
+;; or:
+user=> (plan/select! ds
+                     [:foo/id :bar/product
+                      :quux/unit_price :wibble/unit_cost
+                      :blah/customer_id]
+                     ["select * from invoice where customer_id = ?" 100])
+```
 
 ## Datasources, Connections & Transactions
 

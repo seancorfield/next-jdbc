@@ -15,7 +15,7 @@
             [next.jdbc.result-set :as rs]
             [next.jdbc.specs :as specs]
             [next.jdbc.types :as types])
-  (:import (java.sql ResultSet ResultSetMetaData Types)))
+  (:import (java.sql ResultSet ResultSetMetaData)))
 
 (set! *warn-on-reflection* true)
 
