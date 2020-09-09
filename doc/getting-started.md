@@ -9,12 +9,12 @@ It is designed to work with Clojure 1.10 or later, supports `datafy`/`nav`, and 
 You can add `next.jdbc` to your project with either:
 
 ```clojure
-seancorfield/next.jdbc {:mvn/version "1.1.582"}
+seancorfield/next.jdbc {:mvn/version "1.1.588"}
 ```
 for `deps.edn` or:
 
 ```clojure
-[seancorfield/next.jdbc "1.1.582"]
+[seancorfield/next.jdbc "1.1.588"]
 ```
 for `project.clj` or `build.boot`.
 
@@ -29,7 +29,7 @@ For the examples in this documentation, we will use a local H2 database on disk,
 ```clojure
 ;; deps.edn
 {:deps {org.clojure/clojure {:mvn/version "1.10.1"}
-        seancorfield/next.jdbc {:mvn/version "1.1.582"}
+        seancorfield/next.jdbc {:mvn/version "1.1.588"}
         com.h2database/h2 {:mvn/version "1.4.199"}}}
 ```
 
@@ -275,7 +275,7 @@ The order of the column names returned by `column-names` matches SQL's natural o
 
 > Note: since `plan` expects you to process the result set via reduction, you should not use it for DDL or for SQL statements that only produce update counts.
 
-As of 1.1.next, two helper functions are available to make some `plan` operations easier:
+As of 1.1.588, two helper functions are available to make some `plan` operations easier:
 
 * `next.jdbc.plan/select-one!` -- reduces over `plan` and returns part of just the first row,
 * `next.jdbc.plan/select!` -- reduces over `plan` and returns a sequence of parts of each row.
