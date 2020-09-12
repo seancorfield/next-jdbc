@@ -15,4 +15,3 @@ pom.xml.asc
 /clojure_test*
 /example*db
 /derby.log
-/run-tests.sh
