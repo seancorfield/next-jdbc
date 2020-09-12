@@ -36,6 +36,14 @@
 (def ^:private test-mysql
   (when (System/getenv "NEXT_JDBC_TEST_MYSQL") test-mysql-map))
 
+(defn create-clojure-test [_]
+  (when test-mysql
+    (let [mysql (assoc test-mysql :dbname "mysql")]
+      (println "Creating clojure-test database in MySQL...")
+      (jdbc/execute-one! mysql ["create database if not exists clojure_test"])
+      (println "...done!")
+      (shutdown-agents))))
+
 (def ^:private test-mssql-map
   {:dbtype "mssql" :dbname "model"
    :user "sa" :password (System/getenv "MSSQL_SA_PASSWORD")})
