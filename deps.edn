@@ -43,7 +43,7 @@
    :main-opts ["-m" "cognitect.test-runner"
                "-d" "test"]}
   :jar
-  {:extra-deps {seancorfield/depstar {:mvn/version "1.0.94"}}
+  {:extra-deps {seancorfield/depstar {:mvn/version "1.1.117"}}
    :main-opts ["-m" "hf.depstar.jar" "next-jdbc.jar"]}
   :deploy
   {:extra-deps {deps-deploy/deps-deploy {:mvn/version "0.0.9"}}
