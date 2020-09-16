@@ -241,7 +241,8 @@ containing JSON:
   (let [type  (.getType v)
         value (.getValue v)]
     (if (#{"jsonb" "json"} type)
-      (with-meta (<-json value) {:pgtype type})
+      (when value
+        (with-meta (<-json value) {:pgtype type}))
       value)))
 ```
 
