@@ -26,5 +26,5 @@ fi
 if test "$1" = ""
 then
 	NEXT_JDBC_TEST_MSSQL=yes MSSQL_SA_PASSWORD=Str0ngP4ssw0rd \
-		NEXT_JDBC_TEST_MYSQL=yes clojure -A:test:runner
+		NEXT_JDBC_TEST_MYSQL=yes clojure -M:test:runner
 fi
