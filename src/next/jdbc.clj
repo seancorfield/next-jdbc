@@ -286,7 +286,13 @@
 (defn with-options
   "Given a connectable/transactable object and a set of (default) options
   that should be used on all operations on that object, return a new
-  wrapper object that can be used in its place."
+  wrapper object that can be used in its place.
+
+  Bear in mind that `get-datasource`, `get-connection`, and `with-transaction`
+  return plain Java objects, so if you call any of those on this wrapped
+  object, you'll need to re-wrap the Java object `with-options` again. See
+  the Datasources, Connections & Transactions section of Getting Started for
+  more details, and some examples of use with these functions."
   [connectable opts]
   (opts/->DefaultOptions connectable opts))
 
