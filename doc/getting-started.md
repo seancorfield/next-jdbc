@@ -140,6 +140,8 @@ user=> (jdbc/execute-one! ds-opts ["select * from address where id = ?" 4])
 user=>
 ```
 
+> Note: See the `next.jdbc/with-option` examples in the [**Datasources, Connections & Transactions**](#datasources-connections--transactions) below for some caveats around using this function.
+
 If you have [camel-snake-kebab](https://clj-commons.org/camel-snake-kebab/) on your classpath, two pre-built option hash maps are available in `next.jdbc`:
 * `snake-kebab-opts` -- provides `:column-fn`, `:table-fn`, `:label-fn`, `:qualifier-fn`, and `:builder-fn` that will convert Clojure identifiers in `:kebab-case` to SQL entities in `snake_case` and will produce result sets with qualified `:kebab-case` names from SQL entities that use `snake_case`,
 * `unqualified-snake-kebab-opts` -- provides `:column-fn`, `:table-fn`, `:label-fn`, `:qualifier-fn`, and `:builder-fn` that will convert Clojure identifiers in `:kebab-case` to SQL entities in `snake_case` and will produce result sets with _unqualified_ `:kebab-case` names from SQL entities that use `snake_case`.
