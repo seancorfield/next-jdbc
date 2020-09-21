@@ -67,6 +67,8 @@
   has changed over time (such as with MySQL)."
   {"derby"           {:classname "org.apache.derby.jdbc.EmbeddedDriver"
                       :host :none}
+   "duckdb"          {:classname "org.duckdb.DuckDBDriver"
+                      :host :none}
    "h2"              {:classname "org.h2.Driver"
                       :host :none}
    "h2:mem"          {:classname "org.h2.Driver"}

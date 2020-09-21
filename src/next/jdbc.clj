@@ -106,6 +106,7 @@
   Database types supported (for `:dbtype`), and their defaults:
   * `derby` -- `org.apache.derby.jdbc.EmbeddedDriver` -- also pass `:create true`
       if you want the database to be automatically created
+  * `duckdb` -- `org.duckdb.DuckDBDriver` -- embedded database
   * `h2` -- `org.h2.Driver` -- for an on-disk database
   * `h2:mem` -- `org.h2.Driver` -- for an in-memory database
   * `hsqldb`, `hsql` -- `org.hsqldb.jdbcDriver`
