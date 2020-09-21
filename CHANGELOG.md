@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.1.next in progress
+  * Fix #140 by adding `"duckdb"` to `next.jdbc.connection/dbtypes`.
+
 ## Stable Builds
 
 * 1.1.588 -- 2020-09-09
