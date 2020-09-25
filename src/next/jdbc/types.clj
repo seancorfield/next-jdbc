@@ -25,13 +25,13 @@
                                        (str/lower-case)
                                        (str/replace "_" "-"))))]
              `(defn ~as-n
-                ~(str "Wrap a Clojure value in a vector with metadata to implement `set-parameter`
+                ~(str "Wrap a Clojure value in a thunk with metadata to implement `set-parameter`
   so that `.setObject()` is called with the `java.sql.Types/" n "` SQL type.")
                 [~'obj]
-                (with-meta [~'obj]
+                (with-meta (constantly ~'obj)
                   {'next.jdbc.prepare/set-parameter
-                   (fn [[v#] ^PreparedStatement s# ^long i#]
-                     (.setObject s# i# v# ~(symbol "java.sql.Types" n)))})))))))
+                   (fn [vf# ^PreparedStatement s# ^long i#]
+                     (.setObject s# i# (vf#) ~(symbol "java.sql.Types" n)))})))))))
 
 (all-types)
 

@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.1.next in progress
   * Fix #140 by adding `"duckdb"` to `next.jdbc.connection/dbtypes`.
+  * Change `next.jdbc.types/as-*` functions to use a thunk instead of a vector to convey metadata, so that wrapped values do not get unpacked by HoneySQL.
 
 ## Stable Builds
 
