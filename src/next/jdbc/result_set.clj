@@ -571,16 +571,17 @@
         (let [row  (try (.getRow rs)     (catch Throwable t t))
               cols (try (:cols @builder) (catch Throwable t t))
               meta (try (d/datafy (.getMetaData rs)) (catch Throwable t t))]
-          (with-meta
-            (row-builder @builder)
-            {`core-p/datafy
-             (navize-row connectable opts)
-             `row-number
-             (fn [_] (if (instance? Throwable row) (throw row) row))
-             `column-names
-             (fn [_] (if (instance? Throwable cols) (throw cols) cols))
-             `metadata
-             (fn [_] (if (instance? Throwable meta) (throw meta) meta))})))
+          (vary-meta
+           (row-builder @builder)
+           assoc
+           `core-p/datafy
+           (navize-row connectable opts)
+           `row-number
+           (fn [_] (if (instance? Throwable row) (throw row) row))
+           `column-names
+           (fn [_] (if (instance? Throwable cols) (throw cols) cols))
+           `metadata
+           (fn [_] (if (instance? Throwable meta) (throw meta) meta)))))
 
       (toString [_]
         (try
@@ -604,8 +605,10 @@
   ;; in reality, this is going to be over-optimistic and will like cause `nav`
   ;; to fail on attempts to navigate into result sets that are not hash maps
   (datafiable-row [this connectable opts]
-                  (with-meta this
-                    {`core-p/datafy (navize-row connectable opts)})))
+                  (vary-meta
+                   this
+                   assoc
+                   `core-p/datafy (navize-row connectable opts))))
 
 (defn datafiable-result-set
   "Given a ResultSet, a connectable, and an options hash map, return a fully
@@ -1029,27 +1032,29 @@
   assumed foreign key column name."
   [connectable opts]
   (fn [row]
-    (with-meta row
-      {`core-p/nav (fn [_ k v]
-                     (try
-                       (let [[table fk cardinality]
-                             (expand-schema k (or (get-in opts [:schema k])
-                                                  (default-schema k)))]
-                         (if fk
-                           (let [entity-fn (:table-fn opts identity)
-                                 exec-fn!  (if (= :many cardinality)
-                                             p/-execute-all
-                                             p/-execute-one)]
-                             (exec-fn! connectable
-                                       [(str "SELECT * FROM "
-                                             (entity-fn (name table))
-                                             " WHERE "
-                                             (entity-fn (name fk))
-                                             " = ?")
-                                        v]
-                                       opts))
-                           v))
-                       (catch Exception _
-                         ;; assume an exception means we just cannot
-                         ;; navigate anywhere, so return just the value
-                         v)))})))
+    (vary-meta
+     row
+     assoc
+     `core-p/nav (fn [_ k v]
+                   (try
+                     (let [[table fk cardinality]
+                           (expand-schema k (or (get-in opts [:schema k])
+                                                (default-schema k)))]
+                       (if fk
+                         (let [entity-fn (:table-fn opts identity)
+                               exec-fn!  (if (= :many cardinality)
+                                           p/-execute-all
+                                           p/-execute-one)]
+                           (exec-fn! connectable
+                                     [(str "SELECT * FROM "
+                                           (entity-fn (name table))
+                                           " WHERE "
+                                           (entity-fn (name fk))
+                                           " = ?")
+                                      v]
+                                     opts))
+                         v))
+                     (catch Exception _
+                       ;; assume an exception means we just cannot
+                       ;; navigate anywhere, so return just the value
+                       v))))))
