@@ -6,6 +6,8 @@ It is designed to work with Clojure 1.10 or later, supports `datafy`/`nav`, and 
 
 ## Installation
 
+**You must be using Clojure 1.10 or later.** 1.10.1 is the most recent stable version of Clojure (as of November 3rd, 2020).
+
 You can add `next.jdbc` to your project with either:
 
 ```clojure
