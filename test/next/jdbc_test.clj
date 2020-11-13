@@ -15,7 +15,9 @@
             [next.jdbc.result-set :as rs]
             [next.jdbc.specs :as specs]
             [next.jdbc.types :as types])
-  (:import (java.sql ResultSet ResultSetMetaData)))
+  (:import (com.zaxxer.hikari HikariDataSource)
+           (com.mchange.v2.c3p0 ComboPooledDataSource PooledDataSource)
+           (java.sql ResultSet ResultSetMetaData)))
 
 (set! *warn-on-reflection* true)
 
@@ -312,6 +314,118 @@ VALUES ('Pear', 'green', 49, 47)
                    result))))
         (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
         (is (= ac (.getAutoCommit con)))))))
+
+(deftest issue-146
+  ;; since we use an embedded PostgreSQL data source, we skip this:
+  (when-not (postgres?)
+    (testing "Hikari and SavePoints"
+      (with-open [^HikariDataSource ds (c/->pool HikariDataSource
+                                        (let [db (db)]
+                                          (cond-> db
+                                            ;; jTDS does not support isValid():
+                                            (jtds?)
+                                            (assoc :connectionTestQuery "SELECT 1")
+                                            ;; HikariCP needs username, not user:
+                                            (contains? db :user)
+                                            (assoc :username (:user db)))))]
+        (testing "with-transaction with unnamed save point"
+          (is (= [{:next.jdbc/update-count 1}]
+                (jdbc/with-transaction [t ds]
+                  (let [save-point (.setSavepoint t)
+                        result (jdbc/execute! t ["
+      INSERT INTO fruit (name, appearance, cost, grade)
+      VALUES ('Pear', 'green', 49, 47)
+      "])]
+                    (.rollback t save-point)
+                    result))))
+          (is (= 4 (count (jdbc/execute! ds ["select * from fruit"]))))
+          (with-open [con (jdbc/get-connection ds)]
+            (let [ac (.getAutoCommit con)]
+              (is (= [{:next.jdbc/update-count 1}]
+                    (jdbc/with-transaction [t con]
+                      (let [save-point (.setSavepoint t)
+                            result (jdbc/execute! t ["
+      INSERT INTO fruit (name, appearance, cost, grade)
+      VALUES ('Pear', 'green', 49, 47)
+      "])]
+                        (.rollback t save-point)
+                        result))))
+              (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
+              (is (= ac (.getAutoCommit con))))))
+        (testing "with-transaction with named save point"
+          (is (= [{:next.jdbc/update-count 1}]
+                (jdbc/with-transaction [t ds]
+                  (let [save-point (.setSavepoint t (name (gensym)))
+                        result (jdbc/execute! t ["
+      INSERT INTO fruit (name, appearance, cost, grade)
+      VALUES ('Pear', 'green', 49, 47)
+      "])]
+                    (.rollback t save-point)
+                    result))))
+          (is (= 4 (count (jdbc/execute! ds ["select * from fruit"]))))
+          (with-open [con (jdbc/get-connection ds)]
+            (let [ac (.getAutoCommit con)]
+              (is (= [{:next.jdbc/update-count 1}]
+                    (jdbc/with-transaction [t con]
+                      (let [save-point (.setSavepoint t (name (gensym)))
+                            result (jdbc/execute! t ["
+      INSERT INTO fruit (name, appearance, cost, grade)
+      VALUES ('Pear', 'green', 49, 47)
+      "])]
+                        (.rollback t save-point)
+                        result))))
+              (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
+              (is (= ac (.getAutoCommit con))))))))
+    (testing "c3p0 and SavePoints"
+      (with-open [^PooledDataSource ds (c/->pool ComboPooledDataSource (db))]
+        (testing "with-transaction with unnamed save point"
+          (is (= [{:next.jdbc/update-count 1}]
+                (jdbc/with-transaction [t ds]
+                  (let [save-point (.setSavepoint t)
+                        result (jdbc/execute! t ["
+      INSERT INTO fruit (name, appearance, cost, grade)
+      VALUES ('Pear', 'green', 49, 47)
+      "])]
+                    (.rollback t save-point)
+                    result))))
+          (is (= 4 (count (jdbc/execute! ds ["select * from fruit"]))))
+          (with-open [con (jdbc/get-connection ds)]
+            (let [ac (.getAutoCommit con)]
+              (is (= [{:next.jdbc/update-count 1}]
+                    (jdbc/with-transaction [t con]
+                      (let [save-point (.setSavepoint t)
+                            result (jdbc/execute! t ["
+      INSERT INTO fruit (name, appearance, cost, grade)
+      VALUES ('Pear', 'green', 49, 47)
+      "])]
+                        (.rollback t save-point)
+                        result))))
+              (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
+              (is (= ac (.getAutoCommit con))))))
+        (testing "with-transaction with named save point"
+          (is (= [{:next.jdbc/update-count 1}]
+                (jdbc/with-transaction [t ds]
+                  (let [save-point (.setSavepoint t (name (gensym)))
+                        result (jdbc/execute! t ["
+      INSERT INTO fruit (name, appearance, cost, grade)
+      VALUES ('Pear', 'green', 49, 47)
+      "])]
+                    (.rollback t save-point)
+                    result))))
+          (is (= 4 (count (jdbc/execute! ds ["select * from fruit"]))))
+          (with-open [con (jdbc/get-connection ds)]
+            (let [ac (.getAutoCommit con)]
+              (is (= [{:next.jdbc/update-count 1}]
+                    (jdbc/with-transaction [t con]
+                      (let [save-point (.setSavepoint t (name (gensym)))
+                            result (jdbc/execute! t ["
+      INSERT INTO fruit (name, appearance, cost, grade)
+      VALUES ('Pear', 'green', 49, 47)
+      "])]
+                        (.rollback t save-point)
+                        result))))
+              (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
+              (is (= ac (.getAutoCommit con))))))))))
 
 (deftest bool-tests
   (doseq [[n b] [["zero" 0] ["one" 1] ["false" false] ["true" true]]
