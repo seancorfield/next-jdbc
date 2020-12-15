@@ -2,10 +2,10 @@
 
 Only accretive/fixative changes will be made from now on.
 
+## Stable Builds
+
 * 1.1.613 -- 2020-11-05
   * Fix #144 by ensuring `camel-snake-case` is properly required before use in an uberjar context.
-
-## Stable Builds
 
 * 1.1.610 -- 2020-10-19
   * Fix #140 by adding `"duckdb"` to `next.jdbc.connection/dbtypes`.
