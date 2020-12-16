@@ -235,7 +235,7 @@ At program startup you'll need to call these functions (either at the top-level 
 Those calls will add function definitions to that namespace based on what is in the `.sql` files. Now set up your db-spec and datasource as usual with `next.jdbc`:
 
 ```clojure
-(def db-spec {:dbytpe "h2:mem" :dbtype "example"}) ; assumes H2 driver in deps.edn
+(def db-spec {:dbtype "h2:mem" :dbname "example"}) ; assumes H2 driver in deps.edn
 
 (def ds (jdbc/get-datasource db-spec))
 ```
