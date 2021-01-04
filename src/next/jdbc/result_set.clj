@@ -11,7 +11,7 @@
 
   A broad range of result set builder implementation functions are provided.
 
-  Also provides the default implemenations for `Executable` and
+  Also provides the default implementations for `Executable` and
   the default `datafy`/`nav` behavior for rows from a result set.
 
   See also https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.date-time
