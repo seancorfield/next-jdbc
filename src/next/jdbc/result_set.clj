@@ -166,7 +166,7 @@
   determine whether to call `.getObject` or some other method to read the
   column's value, and can choose whether or not to use the `ReadableColumn`
   protocol-based value processor (and could add metadata to the value to
-  satify that protocol on a per-instance basis)."
+  satisfy that protocol on a per-instance basis)."
   [builder-fn column-by-index-fn]
   (fn [rs opts]
     (let [builder (builder-fn rs opts)]
