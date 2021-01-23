@@ -372,7 +372,7 @@
 
   These options are supported:
   * `:auto-commit` -- whether the connection should be set to auto-commit or not;
-      without this option, the defaut is `true` -- connections will auto-commit,
+      without this option, the default is `true` -- connections will auto-commit,
   * `:read-only` -- whether the connection should be set to read-only mode,
   * `:connection` -- a hash map of camelCase properties to set on the connection,
       via reflection, e.g., :autoCommit, :readOnly, :schema..."

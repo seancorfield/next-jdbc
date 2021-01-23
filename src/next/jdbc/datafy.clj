@@ -19,7 +19,7 @@
   * `Statement` -- datafies as a bean.
 
   Because different database drivers may throw `SQLException` for various
-  unimplemented or unavailable propertiies on objects in various states,
+  unimplemented or unavailable properties on objects in various states,
   the default behavior is to return those exceptions using the `:qualify`
   option for `clojure.java.data/from-java-shallow`, so for a property
   `:foo`, if its corresponding getter throws an exception, it would instead
