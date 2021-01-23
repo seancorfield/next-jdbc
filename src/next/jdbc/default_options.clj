@@ -1,8 +1,10 @@
-;; copyright (c) 2020 Sean Corfield, all rights reserved
+;; copyright (c) 2020-2021 Sean Corfield, all rights reserved
 
 (ns ^:no-doc next.jdbc.default-options
   "Implementation of default options logic."
   (:require [next.jdbc.protocols :as p]))
+
+(set! *warn-on-reflection* true)
 
 (defrecord DefaultOptions [connectable options])
 

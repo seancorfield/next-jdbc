@@ -1,9 +1,11 @@
-;; copyright (c) 2020 Sean Corfield, all rights reserved
+;; copyright (c) 2020-2021 Sean Corfield, all rights reserved
 
 (ns next.jdbc.plan
   "Some helper functions that make common operations with `next.jdbc/plan`
   much easier."
   (:require [next.jdbc :as jdbc]))
+
+(set! *warn-on-reflection* true)
 
 (defn select-one!
   "Execute the SQL and params using `next.jdbc/plan` and return just the
