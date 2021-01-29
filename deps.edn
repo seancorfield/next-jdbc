@@ -1,5 +1,5 @@
 {:paths ["src"]
- :deps {org.clojure/clojure {:mvn/version "1.10.1"}
+ :deps {org.clojure/clojure {:mvn/version "1.10.2"}
         org.clojure/java.data {:mvn/version "1.0.78"}}
  :aliases
  {:test {:extra-paths ["test"]
@@ -43,8 +43,9 @@
    :main-opts ["-m" "cognitect.test-runner"
                "-d" "test"]}
   :jar
-  {:extra-deps {seancorfield/depstar {:mvn/version "1.1.132"}}
-   :main-opts ["-m" "hf.depstar.jar" "next-jdbc.jar"]}
+  {:replace-deps {seancorfield/depstar {:mvn/version "2.0.171"}}
+   :exec-fn hf.depstar/jar :exec-args {:jar "next-jdbc.jar"}}
   :deploy
-  {:extra-deps {slipset/deps-deploy {:mvn/version "0.1.1"}}
-   :main-opts ["-m" "deps-deploy.deps-deploy" "deploy" "next-jdbc.jar"]}}}
+  {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
+   :exec-fn deps-deploy.deps-deploy/deploy
+   :exec-args {:installer :remote :artifact "next-jdbc.jar"}}}}
