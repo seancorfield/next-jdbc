@@ -44,7 +44,8 @@
                "-d" "test"]}
   :jar
   {:replace-deps {seancorfield/depstar {:mvn/version "2.0.171"}}
-   :exec-fn hf.depstar/jar :exec-args {:jar "next-jdbc.jar"}}
+   :exec-fn hf.depstar/jar
+   :exec-args {:jar "next-jdbc.jar" :sync-pom true}}
   :deploy
   {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
    :exec-fn deps-deploy.deps-deploy/deploy
