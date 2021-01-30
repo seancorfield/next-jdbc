@@ -4,6 +4,9 @@ Only accretive/fixative changes will be made from now on.
 
 ## Stable Builds
 
+* 1.1.next in progress
+  * Address #157 by using a `volatile!` as a way to break the circular dependency (code that requires `next.jdbc.prepare` and uses `execute-batch!` without also requiring something that causes `next.jdbc.result-set` to be loaded will no longer return generated keys from `execute-batch!` but that's an almost impossible path since nearly all code that uses `execute-batch!` will have called `next.jdbc/prepare` to get the `PreparedStatement` in the first place). _[I'm leaning toward adding `execute-batch!` to `next.jdbc` and deprecating the one in `next.jdbc.prepare`]_
+
 * 1.1.613 -- 2020-11-05
   * Fix #144 by ensuring `camel-snake-case` is properly required before use in an uberjar context.
 

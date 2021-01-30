@@ -638,6 +638,9 @@
                 (.next rs))
          (rs! builder rs'))))))
 
+;; make it available to next.jdbc.prepare
+(vreset! @#'prepare/d-r-s datafiable-result-set)
+
 (defn- stmt->result-set
   "Given a `PreparedStatement` and options, execute it and return a `ResultSet`
   if possible."

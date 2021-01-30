@@ -190,6 +190,8 @@
        (j/set-properties stmt props))
      stmt)))
 
+(def ^:private d-r-s (volatile! nil))
+
 (defn execute-batch!
   "Given a `PreparedStatement` and a vector containing parameter groups,
   i.e., a vector of vector of parameters, use `.addBatch` to add each group
@@ -225,13 +227,10 @@
    (execute-batch! ps param-groups {}))
   ([^PreparedStatement ps param-groups opts]
    (let [gen-ks (when (:return-generated-keys opts)
-                  (try
-                    (let [drs (requiring-resolve
-                               'next.jdbc.result-set/datafiable-result-set)]
-                      #(drs (.getGeneratedKeys ^PreparedStatement %)
-                            (p/get-connection ps {})
-                            opts))
-                    (catch Throwable _)))
+                  (when-let [drs @d-r-s]
+                    #(drs (.getGeneratedKeys ^PreparedStatement %)
+                          (p/get-connection ps {})
+                          opts)))
          params (if-let [n (:batch-size opts)]
                   (if (and (number? n) (pos? n))
                     (partition-all n param-groups)

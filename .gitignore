@@ -10,6 +10,7 @@ pom.xml.asc
 /.nrepl-history
 /.rebl
 /.nrepl-port
+/.socket-repl-port
 .hgignore
 .hg/
 /clojure_test*
