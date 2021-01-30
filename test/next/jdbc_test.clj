@@ -1,4 +1,4 @@
-;; copyright (c) 2019-2020 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2021 Sean Corfield, all rights reserved
 
 (ns next.jdbc-test
   "Basic tests for the primary API of `next.jdbc`."

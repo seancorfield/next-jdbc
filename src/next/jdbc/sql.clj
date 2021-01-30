@@ -1,4 +1,4 @@
-;; copyright (c) 2019-2020 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2021 Sean Corfield, all rights reserved
 
 (ns next.jdbc.sql
   "Some utility functions that make common operations easier by

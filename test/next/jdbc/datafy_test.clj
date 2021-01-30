@@ -1,4 +1,4 @@
-;; copyright (c) 2020 Sean Corfield, all rights reserved
+;; copyright (c) 2020-2021 Sean Corfield, all rights reserved
 
 (ns next.jdbc.datafy-test
   "Tests for the datafy extensions over JDBC types."

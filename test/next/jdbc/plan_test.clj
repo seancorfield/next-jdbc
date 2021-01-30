@@ -1,4 +1,4 @@
-;; copyright (c) 2020 Sean Corfield, all rights reserved
+;; copyright (c) 2020-2021 Sean Corfield, all rights reserved
 
 (ns next.jdbc.plan-test
   "Tests for the plan helpers."
