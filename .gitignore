@@ -10,6 +10,7 @@ pom.xml.asc
 /.nrepl-history
 /.rebl
 /.nrepl-port
+/.rebel_readline_history
 /.socket-repl-port
 .hgignore
 .hg/
