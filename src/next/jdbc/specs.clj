@@ -128,6 +128,11 @@
                                  :sql-params (s/nilable ::sql-params)
                                  :opts (s/? ::opts-map))))
 
+(s/fdef jdbc/execute-batch!
+        :args (s/cat :ps ::prepared-statement
+                     :param-groups (s/coll-of ::params :kind sequential?)
+                     :opts (s/? ::batch-opts)))
+
 (s/fdef jdbc/transact
         :args (s/cat :transactable ::transactable
                      :f fn?
@@ -152,11 +157,6 @@
         :args (s/cat :clazz #(instance? Class %)
                      :db-spec ::db-spec-or-jdbc
                      :close-fn (s/? fn?)))
-
-(s/fdef prepare/execute-batch!
-        :args (s/cat :ps ::prepared-statement
-                     :param-groups (s/coll-of ::params :kind sequential?)
-                     :opts (s/? ::batch-opts)))
 
 (s/fdef prepare/set-parameters
         :args (s/cat :ps ::prepared-statement
@@ -230,12 +230,12 @@
    `jdbc/plan
    `jdbc/execute!
    `jdbc/execute-one!
+   `jdbc/execute-batch!
    `jdbc/transact
    `jdbc/with-transaction
    `jdbc/with-options
    `connection/->pool
    `connection/component
-   `prepare/execute-batch!
    `prepare/set-parameters
    `prepare/statement
    `sql/insert!

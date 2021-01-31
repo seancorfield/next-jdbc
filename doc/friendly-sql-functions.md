@@ -60,7 +60,7 @@ database. Several databases have a limit of 1,000 parameter placeholders.
 Oracle does not support this form of multi-row insert, requiring a different
 syntax altogether.
 
-You should look at [`next.jdbc.prepare/execute-batch!`](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.prepare#execute-batch!) for an alternative approach.
+You should look at [`next.jdbc/execute-batch!`](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc#execute-batch!) for an alternative approach.
 
 ## `query`
 

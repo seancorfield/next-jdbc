@@ -5,7 +5,7 @@ Only accretive/fixative changes will be made from now on.
 ## Stable Builds
 
 * 1.1.next in progress
-  * Address #157 by using a `volatile!` as a way to break the circular dependency (code that requires `next.jdbc.prepare` and uses `execute-batch!` without also requiring something that causes `next.jdbc.result-set` to be loaded will no longer return generated keys from `execute-batch!` but that's an almost impossible path since nearly all code that uses `execute-batch!` will have called `next.jdbc/prepare` to get the `PreparedStatement` in the first place). _[I'm leaning toward adding `execute-batch!` to `next.jdbc` and deprecating the one in `next.jdbc.prepare`]_
+  * Fix #157 by copying `next.jdbc.prepare/execute-batch!` to `next.jdbc/execute-batch!` (to avoid a circular dependency that previously relied on requiring `next.jdbc.result-set` at runtime -- which was problematic for GraalVM-based native compilation); **`next.jdbc.prepare/execute-batch!` is deprecated:** it will continue to exist and work, but is no longer documented. In addition, `next.jdbc.prepare/execute-batch!` now relies on a private `volatile!` in order to reference `next.jdbc.result-set/datafiable-result-set` so that it is GraalVM-friendly. Note: code that requires `next.jdbc.prepare` and uses `execute-batch!` without also requiring something that causes `next.jdbc.result-set` to be loaded will no longer return generated keys from `execute-batch!` but that's an almost impossible path since nearly all code that uses `execute-batch!` will have called `next.jdbc/prepare` to get the `PreparedStatement` in the first place.
 
 * 1.1.613 -- 2020-11-05
   * Fix #144 by ensuring `camel-snake-case` is properly required before use in an uberjar context.
@@ -179,7 +179,7 @@ Only accretive/fixative changes will be made from now on.
   * Fix #43 by adjusting the spec for `insert-multi!` to "require less" of the `cols` and `rows` arguments.
   * Fix #42 by adding specs for `execute-batch!` and `set-parameters` in `next.jdbc.prepare`.
   * Fix #41 by improving docstrings and documentation, especially around prepared statement handling.
-  * Fix #40 by adding `next.jdbc.prepare/execute-batch!`.
+  * Fix #40 by adding `next.jdbc/execute-batch!` (previously `next.jdbc.prepare/execute-batch!`).
   * Added `assert`s in `next.jdbc.sql` as more informative errors for cases that would generate SQL exceptions (from malformed SQL).
   * Added spec for `:order-by` to reflect what is actually permitted.
   * Expose `next.jdbc.connect/dbtypes` as a table of known database types and aliases, along with their class name(s), port, and other JDBC string components.

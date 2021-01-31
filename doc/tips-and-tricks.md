@@ -101,7 +101,7 @@ It's also worth noting that column comparisons are case-insensitive so `WHERE fo
 
 ### Batch Statements
 
-Even when using `next.jdbc.prepare/execute-batch!`, MySQL will still send multiple statements to the database unless you specify `:rewriteBatchedStatements true` as part of the db-spec hash map or JDBC URL when the datasource is created.
+Even when using `next.jdbc/execute-batch!`, MySQL will still send multiple statements to the database unless you specify `:rewriteBatchedStatements true` as part of the db-spec hash map or JDBC URL when the datasource is created.
 
 ### Streaming Result Sets
 
@@ -125,7 +125,7 @@ What does this mean for your use of `next.jdbc`? In `plan`, `execute!`, and `exe
 
 ### Batch Statements
 
-Even when using `next.jdbc.prepare/execute-batch!`, PostgreSQL will still send multiple statements to the database unless you specify `:reWriteBatchedInserts true` as part of the db-spec hash map or JDBC URL when the datasource is created.
+Even when using `next.jdbc/execute-batch!`, PostgreSQL will still send multiple statements to the database unless you specify `:reWriteBatchedInserts true` as part of the db-spec hash map or JDBC URL when the datasource is created.
 
 ### Streaming Result Sets
 
@@ -168,7 +168,7 @@ create table example(
 ;; => #:example{:tags ["tag1" "tag2"]}
 ```
 
-> Note: PostgreSQL JDBC driver supports only 7 primitive array types, but not array types like `UUID[]` -  
+> Note: PostgreSQL JDBC driver supports only 7 primitive array types, but not array types like `UUID[]` -
 [PostgreSQL™ Extensions to the JDBC API](https://jdbc.postgresql.org/documentation/head/arrays.html).
 
 ### Working with Date and Time

@@ -4,8 +4,10 @@
   "Stub test namespace for PreparedStatement creation etc.
 
   Most of this functionality is core to all of the higher-level stuff
-  so it gets tested that way, but there are some specific tests for
-  `execute-batch!` here."
+  so it gets tested that way.
+
+  The tests for the deprecated version of `execute-batch!` are here
+  as a guard against regressions."
   (:require [clojure.test :refer [deftest is testing use-fixtures]]
             [next.jdbc :as jdbc]
             [next.jdbc.test-fixtures

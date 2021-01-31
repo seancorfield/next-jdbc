@@ -7,9 +7,6 @@
   `set-parameters` is public and may be useful if you have a `PreparedStatement`
   that you wish to reuse and (re)set the parameters on it.
 
-  `execute-batch!` provides a way to add batches of parameters to a
-  `PreparedStatement` and then execute it in batch mode (via `.executeBatch`).
-
   Defines the `SettableParameter` protocol for converting Clojure values
   to database-specific values.
 
@@ -192,37 +189,8 @@
 
 (def ^:private d-r-s (volatile! nil))
 
-(defn execute-batch!
-  "Given a `PreparedStatement` and a vector containing parameter groups,
-  i.e., a vector of vector of parameters, use `.addBatch` to add each group
-  of parameters to the prepared statement (via `set-parameters`) and then
-  call `.executeBatch`. A vector of update counts is returned.
-
-  An options hash map may also be provided, containing `:batch-size` which
-  determines how to partition the parameter groups for submission to the
-  database. If omitted, all groups will be submitted as a single command.
-  If you expect the update counts to be larger than `Integer/MAX_VALUE`,
-  you can specify `:large true` and `.executeLargeBatch` will be called
-  instead.
-
-  By default, returns a Clojure vector of update counts. Some databases
-  allow batch statements to also return generated keys and you can attempt that
-  if you ensure the `PreparedStatement` is created with `:return-keys true`
-  and you also provide `:return-generated-keys true` in the options passed
-  to `execute-batch!`. Some databases will only return one generated key
-  per batch, some return all the generated keys, some will throw an exception.
-  If that is supported, `execute-batch!` will return a vector of hash maps
-  containing the generated keys as fully-realized, datafiable result sets,
-  whose content is database-dependent.
-
-  May throw `java.sql.BatchUpdateException` if any part of the batch fails.
-  You may be able to call `.getUpdateCounts` on that exception object to
-  get more information about which parts succeeded and which failed.
-
-  For additional caveats and database-specific options you may need, see:
-  https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/prepared-statements#caveats
-
-  Not all databases support batch execution."
+(defn ^:no-doc execute-batch!
+  "Deprecated in favor of `next.jdbc/execute-batch!`."
   ([ps param-groups]
    (execute-batch! ps param-groups {}))
   ([^PreparedStatement ps param-groups opts]

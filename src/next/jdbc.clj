@@ -26,6 +26,8 @@
       return a hash map representing that row; this can be datafied to allow
       navigation of foreign keys into other tables (either by convention or
       via a schema definition),
+  * `execute-batch!` -- given a `PreparedStatement` and groups of parameters,
+      execute the statement in batch mode (via `.executeBatch`).
   * `prepare` -- given a `Connection` and SQL + parameters, construct a new
       `PreparedStatement`; in general this should be used with `with-open`,
   * `transact` -- the functional implementation of `with-transaction`,
@@ -59,10 +61,11 @@
   * `:return-keys` -- either `true` or a vector of key names to return."
   (:require [next.jdbc.connection]
             [next.jdbc.default-options :as opts]
-            [next.jdbc.prepare]
+            [next.jdbc.prepare :as prepare]
             [next.jdbc.protocols :as p]
-            [next.jdbc.result-set]
-            [next.jdbc.transaction]))
+            [next.jdbc.result-set :as rs]
+            [next.jdbc.transaction])
+  (:import (java.sql PreparedStatement)))
 
 (set! *warn-on-reflection* true)
 
@@ -259,6 +262,59 @@
   ([connectable sql-params opts]
    (p/-execute-one connectable sql-params
                    (assoc opts :next.jdbc/sql-params sql-params))))
+
+(defn execute-batch!
+  "Given a `PreparedStatement` and a vector containing parameter groups,
+  i.e., a vector of vector of parameters, use `.addBatch` to add each group
+  of parameters to the prepared statement (via `set-parameters`) and then
+  call `.executeBatch`. A vector of update counts is returned.
+
+  An options hash map may also be provided, containing `:batch-size` which
+  determines how to partition the parameter groups for submission to the
+  database. If omitted, all groups will be submitted as a single command.
+  If you expect the update counts to be larger than `Integer/MAX_VALUE`,
+  you can specify `:large true` and `.executeLargeBatch` will be called
+  instead.
+
+  By default, returns a Clojure vector of update counts. Some databases
+  allow batch statements to also return generated keys and you can attempt that
+  if you ensure the `PreparedStatement` is created with `:return-keys true`
+  and you also provide `:return-generated-keys true` in the options passed
+  to `execute-batch!`. Some databases will only return one generated key
+  per batch, some return all the generated keys, some will throw an exception.
+  If that is supported, `execute-batch!` will return a vector of hash maps
+  containing the generated keys as fully-realized, datafiable result sets,
+  whose content is database-dependent.
+
+  May throw `java.sql.BatchUpdateException` if any part of the batch fails.
+  You may be able to call `.getUpdateCounts` on that exception object to
+  get more information about which parts succeeded and which failed.
+
+  For additional caveats and database-specific options you may need, see:
+  https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/prepared-statements#caveats
+
+  Not all databases support batch execution."
+  ([ps param-groups]
+   (execute-batch! ps param-groups {}))
+  ([^PreparedStatement ps param-groups opts]
+   (let [params (if-let [n (:batch-size opts)]
+                  (if (and (number? n) (pos? n))
+                    (partition-all n param-groups)
+                    (throw (IllegalArgumentException.
+                            ":batch-size must be positive")))
+                  [param-groups])]
+     (into []
+           (mapcat (fn [group]
+                     (run! #(.addBatch (prepare/set-parameters ps %)) group)
+                     (let [result (if (:large opts)
+                                    (.executeLargeBatch ps)
+                                    (.executeBatch ps))]
+                       (if (:return-generated-keys opts)
+                         (rs/datafiable-result-set (.getGeneratedKeys ps)
+                                                   (p/get-connection ps {})
+                                                   opts)
+                         result))))
+           params))))
 
 (defn transact
   "Given a transactable object and a function (taking a `Connection`),

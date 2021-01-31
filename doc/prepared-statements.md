@@ -93,12 +93,12 @@ Here we set parameters and add them in batches to the prepared statement, then w
   (.executeBatch ps)) ; returns int[]
 ```
 
-Both of those are somewhat ugly and contain a fair bit of boilerplate and Java interop, so a helper function is provided in `next.jdbc.prepare` to automate the execution of batched parameters:
+Both of those are somewhat ugly and contain a fair bit of boilerplate and Java interop, so a helper function is provided in `next.jdbc` to automate the execution of batched parameters:
 
 ```clojure
 (with-open [con (jdbc/get-connection ds)
             ps  (jdbc/prepare con ["insert into status (id,name) values (?,?)"])]
-  (p/execute-batch! ps [[1 "Approved"] [2 "Rejected"] [3 "New"]]))
+  (jdbc/execute-batch! ps [[1 "Approved"] [2 "Rejected"] [3 "New"]]))
 ```
 
 By default, this adds all the parameter groups and executes one batched command. It returns a (Clojure) vector of update counts (rather than `int[]`). If you provide an options hash map, you can specify a `:batch-size` and the parameter groups will be partitioned and executed as multiple batched commands. This is intended to allow very large sequences of parameter groups to be executed without running into limitations that may apply to a single batched command. If you expect the update counts to be very large (more than `Integer/MAX_VALUE`), you can specify `:large true` so that `.executeLargeBatch` is called instead of `.executeBatch`.
@@ -114,8 +114,8 @@ If you want to get the generated keys from an `insert` done via `execute-batch!`
                               {:return-keys true})]
   ;; this will call .getGeneratedKeys for each batch and return them as a
   ;; vector of datafiable result sets (the keys in map are database-specific):
-  (p/execute-batch! ps [[1 "Approved"] [2 "Rejected"] [3 "New"]]
-                    {:return-generated-keys true}))
+  (jdbc/execute-batch! ps [[1 "Approved"] [2 "Rejected"] [3 "New"]]
+                       {:return-generated-keys true}))
 ```
 
 This calls `rs/datafiable-result-set` behind the scenes so you can also pass a `:builder-fn` option to `execute-batch!` if you want something other than qualified as-is hash maps.
