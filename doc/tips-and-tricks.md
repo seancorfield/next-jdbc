@@ -21,9 +21,9 @@ There is a helper in `next.jdbc.result-set` to make this easier -- `clob->string
 (extend-protocol rs/ReadableColumn
   java.sql.Clob
   (read-column-by-label [^java.sql.Clob v _]
-    (clob->string v))
+    (rs/clob->string v))
   (read-column-by-index [^java.sql.Clob v _2 _3]
-    (clob->string v)))
+    (rs/clob->string v)))
 ```
 
 As noted in [Result Set Builders](/doc/result-set-builders.md), there is also `clob-column-reader` that can be used with the `as-*-adapter` result set builder functions.
