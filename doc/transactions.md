@@ -8,7 +8,7 @@ Although `(transact transactable f)` is available, it is expected that you will 
 
 By default, all connections that `next.jdbc` creates are automatically committable, i.e., as each operation is performed, the effect is committed to the database directly before the next operation is performed. Any exceptions only cause the current operation to be aborted -- any prior operations have already been committed.
 
-It is possible to tell `next.jdbc` to create connections that do not automatically commit operations: pass `{:auto-commit false}` as part of the options map to anything that creates a connection (including `get-connection` itself). You can then decide when to commit or rollback by calling `.commit` or `.rollback` on the connection object itself. You can also create save points (`(.setSavePoint con)`, `(.setSavePoint con name)`) and rollback to them (`(.rollback con save-point)`). You can also change the auto-commit state of an open connection at any time (`(.setAutoCommit con on-off)`).
+It is possible to tell `next.jdbc` to create connections that do not automatically commit operations: pass `{:auto-commit false}` as part of the options map to anything that creates a connection (including `get-connection` itself). You can then decide when to commit or rollback by calling `.commit` or `.rollback` on the connection object itself. You can also create save points (`(.setSavepoint con)`, `(.setSavepoint con name)`) and rollback to them (`(.rollback con save-point)`). You can also change the auto-commit state of an open connection at any time (`(.setAutoCommit con on-off)`).
 
 ## Automatic Commit & Rollback
 
@@ -60,13 +60,13 @@ If you want the ability to selectively roll back certain groups of operations in
 ```clojure
 (jdbc/with-transaction [tx my-datasource]
   (let [result (jdbc/execute! tx ...) ; op A
-        sp1    (.setSavepoint)] ; unnamed save point
+        sp1    (.setSavepoint tx)] ; unnamed save point
 
     (jdbc/execute! tx ...) ; op B
 
     (when ... (.rollback tx sp1)) ; just rolls back op B
 
-    (let [sp2 (.setSavepoint "two")] ; named save point
+    (let [sp2 (.setSavepoint tx "two")] ; named save point
 
       (jdbc/execute! tx ...) ; op C
 
