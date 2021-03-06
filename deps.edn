@@ -43,7 +43,7 @@
    :main-opts ["-m" "cognitect.test-runner"
                "-d" "test"]}
   :jar
-  {:replace-deps {seancorfield/depstar {:mvn/version "2.0.171"}}
+  {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.0.193"}}
    :exec-fn hf.depstar/jar
    :exec-args {:jar "next-jdbc.jar" :sync-pom true}}
   :deploy

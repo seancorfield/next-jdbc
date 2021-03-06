@@ -8,15 +8,15 @@ The next generation of `clojure.java.jdbc`: a new low-level Clojure wrapper for 
 
 The latest versions on Clojars and on cljdoc:
 
-[![Clojars Project](https://clojars.org/seancorfield/next.jdbc/latest-version.svg)](https://clojars.org/seancorfield/next.jdbc) [![cljdoc badge](https://cljdoc.org/badge/seancorfield/next.jdbc?1.1.613)](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT)
+[![Clojars Project](https://clojars.org/com.github.seancorfield/next.jdbc/latest-version.svg)](https://clojars.org/com.github.seancorfield/next.jdbc) [![cljdoc badge](https://cljdoc.org/badge/com.github.seancorfield/next.jdbc?1.1.643)](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT)
 
-The documentation on [cljdoc.org](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT) is for the current version of `next.jdbc`:
+The documentation on [cljdoc.org](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT) is for the current version of `next.jdbc`:
 
-* [Getting Started](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started)
-* [Migrating from `clojure.java.jdbc`](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/migration-from-clojure-java-jdbc)
+* [Getting Started](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/doc/getting-started)
+* [Migrating from `clojure.java.jdbc`](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/doc/migration-from-clojure-java-jdbc)
 * Feedback via [issues](https://github.com/seancorfield/next-jdbc/issues) or in the [`#sql` channel on the Clojurians Slack](https://clojurians.slack.com/messages/C1Q164V29/details/) or the [`#sql` stream on the Clojurians Zulip](https://clojurians.zulipchat.com/#narrow/stream/152063-sql).
 
-The documentation on GitHub is for **develop** since the 1.1.613 release -- [see the CHANGELOG](https://github.com/seancorfield/next-jdbc/blob/develop/CHANGELOG.md) and then read the [corresponding updated documentation](https://github.com/seancorfield/next-jdbc/tree/develop/doc) on GitHub if you want.
+The documentation on GitHub is for **develop** since the 1.1.643 release -- [see the CHANGELOG](https://github.com/seancorfield/next-jdbc/blob/develop/CHANGELOG.md) and then read the [corresponding updated documentation](https://github.com/seancorfield/next-jdbc/tree/develop/doc) on GitHub if you want.
 
 This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINOR provide some relative indication of the size of the change, but do not follow semantic versioning. In general, all changes endeavor to be non-breaking (by moving to new names rather than by breaking existing names). COMMITS is an ever-increasing counter of commits since the beginning of this repository.
 
@@ -34,7 +34,7 @@ I also wanted `datafy`/`nav` support baked right in (it was added to `clojure.ja
 
 As `next.jdbc` moved from alpha to beta, the last breaking change was made (renaming `reducible!` to `plan`) and the API should be considered stable. Only accretive and fixative changes will be made from now on.
 
-After a month of alpha builds being available for testing, the first beta build was released on May 24th, 2019. A release candidate followed on June 4th and the "gold" (1.0.0) release was on June 12th. In addition to the small, core API in `next.jdbc`, there are "syntactic sugar" SQL functions (`insert!`, `query`, `update!`, and `delete!`) available in `next.jdbc.sql` that are similar to the main API in `clojure.java.jdbc`. See [Migrating from `clojure.java.jdbc`](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/migration-from-clojure-java-jdbc) for more detail about the differences.
+After a month of alpha builds being available for testing, the first beta build was released on May 24th, 2019. A release candidate followed on June 4th and the "gold" (1.0.0) release was on June 12th. In addition to the small, core API in `next.jdbc`, there are "syntactic sugar" SQL functions (`insert!`, `query`, `update!`, and `delete!`) available in `next.jdbc.sql` that are similar to the main API in `clojure.java.jdbc`. See [Migrating from `clojure.java.jdbc`](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/doc/migration-from-clojure-java-jdbc) for more detail about the differences.
 
 ## Usage
 

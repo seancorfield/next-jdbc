@@ -4,7 +4,8 @@ Only accretive/fixative changes will be made from now on.
 
 ## Stable Builds
 
-* 1.1.next in progress
+* 1.1.643 -- 2021-03-06
+  * Change coordinates to `com.github.seancorfield/next.jdbc` (although new versions will continue to be deployed to `seancorfield/next.jdbc` for a while -- see the [Clojars Verified Group Names policy](https://github.com/clojars/clojars-web/wiki/Verified-Group-Names)).
   * Documented `next.jdbc.transaction/*nested-tx*` more thoroughly since that difference from `clojure.java.jdbc` has come up in conversation a few times recently.
   * Fix #158 by documenting (and testing) `:allowMultiQueries true` as an option for MySQL/MariaDB to allow multiple statements to be executed and multiple result sets to be returned.
   * Fix #157 by copying `next.jdbc.prepare/execute-batch!` to `next.jdbc/execute-batch!` (to avoid a circular dependency that previously relied on requiring `next.jdbc.result-set` at runtime -- which was problematic for GraalVM-based native compilation); **`next.jdbc.prepare/execute-batch!` is deprecated:** it will continue to exist and work, but is no longer documented. In addition, `next.jdbc.prepare/execute-batch!` now relies on a private `volatile!` in order to reference `next.jdbc.result-set/datafiable-result-set` so that it is GraalVM-friendly. Note: code that requires `next.jdbc.prepare` and uses `execute-batch!` without also requiring something that causes `next.jdbc.result-set` to be loaded will no longer return generated keys from `execute-batch!` but that's an almost impossible path since nearly all code that uses `execute-batch!` will have called `next.jdbc/prepare` to get the `PreparedStatement` in the first place.

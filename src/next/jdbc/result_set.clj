@@ -14,7 +14,7 @@
   Also provides the default implementations for `Executable` and
   the default `datafy`/`nav` behavior for rows from a result set.
 
-  See also https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.date-time
+  See also https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc.date-time
   for implementations of `ReadableColumn` that provide automatic
   conversion of some SQL data types to Java Time objects."
   (:require [clojure.core.protocols :as core-p]

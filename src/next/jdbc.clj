@@ -129,7 +129,7 @@
   * `timesten:direct` -- `com.timesten.jdbc.TimesTenDriver`
 
   For more details about `:dbtype` and `:classname` values, see:
-  https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.connection#dbtypes"
+  https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc.connection#dbtypes"
   ^javax.sql.DataSource
   [spec]
   (p/get-datasource spec))
@@ -291,7 +291,7 @@
   get more information about which parts succeeded and which failed.
 
   For additional caveats and database-specific options you may need, see:
-  https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/doc/getting-started/prepared-statements#caveats
+  https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/doc/getting-started/prepared-statements#caveats
 
   Not all databases support batch execution."
   ([ps param-groups]

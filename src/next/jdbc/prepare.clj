@@ -10,11 +10,11 @@
   Defines the `SettableParameter` protocol for converting Clojure values
   to database-specific values.
 
-  See also https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.date-time
+  See also https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc.date-time
   for implementations of `SettableParameter` that provide automatic
   conversion of Java Time objects to SQL data types.
 
-  See also https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.types
+  See also https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc.types
   for `as-xxx` functions that provide per-instance implementations of
   `SettableParameter` for each of the standard `java.sql.Types` values."
   (:require [clojure.java.data :as j]

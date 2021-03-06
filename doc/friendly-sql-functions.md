@@ -60,7 +60,7 @@ database. Several databases have a limit of 1,000 parameter placeholders.
 Oracle does not support this form of multi-row insert, requiring a different
 syntax altogether.
 
-You should look at [`next.jdbc/execute-batch!`](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc#execute-batch!) for an alternative approach.
+You should look at [`next.jdbc/execute-batch!`](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc#execute-batch!) for an alternative approach.
 
 ## `query`
 
@@ -202,7 +202,7 @@ If you have [camel-snake-kebab](https://clj-commons.org/camel-snake-kebab/) on y
 
 ## HugSQL Quick Start
 
-Here's how to get up and running quickly with `next.jdbc` and HugSQL. For more detail, consult the [HugSQL documentation](https://www.hugsql.org/). Add the following dependencies to your project (in addition to `seancorfield/next.jdbc` and whichever JDBC drivers you need):
+Here's how to get up and running quickly with `next.jdbc` and HugSQL. For more detail, consult the [HugSQL documentation](https://www.hugsql.org/). Add the following dependencies to your project (in addition to `com.github.seancorfield/next.jdbc` and whichever JDBC drivers you need):
 
 ```clojure
         com.layerware/hugsql-core {:mvn/version "0.5.1"}

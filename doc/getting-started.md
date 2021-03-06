@@ -11,12 +11,12 @@ It is designed to work with Clojure 1.10 or later, supports `datafy`/`nav`, and 
 You can add `next.jdbc` to your project with either:
 
 ```clojure
-seancorfield/next.jdbc {:mvn/version "1.1.613"}
+com.github.seancorfield/next.jdbc {:mvn/version "1.1.643"}
 ```
 for `deps.edn` or:
 
 ```clojure
-[seancorfield/next.jdbc "1.1.613"]
+[com.github.seancorfield/next.jdbc "1.1.643"]
 ```
 for `project.clj` or `build.boot`.
 
@@ -31,7 +31,7 @@ For the examples in this documentation, we will use a local H2 database on disk,
 ```clojure
 ;; deps.edn
 {:deps {org.clojure/clojure {:mvn/version "1.10.2"}
-        seancorfield/next.jdbc {:mvn/version "1.1.613"}
+        com.github.seancorfield/next.jdbc {:mvn/version "1.1.643"}
         com.h2database/h2 {:mvn/version "1.4.199"}}}
 ```
 
@@ -68,7 +68,7 @@ user=>
 
 We described the database with just `:dbtype` and `:dbname` because it is created as a local file and needs no authentication. For most databases, you would need `:user` and `:password` for authentication, and if the database is running on a remote machine you would need `:host` and possibly `:port` (`next.jdbc` tries to guess the correct port based on the `:dbtype`).
 
-> Note: You can see the full list of `:dbtype` values supported in [next.jdbc/get-datasource](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc#get-datasource)'s docstring. If you need this programmatically, you can get it from the [next.jdbc.connection/dbtypes](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.connection#dbtypes) hash map. If those lists differ, the hash map is the definitive list (and I'll need to fix the docstring!). The docstring of that Var explains how to tell `next.jdbc` about additional databases.
+> Note: You can see the full list of `:dbtype` values supported in [next.jdbc/get-datasource](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc#get-datasource)'s docstring. If you need this programmatically, you can get it from the [next.jdbc.connection/dbtypes](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc.connection#dbtypes) hash map. If those lists differ, the hash map is the definitive list (and I'll need to fix the docstring!). The docstring of that Var explains how to tell `next.jdbc` about additional databases.
 
 If you already have a JDBC URL (string), you can use that as-is instead of the db-spec hash map. If you have a JDBC URL and still need additional options passed into the JDBC driver, you can use a hash map with the `:jdbcUrl` key specifying the string and whatever additional options you need.
 
@@ -513,7 +513,7 @@ If you are using [Component](https://github.com/stuartsierra/component), a conne
 
 By default, `next.jdbc` relies on the JDBC driver to handle all data type conversions when reading from a result set (to produce Clojure values from SQL values) or setting parameters (to produce SQL values from Clojure values). Sometimes that means that you will get back a database-specific Java object that would need to be manually converted to a Clojure data structure, or that certain database column types require you to manually construct the appropriate database-specific Java object to pass into a SQL operation. You can usually automate those conversions using either the [`ReadableColumn` protocol](/doc/result-set-builders.md#readablecolumn) (for converting database-specific types to Clojure values) or the [`SettableParameter` protocol](/doc/prepared-statements.md#prepared-statement-parameters) (for converting Clojure values to database-specific types).
 
-In particular, PostgreSQL does not seem to perform a conversion from `java.util.Date` to a SQL data type automatically. You can `require` the [`next.jdbc.date-time` namespace](https://cljdoc.org/d/seancorfield/next.jdbc/CURRENT/api/next.jdbc.date-time) to enable that conversion.
+In particular, PostgreSQL does not seem to perform a conversion from `java.util.Date` to a SQL data type automatically. You can `require` the [`next.jdbc.date-time` namespace](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc.date-time) to enable that conversion.
 
 If you are working with Java Time, some JDBC drivers will automatically convert `java.time.Instant` (and `java.time.LocalDate` and `java.time.LocalDateTime`) to a SQL data type automatically, but others will not. Requiring `next.jdbc.date-time` will enable those automatic conversions for all databases.
 
