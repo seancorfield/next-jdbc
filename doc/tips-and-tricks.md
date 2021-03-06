@@ -91,6 +91,15 @@ In MS SQL Server, the generated key from an insert comes back as `:GENERATED_KEY
 
 By default, you won't get table names as qualifiers with Microsoft's JDBC driver (you might with the jTDS drive -- I haven't tried that recently). See this [MSDN forum post about `.getTableName()`](https://social.msdn.microsoft.com/Forums/sqlserver/en-US/55e8cbb2-b11c-446e-93ab-dc30658caf99/resultsetmetadatagettablename-returns-instead-of-table-name) for details. According to one of the answers posted there, if you specify `:result-type` and `:concurrency` in the options for `execute!`, `execute-one!`, `plan`, or `prepare`, that will cause SQL Server to return table names for columns. `:result-type` needs to be `:scoll-sensitive` or `:scroll-insensitive` for this to work. `:concurrency` can be `:read-only` or `:updatable`.
 
+MS SQL Server supports execution of multiple statements when surrounded by `begin`/`end` and can return multiple result sets, when requested via `:multi-rs true` on `execute!`.
+
+```clojure
+(jdbc/execute! db-spec ["begin select * from table1; select * from table2; end"] {:multi-rs true})
+;; vector of result sets:
+=> [[{.. table1 row ..} {.. table1 row ..}]
+    [{.. table2 row ..} {.. table2 row ..} {..}]]
+```
+
 ## MySQL & MariaDB
 
 In MySQL, the generated key from an insert comes back as `:GENERATED_KEY`. In MariaDB, the generated key from an insert comes back as `:insert_id`.
@@ -98,6 +107,19 @@ In MySQL, the generated key from an insert comes back as `:GENERATED_KEY`. In Ma
 MySQL generally stores tables as files so they are case-sensitive if your O/S is (Linux) or case-insensitive if your O/S is not (Mac, Windows) but the column names are generally case-insensitive. This can matter when if you use `next.jdbc.result-set/as-lower-maps` because that will lower-case the table names (as well as the column names) so if you are round-tripping based on the keys you get back, you may produce an incorrect table name in terms of case. You'll also need to be careful about `:table-fn`/`:column-fn` because of this.
 
 It's also worth noting that column comparisons are case-insensitive so `WHERE foo = 'BAR'` will match `"bar"` or `"BAR"` etc.
+
+MySQL has a connection option, `:allowMultiQueries true`, that allows you to pass multiple SQL statements in a single operation and can return multiple result sets, when requested via `:multi-rs true`.
+
+```clojure
+(def db-spec {:dbtype "mysql" .. :allowMultiQueries true})
+;; equivalent to allowMultiQueries=true in the JDBC URL
+(jdbc/execute! db-spec ["select * from table1; select * from table2"] {:multi-rs true})
+;; vector of result sets:
+=> [[{.. table1 row ..} {.. table1 row ..}]
+    [{.. table2 row ..} {.. table2 row ..} {..}]]
+```
+
+Compare this with MS SQL Server above: MySQL does not support `begin`/`end` here. This is not the default behavior because allowing multiple statements in a single operation is generally considered a bit of a risk as it can make it easier for SQL injection attacks to be performed.
 
 ### Batch Statements
 

@@ -643,7 +643,7 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
             ds (jdbc/get-datasource (assoc etc :jdbcUrl url))]
         (cond (derby?) (is (= {:create true} etc))
               (mssql?) (is (= #{:user :password} (set (keys etc))))
-              (mysql?) (is (= #{:user :password :useSSL}
+              (mysql?) (is (= #{:user :password :useSSL :allowMultiQueries}
                               (disj (set (keys etc)) :disableMariaDbDriver)))
               :else    (is (= {} etc)))
         (is (instance? javax.sql.DataSource ds))
@@ -668,6 +668,16 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
                                  " select * from fruit;"
                                  " select * from fruit where id < 4;"
                                  " end")]
+                           {:multi-rs true})]
+        (is (= 2 (count multi-rs)))
+        (is (= 4 (count (first multi-rs))))
+        (is (= 3 (count (second multi-rs)))))))
+  (when (mysql?)
+    (testing "script with multiple result sets"
+      (let [multi-rs
+            (jdbc/execute! (ds)
+                           [(str "select * from fruit;"
+                                 " select * from fruit where id < 4")]
                            {:multi-rs true})]
         (is (= 2 (count multi-rs)))
         (is (= 4 (count (first multi-rs))))
