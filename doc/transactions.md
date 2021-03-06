@@ -53,7 +53,7 @@ Instead of throwing an exception (which will propagate through `with-transaction
 
 In general, transactions are per-connection and do not nest in JDBC. If you nest calls to `with-transaction` using a `DataSource` argument (or a db-spec) then you will get separate connections inside each invocation and the transactions will be independent, as permitted by the isolation level.
 
-If you nest such calls passing a `Connection` instead, the inner call will commit (or rollback) all operations on that connection up to that point -- including any performed in the outer call, prior to entering the inner call. The outer call will then commit (or rollback) any additional operations within its scope. This will be confusing at best and most likely buggy behavior!
+If you nest such calls passing a `Connection` instead, the inner call will commit (or rollback) all operations on that connection up to that point -- including any performed in the outer call, prior to entering the inner call. The outer call will then commit (or rollback) any additional operations within its scope. This will be confusing at best and most likely buggy behavior! See below for ways to exercise more control over this behavior.
 
 If you want the ability to selectively roll back certain groups of operations inside a transaction, you can use named or unnamed save points:
 
@@ -75,5 +75,24 @@ If you want the ability to selectively roll back certain groups of operations in
     result)) ; returns this and will commit op A
     ;; (and ops B & C if they weren't rolled back above)
 ```
+
+### Nesting Transactions
+
+As noted above, transactions do not nest in JDBC and `next.jdbc`'s default behavior is to allow you
+to overlap transactions (i.e., nested calls to `with-transaction`) and assume you know what you are
+doing, although it would generally be buggy programming to do so.
+
+By contrast, `clojure.java.jdbc` allowed the nested calls but simply _ignored_ the inner calls and
+behaved as it you had only the outermost, top-level transaction. That allowed for buggy programming
+too, in a different way, but could be convenient if you wanted to override any transaction behavior
+in called code, as you might wish to do with a test fixture that set up and rolled back a
+transaction at the top-level -- you would just silently lose the effects of any (nested)
+transactions in the code under test.
+
+`next.jdbc` provides a way to control the behavior via a public, dynamic Var:
+
+* `next.jdbc.transaction/*nested-tx*` is initially set to `:allow` which allows nested calls but makes them overlap (as described above),
+* `(binding [next.jdbc.transaction/*nested-tx* :ignore] ...)` provides the same behavior as `clojure.java.jdbc` where nested calls are essentially ignored and only the outermost transaction takes effect,
+* `(binding [next.jdbc.transaction/*nested-tx* :prohibit] ...)` will cause any attempt to start a nested transaction to throw an exception instead; this could be a useful way to detect the potentially buggy behavior described above (for either `:allow` or `:ignore`).
 
 [<: Prepared Statements](/doc/prepared-statements.md) | [All The Options :>](/doc/all-the-options.md)
