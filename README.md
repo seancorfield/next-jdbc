@@ -13,10 +13,11 @@ The latest versions on Clojars and on cljdoc:
 The documentation on [cljdoc.org](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT) is for the current version of `next.jdbc`:
 
 * [Getting Started](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/doc/getting-started)
+* [API Reference](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next)
 * [Migrating from `clojure.java.jdbc`](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/doc/migration-from-clojure-java-jdbc)
 * Feedback via [issues](https://github.com/seancorfield/next-jdbc/issues) or in the [`#sql` channel on the Clojurians Slack](https://clojurians.slack.com/messages/C1Q164V29/details/) or the [`#sql` stream on the Clojurians Zulip](https://clojurians.zulipchat.com/#narrow/stream/152063-sql).
 
-The documentation on GitHub is for **develop** since the 1.1.643 release -- [see the CHANGELOG](https://github.com/seancorfield/next-jdbc/blob/develop/CHANGELOG.md) and then read the [corresponding updated documentation](https://github.com/seancorfield/next-jdbc/tree/develop/doc) on GitHub if you want.
+The documentation on GitHub is for **develop** since the 1.1.643 release -- [see the CHANGELOG](https://github.com/seancorfield/next-jdbc/blob/develop/CHANGELOG.md) and then read the [corresponding updated documentation](https://github.com/seancorfield/next-jdbc/tree/develop/doc) on GitHub if you want. Older versions of `next.jdbc` were published under the `seancorfield` group ID and you can find [older seancorfield/next.jdbc documentation on cljdoc.org](https://cljdoc.org/versions/seancorfield/next.jdbc).
 
 This project follows the version scheme MAJOR.MINOR.COMMITS where MAJOR and MINOR provide some relative indication of the size of the change, but do not follow semantic versioning. In general, all changes endeavor to be non-breaking (by moving to new names rather than by breaking existing names). COMMITS is an ever-increasing counter of commits since the beginning of this repository.
 
