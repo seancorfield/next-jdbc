@@ -483,7 +483,6 @@ VALUES ('Pear', 'green', 49, 47)
     (is (every? boolean? (map :is_it data)))
     (is (every? boolean? (map :twiddle data)))))
 
-
 (deftest execute-batch-tests
   (testing "simple batch insert"
     (is (= [1 1 1 1 1 1 1 1 1 13]
@@ -578,6 +577,115 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
                                                   {:batch-size 4
                                                    :return-generated-keys true})]
                   (conj result (count (jdbc/execute! t ["select * from fruit"]))))))]
+        (is (= 13 (last results)))
+        (is (every? map? (butlast results)))
+        ;; Derby and SQLite only return one generated key per batch so there
+        ;; are only three keys, plus the overall count here:
+        (is (< 3 (count results))))
+      (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))))
+
+(deftest execute-batch-connectable-tests
+  (testing "simple batch insert"
+    (is (= [1 1 1 1 1 1 1 1 1 13]
+           (try
+             (let [result (jdbc/execute-batch! (ds)
+                                               "INSERT INTO fruit (name, appearance) VALUES (?,?)"
+                                               [["fruit1" "one"]
+                                                ["fruit2" "two"]
+                                                ["fruit3" "three"]
+                                                ["fruit4" "four"]
+                                                ["fruit5" "five"]
+                                                ["fruit6" "six"]
+                                                ["fruit7" "seven"]
+                                                ["fruit8" "eight"]
+                                                ["fruit9" "nine"]]
+                                               {})]
+               (conj result (count (jdbc/execute! (ds) ["select * from fruit"]))))
+             (finally
+               (jdbc/execute-one! (ds) ["delete from fruit where id > 4"])))))
+    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
+  (testing "small batch insert"
+    (is (= [1 1 1 1 1 1 1 1 1 13]
+           (try
+             (let [result (jdbc/execute-batch! (ds)
+                                               "INSERT INTO fruit (name, appearance) VALUES (?,?)"
+                                               [["fruit1" "one"]
+                                                ["fruit2" "two"]
+                                                ["fruit3" "three"]
+                                                ["fruit4" "four"]
+                                                ["fruit5" "five"]
+                                                ["fruit6" "six"]
+                                                ["fruit7" "seven"]
+                                                ["fruit8" "eight"]
+                                                ["fruit9" "nine"]]
+                                               {:batch-size 3})]
+               (conj result (count (jdbc/execute! (ds) ["select * from fruit"]))))
+             (finally
+               (jdbc/execute-one! (ds) ["delete from fruit where id > 4"])))))
+    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
+  (testing "big batch insert"
+    (is (= [1 1 1 1 1 1 1 1 1 13]
+           (try
+             (let [result (jdbc/execute-batch! (ds)
+                                               "INSERT INTO fruit (name, appearance) VALUES (?,?)"
+                                               [["fruit1" "one"]
+                                                ["fruit2" "two"]
+                                                ["fruit3" "three"]
+                                                ["fruit4" "four"]
+                                                ["fruit5" "five"]
+                                                ["fruit6" "six"]
+                                                ["fruit7" "seven"]
+                                                ["fruit8" "eight"]
+                                                ["fruit9" "nine"]]
+                                               {:batch-size 8})]
+               (conj result (count (jdbc/execute! (ds) ["select * from fruit"]))))
+             (finally
+               (jdbc/execute-one! (ds) ["delete from fruit where id > 4"])))))
+    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
+  (testing "large batch insert"
+    (when-not (or (jtds?) (sqlite?))
+      (is (= [1 1 1 1 1 1 1 1 1 13]
+             (try
+               (let [result (jdbc/execute-batch! (ds)
+                                                 "INSERT INTO fruit (name, appearance) VALUES (?,?)"
+                                                 [["fruit1" "one"]
+                                                  ["fruit2" "two"]
+                                                  ["fruit3" "three"]
+                                                  ["fruit4" "four"]
+                                                  ["fruit5" "five"]
+                                                  ["fruit6" "six"]
+                                                  ["fruit7" "seven"]
+                                                  ["fruit8" "eight"]
+                                                  ["fruit9" "nine"]]
+                                                 {:batch-size 4
+                                                  :large true})]
+                 (conj result (count (jdbc/execute! (ds) ["select * from fruit"]))))
+               (finally
+                 (jdbc/execute-one! (ds) ["delete from fruit where id > 4"])))))
+      (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))))
+  (testing "return generated keys"
+    (when-not (mssql?)
+      (let [results
+            (try
+              (let [result (jdbc/execute-batch! (ds)
+                                                "INSERT INTO fruit (name, appearance) VALUES (?,?)"
+                                                [["fruit1" "one"]
+                                                 ["fruit2" "two"]
+                                                 ["fruit3" "three"]
+                                                 ["fruit4" "four"]
+                                                 ["fruit5" "five"]
+                                                 ["fruit6" "six"]
+                                                 ["fruit7" "seven"]
+                                                 ["fruit8" "eight"]
+                                                 ["fruit9" "nine"]]
+                                                ;; note: we need both :return-keys true for creating
+                                                ;; the PreparedStatement and :return-generated-keys
+                                                ;; true to control the way batch execution happens:
+                                                {:batch-size 4 :return-keys true
+                                                 :return-generated-keys true})]
+                (conj result (count (jdbc/execute! (ds) ["select * from fruit"]))))
+              (finally
+                (jdbc/execute-one! (ds) ["delete from fruit where id > 4"])))]
         (is (= 13 (last results)))
         (is (every? map? (butlast results)))
         ;; Derby and SQLite only return one generated key per batch so there

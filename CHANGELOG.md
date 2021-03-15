@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.1.next in progress
+  * Fix #161 by allowing `execute-batch!` to work with datasources and connections, and providing the SQL statement directly.
+
 ## Stable Builds
 
 * 1.1.643 -- 2021-03-06

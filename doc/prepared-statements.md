@@ -99,6 +99,13 @@ Both of those are somewhat ugly and contain a fair bit of boilerplate and Java i
 (with-open [con (jdbc/get-connection ds)
             ps  (jdbc/prepare con ["insert into status (id,name) values (?,?)"])]
   (jdbc/execute-batch! ps [[1 "Approved"] [2 "Rejected"] [3 "New"]]))
+;; or:
+(jdbc/execute-batch! ds
+                     "insert into status (id,name) values (?,?)"
+                     [[1 "Approved"] [2 "Rejected"] [3 "New"]]
+                     ;; options hash map required here to disambiguate
+                     ;; this call from the 2- & 3-arity calls
+                     {})
 ```
 
 By default, this adds all the parameter groups and executes one batched command. It returns a (Clojure) vector of update counts (rather than `int[]`). If you provide an options hash map, you can specify a `:batch-size` and the parameter groups will be partitioned and executed as multiple batched commands. This is intended to allow very large sequences of parameter groups to be executed without running into limitations that may apply to a single batched command. If you expect the update counts to be very large (more than `Integer/MAX_VALUE`), you can specify `:large true` so that `.executeLargeBatch` is called instead of `.executeBatch`.
@@ -116,6 +123,12 @@ If you want to get the generated keys from an `insert` done via `execute-batch!`
   ;; vector of datafiable result sets (the keys in map are database-specific):
   (jdbc/execute-batch! ps [[1 "Approved"] [2 "Rejected"] [3 "New"]]
                        {:return-generated-keys true}))
+;; or:
+(jdbc/execute-batch! ds
+                     "insert into status (id,name) values (?,?)"
+                     [[1 "Approved"] [2 "Rejected"] [3 "New"]]
+                     {:return-keys true ; for creation of PreparedStatement
+                      :return-generated-keys true}) ; for batch result format
 ```
 
 This calls `rs/datafiable-result-set` behind the scenes so you can also pass a `:builder-fn` option to `execute-batch!` if you want something other than qualified as-is hash maps.

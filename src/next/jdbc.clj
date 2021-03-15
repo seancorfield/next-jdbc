@@ -27,7 +27,9 @@
       navigation of foreign keys into other tables (either by convention or
       via a schema definition),
   * `execute-batch!` -- given a `PreparedStatement` and groups of parameters,
-      execute the statement in batch mode (via `.executeBatch`).
+      execute the statement in batch mode (via `.executeBatch`); given a
+      connectable, a SQL string, and groups of parameters, create a new
+      `PreparedStatement` from the SQL and execute it in batch mode.
   * `prepare` -- given a `Connection` and SQL + parameters, construct a new
       `PreparedStatement`; in general this should be used with `with-open`,
   * `transact` -- the functional implementation of `with-transaction`,
@@ -276,6 +278,12 @@
   you can specify `:large true` and `.executeLargeBatch` will be called
   instead.
 
+  Alternatively, given a connectable, a SQL string, a vector containing
+  parameter groups, and an options hash map, create a new `PreparedStatement`
+  (after possibly creating a new `Connection`), and execute the SQL with
+  the specified parameter groups. That new `PreparedStatement` (and the
+  new `Connection`, if created) will be closed automatically after use.
+
   By default, returns a Clojure vector of update counts. Some databases
   allow batch statements to also return generated keys and you can attempt that
   if you ensure the `PreparedStatement` is created with `:return-keys true`
@@ -314,7 +322,13 @@
                                                    (p/get-connection ps {})
                                                    opts)
                          result))))
-           params))))
+           params)))
+  ([connectable sql param-groups opts]
+   (if (instance? java.sql.Connection connectable)
+     (with-open [ps (prepare connectable [sql] opts)]
+       (execute-batch! ps param-groups opts))
+     (with-open [con (get-connection connectable)]
+       (execute-batch! con sql param-groups opts)))))
 
 (defn transact
   "Given a transactable object and a function (taking a `Connection`),

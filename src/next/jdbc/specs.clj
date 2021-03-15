@@ -129,9 +129,13 @@
                                  :opts (s/? ::opts-map))))
 
 (s/fdef jdbc/execute-batch!
-        :args (s/cat :ps ::prepared-statement
-                     :param-groups (s/coll-of ::params :kind sequential?)
-                     :opts (s/? ::batch-opts)))
+        :args (s/alt :prepared (s/cat :ps ::prepared-statement
+                                      :param-groups (s/coll-of ::params :kind sequential?)
+                                      :opts (s/? ::batch-opts))
+                     :sql (s/cat :connectable ::connectable
+                                 :sql string?
+                                 :param-groups (s/coll-of ::params :kind sequential?)
+                                 :opts ::batch-opts)))
 
 (s/fdef jdbc/transact
         :args (s/cat :transactable ::transactable
