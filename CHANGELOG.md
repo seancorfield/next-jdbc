@@ -2,10 +2,10 @@
 
 Only accretive/fixative changes will be made from now on.
 
-* 1.1.next in progress
-  * Fix #161 by allowing `execute-batch!` to work with datasources and connections, and providing the SQL statement directly.
-
 ## Stable Builds
+
+* 1.1.646 -- 2021-03-15
+  * Fix #161 by allowing `execute-batch!` to work with datasources and connections, and providing the SQL statement directly.
 
 * 1.1.643 -- 2021-03-06
   * Change coordinates to `com.github.seancorfield/next.jdbc` (although new versions will continue to be deployed to `seancorfield/next.jdbc` for a while -- see the [Clojars Verified Group Names policy](https://github.com/clojars/clojars-web/wiki/Verified-Group-Names)).
