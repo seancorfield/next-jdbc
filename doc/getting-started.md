@@ -26,7 +26,7 @@ for `project.clj` or `build.boot`.
 * PostgreSQL: `org.postgresql/postgresql {:mvn/version "42.2.10"}` ([search for latest version](https://search.maven.org/artifact/org.postgresql/postgresql))
 * Microsoft SQL Server: `com.microsoft.sqlserver/mssql-jdbc {:mvn/version "8.2.1.jre8"}` ([search for latest version](https://search.maven.org/artifact/com.microsoft.sqlserver/mssql-jdbc))
 
-> Note: these are the versions that I've tested `next.jdbc` against but there may be more recent versions and those should generally work too -- click the "search for latest version" link to see all available versions of those drivers on Maven Central. You can see the full list of drivers and versions that `next.jdbc` is tested against in [the project's `deps.edn` file](https://github.com/seancorfield/next-jdbc/blob/develop/deps.edn#L10-L27), but many other JDBC drivers for other databases should also work (e.g., Oracle, Red Shift).
+> Note: these are the versions that `next.jdbc` is tested against but there may be more recent versions and those should generally work too -- click the "search for latest version" link to see all available versions of those drivers on Maven Central. You can see the full list of drivers and versions that `next.jdbc` is tested against in [the project's `deps.edn` file](https://github.com/seancorfield/next-jdbc/blob/develop/deps.edn#L10-L27), but many other JDBC drivers for other databases should also work (e.g., Oracle, Red Shift).
 
 ## An Example REPL Session
 
