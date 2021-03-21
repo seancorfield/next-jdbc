@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.1.next in progress
+  * Update several dependency versions.
+
 ## Stable Builds
 
 * 1.1.646 -- 2021-03-15

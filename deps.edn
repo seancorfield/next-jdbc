@@ -1,9 +1,9 @@
 {:paths ["src"]
- :deps {org.clojure/clojure {:mvn/version "1.10.2"}
-        org.clojure/java.data {:mvn/version "1.0.78"}}
+ :deps {org.clojure/clojure {:mvn/version "1.10.3"}
+        org.clojure/java.data {:mvn/version "1.0.86"}}
  :aliases
  {:test {:extra-paths ["test"]
-         :extra-deps {org.clojure/test.check {:mvn/version "1.0.0"}
+         :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}
                       ;; connection pooling
                       com.zaxxer/HikariCP {:mvn/version "3.4.2"}
                       com.mchange/c3p0 {:mvn/version "0.9.5.5"}
@@ -19,22 +19,22 @@
                       org.mariadb.jdbc/mariadb-java-client {:mvn/version "2.5.4"}
                       mysql/mysql-connector-java {:mvn/version "8.0.19"}
                       org.postgresql/postgresql {:mvn/version "42.2.10"}
-                      io.zonky.test/embedded-postgres {:mvn/version "1.2.6"}
-                      io.zonky.test.postgres/embedded-postgres-binaries-darwin-amd64 {:mvn/version "12.2.0"}
-                      io.zonky.test.postgres/embedded-postgres-binaries-linux-amd64 {:mvn/version "12.2.0"}
-                      io.zonky.test.postgres/embedded-postgres-binaries-windows-amd64 {:mvn/version "12.2.0"}
+                      io.zonky.test/embedded-postgres {:mvn/version "1.2.10"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-darwin-amd64 {:mvn/version "13.1.0-1"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-linux-amd64 {:mvn/version "13.1.0-1"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-windows-amd64 {:mvn/version "13.1.0-1"}
                       org.xerial/sqlite-jdbc {:mvn/version "3.30.1"}
                       com.microsoft.sqlserver/mssql-jdbc {:mvn/version "8.2.1.jre8"}
                       ;; supplementary test stuff
                       ;; use log4j 2.x:
-                      org.apache.logging.log4j/log4j-api {:mvn/version "2.13.3"}
+                      org.apache.logging.log4j/log4j-api {:mvn/version "2.14.1"}
                       ;; bridge into log4j:
-                      org.apache.logging.log4j/log4j-1.2-api {:mvn/version "2.13.3"}
-                      org.apache.logging.log4j/log4j-jcl {:mvn/version "2.13.3"}
-                      org.apache.logging.log4j/log4j-jul {:mvn/version "2.13.3"}
-                      org.apache.logging.log4j/log4j-slf4j-impl {:mvn/version "2.13.3"}
+                      org.apache.logging.log4j/log4j-1.2-api {:mvn/version "2.14.1"}
+                      org.apache.logging.log4j/log4j-jcl {:mvn/version "2.14.1"}
+                      org.apache.logging.log4j/log4j-jul {:mvn/version "2.14.1"}
+                      org.apache.logging.log4j/log4j-slf4j-impl {:mvn/version "2.14.1"}
                       ;; test auto-added snake/kebab builders and options
-                      camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.1"}}
+                      camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.2"}}
          :jvm-opts ["-Dlog4j2.configurationFile=log4j2-info.properties"]}
   :runner
   {:extra-deps {com.cognitect/test-runner
@@ -43,7 +43,7 @@
    :main-opts ["-m" "cognitect.test-runner"
                "-d" "test"]}
   :jar
-  {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.0.193"}}
+  {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.0.206"}}
    :exec-fn hf.depstar/jar
    :exec-args {:jar "next-jdbc.jar" :sync-pom true}}
   :deploy

@@ -36,7 +36,7 @@ For the examples in this documentation, we will use a local H2 database on disk,
 
 ```clojure
 ;; deps.edn
-{:deps {org.clojure/clojure {:mvn/version "1.10.2"}
+{:deps {org.clojure/clojure {:mvn/version "1.10.3"}
         com.github.seancorfield/next.jdbc {:mvn/version "1.1.646"}
         com.h2database/h2 {:mvn/version "1.4.199"}}}
 ```
