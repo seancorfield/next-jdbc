@@ -372,6 +372,8 @@ user=> (plan/select! ds
                      ["select * from invoice where customer_id = ?" 100])
 ```
 
+> Note: you need to be careful when using stateful transducers, such as `partition-by`, when reducing over the result of `plan`. Since `plan` returns an `IReduceInit`, the resource management (around the `ResultSet`) only applies to the `reduce` operation: many stateful transducers have a completing function that will access elements of the result sequence -- and this will usually fail after the reduction has cleaned up the resources. This is an inherent problem with stateful transducers over resource-managing reductions with no good solution.
+
 ## Datasources, Connections & Transactions
 
 In the examples above, we created a datasource and then passed it into each function call. When `next.jdbc` is given a datasource, it creates a `java.sql.Connection` from it, uses it for the SQL operation (by creating and populating a `java.sql.PreparedStatement` from the connection and the SQL string and parameters passed in), and then closes it. If you're not using a connection pooling datasource (see below), that can be quite an overhead: setting up database connections to remote servers is not cheap!
