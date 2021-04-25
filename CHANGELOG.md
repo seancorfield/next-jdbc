@@ -3,7 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.1.next in progress
-  * Add **Tips & Tricks** section about working with PostgreSQL "interval" types (via PR from @snorremd).
+  * Add **Tips & Tricks** section about working with PostgreSQL "interval" types (via PR #163 from @snorremd).
   * Update several dependency versions.
 
 ## Stable Builds
