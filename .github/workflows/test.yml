@@ -21,12 +21,32 @@ jobs:
       - name: Run Tests
         run: clojure -M:test:runner
 
-  build-graalvm:
+  build-graalvm-old:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        graalvm: [ '19.3.0', '20.0.0', '20.1.0', '20.2.0', '20.3.0', '20.3.1', '20.3.1.2', '21.0.0', '21.0.0.2' ]
+        graalvm: [ '19.3.6', '20.3.2' ]
         base: [ 'java8', 'java11' ]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup GraalVM
+        uses: DeLaGuardo/setup-graalvm@4.0
+        with:
+          graalvm: ${{ matrix.graalvm }}
+          java: ${{ matrix.base }}
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@master
+        with:
+          tools-deps: '1.10.3.822'
+      - name: Run Tests
+        run: clojure -M:test:runner
+
+  build-graalvm-new:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        graalvm: [ '21.1.0' ]
+        base: [ 'java11', 'java16' ]
     steps:
       - uses: actions/checkout@v2
       - name: Setup GraalVM
