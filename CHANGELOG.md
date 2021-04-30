@@ -4,9 +4,8 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.1.next in progress
   * Add **Tips & Tricks** section about working with PostgreSQL "interval" types (via PR #163 from @snorremd).
+  * Address #162 by adding GraalVM to the test matrix (thank you @DeLaGuardo).
   * Update several dependency versions.
-
-## Stable Builds
 
 * 1.1.646 -- 2021-03-15
   * Fix #161 by allowing `execute-batch!` to work with datasources and connections, and providing the SQL statement directly.
