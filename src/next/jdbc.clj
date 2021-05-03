@@ -61,7 +61,8 @@
 
   In addition, wherever a `PreparedStatement` is created, you may specify:
   * `:return-keys` -- either `true` or a vector of key names to return."
-  (:require [next.jdbc.connection]
+  (:require [camel-snake-kebab.core :refer [->kebab-case ->snake_case]]
+            [next.jdbc.connection]
             [next.jdbc.default-options :as opts]
             [next.jdbc.prepare :as prepare]
             [next.jdbc.protocols :as p]
@@ -367,25 +368,18 @@
   [connectable opts]
   (opts/->DefaultOptions connectable opts))
 
-(defmacro ^:private def-snake-kebab []
-  (try
-    (require 'camel-snake-kebab.core)
-    `(let [kebab-case# (requiring-resolve 'camel-snake-kebab.core/->kebab-case)
-           snake-case# (requiring-resolve 'camel-snake-kebab.core/->snake_case)]
-       (def snake-kebab-opts
-         "A hash map of options that will convert Clojure identifiers to
+(def snake-kebab-opts
+  "A hash map of options that will convert Clojure identifiers to
   snake_case SQL entities (`:table-fn`, `:column-fn`), and will convert
   SQL entities to qualified kebab-case Clojure identifiers (`:builder-fn`)."
-         {:column-fn  snake-case# :table-fn     snake-case#
-          :label-fn   kebab-case# :qualifier-fn kebab-case#
-          :builder-fn (resolve 'next.jdbc.result-set/as-kebab-maps)})
-       (def unqualified-snake-kebab-opts
-         "A hash map of options that will convert Clojure identifiers to
+  {:column-fn  ->snake_case :table-fn     ->snake_case
+   :label-fn   ->kebab-case :qualifier-fn ->kebab-case
+   :builder-fn rs/as-kebab-maps})
+
+(def unqualified-snake-kebab-opts
+  "A hash map of options that will convert Clojure identifiers to
   snake_case SQL entities (`:table-fn`, `:column-fn`), and will convert
   SQL entities to unqualified kebab-case Clojure identifiers (`:builder-fn`)."
-         {:column-fn  snake-case# :table-fn     snake-case#
-          :label-fn   kebab-case# :qualifier-fn kebab-case#
-          :builder-fn (resolve 'next.jdbc.result-set/as-unqualified-kebab-maps)}))
-    (catch Throwable _)))
-
-(def-snake-kebab)
+  {:column-fn  ->snake_case :table-fn     ->snake_case
+   :label-fn   ->kebab-case :qualifier-fn ->kebab-case
+   :builder-fn rs/as-unqualified-kebab-maps})

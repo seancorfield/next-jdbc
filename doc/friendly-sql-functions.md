@@ -196,7 +196,7 @@ These quoting functions can be provided to any of the friendly SQL functions abo
 (sql/insert! ds :my-table {:some "data"} {:table-fn snake-case})
 ```
 
-If you have [camel-snake-kebab](https://clj-commons.org/camel-snake-kebab/) on your classpath, `next.jdbc` will contain `snake-kebab-opts` and `unqualified-snake-kebab-opts` which are hash maps containing `:column-fn` and `:table-fn` that use the `->snake_case` function from that library which performs a more sophisticated transformation.
+`next.jdbc` provides `snake-kebab-opts` and `unqualified-snake-kebab-opts` which are hash maps containing `:column-fn` and `:table-fn` that use the `->snake_case` function from the [camel-snake-kebab library](https://github.com/clj-commons/camel-snake-kebab/) which performs a more sophisticated transformation.
 
 > Note: The entity naming function is passed a string, the result of calling `name` on the keyword passed in. Also note that the default quoting functions do not handle schema-qualified names, such as `dbo.table_name` -- `sql-server` would produce `[dbo.table_name]` from that. Use the `schema` function to wrap the quoting function if you need that behavior, e.g,. `{:table-fn (schema sql-server)}` which would produce `[dbo].[table_name]`.
 

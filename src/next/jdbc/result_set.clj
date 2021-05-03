@@ -17,7 +17,8 @@
   See also https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc.date-time
   for implementations of `ReadableColumn` that provide automatic
   conversion of some SQL data types to Java Time objects."
-  (:require [clojure.core.protocols :as core-p]
+  (:require [camel-snake-kebab.core :refer [->kebab-case]]
+            [clojure.core.protocols :as core-p]
             [clojure.core.reducers :as r]
             [clojure.datafy :as d]
             [next.jdbc.prepare :as prepare]
@@ -256,26 +257,19 @@
   [rs opts]
   (as-unqualified-modified-maps rs (assoc opts :label-fn lower-case)))
 
-(defmacro ^:private def-snake-kebab []
-  (try
-    (let [kebab-case (requiring-resolve 'camel-snake-kebab.core/->kebab-case)]
-      `(do
-         (defn ~'as-kebab-maps
-           {:doc "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
+(defn as-kebab-maps
+  "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
   that produces bare vectors of hash map rows, with kebab-case keys."
-            :arglists '([~'rs ~'opts])}
-           [rs# opts#]
-           (as-modified-maps rs# (assoc opts#
-                                        :qualifier-fn ~kebab-case
-                                        :label-fn ~kebab-case)))
-         (defn ~'as-unqualified-kebab-maps
-           {:doc "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
+  [rs opts]
+  (as-modified-maps rs (assoc opts
+                              :qualifier-fn ->kebab-case
+                              :label-fn ->kebab-case)))
+
+(defn as-unqualified-kebab-maps
+  "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
   that produces bare vectors of hash map rows, with simple, kebab-case keys."
-            :arglists '([~'rs ~'opts])}
-           [rs# opts#]
-           (as-unqualified-modified-maps rs# (assoc opts# :label-fn ~kebab-case)))))
-    (catch Throwable _)))
-(def-snake-kebab)
+  [rs opts]
+  (as-unqualified-modified-maps rs (assoc opts :label-fn ->kebab-case)))
 
 (defn as-maps-adapter
   "Given a map builder function (e.g., `as-lower-maps`) and a column reading
