@@ -2,7 +2,7 @@
 
 Only accretive/fixative changes will be made from now on.
 
-* 1.1.next in progress
+* 1.2.659 -- 2021-05-05
   * Address #164 by making `clj-commons/camel-snake-kebab` an unconditional dependency. _[Being a conditional dependency that could be brought in at runtime caused problems with GraalVM-based native compilation as well as with multi-project monorepos]_
   * Add **Tips & Tricks** section about working with PostgreSQL "interval" types (via PR #163 from @snorremd).
   * Address #162 by adding GraalVM to the test matrix (thank you @DeLaGuardo).
