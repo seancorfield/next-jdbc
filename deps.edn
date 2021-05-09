@@ -42,7 +42,7 @@
                  :sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}}
    :exec-fn cognitect.test-runner.api/test}
   :jar
-  {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.0.206"}}
+  {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.0.216"}}
    :exec-fn hf.depstar/jar
    :exec-args {:jar "next-jdbc.jar" :sync-pom true}}
   :deploy
