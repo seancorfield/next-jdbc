@@ -37,11 +37,10 @@
                       org.apache.logging.log4j/log4j-slf4j-impl {:mvn/version "2.14.1"}}
          :jvm-opts ["-Dlog4j2.configurationFile=log4j2-info.properties"]}
   :runner
-  {:extra-deps {com.cognitect/test-runner
+  {:extra-deps {io.github.cognitect-labs/test-runner
                 {:git/url "https://github.com/cognitect-labs/test-runner"
-                 :sha "b6b3193fcc42659d7e46ecd1884a228993441182"}}
-   :main-opts ["-m" "cognitect.test-runner"
-               "-d" "test"]}
+                 :sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}}
+   :exec-fn cognitect.test-runner.api/test}
   :jar
   {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.0.206"}}
    :exec-fn hf.depstar/jar
