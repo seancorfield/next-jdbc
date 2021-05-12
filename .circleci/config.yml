@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/next-jdbc
     docker:
-      - image: circleci/clojure:openjdk-11-tools-deps-1.10.0.442
+      - image: circleci/clojure:openjdk-11-tools-deps-1.10.3.822
 #    environment:
 #      JVM_OPTS: -Xmx3200m
     steps:
@@ -16,4 +16,4 @@ jobs:
             - ~/.m2
             - ~/.gitlibs
           key: next-jdbc-{{ checksum "deps.edn" }}
-      - run: clojure -A:test:runner
+      - run: clojure -M:test:runner
