@@ -6,7 +6,7 @@
 
 (set! *warn-on-reflection* true)
 
-(defrecord SQLLogging [connectable logger])
+(defrecord SQLLogging [connectable sql-logger result-logger])
 
 (extend-protocol p/Sourceable
   SQLLogging
@@ -19,25 +19,33 @@
                   (p/get-connection (:connectable this)
                                     (merge (:options this) opts))))
 
+(defn- result-logger-helper [result this sym state]
+  (when-let [logger (:result-logger this)]
+    (logger sym state result)))
+
 (extend-protocol p/Executable
   SQLLogging
   (-execute [this sql-params opts]
-            ((:logger this) 'plan sql-params)
+            ;; no result-logger call possible:
+            ((:sql-logger this) 'next.jdbc/plan sql-params)
             (p/-execute (:connectable this) sql-params
                         (merge (:options this) opts)))
   (-execute-one [this sql-params opts]
-                ((:logger this) 'execute-one! sql-params)
-                (p/-execute-one (:connectable this) sql-params
-                                (merge (:options this) opts)))
+                (let [state ((:sql-logger this) 'next.jdbc/execute-one! sql-params)]
+                  (doto (p/-execute-one (:connectable this) sql-params
+                                        (merge (:options this) opts))
+                    (result-logger-helper this 'next.jdbc/execute-one! state))))
   (-execute-all [this sql-params opts]
-                ((:logger this) 'execute! sql-params)
-                (p/-execute-all (:connectable this) sql-params
-                                (merge (:options this) opts))))
+                (let [state ((:sql-logger this) 'next.jdbc/execute! sql-params)]
+                  (doto (p/-execute-all (:connectable this) sql-params
+                                        (merge (:options this) opts))
+                    (result-logger-helper this 'next.jdbc/execute! state)))))
 
 (extend-protocol p/Preparable
   SQLLogging
   (prepare [this sql-params opts]
-           ((:logger this) 'prepare sql-params)
+           ;; no result-logger call possible:
+           ((:sql-logger this) 'next.jdbc/prepare sql-params)
            (p/prepare (:connectable this) sql-params
                       (merge (:options this) opts))))
 

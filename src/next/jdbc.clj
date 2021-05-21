@@ -370,22 +370,33 @@
   (opts/->DefaultOptions connectable opts))
 
 (defn with-logging
-  "Given a connectable/transactable object and a logging function
-  that should be used on all operations on that object, return a new
-  wrapper object that can be used in its place.
+  "Given a connectable/transactable object and a sql/params logging
+  function and an optional result logging function that should be used
+  on all operations on that object, return a new wrapper object that can
+  be used in its place.
 
-  The logging function will be called with two arguments:
+  The sql/params logging function will be called with two arguments:
   * a symbol indicating which operation is being performed:
-    * `plan`, `execute-one!`, `execute!`, or `prepare`
-    * the vector containing the SQL string and its parameters
+    * `next.jdbc/plan`, `next.jdbc/execute-one!`, `next.jdbc/execute!`,
+      or `next.jdbc/prepare`
+  * the vector containing the SQL string and its parameters
+  Whatever the sql/params logging function returns will be passed as a
+  `state` argument to the optional result logging function.
+
+  The result logging function, if provided, will be called with the
+  same symbol passed to the sql/params logging function, the `state`
+  returned by the sql/params logging function, and the result of the
+  `execute!` or `execute-one!` call. The result logging function is
+  not called for the `plan` or `prepare` call (since they do not produce
+  result sets directly).
 
   Bear in mind that `get-datasource`, `get-connection`, and `with-transaction`
   return plain Java objects, so if you call any of those on this wrapped
   object, you'll need to re-wrap the Java object `with-logging` again. See
   the Datasources, Connections & Transactions section of Getting Started for
   more details, and some examples of use with these functions."
-  [connectable opts]
-  (logger/->SQLLogging connectable opts))
+  [connectable sql-logger & [result-logger]]
+  (logger/->SQLLogging connectable sql-logger result-logger))
 
 (def snake-kebab-opts
   "A hash map of options that will convert Clojure identifiers to

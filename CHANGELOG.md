@@ -3,7 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.2.next in progress
-  * Add `next.jdbc/with-logging` to create a wrapped connectable that will invoke a logging function with the SQL and parameters for each operation. _[needs docs and tests]_
+  * _[Experimental! Will change in response to feedback!]_ Add `next.jdbc/with-logging` to create a wrapped connectable that will invoke logging functions with the SQL/parameters and optionally the result for each operation. _[needs docs and tests]_
   * Update `test-runner`.
 
 * 1.2.659 -- 2021-05-05
