@@ -67,6 +67,7 @@
             [next.jdbc.prepare :as prepare]
             [next.jdbc.protocols :as p]
             [next.jdbc.result-set :as rs]
+            [next.jdbc.sql-logging :as logger]
             [next.jdbc.transaction])
   (:import (java.sql PreparedStatement)))
 
@@ -367,6 +368,24 @@
   more details, and some examples of use with these functions."
   [connectable opts]
   (opts/->DefaultOptions connectable opts))
+
+(defn with-logging
+  "Given a connectable/transactable object and a logging function
+  that should be used on all operations on that object, return a new
+  wrapper object that can be used in its place.
+
+  The logging function will be called with two arguments:
+  * a symbol indicating which operation is being performed:
+    * `plan`, `execute-one!`, `execute!`, or `prepare`
+    * the vector containing the SQL string and its parameters
+
+  Bear in mind that `get-datasource`, `get-connection`, and `with-transaction`
+  return plain Java objects, so if you call any of those on this wrapped
+  object, you'll need to re-wrap the Java object `with-logging` again. See
+  the Datasources, Connections & Transactions section of Getting Started for
+  more details, and some examples of use with these functions."
+  [connectable opts]
+  (logger/->SQLLogging connectable opts))
 
 (def snake-kebab-opts
   "A hash map of options that will convert Clojure identifiers to
