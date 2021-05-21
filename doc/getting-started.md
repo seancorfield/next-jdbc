@@ -408,7 +408,7 @@ If `with-transaction` is given a datasource, it will create and close the connec
 
 You can read more about [working with transactions](/doc/transactions.md) further on in the documentation.
 
-> Note: Because `get-datasource` and `get-connection` return plain JDBC objects (`javax.sql.DataSource` and `java.sql.Connection` respectively), `next.jdbc/with-options` cannot flow options across those calls, so if you are explicitly managing connections or transactions as above, you would need to have local bindings for the wrapped versions:
+> Note: Because `get-datasource` and `get-connection` return plain JDBC objects (`javax.sql.DataSource` and `java.sql.Connection` respectively), `next.jdbc/with-options` and `next.jdbc/with-logging` (see **Logging** below) cannot flow options across those calls, so if you are explicitly managing connections or transactions as above, you would need to have local bindings for the wrapped versions:
 
 ```clojure
 (with-open [con (jdbc/get-connection ds)]
@@ -541,6 +541,100 @@ JDBC provides several features that let you introspect the database to obtain li
 
 Several methods on `DatabaseMetaData` return a `ResultSet` object, e.g., `.getCatalogs()`, `.getClientInfoProperties()`, `.getSchemas()`.
 All of those can be handled in a similar manner to the above. See the [Oracle documentation for `java.sql.DatabaseMetaData`](https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/DatabaseMetaData.html) (Java 11) for more details.
+
+## Logging
+
+Sometimes it is convenient to database operations logged automatically. `next.jdbc/with-logging`
+provides a way to wrap a datasource (or connection) so that operations on it will be logged via
+functions you provide.
+
+There are two logging points:
+* Logging the SQL and parameters prior to a database operation,
+* Logging the result of a database operation.
+
+`next.jdbc/with-logging` accepts two or three arguments and returns a connectable that can
+be used with `plan`, `execute!`, `execute-one!`, `prepare`, or any of the "friendly SQL
+functions". Since it uses a similar wrapping mechanism to `next.jdbc/with-options`, the
+same caveats apply -- see [**Datasources, Connections & Transactions**](#datasources-connections--transactions) above for details.
+
+### Logging SQL and Parameters
+
+```clojure
+(let [log-ds (jdbc/with-logging ds my-sql-logger)]
+  (jdbc/execute! log-ds ["some SQL" "and" "params"])
+  ...
+  (jdbc/execute! log-ds ["more SQL" "other" "params"]))
+```
+
+The `my-sql-logger` function will be invoked for each database operation, with two arguments:
+* The fully-qualified symbol identifying the operation,
+* The vector containing the SQL string followed by the parameters.
+
+The symbol will be one of: `next.jdbc/plan`, `next.jdbc/execute!`, `next.jdbc/execute-one!`,
+or `next.jdbc/prepare`. The friendly SQL functions invoke `execute!` or `execute-one!` under
+the hood, so that is how they will be logged.
+
+The logging function can do anything it wants with the SQL and parameters. If you are logging
+parameter values, consider sensitive data that you might be passing in.
+
+### Logging Results
+
+```clojure
+(let [log-ds (jdbc/with-logging ds my-sql-logger my-result-logger)]
+  (jdbc/execute! log-ds ["some SQL" "and" "params"])
+  ...
+  (jdbc/execute! log-ds ["more SQL" "other" "params"]))
+```
+
+In addition to calling `my-sql-logger` as described above, this will also call `my-result-logger`
+for `execute!` and `execute-one!` operations (`plan` and `prepare` do not execute database
+operations directly so they do not produce results). `my-result-logger` will be invoked with
+three arguments:
+* The fully-qualified symbol identify the operation,
+* A "state" argument (the result of calling `my-sql-logger`),
+* The result set data structure.
+
+The symbol will be one of: `next.jdbc/execute!` or `next.jdbc/execute-one!`. The friendly
+SQL functions invoke `execute!` or `execute-one!` under the hood, so that is how they will
+be logged.
+
+The "state" argument allows you to return data from the first logging function, such as the
+current time, that can be consumed by the second logging function, so that you can calculate
+how long an `execute!` or `execute-one!` operation took. If the first logging function
+returns `nil`, that will be passed as the second argument to your second logging function.
+
+The result set data structure could be arbitrarily large. It will generally be a vector
+for calls to `execute!` or a hash map for calls to `execute-one!`, but its shape is determined
+by any `:builder-fn` options in effect.
+
+For `plan` and `prepare` calls, only the first logging function is invoked (and the return
+value is ignored). You can use the symbol passed in to determine this.
+
+### Naive Logging with Timing
+
+This example prints all SQL and parameters to `*out*` along with millisecond timing and
+results, if a result set is available:
+
+```clojure
+dev=> (def lds (jdbc/with-logging ds
+ #_=>            (fn [sym sql-params]
+ #_=>              (prn sym sql-params)
+ #_=>              (System/currentTimeMillis))
+ #_=>            (fn [sym state result]
+ #_=>              (prn sym
+ #_=>                   (- (System/currentTimeMillis) state)
+ #_=>                   (if (map? result) result (count result))))))
+#'dev/lds
+dev=> (sql/find-by-keys lds :foo {:name "Person"})
+next.jdbc/execute! ["SELECT * FROM foo WHERE name = ?" "Person"]
+next.jdbc/execute! 813 1
+[#:FOO{:NAME "Person"}]
+dev=>
+```
+
+A more sophisticated example could use `sym` to decide whether to just log the SQL and
+some parameter values or return the current time and the SQL and parameters, so that the
+result logging could log the SQL, parameters, _and_ result set information with timing.
 
 ## Support from Specs
 
