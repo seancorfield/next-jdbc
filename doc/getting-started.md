@@ -243,18 +243,18 @@ If you wish to create a Clojure hash map that supports that lazy navigation, you
 ```clojure
 ;; selects specific keys (as simple keywords):
 user=> (into []
-             (map #(select-keys % [:id :product :unit_price :unit_cost :customer_id]))
+             (map #(select-keys % [:id :product :unit_price :unit_count :customer_id]))
              (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
 ;; selects specific keys (as qualified keywords):
 user=> (into []
              (map #(select-keys % [:invoice/id :invoice/product
-                                   :invoice/unit_price :invoice/unit_cost
+                                   :invoice/unit_price :invoice/unit_count
                                    :invoice/customer_id]))
              (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
 ;; selects specific keys (as qualified keywords -- ignoring the table name):
 user=> (into []
              (map #(select-keys % [:foo/id :bar/product
-                                   :quux/unit_price :wibble/unit_cost
+                                   :quux/unit_price :wibble/unit_count
                                    :blah/customer_id]))
              (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
 ;; do not do this:
@@ -338,34 +338,34 @@ user=> (plan/select! ds
 #{"apple" "banana" "cucumber"}
 ;; selects specific keys (as simple keywords):
 user=> (into []
-             (map #(select-keys % [:id :product :unit_price :unit_cost :customer_id]))
+             (map #(select-keys % [:id :product :unit_price :unit_count :customer_id]))
              (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
 ;; or:
 user=> (plan/select! ds
-                     [:id :product :unit_price :unit_cost :customer_id]
+                     [:id :product :unit_price :unit_count :customer_id]
                      ["select * from invoice where customer_id = ?" 100])
 ;; selects specific keys (as qualified keywords):
 user=> (into []
              (map #(select-keys % [:invoice/id :invoice/product
-                                   :invoice/unit_price :invoice/unit_cost
+                                   :invoice/unit_price :invoice/unit_count
                                    :invoice/customer_id]))
              (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
 ;; or:
 user=> (plan/select! ds
                      [:invoice/id :invoice/product
-                      :invoice/unit_price :invoice/unit_cost
+                      :invoice/unit_price :invoice/unit_count
                       :invoice/customer_id]
                      ["select * from invoice where customer_id = ?" 100])
 ;; selects specific keys (as qualified keywords -- ignoring the table name):
 user=> (into []
              (map #(select-keys % [:foo/id :bar/product
-                                   :quux/unit_price :wibble/unit_cost
+                                   :quux/unit_price :wibble/unit_count
                                    :blah/customer_id]))
              (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
 ;; or:
 user=> (plan/select! ds
                      [:foo/id :bar/product
-                      :quux/unit_price :wibble/unit_cost
+                      :quux/unit_price :wibble/unit_count
                       :blah/customer_id]
                      ["select * from invoice where customer_id = ?" 100])
 ```
