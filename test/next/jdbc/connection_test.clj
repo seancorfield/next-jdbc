@@ -54,27 +54,71 @@
            (#'c/spec->url+etc {:dbtype "sqlserver" :dbname db-name :port 1433})))))
 
 (deftest custom-dbtypes
-  (is (= ["jdbc:acme:my-db" {}]
+  (is (= ["jdbc:acme:my-db" {} nil]
          (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
                              :dbname "my-db" :host :none})))
-  (is (= ["jdbc:acme://127.0.0.1/my-db" {}]
+  (is (= ["jdbc:acme://127.0.0.1/my-db" {} nil]
          (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
                              :dbname "my-db"})))
-  (is (= ["jdbc:acme://12.34.56.70:1234/my-db" {}]
+  (is (= ["jdbc:acme://12.34.56.70:1234/my-db" {} nil]
          (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
                              :dbname "my-db" :host "12.34.56.70" :port 1234})))
-  (is (= ["jdbc:acme:dsn=my-db" {}]
+  (is (= ["jdbc:acme:dsn=my-db" {} nil]
          (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
                              :dbname "my-db" :host :none
                              :dbname-separator ":dsn="})))
-  (is (= ["jdbc:acme:(*)127.0.0.1/my-db" {}]
+  (is (= ["jdbc:acme:(*)127.0.0.1/my-db" {} nil]
          (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
                              :dbname "my-db"
                              :host-prefix "(*)"})))
-  (is (= ["jdbc:acme:(*)12.34.56.70:1234/my-db" {}]
+  (is (= ["jdbc:acme:(*)12.34.56.70:1234/my-db" {} nil]
          (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
                              :dbname "my-db" :host "12.34.56.70" :port 1234
                              :host-prefix "(*)"}))))
+
+(deftest jdbc-url-tests
+  (testing "basic URLs work"
+    (is (= "jdbc:acme:my-db"
+           (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
+                        :dbname "my-db" :host :none})))
+    (is (= "jdbc:acme://127.0.0.1/my-db"
+           (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
+                        :dbname "my-db"})))
+    (is (= "jdbc:acme://12.34.56.70:1234/my-db"
+           (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
+                        :dbname "my-db" :host "12.34.56.70" :port 1234})))
+    (is (= "jdbc:acme:dsn=my-db"
+           (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
+                        :dbname "my-db" :host :none
+                        :dbname-separator ":dsn="})))
+    (is (= "jdbc:acme:(*)127.0.0.1/my-db"
+           (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
+                        :dbname "my-db"
+                        :host-prefix "(*)"})))
+    (is (= "jdbc:acme:(*)12.34.56.70:1234/my-db"
+           (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
+                        :dbname "my-db" :host "12.34.56.70" :port 1234
+                        :host-prefix "(*)"}))))
+  (testing "URLs with properties work"
+    (is (= "jdbc:acme:my-db?useSSL=true"
+           (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
+                        :dbname "my-db" :host :none
+                        :useSSL true})))
+    (is (boolean (#{"jdbc:acme:my-db?useSSL=true&user=dba"
+                    "jdbc:acme:my-db?user=dba&useSSL=true"}
+                  (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
+                               :dbname "my-db" :host :none
+                               :useSSL true :user "dba"}))))
+
+    (is (= "jdbc:jtds:sqlserver:my-db;useSSL=true"
+           (c/jdbc-url {:dbtype "jtds"
+                        :dbname "my-db" :host :none
+                        :useSSL true})))
+    (is (boolean (#{"jdbc:jtds:sqlserver:my-db;useSSL=true;user=dba"
+                    "jdbc:jtds:sqlserver:my-db;user=dba;useSSL=true"}
+                  (c/jdbc-url {:dbtype "jtds"
+                               :dbname "my-db" :host :none
+                               :useSSL true :user "dba"}))))))
 
 ;; these are the 'local' databases that we can always test against
 (def test-db-type ["derby" "h2" "h2:mem" "hsqldb" "sqlite"])

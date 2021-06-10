@@ -103,6 +103,11 @@
       the database name in the JDBC URL
   * `:host-prefix` -- override the `//` that normally precedes the IP
       address or hostname in the JDBC URL
+  * `:property-separator` -- an optional string that can be used to override
+      the separators used in `jdbc-url` for the properties (after the initial
+      JDBC URL portion); by default `?` and `&` are used to build JDBC URLs
+      with properties; for SQL Server drivers (both MS and jTDS)
+      `:property-separator \";\"` is used
 
   In the second format, this key is required:
   * `:jdbcUrl` -- a JDBC URL string

@@ -22,7 +22,8 @@
   string, this table includes `:dbname-separator` and/or `:host-prefix`. The
   default prefix for `:dbname` is either `/` or `:` and for `:host` it is `//`.
   For local databases, with no `:host`/`:port` segment in their JDBC URL, a
-  value of `:none` is provided for `:host` in this table.
+  value of `:none` is provided for `:host` in this table. In addition,
+  `:property-separator` can specify how you build the JDBC URL.
 
   For known database types, you can use `:dbtype` (and omit `:classname`).
 
@@ -79,14 +80,17 @@
                       :host :none}
    "jtds"            {:classname "net.sourceforge.jtds.jdbc.Driver"
                       :alias-for "jtds:sqlserver"
+                      :property-separator ";"
                       :port 1433}
    "jtds:sqlserver"  {:classname "net.sourceforge.jtds.jdbc.Driver"
+                      :property-separator ";"
                       :port 1433}
    "mariadb"         {:classname "org.mariadb.jdbc.Driver"
                       :port 3306}
    "mssql"           {:classname "com.microsoft.sqlserver.jdbc.SQLServerDriver"
                       :alias-for "sqlserver"
                       :dbname-separator ";DATABASENAME="
+                      :property-separator ";"
                       :port 1433}
    "mysql"           {:classname ["com.mysql.cj.jdbc.Driver"
                                   "com.mysql.jdbc.Driver"]
@@ -117,6 +121,7 @@
                       :host :none}
    "sqlserver"       {:classname "com.microsoft.sqlserver.jdbc.SQLServerDriver"
                       :dbname-separator ";DATABASENAME="
+                      :property-separator ";"
                       :port 1433}
    "timesten:client" {:classname "com.timesten.jdbc.TimesTenClientDriver"
                       :dbname-separator ":dsn="
@@ -151,7 +156,7 @@
   As a special case, the database spec can contain jdbcUrl (just like ->pool),
   in which case it will return that URL as-is and a map of any other options."
   [{:keys [dbtype dbname host port classname
-           dbname-separator host-prefix
+           dbname-separator host-prefix property-separator
            jdbcUrl]
     :as db-spec}]
   (let [etc (dissoc db-spec
@@ -208,7 +213,8 @@
           (throw (ex-info (str "Unknown dbtype: " dbtype
                                ", and :classname not provided.")
                           db-spec)))
-        [url etc]))))
+        [url etc (or property-separator
+                     (-> dbtype dbtypes :property-separator))]))))
 
 (defn jdbc-url
   "Given a database spec (as a hash map), return a JDBC URL with all the
@@ -236,13 +242,15 @@
   sure they are properly URL-encoded as values in the database spec hash map.
   This function does **not** attempt to URL-encode values for you!"
   [db-spec]
-  (let [[url etc] (spec->url+etc db-spec)
-        url-and   (if (str/index-of url "?") "&" "?")]
-    (str url url-and (str/join "&"
-                               (reduce-kv (fn [pairs k v]
-                                            (conj pairs (str (name k) "=" v)))
-                                          []
-                                          etc)))))
+  (let [[url etc ps] (spec->url+etc db-spec)
+        url-and      (or ps (if (str/index-of url "?") "&" "?"))]
+    (if (seq etc)
+      (str url url-and (str/join (or ps "&")
+                                 (reduce-kv (fn [pairs k v]
+                                              (conj pairs (str (name k) "=" v)))
+                                            []
+                                            etc)))
+      url)))
 
 (defn ->pool
   "Given a (connection pooled datasource) class and a database spec, return a
