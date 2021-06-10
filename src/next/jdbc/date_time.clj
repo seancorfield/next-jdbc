@@ -66,7 +66,7 @@
   will be extended to (`java.sql.Date` and) `java.sql.Timestamp` so that any
   timestamp columns will automatically be read as `java.time.Instant`.
 
-  Note that `java.sql.Date` columns will still be returns as-is because they
+  Note that `java.sql.Date` columns will still be returned as-is because they
   cannot be converted to an instant (they lack a time component)."
   []
   (extend-protocol rs/ReadableColumn
