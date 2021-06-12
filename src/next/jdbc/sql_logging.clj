@@ -32,14 +32,22 @@
                         (merge (:options this) opts)))
   (-execute-one [this sql-params opts]
                 (let [state ((:sql-logger this) 'next.jdbc/execute-one! sql-params)]
-                  (doto (p/-execute-one (:connectable this) sql-params
-                                        (merge (:options this) opts))
-                    (result-logger-helper this 'next.jdbc/execute-one! state))))
+                  (try
+                    (doto (p/-execute-one (:connectable this) sql-params
+                                          (merge (:options this) opts))
+                      (result-logger-helper this 'next.jdbc/execute-one! state))
+                    (catch Throwable t
+                      (result-logger-helper t this 'next.jdbc/execut-one! state)
+                      (throw t)))))
   (-execute-all [this sql-params opts]
                 (let [state ((:sql-logger this) 'next.jdbc/execute! sql-params)]
-                  (doto (p/-execute-all (:connectable this) sql-params
-                                        (merge (:options this) opts))
-                    (result-logger-helper this 'next.jdbc/execute! state)))))
+                  (try
+                    (doto (p/-execute-all (:connectable this) sql-params
+                                          (merge (:options this) opts))
+                      (result-logger-helper this 'next.jdbc/execute! state))
+                    (catch Throwable t
+                      (result-logger-helper t this 'next.jdbc/execut-one! state)
+                      (throw t))))))
 
 (extend-protocol p/Preparable
   SQLLogging

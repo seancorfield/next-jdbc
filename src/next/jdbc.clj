@@ -390,10 +390,10 @@
 
   The result logging function, if provided, will be called with the
   same symbol passed to the sql/params logging function, the `state`
-  returned by the sql/params logging function, and the result of the
-  `execute!` or `execute-one!` call. The result logging function is
-  not called for the `plan` or `prepare` call (since they do not produce
-  result sets directly).
+  returned by the sql/params logging function, and either the result of
+  the `execute!` or `execute-one!` call or an exception if the call
+  failed. The result logging function is not called for the `plan`
+  or `prepare` call (since they do not produce result sets directly).
 
   Bear in mind that `get-datasource`, `get-connection`, and `with-transaction`
   return plain Java objects, so if you call any of those on this wrapped

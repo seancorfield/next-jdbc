@@ -592,7 +592,9 @@ operations directly so they do not produce results). `my-result-logger` will be 
 three arguments:
 * The fully-qualified symbol identify the operation,
 * A "state" argument (the result of calling `my-sql-logger`),
-* The result set data structure.
+* The result set data structure, if the call succeeded, or the exception if it failed.
+
+The return value of the result logger function is ignored.
 
 The symbol will be one of: `next.jdbc/execute!` or `next.jdbc/execute-one!`. The friendly
 SQL functions invoke `execute!` or `execute-one!` under the hood, so that is how they will
@@ -605,7 +607,8 @@ returns `nil`, that will be passed as the second argument to your second logging
 
 The result set data structure could be arbitrarily large. It will generally be a vector
 for calls to `execute!` or a hash map for calls to `execute-one!`, but its shape is determined
-by any `:builder-fn` options in effect.
+by any `:builder-fn` options in effect. You should check if `(instance? Throwable result)`
+to see if the call failed and the logger has been called with the thrown exception.
 
 For `plan` and `prepare` calls, only the first logging function is invoked (and the return
 value is ignored). You can use the symbol passed in to determine this.

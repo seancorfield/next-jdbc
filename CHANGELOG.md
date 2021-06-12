@@ -3,8 +3,8 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.2.next in progress
-  * _[Experimental! Will change in response to feedback!]_ Add `next.jdbc/with-logging` to create a wrapped connectable that will invoke logging functions with the SQL/parameters and optionally the result for each operation.
   * Fix #167 by adding `:property-separator` to `next.jdbc.connection/dbtypes` and using it in `jdbc-url`.
+  * Address #166 by adding `next.jdbc/with-logging` to create a wrapped connectable that will invoke logging functions with the SQL/parameters and optionally the result or exception for each operation.
   * Fix `:unit_count` references in **Getting Started** (were `:unit_cost`).
   * Update `test-runner`.
 
