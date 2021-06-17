@@ -10,10 +10,10 @@ jobs:
       - checkout
       - restore_cache:
           key: next-jdbc-{{ checksum "deps.edn" }}
-      - run: clojure -Spath -R:test:runner
+      - run: clojure -Spath -R:test
       - save_cache:
           paths:
             - ~/.m2
             - ~/.gitlibs
           key: next-jdbc-{{ checksum "deps.edn" }}
-      - run: clojure -M:test:runner
+      - run: clojure -X:test

@@ -6,6 +6,9 @@
  :aliases
  {:test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}
+                      io.github.cognitect-labs/test-runner
+                      {:git/url "https://github.com/cognitect-labs/test-runner"
+                       :sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}
                       ;; connection pooling
                       com.zaxxer/HikariCP {:mvn/version "3.4.2"}
                       com.mchange/c3p0 {:mvn/version "0.9.5.5"}
@@ -35,12 +38,8 @@
                       org.apache.logging.log4j/log4j-jcl {:mvn/version "2.14.1"}
                       org.apache.logging.log4j/log4j-jul {:mvn/version "2.14.1"}
                       org.apache.logging.log4j/log4j-slf4j-impl {:mvn/version "2.14.1"}}
-         :jvm-opts ["-Dlog4j2.configurationFile=log4j2-info.properties"]}
-  :runner
-  {:extra-deps {io.github.cognitect-labs/test-runner
-                {:git/url "https://github.com/cognitect-labs/test-runner"
-                 :sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}}
-   :exec-fn cognitect.test-runner.api/test}
+         :jvm-opts ["-Dlog4j2.configurationFile=log4j2-info.properties"]
+         :exec-fn cognitect.test-runner.api/test}
   :jar
   {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.0.216"}}
    :exec-fn hf.depstar/jar
