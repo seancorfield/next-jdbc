@@ -8,7 +8,7 @@
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}
                       io.github.cognitect-labs/test-runner
                       {:git/url "https://github.com/cognitect-labs/test-runner"
-                       :sha "2d69f33d7980c3353b246c28f72ffeafbd9f2fab"}
+                       :sha "62ef1de18e076903374306060ac0e8a752e57c86"}
                       ;; connection pooling
                       com.zaxxer/HikariCP {:mvn/version "3.4.2"}
                       com.mchange/c3p0 {:mvn/version "0.9.5.5"}
