@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/next-jdbc
     docker:
-      - image: circleci/clojure:openjdk-11-tools-deps-1.10.3.822
+      - image: circleci/clojure:openjdk-11-tools-deps-1.10.3.855
 #    environment:
 #      JVM_OPTS: -Xmx3200m
     steps:
