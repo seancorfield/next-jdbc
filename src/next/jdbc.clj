@@ -352,6 +352,9 @@
   then executes the `body` in that context, committing any changes if the body
   completes successfully, otherwise rolling back any changes made.
 
+  Like `with-open`, if `with-transaction` creates a new `Connection` object,
+  it will automatically close it for you.
+
   The options map supports:
   * `:isolation` -- `:none`, `:read-committed`, `:read-uncommitted`,
       `:repeatable-read`, `:serializable`,

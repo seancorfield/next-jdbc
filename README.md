@@ -15,7 +15,7 @@ The documentation on [cljdoc.org](https://cljdoc.org/d/com.github.seancorfield/n
 * [Getting Started](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/doc/getting-started)
 * [API Reference](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next)
 * [Migrating from `clojure.java.jdbc`](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/doc/migration-from-clojure-java-jdbc)
-* Feedback via [issues](https://github.com/seancorfield/next-jdbc/issues) or in the [`#sql` channel on the Clojurians Slack](https://clojurians.slack.com/messages/C1Q164V29/details/) or the [`#sql` stream on the Clojurians Zulip](https://clojurians.zulipchat.com/#narrow/stream/152063-sql).
+* Feedback via [issues](https://github.com/seancorfield/next-jdbc/issues) or in the [`#sql` channel on the Clojurians Slack](https://clojurians.slack.com/messages/C1Q164V29/) or the [`#sql` stream on the Clojurians Zulip](https://clojurians.zulipchat.com/#narrow/stream/152063-sql).
 
 The documentation on GitHub is for **develop** since the 1.2.674 release -- [see the CHANGELOG](https://github.com/seancorfield/next-jdbc/blob/develop/CHANGELOG.md) and then read the [corresponding updated documentation](https://github.com/seancorfield/next-jdbc/tree/develop/doc) on GitHub if you want. Older versions of `next.jdbc` were published under the `seancorfield` group ID and you can find [older seancorfield/next.jdbc documentation on cljdoc.org](https://cljdoc.org/versions/seancorfield/next.jdbc).
 

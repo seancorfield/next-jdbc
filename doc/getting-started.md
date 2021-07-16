@@ -394,16 +394,27 @@ If any of these operations throws an exception, the connection will still be clo
   (into [] (map :column) (jdbc/plan tx ...)))
 ```
 
-If `with-transaction` is given a datasource, it will create and close the connection for you. If you pass in an existing connection, `with-transaction` will set up a transaction on that connection and, after either committing or rolling back the transaction, will restore the state of the connection and leave it open:
+`with-transaction` behaves somewhat like Clojure's `with-open` macro: it will (generally) create a new `Connection` for you (from `ds`) and set up a transaction on it and bind it to `tx`; if the code in the body executes successfully, it will commit the transaction and close the `Connection`; if the code in the body throws an exception, it will rollback the transaction, but still close the `Connection`.
+
+If `ds` is a `Connection`, `with-transaction` will just bind `tx` to that but will set up a transaction on that `Connection`; run the code in the body and either commit or rollback the transaction; it will leave the `Connection` open (but try to restore the state of the `Connection`).
+
+If `ds` is a datasource, `with-transaction` will call `get-connection` on it, bind `tx` to that `Connection` and set up a transaction; run the code in the body and either commit or rollback the transaction; close the `Connection`.
+
+If `ds` is something else, `with-transaction` will call `get-datasource` on it first and then proceed as above.
+
+Here's what will happen in the case where `with-transaction` is given a `Connection`:
 
 ```clojure
 (with-open [con (jdbc/get-connection ds)]
-  (jdbc/execute! con ...) ; committed
+  (jdbc/execute! con ...) ; auto-committed
+
   (jdbc/with-transaction [tx con] ; will commit or rollback this group:
+    ;; note: tx is bound to the same Connection object as con
     (jdbc/execute! tx ...)
     (jdbc/execute! tx ...)
     (into [] (map :column) (jdbc/plan tx ...)))
-  (jdbc/execute! con ...)) ; committed
+
+  (jdbc/execute! con ...)) ; auto-committed
 ```
 
 You can read more about [working with transactions](/doc/transactions.md) further on in the documentation.
@@ -413,13 +424,15 @@ You can read more about [working with transactions](/doc/transactions.md) furthe
 ```clojure
 (with-open [con (jdbc/get-connection ds)]
   (let [con-opts (jdbc/with-options con some-options)]
-    (jdbc/execute! con-opts ...) ; committed
+    (jdbc/execute! con-opts ...) ; auto-committed
+
     (jdbc/with-transaction [tx con-opts] ; will commit or rollback this group:
       (let [tx-opts (jdbc/with-options tx (:options con-opts)]
         (jdbc/execute! tx-opts ...)
         (jdbc/execute! tx-opts ...)
         (into [] (map :column) (jdbc/plan tx-opts ...))))
-    (jdbc/execute! con-opts ...))) ; committed
+
+    (jdbc/execute! con-opts ...))) ; auto-committed
 ```
 
 ### Prepared Statement Caveat
