@@ -415,6 +415,14 @@ And those columns are nicely transformed into Clojure data when querying:
 => [{:demo/id 1, :foo {:a 1}}]
 ```
 
+#### Using HoneySQL with JSON and JSONB
+
+If you are using HoneySQL to generate your SQL, there will be an inherent conflict
+between the data structures you are intending HoneySQL to interpret -- as function calls
+and SQL statements -- and the data structures you intend to treat as JSON. See
+[General Reference > Working with JSON/JSONB (PostgreSQL)](https://cljdoc.org/d/com.github.seancorfield/honeysql/CURRENT/doc/getting-started/general-reference#working-with-jsonjsonb-postgresql)
+in the HoneySQL documentation for more details.
+
 #### JSON or JSONB?
 
 * A `json` column stores JSON data as strings (reading and writing is fast but manipulation is slow, field order is preserved)
