@@ -18,6 +18,21 @@ If you used `:as-arrays? true`, you will most likely want to use a `:builder-fn`
 
 > Note: When `next.jdbc` cannot obtain a `ResultSet` object and returns `{:next.jdbc/count N}` instead, these builder functions are not applied -- the `:builder-fn` option is not used in that situation.
 
+### Transactions
+
+Although both libraries support transactions -- via `clojure.java.jdbc/with-db-transaction` and
+via `next.jdbc/with-transaction` -- there are some important considerations when you are migrating:
+
+* `clojure.java.jdbc/with-db-transaction` allows nested calls to be present but it tracks the "depth" of such calls and "nested" calls are simply ignored (because transactions do not actually nest in JDBC).
+* `next.jdbc/with-transaction` will attempt to set up a transaction on an existing `Connection` if that is what it is passed (otherwise a new `Connection` is created and a new transaction set up on that). That means that if you have nested calls, the inner transaction will commit (or rollback) all the way to the outermost transaction. `next.jdbc` "trusts" the programmer to know what they are doing. You can bind `next.jdbc.transaction/*nested-tx*` to `:ignore` if you want the same behavior as `clojure.java.jdbc` where all nested calls are ignored and the outermost transaction is in full control.
+* Every operation in `clojure.java.jdbc` attempts to create its own transaction, which is a no-op inside an `with-db-transaction` so it is safe; transactions are _implicit_ in `clojure.java.jdbc`. However, if you have migrated that `with-db-transaction` call over to `next.jdbc/with-transaction` then any `clojure.java.jdbc` operations invoked inside the body of that migrated transaction will still try to create their own transactions and `with-db-transaction` won't know about the outer `with-transaction` call so you will effectively get the "overlapping" behavior of `next.jdbc` since the `clojure.java.jdbc` operation will cause the outermost transaction to be committed or rolled back.
+* None of the operations in `next.jdbc` try to create transactions -- exception `with-transaction`. All `Connection`s are auto-commit by default so it doesn't need the local transactions that `clojure.java.jdbc` tries to create; transactions are _explicit_ in `next.jdbc`.
+
+There are some strategies you can take to mitigate these differences:
+1. Migrate code bottom-up so that you don't end up with calls to `clojure.java.jdbc` operations inside `next.jdbc/with-transaction` calls.
+2. When you migrate a `with-db-transaction` call, think carefully about whether it could be a nested call (in which case simply remove it) or a conditionally nested call which you'll need to be much more careful about migrating.
+3. You can bind `next.jdbc.transaction/*nested-tx*` to `:prohibit` which will throw exceptions if you accidentally nest calls to `next.jdbc/with-transaction`. Although you can bind it to `:ignore` in order to mimic the behavior of `clojure.java.jdbc`, that should be considered a last resort for dealing with complex conditional nesting of transaction calls.
+
 ### Option Handling
 
 Because `clojure.java.jdbc` focuses on a hash map for the `db-spec` that is passed around, it can hold options that act as defaults for all operations on it. In addition, all operations in `clojure.java.jdbc` can accept a hash map of options and can pass those options down the call chain. In `next.jdbc`, `get-datasource`, `get-connection`, and `prepare` all produce Java objects that cannot have any extra options attached. On one hand, that means that it is harder to provide "default options", and on the other hand it means you need to be a bit more careful to ensure that you pass the appropriate options to the appropriate function, since they cannot be passed through the call chain via the `db-spec`. That's where `next.jdbc/with-options` can come in handy to wrap a connectable (generally a datasource or a connection) but be careful where you are managing connections and/or transactions directly, as mentioned in the [Getting Started](/doc/getting-started.md) guide.
