@@ -422,7 +422,7 @@
   (datafiable-row [this connectable opts]
     "Produce a datafiable representation of a row from a `ResultSet`."))
 
-(defn- row-builder
+(defn row-builder
   "Given a `RowBuilder` -- a row materialization strategy -- produce a fully
   materialized row from it."
   [builder]
