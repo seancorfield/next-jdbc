@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.2.next in progress
+  * Address #173 by extending `DatafiableRow` to `ResultSet` so there's a public method to call on (rows of) a JDBC result set directly.
   * Address #169 by expanding the description of `with-transaction` in **Getting Started**.
 
 * 1.2.674 -- 2021-06-16

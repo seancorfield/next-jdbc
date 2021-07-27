@@ -595,6 +595,13 @@
 
 (extend-protocol
   DatafiableRow
+  ResultSet
+  (datafiable-row [this connectable opts]
+    (let [mapped (mapify-result-set this opts)]
+      (datafiable-row mapped connectable opts))))
+
+(extend-protocol
+  DatafiableRow
   clojure.lang.IObj ; assume we can "navigate" anything that accepts metadata
   ;; in reality, this is going to be over-optimistic and will like cause `nav`
   ;; to fail on attempts to navigate into result sets that are not hash maps
