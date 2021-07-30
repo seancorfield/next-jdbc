@@ -262,5 +262,3 @@ By default, for compatibility with their default adapter (`clojure.java.jdbc`), 
 (character-by-id ds {:id 1})
 ;;=> #:CHARACTERS{:ID 1, :NAME "Westley", :SPECIALTY "love", :CREATED_AT #inst "2019-09-27T18:52:54.413000000-00:00"}
 ```
-
-[<: Getting Started](/doc/getting-started.md) | [Tips & Tricks :>](/doc/tips-and-tricks.md)

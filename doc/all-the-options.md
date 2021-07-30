@@ -107,5 +107,3 @@ The `transact` function and `with-transaction` macro accept the following option
 The `next.jdbc.plan/select!` function accepts the following specific option:
 
 * `:into` -- a data structure into which the selected result from a `plan` operation are poured; by default this is `[]`; could be any value that is acceptable as the first argument to `into`, subject to `into` accepting the sequence of values produced by the `plan` reduction.
-
-[<: Transactions](/doc/transactions.md) | [`datafy`, `nav`, and `:schema` :>](/doc/datafy-nav-and-schema.md)

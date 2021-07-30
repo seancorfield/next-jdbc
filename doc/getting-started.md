@@ -673,5 +673,3 @@ A convenience function also exists to revert that instrumentation:
 ```clojure
 (specs/unstrument) ; undoes the instrumentation of all next.jdbc API functions
 ```
-
-[Friendly SQL Functions :>](/doc/friendly-sql-functions.md)

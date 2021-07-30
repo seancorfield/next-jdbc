@@ -150,5 +150,3 @@ The default implementation of this protocol is for these two functions to return
 Remember that a protocol extension will apply to all code running in your application so with the above code **all** timestamp values coming from the database will be converted to `java.time.Instant` for all queries. If you want to control behavior across different calls, consider the adapters described above (`as-maps-adapter`, `as-arrays-adapter`, and `builder-adapter`, and think about using metadata to implement the `rs/ReadableColumn` protocol instead of extending it).
 
 Note that the converse, converting Clojure values to database-specific types is handled by the `SettableParameter` protocol, discussed in the next section ([Prepared Statements](/doc/prepared-statements.md#prepared-statement-parameters)).
-
-[<: Tips & Tricks](/doc/tips-and-tricks.md) | [Prepared Statements :>](/doc/prepared-statements.md)

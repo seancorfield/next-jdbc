@@ -459,5 +459,3 @@ If you are using `plan`, you'll most likely be accessing columns by just the lab
         []
         (jdbc/plan ds ["select * from some_table"]))
 ```
-
-[<: Friendly SQL Functions](/doc/friendly-sql-functions.md) | [Result Set Builders :>](/doc/result-set-builders.md)
