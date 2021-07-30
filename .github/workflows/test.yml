@@ -17,7 +17,7 @@ jobs:
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
-          tools-deps: '1.10.3.855'
+          tools-deps: '1.10.3.933'
       - name: Run Tests
         run: clojure -X:test
 
@@ -37,7 +37,7 @@ jobs:
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
-          tools-deps: '1.10.3.855'
+          tools-deps: '1.10.3.933'
       - name: Run Tests
         run: clojure -X:test
 
@@ -57,6 +57,6 @@ jobs:
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
-          tools-deps: '1.10.3.855'
+          tools-deps: '1.10.3.933'
       - name: Run Tests
         run: clojure -X:test

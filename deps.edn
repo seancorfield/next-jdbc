@@ -7,8 +7,7 @@
  {:test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}
                       io.github.cognitect-labs/test-runner
-                      {:git/url "https://github.com/cognitect-labs/test-runner"
-                       :sha "62ef1de18e076903374306060ac0e8a752e57c86"}
+                      {:git/tag "v0.4.0" :git/sha "334f2e2"}
                       ;; connection pooling
                       com.zaxxer/HikariCP {:mvn/version "3.4.2"}
                       com.mchange/c3p0 {:mvn/version "0.9.5.5"}
@@ -41,7 +40,7 @@
          :jvm-opts ["-Dlog4j2.configurationFile=log4j2-info.properties"]
          :exec-fn cognitect.test-runner.api/test}
   :jar
-  {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.267"}}
+  {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.278"}}
    :exec-fn hf.depstar/jar
    :exec-args {:jar "next-jdbc.jar" :sync-pom true}}
   :deploy
