@@ -4,7 +4,9 @@
 
         camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.2"}}
  :aliases
- {:test {:extra-paths ["test"]
+ {:build {:deps {io.github.clojure/tools.build {:git/tag "v0.1.7" :git/sha "8a3abc2"}}
+          :ns-default build}
+  :test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}
                       io.github.cognitect-labs/test-runner
                       {:git/tag "v0.4.0" :git/sha "334f2e2"}
