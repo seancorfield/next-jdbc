@@ -2,13 +2,13 @@
 
 Only accretive/fixative changes will be made from now on.
 
-* 1.2.next in progress
+* 1.2.689 -- 2021-08-01
   * Address #173 by extending `DatafiableRow` to `ResultSet` so there's a public method to call on (rows of) a JDBC result set directly.
   * Address #171 by clarifying that you cannot use `clojure.java.jdbc` functions inside `next.jdbc/with-transaction` and discuss how to migrate transaction-based code in the **Migration** guide.
   * Address #169 by expanding the description of `with-transaction` in **Getting Started**.
   * Cross-link to HoneySQL documentation for JSON/JSONB manipulation.
   * Remove superfluous prev/next links in docs (cljdoc does this automatically now).
-  * Update `depstar`, `test-runner`, and CI versions.
+  * Update `depstar`, `test-runner`, and CI versions. Add example `build.clj` to run tests in a subprocess (purely educational).
 
 * 1.2.674 -- 2021-06-16
   * Fix #167 by adding `:property-separator` to `next.jdbc.connection/dbtypes` and using it in `jdbc-url`.
