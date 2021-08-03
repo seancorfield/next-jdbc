@@ -42,7 +42,8 @@
          :jvm-opts ["-Dlog4j2.configurationFile=log4j2-info.properties"]
          :exec-fn cognitect.test-runner.api/test}
   :deploy
-  {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
+  {:replace-deps {slipset/deps-deploy {:git/url "https://github.com/slipset/deps-deploy"
+                                       :sha "b4359c5d67ca002d9ed0c4b41b710d7e5a82e3bf"}}
    :exec-fn deps-deploy.deps-deploy/deploy
    :exec-args {:installer :remote
                :pom-file "target/classes/META-INF/maven/com.github.seancorfield/next.jdbc/pom.xml"}}}}
