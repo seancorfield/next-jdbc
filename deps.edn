@@ -41,11 +41,8 @@
                       org.apache.logging.log4j/log4j-slf4j-impl {:mvn/version "2.14.1"}}
          :jvm-opts ["-Dlog4j2.configurationFile=log4j2-info.properties"]
          :exec-fn cognitect.test-runner.api/test}
-  :jar
-  {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.278"}}
-   :exec-fn hf.depstar/jar
-   :exec-args {:jar "next-jdbc.jar" :sync-pom true}}
   :deploy
   {:replace-deps {slipset/deps-deploy {:mvn/version "0.1.5"}}
    :exec-fn deps-deploy.deps-deploy/deploy
-   :exec-args {:installer :remote :artifact "next-jdbc.jar"}}}}
+   :exec-args {:installer :remote
+               :pom-file "target/classes/META-INF/maven/com.github.seancorfield/next.jdbc/pom.xml"}}}}
