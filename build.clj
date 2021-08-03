@@ -1,5 +1,6 @@
 (ns build
-  (:require [clojure.tools.build.api :as b]))
+  (:require [clojure.tools.build.api :as b]
+            [clojure.tools.deps.alpha :as t]))
 
 (def lib 'com.github.seancorfield/next.jdbc)
 (def version (format "1.2.%s" (b/git-count-revs nil)))
@@ -8,11 +9,11 @@
 (def jar-file (format "target/%s-%s.jar" (name lib) version))
 
 (defn clean [_]
-  (println "Cleaning target...")
+  (println "\nCleaning target...")
   (b/delete {:path "target"}))
 
 (defn jar [_]
-  (println "Writing pom.xml...")
+  (println "\nWriting pom.xml...")
   (b/write-pom {:class-dir class-dir
                 :lib lib
                 :version version
@@ -27,10 +28,12 @@
 
 (defn run-tests
   [_]
-  (let [basis (b/create-basis {:aliases [:test]})
-        cmds  (b/java-command {:basis     basis
-                               :main      'clojure.main
-                               :main-args ["-m" "cognitect.test-runner"]})
+  (let [basis    (b/create-basis {:aliases [:test]})
+        combined (t/combine-aliases basis [:test])
+        cmds     (b/java-command {:basis     basis
+                                  :java-opts (:jvm-opts combined)
+                                  :main      'clojure.main
+                                  :main-args ["-m" "cognitect.test-runner"]})
         {:keys [exit]} (b/process cmds)]
     (when-not (zero? exit)
       (throw (ex-info "Tests failed" {})))))
