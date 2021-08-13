@@ -1,4 +1,13 @@
 (ns build
+  "next.jdbc's build script.
+
+  clojure -T:build run-tests
+
+  clojure -T:build ci
+
+  For more information, run:
+
+  clojure -A:deps -T:build help/doc"
   (:require [clojure.tools.build.api :as b]
             [clojure.tools.deps.alpha :as t]))
 
@@ -8,11 +17,11 @@
 (def basis (b/create-basis {:project "deps.edn"}))
 (def jar-file (format "target/%s-%s.jar" (name lib) version))
 
-(defn clean [_]
+(defn clean "Remove the target folder." [_]
   (println "\nCleaning target...")
   (b/delete {:path "target"}))
 
-(defn jar [_]
+(defn jar "Build the library JAR file." [_]
   (println "\nWriting pom.xml...")
   (b/write-pom {:class-dir class-dir
                 :lib lib
@@ -26,8 +35,7 @@
   (b/jar {:class-dir class-dir
           :jar-file jar-file}))
 
-(defn run-tests
-  [_]
+(defn run-tests "Run regular tests." [_]
   (let [basis    (b/create-basis {:aliases [:test]})
         combined (t/combine-aliases basis [:test])
         cmds     (b/java-command {:basis     basis
@@ -38,5 +46,5 @@
     (when-not (zero? exit)
       (throw (ex-info "Tests failed" {})))))
 
-(defn ci [opts]
+(defn ci "Run the CI pipeline of tests (and build the JAR)." [opts]
   (-> opts (run-tests) (clean) (jar)))

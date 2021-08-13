@@ -4,8 +4,11 @@
 
         camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.2"}}
  :aliases
- {:build {:deps {io.github.clojure/tools.build {:git/tag "v0.1.7" :git/sha "8a3abc2"}}
+ {;; for help: clojure -A:deps -T:build help/doc
+  :build {:deps {io.github.clojure/tools.build {:git/tag "v0.1.7" :git/sha "8a3abc2"}}
           :ns-default build}
+
+  ;; running tests/checks of various kinds:
   :test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}
                       io.github.cognitect-labs/test-runner
@@ -40,10 +43,15 @@
                       org.apache.logging.log4j/log4j-jul {:mvn/version "2.14.1"}
                       org.apache.logging.log4j/log4j-slf4j-impl {:mvn/version "2.14.1"}}
          :jvm-opts ["-Dlog4j2.configurationFile=log4j2-info.properties"]
-         :exec-fn cognitect.test-runner.api/test}
+         ;; so we can run both ways:
+         :exec-fn cognitect.test-runner.api/test
+         :main-opts ["-m" "cognitect.test-runner"]}
+
+  ;; first run: clojure -T:build ci
+  ;; then: clojure -T:deploy target/n<TAB>
   :deploy
-  {:replace-deps {slipset/deps-deploy {:git/url "https://github.com/slipset/deps-deploy"
-                                       :sha "b4359c5d67ca002d9ed0c4b41b710d7e5a82e3bf"}}
+  {:deps {slipset/deps-deploy {:git/url "https://github.com/slipset/deps-deploy"
+                               :sha "b4359c5d67ca002d9ed0c4b41b710d7e5a82e3bf"}}
    :exec-fn deps-deploy.deps-deploy/deploy
    :exec-args {:installer :remote
                :pom-file "target/classes/META-INF/maven/com.github.seancorfield/next.jdbc/pom.xml"}}}}

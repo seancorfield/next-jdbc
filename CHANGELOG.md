@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.2.next in progress
+  * Switch to `tools.build` for running tests and JAR building etc.
+
 * 1.2.689 -- 2021-08-01
   * Address #173 by extending `DatafiableRow` to `ResultSet` so there's a public method to call on (rows of) a JDBC result set directly.
   * Address #171 by clarifying that you cannot use `clojure.java.jdbc` functions inside `next.jdbc/with-transaction` and discuss how to migrate transaction-based code in the **Migration** guide.

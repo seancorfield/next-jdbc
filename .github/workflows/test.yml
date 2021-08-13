@@ -19,7 +19,7 @@ jobs:
         with:
           tools-deps: '1.10.3.933'
       - name: Run Tests
-        run: clojure -X:test
+        run: clojure -T:build ci
 
   build-graalvm-old:
     runs-on: ubuntu-latest
@@ -39,7 +39,7 @@ jobs:
         with:
           tools-deps: '1.10.3.933'
       - name: Run Tests
-        run: clojure -X:test
+        run: clojure -T:build ci
 
   build-graalvm-new:
     runs-on: ubuntu-latest
@@ -59,4 +59,4 @@ jobs:
         with:
           tools-deps: '1.10.3.933'
       - name: Run Tests
-        run: clojure -X:test
+        run: clojure -T:build ci
