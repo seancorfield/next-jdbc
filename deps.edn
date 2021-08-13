@@ -5,7 +5,7 @@
         camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.2"}}
  :aliases
  {;; for help: clojure -A:deps -T:build help/doc
-  :build {:deps {io.github.clojure/tools.build {:git/tag "v0.1.7" :git/sha "8a3abc2"}}
+  :build {:deps {io.github.clojure/tools.build {:git/tag "v0.1.8" :git/sha "38d2780"}}
           :ns-default build}
 
   ;; running tests/checks of various kinds:
