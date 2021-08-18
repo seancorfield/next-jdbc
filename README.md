@@ -1,4 +1,4 @@
-# next.jdbc [![Clojure CI](https://github.com/seancorfield/next-jdbc/actions/workflows/test.yml/badge.svg)](https://github.com/seancorfield/next-jdbc/actions/workflows/test.yml) [![CircleCI](https://circleci.com/gh/seancorfield/next-jdbc/tree/develop.svg?style=svg)](https://circleci.com/gh/seancorfield/next-jdbc/tree/develop)
+# next.jdbc [![Clojure CI](https://github.com/seancorfield/next-jdbc/actions/workflows/test.yml/badge.svg)](https://github.com/seancorfield/next-jdbc/actions/workflows/test.yml) [![CircleCI](https://circleci.com/gh/seancorfield/next-jdbc/tree/develop.svg?style=svg)](https://circleci.com/gh/seancorfield/next-jdbc/tree/develop) [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/seancorfield/next-jdbc)
 
 The next generation of `clojure.java.jdbc`: a new low-level Clojure wrapper for JDBC-based access to databases.
 
