@@ -1,21 +1,7 @@
 ;; ~/.config/clover/config.cljs
+;; for running in GitPod, we don't tap> values:
 
-;; if you want to support Cognitect's REBL, use this version:
-
-#_(defn- wrap-in-tap [code]
-    (str "(let [value (try " code " (catch Throwable t t))"
-         "      rr    (try (resolve 'requiring-resolve) (catch Throwable _))]"
-         "  (if-let [rs (try (rr 'cognitect.rebl/submit) (catch Throwable _))]"
-         "    (rs '" code " value)"
-         "    (tap> value))"
-         "  value)"))
-
-;; if you only care about submitting values via tap> (e.g., Reveal, Portal):
-
-(defn- wrap-in-tap [code]
-  (str "(let [value (try " code " (catch Throwable t t))]"
-       "  (tap> value)"
-       "  value)"))
+(defn- wrap-in-tap [code] code)
 
 (defn tap-top-block []
   (p/let [block (editor/get-top-block)]
