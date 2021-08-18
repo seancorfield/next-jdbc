@@ -15,7 +15,7 @@ tasks:
       mkdir ~/.config/clover
       cp .clover/config.cljs ~/.config/clover/
   - name: Start REPL
-    command: clojure -J-Dclojure.server.repl="{:address \"0.0.0.0\" :port 50505 :accept clojure.core.server/repl}" -R:test -M -r
+    command: clojure -J-Dclojure.server.repl="{:address \"0.0.0.0\" :port 50505 :accept clojure.core.server/repl}" -A:test
   - name: Start up
     command: code CHANGELOG.md
 
