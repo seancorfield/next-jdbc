@@ -7,18 +7,17 @@ vscode:
     - mauricioszabo.clover
 
 tasks:
-  - name: Prepare deps
-    init: clojure -A:test -P
-  - name: Clover Config
-    command: |
+  - name: Prepare deps/clover
+    init: |
+      clojure -A:test -P
       echo 50505 > .socket-repl-port
       mkdir ~/.config/clover
       cp .clover/config.cljs ~/.config/clover/
   - name: Start REPL
     command: clojure -J-Dclojure.server.repl="{:address \"0.0.0.0\" :port 50505 :accept clojure.core.server/repl}" -A:test
-  - name: Start up
+  - name: See Changes
     command: code CHANGELOG.md
 
 github:
   prebuilds:
-    main: true
+    develop: true
