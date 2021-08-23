@@ -9,7 +9,8 @@
 
   clojure -A:deps -T:build help/doc"
   (:require [clojure.tools.build.api :as b]
-            [clojure.tools.deps.alpha :as t]))
+            [clojure.tools.deps.alpha :as t]
+            [deps-deploy.deps-deploy :as dd]))
 
 (def lib 'com.github.seancorfield/next.jdbc)
 (def version (format "1.2.%s" (b/git-count-revs nil)))
@@ -49,3 +50,8 @@
 
 (defn ci "Run the CI pipeline of tests (and build the JAR)." [opts]
   (-> opts (run-tests) (clean) (jar)))
+
+(defn deploy "Deploy the JAR to Clojars." [opts]
+  (dd/deploy (merge {:installer :remote :artifact jar-file
+                     :pom-file (b/pom-path {:lib lib :class-dir class-dir})}
+                    opts)))
