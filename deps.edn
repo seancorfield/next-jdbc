@@ -9,8 +9,12 @@
                  io.github.slipset/deps-deploy {:sha "b4359c5d67ca002d9ed0c4b41b710d7e5a82e3bf"}}
           :ns-default build}
 
+  ;; versions to test against:
+  :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.3"}}}
+  :master {:override-deps {org.clojure/clojure {:mvn/version "1.11.1-master-SNAPSHOT"}}}
+
   ;; running tests/checks of various kinds:
-  :test {:extra-paths ["test"]
+  :test {:extra-paths ["test"] ; can also run clojure -X:test
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}
                       io.github.cognitect-labs/test-runner
                       {:git/tag "v0.4.0" :git/sha "334f2e2"}
@@ -44,4 +48,8 @@
                       org.apache.logging.log4j/log4j-jul {:mvn/version "2.14.1"}
                       org.apache.logging.log4j/log4j-slf4j-impl {:mvn/version "2.14.1"}}
          :jvm-opts ["-Dlog4j2.configurationFile=log4j2-info.properties"]
-         :exec-fn cognitect.test-runner.api/test}}}
+         :exec-fn cognitect.test-runner.api/test}
+
+  ;; various "runners" for tests/CI:
+  :runner
+  {:main-opts ["-m" "cognitect.test-runner"]}}}

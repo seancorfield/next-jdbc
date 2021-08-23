@@ -37,19 +37,39 @@
   (b/jar {:class-dir class-dir
           :jar-file jar-file}))
 
-(defn run-tests "Run regular tests." [_]
-  (let [basis    (b/create-basis {:aliases [:test]})
-        combined (t/combine-aliases basis [:test])
+(defn- run-task
+  [aliases]
+  (println "\nRunning task for:" aliases)
+  (let [basis    (b/create-basis {:aliases aliases})
+        combined (t/combine-aliases basis aliases)
         cmds     (b/java-command {:basis     basis
                                   :java-opts (:jvm-opts combined)
                                   :main      'clojure.main
-                                  :main-args ["-m" "cognitect.test-runner"]})
+                                  :main-args (:main-opts combined)})
         {:keys [exit]} (b/process cmds)]
     (when-not (zero? exit)
-      (throw (ex-info "Tests failed" {})))))
+      (throw (ex-info (str "Task failed for: " aliases) {})))))
+
+
+(defn run-tests
+  "Run regular tests.
+
+  Optionally specify :aliases:
+  [:1.10] -- test against Clojure 1.10.3 (the default)
+  [:master] -- test against Clojure 1.11 master snapshot"
+  [{:keys [aliases] :as opts}]
+  (run-task (into [:test] aliases))
+  opts)
 
 (defn ci "Run the CI pipeline of tests (and build the JAR)." [opts]
-  (-> opts (run-tests) (clean) (jar)))
+  (-> opts
+      (as-> opts
+            (reduce (fn [opts alias]
+                      (run-tests (assoc opts :aliases [alias :runner])))
+                    opts
+                    [:1.10 :master]))
+      (clean)
+      (jar)))
 
 (defn deploy "Deploy the JAR to Clojars." [opts]
   (dd/deploy (merge {:installer :remote :artifact jar-file
