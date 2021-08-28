@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.2.next in progress
+  * Fix #174 by removing `:property-separator` from "etc" map and defaulting H2 to `";"` for this.
   * Switch to `tools.build` for running tests and JAR building etc.
 
 * 1.2.689 -- 2021-08-01

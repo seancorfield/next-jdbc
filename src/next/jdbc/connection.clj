@@ -71,8 +71,10 @@
    "duckdb"          {:classname "org.duckdb.DuckDBDriver"
                       :host :none}
    "h2"              {:classname "org.h2.Driver"
+                      :property-separator ";"
                       :host :none}
-   "h2:mem"          {:classname "org.h2.Driver"}
+   "h2:mem"          {:classname "org.h2.Driver"
+                      :property-separator ";"}
    "hsql"            {:classname "org.hsqldb.jdbcDriver"
                       :alias-for "hsqldb"
                       :host :none}
@@ -161,7 +163,7 @@
     :as db-spec}]
   (let [etc (dissoc db-spec
                     :dbtype :dbname :host :port :classname
-                    :dbname-separator :host-prefix
+                    :dbname-separator :host-prefix property-separator
                     :jdbcUrl)]
     (if jdbcUrl
       [jdbcUrl etc]
