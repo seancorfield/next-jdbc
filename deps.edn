@@ -6,8 +6,8 @@
         camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.2"}}
  :aliases
  {;; for help: clojure -A:deps -T:build help/doc
-  :build {:deps {io.github.clojure/tools.build {:git/tag "v0.1.9" :git/sha "6736c83"}
-                 io.github.slipset/deps-deploy {:sha "b4359c5d67ca002d9ed0c4b41b710d7e5a82e3bf"}}
+  :build {:deps {io.github.seancorfield/build-clj
+                 {:git/tag "v0.1.0" :git/sha "fe2d586"}}
           :ns-default build}
 
   ;; versions to test against:
@@ -49,8 +49,4 @@
                       org.apache.logging.log4j/log4j-jul {:mvn/version "2.14.1"}
                       org.apache.logging.log4j/log4j-slf4j-impl {:mvn/version "2.14.1"}}
          :jvm-opts ["-Dlog4j2.configurationFile=log4j2-info.properties"]
-         :exec-fn cognitect.test-runner.api/test}
-
-  ;; various "runners" for tests/CI:
-  :runner
-  {:main-opts ["-m" "cognitect.test-runner"]}}}
+         :exec-fn cognitect.test-runner.api/test}}}
