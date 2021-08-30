@@ -163,7 +163,7 @@
     :as db-spec}]
   (let [etc (dissoc db-spec
                     :dbtype :dbname :host :port :classname
-                    :dbname-separator :host-prefix property-separator
+                    :dbname-separator :host-prefix :property-separator
                     :jdbcUrl)]
     (if jdbcUrl
       [jdbcUrl etc]
