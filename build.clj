@@ -1,9 +1,11 @@
 (ns build
   "next.jdbc's build script.
 
-  clojure -T:build run-tests
-
   clojure -T:build ci
+  clojure -T:build deploy
+
+  Run tests via:
+  clojure -X:test
 
   For more information, run:
 
