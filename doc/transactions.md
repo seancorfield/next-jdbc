@@ -94,3 +94,5 @@ transactions in the code under test.
 * `next.jdbc.transaction/*nested-tx*` is initially set to `:allow` which allows nested calls but makes them overlap (as described above),
 * `(binding [next.jdbc.transaction/*nested-tx* :ignore] ...)` provides the same behavior as `clojure.java.jdbc` where nested calls are essentially ignored and only the outermost transaction takes effect,
 * `(binding [next.jdbc.transaction/*nested-tx* :prohibit] ...)` will cause any attempt to start a nested transaction to throw an exception instead; this could be a useful way to detect the potentially buggy behavior described above (for either `:allow` or `:ignore`).
+
+ > Note: this is a **global** setting (per thread) and not related to just a single connection, so you can't use this setting if you are working with multiple databases in the same context.
