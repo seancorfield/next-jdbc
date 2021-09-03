@@ -28,7 +28,7 @@
                       ;; compatible only with JDK9+:
                       ;; org.apache.derby/derby {:mvn/version "10.15.2.0"}
                       ;; org.apache.derby/derbyshared {:mvn/version "10.15.2.0"}
-                      org.hsqldb/hsqldb {:mvn/version "2.6.0"}
+                      org.hsqldb/hsqldb {:mvn/version "2.5.0"}
                       com.h2database/h2 {:mvn/version "1.4.200"}
                       net.sourceforge.jtds/jtds {:mvn/version "1.3.1"}
                       org.mariadb.jdbc/mariadb-java-client {:mvn/version "2.7.4"}
