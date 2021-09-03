@@ -28,17 +28,17 @@
                       ;; compatible only with JDK9+:
                       ;; org.apache.derby/derby {:mvn/version "10.15.2.0"}
                       ;; org.apache.derby/derbyshared {:mvn/version "10.15.2.0"}
-                      org.hsqldb/hsqldb {:mvn/version "2.5.0"}
+                      org.hsqldb/hsqldb {:mvn/version "2.6.0"}
                       com.h2database/h2 {:mvn/version "1.4.200"}
                       net.sourceforge.jtds/jtds {:mvn/version "1.3.1"}
-                      org.mariadb.jdbc/mariadb-java-client {:mvn/version "2.5.4"}
-                      mysql/mysql-connector-java {:mvn/version "8.0.19"}
-                      org.postgresql/postgresql {:mvn/version "42.2.10"}
-                      io.zonky.test/embedded-postgres {:mvn/version "1.2.10"}
-                      io.zonky.test.postgres/embedded-postgres-binaries-darwin-amd64 {:mvn/version "13.1.0-1"}
-                      io.zonky.test.postgres/embedded-postgres-binaries-linux-amd64 {:mvn/version "13.1.0-1"}
-                      io.zonky.test.postgres/embedded-postgres-binaries-windows-amd64 {:mvn/version "13.1.0-1"}
-                      org.xerial/sqlite-jdbc {:mvn/version "3.30.1"}
+                      org.mariadb.jdbc/mariadb-java-client {:mvn/version "2.7.4"}
+                      mysql/mysql-connector-java {:mvn/version "8.0.26"}
+                      org.postgresql/postgresql {:mvn/version "42.2.23"}
+                      io.zonky.test/embedded-postgres {:mvn/version "1.3.1"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-darwin-amd64 {:mvn/version "13.4.0"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-linux-amd64 {:mvn/version "13.4.0"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-windows-amd64 {:mvn/version "13.4.0"}
+                      org.xerial/sqlite-jdbc {:mvn/version "3.36.0.3"}
                       com.microsoft.sqlserver/mssql-jdbc {:mvn/version "8.2.1.jre8"}
                       ;; supplementary test stuff
                       ;; use log4j 2.x:

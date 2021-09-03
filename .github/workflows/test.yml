@@ -18,7 +18,7 @@ jobs:
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
-          tools-deps: '1.10.3.933'
+          tools-deps: '1.10.3.967'
       - name: Run Tests
         run: clojure -T:build ci
 
@@ -38,7 +38,7 @@ jobs:
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
-          tools-deps: '1.10.3.933'
+          tools-deps: '1.10.3.967'
       - name: Run Tests
         run: clojure -T:build ci
 
@@ -58,6 +58,6 @@ jobs:
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
-          tools-deps: '1.10.3.933'
+          tools-deps: '1.10.3.967'
       - name: Run Tests
         run: clojure -T:build ci
