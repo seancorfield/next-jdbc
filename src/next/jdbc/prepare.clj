@@ -190,7 +190,10 @@
 (def ^:private d-r-s (volatile! nil))
 
 (defn ^:no-doc execute-batch!
-  "Deprecated in favor of `next.jdbc/execute-batch!`."
+  "As of 1.1.643, `next.jdbc.prepare/execute-batch!`
+  (this function) is deprecated.
+
+  Use `next.jdbc/execute-batch!` instead."
   ([ps param-groups]
    (execute-batch! ps param-groups {}))
   ([^PreparedStatement ps param-groups opts]
