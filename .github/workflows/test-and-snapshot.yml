@@ -1,13 +1,31 @@
 name: Clojure CI
 
-on: [pull_request]
+on: [push]
 
 jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: '0'
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '11'
+          cache: 'maven'
+      - name: Setup Clojure
+        uses: DeLaGuardo/setup-clojure@master
+        with:
+          tools-deps: '1.10.3.986'
+      - name: Run Tests
+        run: clojure -T:build ci :snapshot true
+
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java: [ '8', '11', '14', '15', '16', '17' ]
+        java: [ '8', '14', '15', '16', '17' ]
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-java@v2
