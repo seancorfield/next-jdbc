@@ -3,7 +3,7 @@ name: Clojure CI
 on: [push]
 
 jobs:
-  build-and-release:
+  build-and-snapshot:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -20,6 +20,11 @@ jobs:
           tools-deps: '1.10.3.986'
       - name: Run Tests
         run: clojure -T:build ci :snapshot true
+      - name: Deploy Snapshot
+        run: clojure -T:build deploy :snapshot true
+        env:
+          CLOJARS_PASSWORD: ${{secrets.DEPLOY_TOKEN}}
+          CLOJARS_USERNAME: ${{secrets.DEPLOY_USERNAME}}
 
   build:
     runs-on: ubuntu-latest
