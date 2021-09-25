@@ -1,5 +1,5 @@
 {:mvn/repos {"sonatype" {:url "https://oss.sonatype.org/content/repositories/snapshots/"}}
- :paths ["src"]
+ :paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}
         org.clojure/java.data {:mvn/version "1.0.86"}
 
