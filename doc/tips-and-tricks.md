@@ -137,6 +137,10 @@ You should be able to get MySQL to stream very large result sets (when you are r
 
 Ah, dear old Oracle! Over the years of maintaining `clojure.java.jdbc` and now `next.jdbc`, I've had all sorts of bizarre and non-standard behavior reported from Oracle users. The main issue I'm aware of with `next.jdbc` is that Oracle's JDBC drivers all return an empty string from `ResultSetMetaData.getTableName()` so you won't get qualified keywords in the result set hash maps. Sorry!
 
+An important performance issue to be aware of with Oracle's JDBC driver is that the default fetch size is just 10 records. If you are working with large datasets, you will
+either need to either specify `:prefetch` in your db-spec hash map with a suitable value (say 1,000 or larger), or specify `&prefetch=` in your JDBC URL string. If you want
+to keep the default, you can change it on a per-statement basis by specifying `:fetch-size` as an option to `execute!` etc.
+
 ## PostgreSQL
 
 When you use `:return-keys true` with `execute!` or `execute-one!` (or you use `insert!`), PostgreSQL returns the entire inserted row (unlike nearly every other database that just returns any generated keys!).

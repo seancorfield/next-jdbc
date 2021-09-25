@@ -2,7 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
-* 1.2.next in progress
+* 1.2.724 -- 2021-09-25
+  * Make `next.jdbc` compatible with GraalVM 22+ (PR #178, @FieryCod).
+  * Address #177 by adding an important performance tip for Oracle.
   * Update most of the JDBC drivers for testing; make it easier to test MariaDB's driver;
 
 * 1.2.709 -- 2021-08-30
