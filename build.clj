@@ -15,8 +15,9 @@
             [org.corfield.build :as bb]))
 
 (def lib 'com.github.seancorfield/next.jdbc)
-(def version (format "1.2.%s" (b/git-count-revs nil)))
-(def snapshot "1.2.999-SNAPSHOT")
+(defn- the-version [patch] (format "1.2.%s" patch))
+(def version (the-version (b/git-count-revs nil)))
+(def snapshot (the-version "999-SNAPSHOT"))
 
 (defn test "Run all the tests." [opts]
   (reduce (fn [opts alias]
