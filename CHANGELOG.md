@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.2.next in progress
+  * Fix #181 by supporting option-wrapped connection in `execute-batch!`.
   * Address #179 by improving documentation around connection pool initialization.
   * Update `build-clj` to v0.5.0.
 

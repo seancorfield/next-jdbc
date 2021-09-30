@@ -331,7 +331,8 @@
                          result))))
            params)))
   ([connectable sql param-groups opts]
-   (if (instance? java.sql.Connection connectable)
+   (if (or (instance? java.sql.Connection connectable)
+           (instance? next.jdbc.default_options.DefaultOptions connectable))
      (with-open [ps (prepare connectable [sql] opts)]
        (execute-batch! ps param-groups opts))
      (with-open [con (get-connection connectable)]
