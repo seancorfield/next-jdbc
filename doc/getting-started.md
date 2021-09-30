@@ -475,6 +475,8 @@ Then import the appropriate classes into your code:
 
 Finally, create the connection pooled datasource. `db-spec` here contains the regular `next.jdbc` options (`:dbtype`, `:dbname`, and maybe `:host`, `:port`, `:classname` etc -- or the `:jdbcUrl` format mentioned above). Those are used to construct the JDBC URL that is passed into the datasource object (by calling `.setJdbcUrl` on it). You can also specify any of the connection pooling library's options, as mixed case keywords corresponding to any simple setter methods on the class being passed in, e.g., `:connectionTestQuery`, `:maximumPoolSize` (HikariCP), `:maxPoolSize`, `:preferredTestQuery` (c3p0).
 
+> Note: both HikariCP and c3p0 defer validation of the settings until a connection is requested. If you want to ensure that your datasource is set up correctly, and the database is reachable, when you first create the connection pool, you will need to call `jdbc/get-connection` on it (and then close that connection and return it to the pool). This will also ensure that the pool is fully initialized. See the examples below.
+
 Some important notes regarding HikariCP:
 
 * Authentication credentials must use `:username` (if you are using c3p0 or regular, non-pooled, connections, then the db-spec hash map must contain `:user`).
@@ -485,7 +487,12 @@ You will generally want to create the connection pooled datasource at the start 
 
 ```clojure
 (defn -main [& args]
+  ;; db-spec must include :username
   (with-open [^HikariDataSource ds (connection/->pool HikariDataSource db-spec)]
+    ;; this code initializes the pool and performs a validation check:
+    (.close (jdbc/get-connection ds))
+    ;; otherwise that validation check is deferred until the first connection
+    ;; is requested in a regular operation:
     (jdbc/execute! ds ...)
     (jdbc/execute! ds ...)
     (do-other-stuff ds args)
@@ -493,6 +500,10 @@ You will generally want to create the connection pooled datasource at the start 
 ;; or:
 (defn -main [& args]
   (with-open [^PooledDataSource ds (connection/->pool ComboPooledDataSource db-spec)]
+    ;; this code initializes the pool and performs a validation check:
+    (.close (jdbc/get-connection ds))
+    ;; otherwise that validation check is deferred until the first connection
+    ;; is requested in a regular operation:
     (jdbc/execute! ds ...)
     (jdbc/execute! ds ...)
     (do-other-stuff ds args)

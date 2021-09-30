@@ -2,6 +2,10 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.2.next in progress
+  * Address #179 by improving documentation around connection pool initialization.
+  * Update `build-clj` to v0.5.0.
+
 * 1.2.724 -- 2021-09-25
   * Make `next.jdbc` compatible with GraalVM 22+ (PR #178, @FieryCod).
   * Address #177 by adding an important performance tip for Oracle.
