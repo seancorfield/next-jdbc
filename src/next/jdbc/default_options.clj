@@ -8,6 +8,13 @@
 
 (defrecord DefaultOptions [connectable options])
 
+(defn wrapped-connection?
+  "Used internally to detect that a connectable is wrapped
+  in options and contains a Connection object."
+  [connectable]
+  (and (instance? DefaultOptions connectable)
+       (instance? java.sql.Connection (:connectable connectable))))
+
 (extend-protocol p/Sourceable
   DefaultOptions
   (get-datasource [this]
