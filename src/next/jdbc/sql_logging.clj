@@ -37,7 +37,7 @@
                                           (merge (:options this) opts))
                       (result-logger-helper this 'next.jdbc/execute-one! state))
                     (catch Throwable t
-                      (result-logger-helper t this 'next.jdbc/execut-one! state)
+                      (result-logger-helper t this 'next.jdbc/execute-one! state)
                       (throw t)))))
   (-execute-all [this sql-params opts]
                 (let [state ((:sql-logger this) 'next.jdbc/execute! sql-params)]
@@ -46,7 +46,7 @@
                                           (merge (:options this) opts))
                       (result-logger-helper this 'next.jdbc/execute! state))
                     (catch Throwable t
-                      (result-logger-helper t this 'next.jdbc/execut-one! state)
+                      (result-logger-helper t this 'next.jdbc/execute! state)
                       (throw t))))))
 
 (extend-protocol p/Preparable
