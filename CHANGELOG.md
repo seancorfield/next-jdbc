@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.2.next in progress
+  * Address #184 by improving documentation about `:jdbcUrl`.
+
 * 1.2.731 -- 2021-10-04
   * Fix #181 by supporting option-wrapped connectables in `execute-batch!`.
   * Address #179 by improving documentation around connection pool initialization.

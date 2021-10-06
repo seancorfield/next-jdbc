@@ -14,10 +14,12 @@ Although `get-datasource` does not accept options, the "db spec" hash map passed
 * `:host` -- an optional string that identifies the IP address or hostname of the server on which the database is running; the default is `"127.0.0.1"`; if `:none` is specified, `next.jdbc` will assume this is for a local database and will omit the host/port segment of the JDBC URL,
 * `:host-prefix` -- an optional string that can be used to override the `//` that is normally placed in front of the IP address or hostname in the JDBC URL,
 * `:port` -- an optional integer that identifies the port on which the database is running; for common database types, `next.jdbc` knows the default so this should only be needed for non-standard setups or "exotic" database types,
-* `:property-separator` -- an optional string that can be used to override the separators used in `jdbc-url` for the properties (after the initial JDBC URL portion); by default `?` and `&` are used to build JDBC URLs with properties; for SQL Server drivers (both MS and jTDS) `:property-separator ";"` is used, so this option should only be necessary when you are specifying "unusual" databases that `next.jdbc` does not already know about,
+* `:property-separator` -- an optional string that can be used to override the separators used in `next.jdbc.connection/jdbc-url` for the properties (after the initial JDBC URL portion); by default `?` and `&` are used to build JDBC URLs with properties; for SQL Server drivers (both MS and jTDS) `:property-separator ";"` is used, so this option should only be necessary when you are specifying "unusual" databases that `next.jdbc` does not already know about,
 * `:classname` -- an optional string that identifies the name of the JDBC driver class to be used for the connection; for common database types, `next.jdbc` knows the default so this should only be needed for "exotic" database types,
 * `:user` -- an optional string that identifies the database username to be used when authenticating,
 * `:password` -- an optional string that identifies the database password to be used when authenticating.
+
+If you already have a JDBC URL, you can either specify that string _instead_ of a "db spec" hash map or, if you need additional properties passed to the JDBC driver, you can use a hash map containing `:jdbcUrl`, specifying the JDBC URL, and any properties you need as additional keys in the hash map.
 
 Any additional keys provided in the "db spec" will be passed to the JDBC driver as `Properties` when each connection is made. Alternatively, when used with `next.jdbc.connection/->pool`, additional keys correspond to setters called on the pooled connection object.
 
