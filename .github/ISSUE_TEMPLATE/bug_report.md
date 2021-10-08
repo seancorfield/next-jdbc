@@ -28,7 +28,7 @@ If possible, please include your Leiningen or clj dependencies, at least for Clo
 **Environment (please complete the following information):**
  - OS: [e.g. Linux]
  - Java Version: [e.g. (AdoptOpenJDK)(build 1.8.0_192-b12)]
- - Clojure Version: [e.g. 1.10.1]
+ - Clojure Version: [e.g. 1.10.3]
  - Database: [e.g., MySQL 5.7 (Percona)]
  - Driver Library Version: [e.g., mysql/mysql-connector-java 5.1.41]
 
