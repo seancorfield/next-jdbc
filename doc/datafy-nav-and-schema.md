@@ -6,13 +6,15 @@ Shortly after REBL's release, I added experimental support to `clojure.java.jdbc
 
 In addition to `datafy` and `nav` support in the result sets, as of version 1.0.462, there is a `next.jdbc.datafy` namespace that can be required to extend these protocols to a number of JDBC object types. See **JDBC Datafication** near the end of this page for more detail of this.
 
+Additional tools that understand `datafy` and `nav` include [Portal](https://github.com/djblue/portal) and [Reveal](https://github.com/vlaaad/reveal).
+
 ## The `datafy`/`nav` Lifecycle on Result Sets
 
 Here's how the process works, for result sets produced by `next.jdbc`:
 
 * `execute!` and `execute-one!` produce result sets containing rows that are `Datafiable`,
-* Tools like REBL can call `datafy` on result sets to render them as "pure data" (which they already are, but this makes them also `Navigable`),
-* Tools like REBL allow users to "drill down" into elements of rows in the "pure data" result set, using `nav`,
+* Tools like Portal, Reveal, and REBL can call `datafy` on result sets to render them as "pure data" (which they already are, but this makes them also `Navigable`),
+* Tools like Portal, Reveal, and REBL allow users to "drill down" into elements of rows in the "pure data" result set, using `nav`,
 * If a column in a row represents a foreign key into another table, calling `nav` will fetch the related row(s),
 * Those can in turn be `datafy`'d and `nav`'d to continue drilling down through connected data in the database.
 

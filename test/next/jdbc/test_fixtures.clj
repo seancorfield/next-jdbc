@@ -230,7 +230,7 @@ CREATE PROCEDURE FRUITP" (cond (hsqldb?) "() READS SQL DATA DYNAMIC RESULT SETS 
   ;; this is a convenience to bring next.jdbc's test dependencies
   ;; into any REPL that has the add-lib3 branch of tools.deps.alpha
   ;; which allows me to develop and test next.jdbc inside my work's
-  ;; "everything" REBL environment
+  ;; "everything" REPL environment
   (require '[clojure.tools.deps.alpha.repl :refer [add-libs]]
            '[clojure.java.io :as io]
            '[clojure.edn :as edn])
