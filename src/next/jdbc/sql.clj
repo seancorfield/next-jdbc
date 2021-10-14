@@ -9,7 +9,7 @@
   `get-by-id`, `update!`, and `delete!`).
 
   For anything more complex, use a library like HoneySQL
-  https://github.com/jkk/honeysql to generate SQL + parameters.
+  https://github.com/seancorfield/honeysql to generate SQL + parameters.
 
   The following options are supported:
   * `:table-fn` -- specify a function used to convert table names (strings)

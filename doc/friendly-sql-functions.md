@@ -18,7 +18,7 @@ as well as these more specific "read" operations:
 
 These functions are described in more detail below. They are deliberately simple and intended to cover only the most common, basic SQL operations. The primary API (`plan`, `execute!`, `execute-one!`) is the recommended approach for everything beyond that. If you need more expressiveness, consider one of the following libraries to build SQL/parameter vectors, or run queries:
 
-* [HoneySQL](https://github.com/jkk/honeysql) -- a composable DSL for creating SQL/parameter vectors from Clojure data structures
+* [HoneySQL](https://github.com/seancorfield/honeysql) -- a composable DSL for creating SQL/parameter vectors from Clojure data structures
 * [seql](https://github.com/exoscale/seql) -- a simplified EQL-inspired query language, built on `next.jdbc` (as of release 0.1.6)
 * [SQLingvo](https://github.com/r0man/sqlingvo) -- a composable DSL for creating SQL/parameter vectors
 * [Walkable](https://github.com/walkable-server/walkable) -- full EQL query language support for creating SQL/parameter vectors
