@@ -475,16 +475,16 @@ Then import the appropriate classes into your code:
 
 Finally, create the connection pooled datasource. `db-spec` here contains the regular `next.jdbc` options (`:dbtype`, `:dbname`, and maybe `:host`, `:port`, `:classname` etc -- or the `:jdbcUrl` format mentioned above). Those are used to construct the JDBC URL that is passed into the datasource object (by calling `.setJdbcUrl` on it). You can also specify any of the connection pooling library's options, as mixed case keywords corresponding to any simple setter methods on the class being passed in, e.g., `:connectionTestQuery`, `:maximumPoolSize` (HikariCP), `:maxPoolSize`, `:preferredTestQuery` (c3p0).
 
-In addition, for HikariCP, you can specify properties to be applied to the underlying `DataSource` itself by passing `:dataSourceProperties` with a value of `java.util.Properties` containing those properties, such as `:socketTimeout`. Using `java.data` makes this easier:
+In addition, for HikariCP, you can specify properties to be applied to the underlying `DataSource` itself by passing `:dataSourceProperties` with a hash map containing those properties, such as `:socketTimeout`:
 
 ```clojure
 ;; assumes next.jdbc.connection has been required as connection
-;; assumes clojure.java.data has been required as j
 (connection/->pool com.zaxxer.hikari.HikariConfig
                    {:dbtype "postgres" :dbname "thedb" :username "dbuser" :password "secret"
-                    :dataSourceProperties
-                    (j/to-java java.util.Properties {:socketTimeout 30})})
+                    :dataSourceProperties {:socketTimeout 30}})
 ```
+
+_(under the hood, `java.data` converts that hash map to a `java.util.Properties` object with `String` keys and `String` values)_
 
 > Note: both HikariCP and c3p0 defer validation of the settings until a connection is requested. If you want to ensure that your datasource is set up correctly, and the database is reachable, when you first create the connection pool, you will need to call `jdbc/get-connection` on it (and then close that connection and return it to the pool). This will also ensure that the pool is fully initialized. See the examples below.
 
