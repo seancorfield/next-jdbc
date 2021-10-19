@@ -359,8 +359,9 @@
   The options map supports:
   * `:isolation` -- `:none`, `:read-committed`, `:read-uncommitted`,
       `:repeatable-read`, `:serializable`,
-  * `:read-only` -- `true` / `false`,
-  * `:rollback-only` -- `true` / `false`."
+  * `:read-only` -- `true` / `false` (`true` will make the `Connection` readonly),
+  * `:rollback-only` -- `true` / `false` (`true` will make the transaction
+      rollback, even if it would otherwise succeed)."
   [[sym transactable opts] & body]
   (let [con (vary-meta sym assoc :tag 'java.sql.Connection)]
    `(transact ~transactable (^{:once true} fn* [~con] ~@body) ~(or opts {}))))
