@@ -360,7 +360,7 @@
   * `:isolation` -- `:none`, `:read-committed`, `:read-uncommitted`,
       `:repeatable-read`, `:serializable`,
   * `:read-only` -- `true` / `false`,
-  * `:rollback-only` -- `true` / `false`."
+  * `:rollback-only` -- `true` / `false` - set the transaction to always rollback, even on success"
   [[sym transactable opts] & body]
   (let [con (vary-meta sym assoc :tag 'java.sql.Connection)]
    `(transact ~transactable (^{:once true} fn* [~con] ~@body) ~(or opts {}))))
