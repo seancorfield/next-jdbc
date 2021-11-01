@@ -31,7 +31,7 @@
       (assoc :lib lib :version (if (:snapshot opts) snapshot version))
       (test)
       (bb/clean)
-      (assoc :src-pom "pom_template.xml")
+      (assoc :src-pom "template/pom.xml")
       (bb/jar)))
 
 (defn deploy "Deploy the JAR to Clojars." [opts]
