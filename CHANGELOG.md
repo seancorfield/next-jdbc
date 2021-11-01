@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.2.next in progress
+  * Documentation updates; `pom.xml` template cleanup.
+
 * 1.2.737 -- 2021-10-17
   * Address #186 by updating `java.data` to 1.0.92 and documenting HikariCP's `:dataSourceProperties`.
   * Address #184 by improving documentation about `:jdbcUrl`.
