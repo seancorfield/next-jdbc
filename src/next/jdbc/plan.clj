@@ -55,7 +55,7 @@
   Note: this allows for the following usage, which returns a vector
   of all the values for a single column:
 
-  `(plan/select! ds :id (jdbc/plan ...))`
+  `(plan/select! ds :id [\"select * from table\"])`
 
   The result is a vector by default, but can be changed using the
   `:into` option to provide the initial data structure into which
