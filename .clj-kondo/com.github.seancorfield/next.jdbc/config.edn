@@ -1,1 +1,4 @@
-{:hooks {:analyze-call {next.jdbc/with-transaction hooks.next-jdbc/with-transaction}}}
+{:hooks
+ {:analyze-call
+  {next.jdbc/with-transaction
+   hooks.com.github.seancorfield.next-jdbc/with-transaction}}}

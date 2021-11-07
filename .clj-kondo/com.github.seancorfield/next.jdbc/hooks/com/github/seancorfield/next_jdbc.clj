@@ -1,7 +1,10 @@
-(ns hooks.next-jdbc
+(ns hooks.com.github.seancorfield.next-jdbc
   (:require [clj-kondo.hooks-api :as api]))
 
-(defn with-transaction [{:keys [:node]}]
+(defn with-transaction
+  "Expands (with-transaction [tx expr opts] body)
+  to (let [tx expr] opts body) pre clj-kondo examples."
+  [{:keys [:node]}]
   (let [[binding-vec & body] (rest (:children node))
         [sym val opts] (:children binding-vec)]
     (when-not (and sym val)

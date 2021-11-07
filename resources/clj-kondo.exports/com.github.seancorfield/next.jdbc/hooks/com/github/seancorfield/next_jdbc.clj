@@ -1,4 +1,4 @@
-(ns hooks.next-jdbc
+(ns hooks.com.github.seancorfield.next-jdbc
   (:require [clj-kondo.hooks-api :as api]))
 
 (defn with-transaction
