@@ -1,1 +1,1 @@
-{:config-paths ["com.github.seancorfield/next.jdbc"]}
+{:config-paths ["resources/clj-kondo.exports/com.github.seancorfield/next.jdbc"]}
