@@ -1,0 +1,1 @@
+{:hooks {:analyze-call {next.jdbc/with-transaction hooks.next-jdbc/with-transaction}}}

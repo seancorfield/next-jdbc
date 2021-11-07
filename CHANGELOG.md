@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.2.next in progress
+  * Address #187 by adding `clj-kondo.exports` for future expansion (`with-transaction` is already built into `clj-kondo`).
   * Documentation updates; `pom.xml` template cleanup.
 
 * 1.2.737 -- 2021-10-17
