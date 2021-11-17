@@ -2,9 +2,10 @@
 
 Only accretive/fixative changes will be made from now on.
 
-* 1.2.next in progress
+* 1.2.752 -- 2021-11-17
   * Address #187 by adding `clj-kondo.exports` for future expansion (`with-transaction` is already built into `clj-kondo`).
   * Documentation updates; `pom.xml` template cleanup.
+  * Update `build-clj` to v0.5.4.
 
 * 1.2.737 -- 2021-10-17
   * Address #186 by updating `java.data` to 1.0.92 and documenting HikariCP's `:dataSourceProperties`.
