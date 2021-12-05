@@ -16,6 +16,22 @@
   [key-map _]
   (str/join ", " (repeat (count key-map) "?")))
 
+;; similar to honeysql, by default we disallow suspicious
+;; characters in table and column names when building SQL:
+(def ^:private ^:dynamic *allow-suspicious-entities* false)
+
+(defn- safe-name
+  "A wrapper for `name` that throws an exception if the
+  resulting string looks 'suspicious' as a table or column."
+  [k]
+  (let [entity     (name k)
+        suspicious #";"]
+    (when-not *allow-suspicious-entities*
+      (when (re-find suspicious entity)
+        (throw (ex-info (str "suspicious character found in entity: " entity)
+                        {:disallowed suspicious}))))
+    entity))
+
 (defn as-cols
   "Given a sequence of raw column names, return a string of all the
   formatted column names.
@@ -36,13 +52,13 @@
     (str/join ", " (map (fn [raw]
                           (if (vector? raw)
                             (if (keyword? (first raw))
-                              (str (col-fn (name (first raw)))
+                              (str (col-fn (safe-name (first raw)))
                                    " AS "
-                                   (col-fn (name (second raw))))
+                                   (col-fn (safe-name (second raw))))
                               (str (first raw)
                                    " AS "
-                                   (col-fn (name (second raw)))))
-                            (col-fn (name raw))))
+                                   (col-fn (safe-name (second raw)))))
+                            (col-fn (safe-name raw))))
                         cols))))
 
 
@@ -62,14 +78,14 @@
   [key-map clause opts]
   (let [entity-fn      (:column-fn opts identity)
         [where params] (reduce-kv (fn [[conds params] k v]
-                                    (let [e (entity-fn (name k))]
+                                    (let [e (entity-fn (safe-name k))]
                                       (if (and (= :where clause) (nil? v))
                                         [(conj conds (str e " IS NULL")) params]
                                         [(conj conds (str e " = ?")) (conj params v)])))
                                   [[] []]
                                   key-map)]
     (assert (seq where) "key-map may not be empty")
-    (into [(str (str/upper-case (name clause)) " "
+    (into [(str (str/upper-case (safe-name clause)) " "
                 (str/join (if (= :where clause) " AND " ", ") where))]
           params)))
 
@@ -88,7 +104,7 @@
                        (by-keys where-params :where opts)
                        (into [(str "WHERE " (first where-params))]
                              (rest where-params)))]
-    (into [(str "DELETE FROM " (entity-fn (name table))
+    (into [(str "DELETE FROM " (entity-fn (safe-name table))
                 " " (first where-params)
                 (when-let [suffix (:suffix opts)]
                   (str " " suffix)))]
@@ -107,7 +123,7 @@
         params    (as-keys key-map opts)
         places    (as-? key-map opts)]
     (assert (seq key-map) "key-map may not be empty")
-    (into [(str "INSERT INTO " (entity-fn (name table))
+    (into [(str "INSERT INTO " (entity-fn (safe-name table))
                 " (" params ")"
                 " VALUES (" places ")"
                 (when-let [suffix (:suffix opts)]
@@ -133,7 +149,7 @@
         column-fn (:column-fn opts identity)
         params    (str/join ", " (map (comp column-fn name) cols))
         places    (as-? (first rows) opts)]
-    (into [(str "INSERT INTO " (table-fn (name table))
+    (into [(str "INSERT INTO " (table-fn (safe-name table))
                 " (" params ")"
                 " VALUES "
                 (str/join ", " (repeat (count rows) (str "(" places ")")))
@@ -148,10 +164,10 @@
   [col opts]
   (let [entity-fn (:column-fn opts identity)]
     (cond (keyword? col)
-          (entity-fn (name col))
+          (entity-fn (safe-name col))
 
           (and (vector? col) (= 2 (count col)) (keyword? (first col)))
-          (str (entity-fn (name (first col)))
+          (str (entity-fn (safe-name (first col)))
                " "
                (or (get {:asc "ASC" :desc "DESC"} (second col))
                    (throw (IllegalArgumentException.
@@ -208,7 +224,7 @@
                 (if-let [cols (seq (:columns opts))]
                   (as-cols cols opts)
                   "*")
-                " FROM " (entity-fn (name table))
+                " FROM " (entity-fn (safe-name table))
                 (when-let [clause (first where-params)]
                   (str " " clause))
                 (when-let [order-by (:order-by opts)]
@@ -242,7 +258,7 @@
                        (by-keys where-params :where opts)
                        (into [(str "WHERE " (first where-params))]
                              (rest where-params)))]
-    (-> [(str "UPDATE " (entity-fn (name table))
+    (-> [(str "UPDATE " (entity-fn (safe-name table))
               " " (first set-params)
               " " (first where-params)
               (when-let [suffix (:suffix opts)]
