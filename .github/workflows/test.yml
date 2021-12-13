@@ -17,7 +17,7 @@ jobs:
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
-          tools-deps: '1.10.3.986'
+          tools-deps: '1.10.3.1040'
       - name: Cache All The Things
         uses: actions/cache@v2
         with:
@@ -39,14 +39,14 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Setup GraalVM
-        uses: DeLaGuardo/setup-graalvm@4.0
+        uses: DeLaGuardo/setup-graalvm@5.0
         with:
           graalvm: ${{ matrix.graalvm }}
           java: ${{ matrix.base }}
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
-          tools-deps: '1.10.3.986'
+          tools-deps: '1.10.3.1040'
       - name: Cache All The Things
         uses: actions/cache@v2
         with:
@@ -68,14 +68,14 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Setup GraalVM
-        uses: DeLaGuardo/setup-graalvm@4.0
+        uses: DeLaGuardo/setup-graalvm@5.0
         with:
           graalvm: ${{ matrix.graalvm }}
           java: ${{ matrix.base }}
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
-          tools-deps: '1.10.3.986'
+          tools-deps: '1.10.3.1040'
       - name: Cache All The Things
         uses: actions/cache@v2
         with:

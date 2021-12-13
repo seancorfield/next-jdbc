@@ -2,6 +2,10 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.2.next in progress
+  * Update several test dependencies (incl. log4j2).
+  * Update `build-clj` to v0.6.1.
+
 * 1.2.753 -- 2021-11-17
   * Address #187 by adding `clj-kondo.exports` for future expansion (`with-transaction` is already built into `clj-kondo`).
   * Documentation updates; `pom.xml` template cleanup.
