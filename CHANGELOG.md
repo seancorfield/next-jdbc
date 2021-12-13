@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.2.next in progress
+  * Fix #194 by throwing an exception if a table or column name used with the friendly SQL functions (or the SQL builder functions behind them) contains a "suspicious" character (currently, that's just `;`).
   * Update several test dependencies (incl. log4j2).
   * Update `build-clj` to v0.6.1.
 
