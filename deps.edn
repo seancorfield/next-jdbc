@@ -7,7 +7,7 @@
  :aliases
  {;; for help: clojure -A:deps -T:build help/doc
   :build {:deps {io.github.seancorfield/build-clj
-                 {:git/tag "v0.6.3" :git/sha "9b8e09b"}}
+                 {:git/tag "v0.6.4" :git/sha "c21cfde"}}
           :ns-default build}
 
   ;; versions to test against:
@@ -45,11 +45,11 @@
                       com.microsoft.sqlserver/mssql-jdbc {:mvn/version "9.4.1.jre8"}
                       ;; supplementary test stuff
                       ;; use log4j 2.x:
-                      org.apache.logging.log4j/log4j-api {:mvn/version "2.16.0"}
+                      org.apache.logging.log4j/log4j-api {:mvn/version "2.17.0"}
                       ;; bridge into log4j:
-                      org.apache.logging.log4j/log4j-1.2-api {:mvn/version "2.16.0"}
-                      org.apache.logging.log4j/log4j-jcl {:mvn/version "2.16.0"}
-                      org.apache.logging.log4j/log4j-jul {:mvn/version "2.16.0"}
-                      org.apache.logging.log4j/log4j-slf4j-impl {:mvn/version "2.16.0"}}
+                      org.apache.logging.log4j/log4j-1.2-api {:mvn/version "2.17.0"}
+                      org.apache.logging.log4j/log4j-jcl {:mvn/version "2.17.0"}
+                      org.apache.logging.log4j/log4j-jul {:mvn/version "2.17.0"}
+                      org.apache.logging.log4j/log4j-slf4j-impl {:mvn/version "2.17.0"}}
          :jvm-opts ["-Dlog4j2.configurationFile=log4j2-info.properties"]
          :exec-fn cognitect.test-runner.api/test}}}
