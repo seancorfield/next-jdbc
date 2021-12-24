@@ -26,6 +26,16 @@
 
 (specs/instrument)
 
+(deftest spec-tests
+  (let [db-spec {:dbtype "h2:mem" :dbname "clojure_test"}]
+    ;; some sanity checks on instrumented function calls:
+    (jdbc/get-datasource db-spec)
+    (jdbc/get-connection db-spec)
+    ;; and again with options:
+    (let [db-spec' (jdbc/with-options db-spec {})]
+      (jdbc/get-datasource db-spec')
+      (jdbc/get-connection db-spec'))))
+
 (deftest basic-tests
   ;; use ds-opts instead of (ds) anywhere you want default options applied:
   (let [ds-opts (jdbc/with-options (ds) (default-options))]

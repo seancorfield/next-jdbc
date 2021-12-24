@@ -9,8 +9,7 @@
   Just `:args` are spec'd. These specs are intended to aid development
   with `next.jdbc` by catching simple errors in calling the library.
   The `connectable` argument is currently just `any?` but both
-  `get-datasource` and `get-connection` have stricter specs. If you
-  extend `Sourceable` or `Connectable`, those specs will likely be too strict.
+  `get-datasource` and `get-connection` have stricter specs.
 
   In addition, there is an `instrument` function that provides a simple
   way to instrument all of the `next.jdbc` functions, and `unstrument`
@@ -20,6 +19,7 @@
             [next.jdbc :as jdbc]
             [next.jdbc.connection :as connection]
             [next.jdbc.prepare :as prepare]
+            [next.jdbc.protocols :as p]
             [next.jdbc.sql :as sql])
   (:import (java.sql Connection PreparedStatement Statement)
            (javax.sql DataSource)))
@@ -65,6 +65,9 @@
                        :ds       ::datasource))
 (s/def ::db-spec-or-jdbc (s/or :db-spec  ::db-spec-map
                                :jdbc-url ::jdbc-url-map))
+(s/def ::proto-connectable (s/or :db-spec     ::db-spec
+                                 :connectable #(satisfies? p/Connectable %)
+                                 :sourceable  #(satisfies? p/Sourceable %)))
 
 (s/def ::connectable any?)
 (s/def ::key-map (s/map-of keyword? any?))
@@ -99,10 +102,10 @@
 (s/def ::batch-opts (s/keys :opt-un [::batch-size ::large]))
 
 (s/fdef jdbc/get-datasource
-        :args (s/cat :spec ::db-spec))
+        :args (s/cat :spec ::proto-connectable))
 
 (s/fdef jdbc/get-connection
-        :args (s/cat :spec ::db-spec
+        :args (s/cat :spec ::proto-connectable
                      :opts (s/? ::opts-map)))
 
 (s/fdef jdbc/prepare
