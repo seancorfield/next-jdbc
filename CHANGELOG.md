@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.2.next in progress
   * Address #193 by expanding the argument specs for `get-datasource` and `get-connection`.
+  * Streamline `execute-batch!` for `with-options` and `with-logging` (and this should generalize to any wrapper that satisfies `Connectable` and stores the actual `Connection` under the `:connectable` key).
   * Update log4j2 test dependency.
   * Update `build-clj` to v0.6.5.
 

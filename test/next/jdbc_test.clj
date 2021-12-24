@@ -614,6 +614,44 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
              (finally
                (jdbc/execute-one! (ds) ["delete from fruit where id > 4"])))))
     (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
+  (testing "batch with-options"
+    (is (= [1 1 1 1 1 1 1 1 1 13]
+           (try
+             (let [result (jdbc/execute-batch! (jdbc/with-options (ds) {})
+                                               "INSERT INTO fruit (name, appearance) VALUES (?,?)"
+                                               [["fruit1" "one"]
+                                                ["fruit2" "two"]
+                                                ["fruit3" "three"]
+                                                ["fruit4" "four"]
+                                                ["fruit5" "five"]
+                                                ["fruit6" "six"]
+                                                ["fruit7" "seven"]
+                                                ["fruit8" "eight"]
+                                                ["fruit9" "nine"]]
+                                               {})]
+               (conj result (count (jdbc/execute! (ds) ["select * from fruit"]))))
+             (finally
+               (jdbc/execute-one! (ds) ["delete from fruit where id > 4"])))))
+    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
+  (testing "batch with-logging"
+    (is (= [1 1 1 1 1 1 1 1 1 13]
+           (try
+             (let [result (jdbc/execute-batch! (jdbc/with-logging (ds) println println)
+                                               "INSERT INTO fruit (name, appearance) VALUES (?,?)"
+                                               [["fruit1" "one"]
+                                                ["fruit2" "two"]
+                                                ["fruit3" "three"]
+                                                ["fruit4" "four"]
+                                                ["fruit5" "five"]
+                                                ["fruit6" "six"]
+                                                ["fruit7" "seven"]
+                                                ["fruit8" "eight"]
+                                                ["fruit9" "nine"]]
+                                               {})]
+               (conj result (count (jdbc/execute! (ds) ["select * from fruit"]))))
+             (finally
+               (jdbc/execute-one! (ds) ["delete from fruit where id > 4"])))))
+    (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
   (testing "small batch insert"
     (is (= [1 1 1 1 1 1 1 1 1 13]
            (try
