@@ -6,7 +6,7 @@ Only accretive/fixative changes will be made from now on.
   * Address #193 by expanding the argument specs for `get-datasource` and `get-connection`.
   * Streamline `execute-batch!` for `with-options` and `with-logging` (and this should generalize to any wrapper that satisfies `Connectable` and stores the actual `Connection` under the `:connectable` key).
   * Update log4j2 test dependency.
-  * Update `build-clj` to v0.6.5.
+  * Update `build-clj` to v0.6.6.
 
 * 1.2.761 -- 2021-12-15
   * Fix #194 by throwing an exception if a table or column name used with the friendly SQL functions (or the SQL builder functions behind them) contains a "suspicious" character (currently, that's just `;`).
