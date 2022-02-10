@@ -408,6 +408,7 @@
                                              i)))))
 
 (declare navize-row)
+(declare navable-row)
 
 (defprotocol DatafiableRow
   "Protocol for making rows datafiable and therefore navigable.
@@ -570,6 +571,8 @@
            assoc
            `core-p/datafy
            (navize-row connectable opts)
+           `core-p/nav
+           (navable-row connectable opts)
            `row-number
            (fn [_] (if (instance? Throwable row) (throw row) row))
            `column-names
@@ -609,7 +612,8 @@
                   (vary-meta
                    this
                    assoc
-                   `core-p/datafy (navize-row connectable opts))))
+                   `core-p/datafy (navize-row  connectable opts)
+                   `core-p/nav    (navable-row connectable opts))))
 
 (defn datafiable-result-set
   "Given a ResultSet, a connectable, and an options hash map, return a fully
@@ -1096,3 +1100,45 @@
                        ;; assume an exception means we just cannot
                        ;; navigate anywhere, so return just the value
                        v))))))
+
+(defn- navable-row
+  "Given a connectable object, return a function that knows how to `nav`
+  into a row.
+
+  A `:schema` option can provide a map from qualified column names
+  (`:<table>/<column>`) to tuples that indicate for which table they are a
+  foreign key, the name of the key within that table, and (optionality) the
+  cardinality of that relationship (`:many`, `:one`).
+
+  If no `:schema` item is provided for a column, the convention of `<table>id` or
+  `<table>_id` is used, and the assumption is that such columns are foreign keys
+  in the `<table>` portion of their name, the key is called `id`, and the
+  cardinality is `:one`.
+
+  Rows are looked up using `-execute-all` or `-execute-one`, and the `:table-fn`
+  option, if provided, is applied to both the assumed table name and the
+  assumed foreign key column name."
+  [connectable opts]
+  (fn [_ k v]
+    (try
+      (let [[table fk cardinality]
+            (expand-schema k (or (get-in opts [:schema k])
+                                 (default-schema k)))]
+        (if (and fk connectable)
+          (let [entity-fn (:table-fn opts identity)
+                exec-fn!  (if (= :many cardinality)
+                            p/-execute-all
+                            p/-execute-one)]
+            (exec-fn! connectable
+                      [(str "SELECT * FROM "
+                            (entity-fn (name table))
+                            " WHERE "
+                            (entity-fn (name fk))
+                            " = ?")
+                       v]
+                      opts))
+          v))
+      (catch Exception _
+                       ;; assume an exception means we just cannot
+                       ;; navigate anywhere, so return just the value
+        v))))
