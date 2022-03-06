@@ -579,7 +579,7 @@ All of those can be handled in a similar manner to the above. See the [Oracle do
 
 ## Logging
 
-Sometimes it is convenient to database operations logged automatically. `next.jdbc/with-logging`
+Sometimes it is convenient to have database operations logged automatically. `next.jdbc/with-logging`
 provides a way to wrap a datasource (or connection) so that operations on it will be logged via
 functions you provide.
 
