@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.2.next in progress
+  * Update `build-clj` to v0.8.0.
+
 * 1.2.772 -- 2022-02-09
   * To support more tools that perform `datafy`/`nav`, make rows directly `nav`able (even though this is not really the correct behavior).
   * Address #193 by expanding the argument specs for `get-datasource` and `get-connection`.
