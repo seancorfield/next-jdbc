@@ -281,6 +281,8 @@ That call produces a vector `["fr"]` with metadata that implements `set-paramete
 
 PostgreSQL has good support for [storing, querying and manipulating JSON data](https://www.postgresql.org/docs/current/datatype-json.html). Basic Clojure data structures (lists, vectors, and maps) transform pretty well to JSON data. With a little help `next.jdbc` can automatically convert Clojure data to JSON and back for us.
 
+> Note: some PostgreSQL JSONB operators have a `?` in them which conflicts with the standard parameter placeholder in SQL. You can write the JSONB operators by doubling up the `?`, e.g., `??|` instead of just `?|`. See [PostgreSQL JSONB operators](https://www.postgresql.org/docs/current/functions-json.html#FUNCTIONS-JSONB-OP-TABLE) for more detail.
+
 First we define functions for JSON encoding and decoding. We're using [metosin/jsonista](https://github.com/metosin/jsonista) in these examples but you could use any JSON library, such as [Cheshire](https://github.com/dakrone/cheshire) or [clojure.data.json](https://github.com/clojure/data.json).
 
 ```clojure
