@@ -883,3 +883,15 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
                                                (default-options)))))
   (is (thrown? IllegalArgumentException
                (doall (take 3 (jdbc/plan (ds) ["select * from fruit"]))))))
+
+(deftest issue-204
+  (testing "against a Connection"
+    (is (seq (with-open [con (jdbc/get-connection (ds))]
+               (jdbc/on-connection [x con] (jdbc/execute! x ["select * from fruit"]))))))
+  (testing "against a wrapped Connection"
+    (is (seq (with-open [con (jdbc/get-connection (ds))]
+               (jdbc/on-connection [x (jdbc/with-options con {})] (jdbc/execute! x ["select * from fruit"]))))))
+  (testing "against a wrapped Datasource"
+    (is (seq (jdbc/on-connection [x (jdbc/with-options (ds) {})] (jdbc/execute! x ["select * from fruit"])))))
+  (testing "against a Datasource"
+    (is (seq (jdbc/on-connection [x (ds)] (jdbc/execute! x ["select * from fruit"]))))))

@@ -339,6 +339,35 @@
      (with-open [con (get-connection connectable)]
        (execute-batch! con sql param-groups opts)))))
 
+(defmacro on-connection
+  "Given a connectable object, gets a connection and binds it to `sym`,
+  then executes the `body` in that context.
+
+  This allows you to write generic, `Connection`-based code without
+  needing to know the exact type of an incoming datasource:
+
+  (on-connection [conn datasource]
+    (let [metadata (.getMetadata conn)
+          catalog  (.getCatalog conn)]
+      ...))
+
+  If passed a `Connection` or a `Connectable` that wraps a `Connection`,
+  then that `Connection` is used as-is.
+
+  Otherwise, creates a new `Connection` object from the connectable,
+  executes the body, and automatically closes it for you."
+  [[sym connectable] & body]
+  (let [con-sym (vary-meta sym assoc :tag 'java.sql.Connection)
+        con-obj connectable]
+    `(cond (instance? java.sql.Connection ~con-obj)
+           ((^{:once true} fn* [~con-sym] ~@body) ~con-obj)
+           (and (satisfies? p/Connectable ~con-obj)
+                (instance? java.sql.Connection (:connectable ~con-obj)))
+           ((^{:once true} fn* [~con-sym] ~@body) (:connectable ~con-obj))
+           :else
+           (with-open [con# (get-connection ~con-obj)]
+             ((^{:once true} fn* [~con-sym] ~@body) con#)))))
+
 (defn transact
   "Given a transactable object and a function (taking a `Connection`),
   execute the function over the connection in a transactional manner.

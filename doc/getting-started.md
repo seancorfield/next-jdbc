@@ -577,6 +577,21 @@ JDBC provides several features that let you introspect the database to obtain li
 Several methods on `DatabaseMetaData` return a `ResultSet` object, e.g., `.getCatalogs()`, `.getClientInfoProperties()`, `.getSchemas()`.
 All of those can be handled in a similar manner to the above. See the [Oracle documentation for `java.sql.DatabaseMetaData`](https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/DatabaseMetaData.html) (Java 11) for more details.
 
+If you are working with a generalized datasource that may be a `Connection`, a `DataSource`,
+or a wrapped connectable (via something like `with-options` or `with-transaction`), you can
+write generic, `Connection`-based code using `on-connection` which will reuse a `Connection`
+if one is passed or create a new one if needed (and automatically close it afterward):
+
+```clojure
+(on-connection [con ds]
+  (-> (.getMetaData con) ; produces java.sql.DatabaseMetaData
+      ;; return a java.sql.ResultSet describing all tables and views:
+      (.getTables nil nil nil (into-array ["TABLE" "VIEW"]))
+      (rs/datafiable-result-set ds opts)))
+```
+
+> Note: to avoid confusion and/or incorrect usage, you cannot pass options to `on-connection` because they would be ignored in some cases (existing `Connection` or a wrapped `Connection`).
+
 ## Logging
 
 Sometimes it is convenient to have database operations logged automatically. `next.jdbc/with-logging`
