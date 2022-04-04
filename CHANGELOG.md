@@ -2,7 +2,7 @@
 
 Only accretive/fixative changes will be made from now on.
 
-* 1.2.next in progress
+* 1.2.780 -- 2022-04-04
   * Address [#204](https://github.com/seancorfield/next-jdbc/issues/204) by adding `next.jdbc/on-connection`.
   * Address [#203](https://github.com/seancorfield/next-jdbc/issues/203) by adding a note to the **PostgreSQL Tips & Tricks** section.
   * Update `build-clj` to v0.8.0.
