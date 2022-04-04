@@ -23,7 +23,7 @@
   (reduce (fn [opts alias]
             (bb/run-tests (assoc opts :aliases [alias])))
           opts
-          [:1.10 :master])
+          [:1.10 :1.11 :master])
   opts)
 
 (defn ci "Run the CI pipeline of tests (and build the JAR)." [opts]
