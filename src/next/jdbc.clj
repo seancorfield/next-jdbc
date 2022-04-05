@@ -346,10 +346,12 @@
   This allows you to write generic, `Connection`-based code without
   needing to know the exact type of an incoming datasource:
 
+```clojure
   (on-connection [conn datasource]
     (let [metadata (.getMetadata conn)
           catalog  (.getCatalog conn)]
       ...))
+```
 
   If passed a `Connection` or a `Connectable` that wraps a `Connection`,
   then that `Connection` is used as-is.
