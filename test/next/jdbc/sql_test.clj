@@ -152,6 +152,36 @@
       (is (= {:next.jdbc/update-count 2}
              (sql/delete! (ds) :fruit ["id > ?" 4])))
       (is (= 4 (count (sql/query (ds) ["select * from fruit"])))))
+    (testing "multiple insert/delete with maps"
+      (is (= (cond (derby?)
+                   [nil] ; WTF Apache Derby?
+                   (mssql?)
+                   [14M]
+                   (sqlite?)
+                   [14]
+                   :else
+                   [12 13 14])
+             (mapv new-key
+                   (sql/insert-multi! (ds) :fruit
+                                      [{:name       "Kiwi"
+                                        :appearance "green & fuzzy"
+                                        :cost       100
+                                        :grade      99.9}
+                                       {:name       "Grape"
+                                        :appearance "black"
+                                        :cost       10
+                                        :grade      50}
+                                       {:name       "Lemon"
+                                        :appearance "yellow"
+                                        :cost       20
+                                        :grade      9.9}]))))
+      (is (= 7 (count (sql/query (ds) ["select * from fruit"]))))
+      (is (= {:next.jdbc/update-count 1}
+             (sql/delete! (ds) :fruit {:id 12})))
+      (is (= 6 (count (sql/query (ds) ["select * from fruit"]))))
+      (is (= {:next.jdbc/update-count 2}
+             (sql/delete! (ds) :fruit ["id > ?" 10])))
+      (is (= 4 (count (sql/query (ds) ["select * from fruit"])))))
     (testing "empty insert-multi!" ; per #44
       (is (= [] (sql/insert-multi! (ds) :fruit
                                    [:name :appearance :cost :grade]

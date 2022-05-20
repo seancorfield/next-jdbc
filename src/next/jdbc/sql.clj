@@ -50,12 +50,26 @@
   multiple rows in the database and attempts to return a vector of maps of
   generated keys.
 
+  Also supports a sequence of hash maps with keys corresponding to column
+  names.
+
   Note: this expands to a single SQL statement with placeholders for every
   value being inserted -- for large sets of rows, this may exceed the limits
   on SQL string size and/or number of parameters for your JDBC driver or your
   database!"
-  ([connectable table cols rows]
-   (insert-multi! connectable table cols rows {}))
+  {:arglists '([connectable table hash-maps]
+               [connectable table hash-maps opts]
+               [connectable table cols rows]
+               [connectable table cols rows opts])}
+  ([connectable table hash-maps]
+   (insert-multi! connectable table hash-maps {}))
+  ([connectable table hash-maps-or-cols opts-or-rows]
+   (if-not (-> hash-maps-or-cols first map?)
+     (insert-multi! connectable table hash-maps-or-cols opts-or-rows {})
+     (let [cols  (keys (first hash-maps-or-cols))
+           ->row (fn ->row [m]
+                   (map (partial get m) cols))]
+       (insert-multi! connectable table cols (map ->row hash-maps-or-cols) opts-or-rows))))
   ([connectable table cols rows opts]
    (if (seq rows)
      (let [opts (merge (:options connectable) opts)]

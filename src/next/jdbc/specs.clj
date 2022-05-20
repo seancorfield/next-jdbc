@@ -180,16 +180,26 @@
                      :opts (s/? ::opts-map)))
 
 (s/fdef sql/insert-multi!
-        :args (s/and (s/cat :connectable ::connectable
-                            :table keyword?
-                            :cols (s/coll-of keyword?
-                                             :kind sequential?
-                                             :min-count 1)
-                            :rows (s/coll-of (s/coll-of any? :kind sequential?)
-                                             :kind sequential?)
-                            :opts (s/? ::opts-map))
-                     #(apply = (count (:cols %))
-                        (map count (:rows %)))))
+        :args
+        (s/or
+          :with-rows-and-columns
+          (s/and (s/cat :connectable ::connectable
+                        :table keyword?
+                        :cols (s/coll-of keyword?
+                                         :kind sequential?
+                                         :min-count 1)
+                        :rows (s/coll-of (s/coll-of any? :kind sequential?)
+                                         :kind sequential?)
+                        :opts (s/? ::opts-map))
+                 #(apply = (count (:cols %))
+                         (map count (:rows %))))
+          :with-hash-maps
+          (s/cat :connectable ::connectable
+                 :table keyword?
+                 :hash-maps (s/coll-of map?
+                                       :kind sequential?
+                                       :min-count 1)
+                 :opts (s/? ::opts-map))))
 
 (s/fdef sql/query
         :args (s/cat :connectable ::connectable
