@@ -137,6 +137,10 @@
 
   Applies any `:table-fn` / `:column-fn` supplied in the options.
 
+  If `:batch` is set to `true` in `opts` the INSERT statement will be prepared
+  using a single set of placeholders and remaining parameters in the vector will
+  be grouped at the row level.
+
   If `:suffix` is provided in `opts`, that string is appended to the
   `INSERT ...` statement."
   [table cols rows opts]
@@ -147,15 +151,16 @@
   (assert (seq rows) "rows may not be empty")
   (let [table-fn  (:table-fn opts identity)
         column-fn (:column-fn opts identity)
+        batch?    (:batch opts)
         params    (str/join ", " (map (comp column-fn name) cols))
         places    (as-? (first rows) opts)]
     (into [(str "INSERT INTO " (table-fn (safe-name table))
                 " (" params ")"
                 " VALUES "
-                (str/join ", " (repeat (count rows) (str "(" places ")")))
+                (str/join ", " (repeat (if batch? 1 (count rows)) (str "(" places ")")))
                 (when-let [suffix (:suffix opts)]
                   (str " " suffix)))]
-          cat
+          (if batch? identity cat)
           rows)))
 
 (defn for-order-col

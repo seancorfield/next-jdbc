@@ -146,11 +146,19 @@
                                {:id 9 :status 42 :opt nil}
                                {:table-fn sql-server :column-fn mysql})
            ["INSERT INTO [user] (`id`, `status`, `opt`) VALUES (?, ?, ?)" 9 42 nil])))
-  (testing "multi-row insert"
+  (testing "multi-row insert (normal mode)"
     (is (= (builder/for-insert-multi :user
                                      [:id :status]
                                      [[42 "hello"]
                                       [35 "world"]
                                       [64 "dollars"]]
                                      {:table-fn sql-server :column-fn mysql})
-           ["INSERT INTO [user] (`id`, `status`) VALUES (?, ?), (?, ?), (?, ?)" 42 "hello" 35 "world" 64 "dollars"]))))
+           ["INSERT INTO [user] (`id`, `status`) VALUES (?, ?), (?, ?), (?, ?)" 42 "hello" 35 "world" 64 "dollars"])))
+  (testing "multi-row insert (batch mode)"
+    (is (= (builder/for-insert-multi :user
+                                     [:id :status]
+                                     [[42 "hello"]
+                                      [35 "world"]
+                                      [64 "dollars"]]
+                                     {:table-fn sql-server :column-fn mysql :batch true})
+           ["INSERT INTO [user] (`id`, `status`) VALUES (?, ?)" [42 "hello"] [35 "world"] [64 "dollars"]]))))
