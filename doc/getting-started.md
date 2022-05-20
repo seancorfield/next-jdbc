@@ -479,7 +479,7 @@ In addition, for HikariCP, you can specify properties to be applied to the under
 
 ```clojure
 ;; assumes next.jdbc.connection has been required as connection
-(connection/->pool com.zaxxer.hikari.HikariConfig
+(connection/->pool com.zaxxer.hikari.HikariDataSource
                    {:dbtype "postgres" :dbname "thedb" :username "dbuser" :password "secret"
                     :dataSourceProperties {:socketTimeout 30}})
 ```
