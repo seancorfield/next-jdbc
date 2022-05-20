@@ -53,6 +53,20 @@ Given a table name (as a keyword), a vector of column names, and a vector of row
                    "Aunt Sally" "sour@lagunitas.beer"] {:return-keys true})
 ```
 
+Given a table name (as a keyword) and a vector of hash maps, this performs a multi-row insertion into the database:
+
+```clojure
+(sql/insert-multi! ds :address
+  [{:name "Stella", :email "stella@artois.beer"}
+   {:name "Waldo", :email "waldo@lagunitas.beer"}
+   {:name "Aunt Sally", :email "sour@lagunitas.beer"}])
+;; equivalent to
+(jdbc/execute! ds ["INSERT INTO address (name,email) VALUES (?,?), (?,?), (?,?)"
+                   "Stella" "stella@artois.beer"
+                   "Waldo" "waldo@lagunitas.beer"
+                   "Aunt Sally" "sour@lagunitas.beer"] {:return-keys true})
+```
+
 > Note: this expands to a single SQL statement with placeholders for every
 value being inserted -- for large sets of rows, this may exceed the limits
 on SQL string size and/or number of parameters for your JDBC driver or your
@@ -60,7 +74,42 @@ database. Several databases have a limit of 1,000 parameter placeholders.
 Oracle does not support this form of multi-row insert, requiring a different
 syntax altogether.
 
-You should look at [`next.jdbc/execute-batch!`](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc#execute-batch!) for an alternative approach.
+### Batch Insertion
+
+As of release 1.2.next, you can specify `:batch true` in the options, which
+will use `execute-batch!` under the hood, instead of `execute!`, as follows:
+
+```clojure
+(sql/insert-multi! ds :address
+  [:name :email]
+  [["Stella" "stella@artois.beer"]
+   ["Waldo" "waldo@lagunitas.beer"]
+   ["Aunt Sally" "sour@lagunitas.beer"]]
+  {:batch true})
+;; equivalent to
+(jdbc/execute-batch! ds
+                     ["INSERT INTO address (name,email) VALUES (?,?)"
+                      ["Stella" "stella@artois.beer"]
+                      ["Waldo" "waldo@lagunitas.beer"]
+                      ["Aunt Sally" "sour@lagunitas.beer"]]
+                     {:return-keys true :return-generated-keys true})
+;; and
+(sql/insert-multi! ds :address
+  [:name :email]
+  [{:name "Stella", :email "stella@artois.beer"}
+   {:name "Waldo", :email "waldo@lagunitas.beer"}
+   {:name "Aunt Sally", :email "sour@lagunitas.beer"}]
+  {:batch true})
+;; equivalent to
+(jdbc/execute-batch! ds
+                     ["INSERT INTO address (name,email) VALUES (?,?)"
+                      ["Stella" "stella@artois.beer"]
+                      ["Waldo" "waldo@lagunitas.beer"]
+                      ["Aunt Sally" "sour@lagunitas.beer"]]
+                     {:return-keys true :return-generated-keys true})
+```
+
+See [**Batched Parameters**](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/doc/getting-started/prepared-statements#caveats) for caveats and possible database-specific behaviors.
 
 ## `query`
 

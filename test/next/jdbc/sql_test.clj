@@ -199,6 +199,10 @@
   (is (thrown? clojure.lang.ExceptionInfo
                (sql/insert-multi! (ds) :fruit [] [[] [] []]))))
 
+(deftest no-mismatched-columns
+  (is (thrown? IllegalArgumentException
+               (sql/insert-multi! (ds) :fruit [{:name "Apple"} {:cost 1.23}]))))
+
 (deftest no-empty-order-by
   (is (thrown? clojure.lang.ExceptionInfo
                (sql/find-by-keys (ds) :fruit

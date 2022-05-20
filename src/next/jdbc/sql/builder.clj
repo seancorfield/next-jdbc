@@ -1,4 +1,4 @@
-;; copyright (c) 2019-2021 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2022 Sean Corfield, all rights reserved
 
 (ns next.jdbc.sql.builder
   "Some utility functions for building SQL strings.
@@ -157,7 +157,9 @@
     (into [(str "INSERT INTO " (table-fn (safe-name table))
                 " (" params ")"
                 " VALUES "
-                (str/join ", " (repeat (if batch? 1 (count rows)) (str "(" places ")")))
+                (if batch?
+                  (str "(" places ")")
+                  (str/join ", " (repeat (count rows) (str "(" places ")"))))
                 (when-let [suffix (:suffix opts)]
                   (str " " suffix)))]
           (if batch? identity cat)

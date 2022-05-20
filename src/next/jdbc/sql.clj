@@ -1,4 +1,4 @@
-;; copyright (c) 2019-2021 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2022 Sean Corfield, all rights reserved
 
 (ns next.jdbc.sql
   "Some utility functions that make common operations easier by
@@ -43,15 +43,17 @@
                    (merge {:return-keys true} opts)))))
 
 (defn insert-multi!
-  "Syntactic sugar over `execute!` to make inserting columns/rows easier.
+  "Syntactic sugar over `execute!` or `execute-batch!` to make inserting
+  columns/rows easier.
 
   Given a connectable object, a table name, a sequence of column names, and
   a vector of rows of data (vectors of column values), inserts the data as
   multiple rows in the database and attempts to return a vector of maps of
   generated keys.
 
-  Also supports a sequence of hash maps with keys corresponding to column
-  names.
+  Given a connectable object, a table name, a sequence of hash maps of data,
+  inserts the data as multiple rows in the database and attempts to return
+  a vector of maps of generated keys.
 
   If called with `:batch` true will call `execute-batch!` - see its documentation
   for situations in which the generated keys may or may not be returned as well as
@@ -68,12 +70,15 @@
   ([connectable table hash-maps]
    (insert-multi! connectable table hash-maps {}))
   ([connectable table hash-maps-or-cols opts-or-rows]
-   (if-not (-> hash-maps-or-cols first map?)
-     (insert-multi! connectable table hash-maps-or-cols opts-or-rows {})
+   (if (map? (first hash-maps-or-cols))
      (let [cols  (keys (first hash-maps-or-cols))
            ->row (fn ->row [m]
-                   (map (partial get m) cols))]
-       (insert-multi! connectable table cols (map ->row hash-maps-or-cols) opts-or-rows))))
+                   (map #(get m %) cols))]
+       (when-not (apply = (map (comp set keys) hash-maps-or-cols))
+         (throw (IllegalArgumentException.
+                 "insert-multi! hash maps must all have the same keys")))
+       (insert-multi! connectable table cols (map ->row hash-maps-or-cols) opts-or-rows))
+     (insert-multi! connectable table hash-maps-or-cols opts-or-rows {})))
   ([connectable table cols rows opts]
    (if (seq rows)
      (let [opts   (merge (:options connectable) opts)
