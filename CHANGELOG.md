@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.2.next in progress
+  * Address [#199](https://github.com/seancorfield/next-jdbc/issues/199) by adding notes on UTC usage -- [@denismccarthykerry](https://github.com/denismccarthykerry).
   * Enhance `insert-multi!` to accept a sequence of hash maps and also to support batch execution, via PR [#206](https://github.com/seancorfield/next-jdbc/pull/206) -- [@rschmukler](https://github.com/rschmukler).
   * Fix HikariCP pooling example.
 

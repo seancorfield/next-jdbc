@@ -85,6 +85,26 @@ The result of `plan` is also foldable in the [clojure.core.reducers](https://clo
 
 There is no back pressure here so if your reducing function is slow, you may end up with more of the realized result set in memory than your system can cope with.
 
+## Times, Dates, and Timezones
+
+Working with dates and timezones in databases can be confusing, as you are
+working at the intersection between the database, the JDBC library and the
+date library that you happen to be using. A good rule of thumb is to keep
+timezone-related logic as simple as possible. For example, with Postgres we
+recommend always storing dates in a Postgres `TIMESTAMP` (without time zone)
+column, storing all such timestamps in UTC, and applying your time zone logic
+separately using application logic. The `TIMESTAMP WITH TIME ZONE` column type in
+Postgres stores its date in UTC anyhow, and applications that need to deal with
+time zones typically require richer functionality than simply adjusting the time
+zone to wherever the database happens to be hosted. Treat time zone related
+logic as an application concern, and keep stored dates in UTC.
+
+For example, for a developer using [`clojure.java-time`](https://github.com/dm3/clojure.java-time), saving `(java-time/instant)`
+in a timestamp column (and doing any timezone adjustment elsewhere) is a good
+way to minimize long term confusion.
+
+> Original text contributed by [Denis McCarthy](https://github.com/denismccarthykerry); in addition: I generally recommend not only using UTC everywhere but also setting your database _and your servers_ to all be in the UTC timezones, to avoid the possibly of incorrect date/time translations -- Sean Corfield.
+
 ## MS SQL Server
 
 In MS SQL Server, the generated key from an insert comes back as `:GENERATED_KEYS`.
