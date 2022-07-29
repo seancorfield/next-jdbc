@@ -406,7 +406,13 @@
 (extend-protocol p/Sourceable
   clojure.lang.Associative
   (get-datasource [this]
-                  (url+etc->datasource (spec->url+etc this)))
+                  ;; #207 c.j.j compatibility:
+                  (if-let [datasource (:datasource this)]
+                    datasource
+                    (url+etc->datasource
+                     (if-let [uri (:connection-uri this)]
+                       (string->url+etc uri)
+                       (spec->url+etc this)))))
   javax.sql.DataSource
   (get-datasource [this] this)
   String
