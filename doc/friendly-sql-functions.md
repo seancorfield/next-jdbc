@@ -76,7 +76,7 @@ syntax altogether.
 
 ### Batch Insertion
 
-As of release 1.2.next, you can specify `:batch true` in the options, which
+As of release 1.2.790, you can specify `:batch true` in the options, which
 will use `execute-batch!` under the hood, instead of `execute!`, as follows:
 
 ```clojure
