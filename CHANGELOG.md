@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.2.next in progress
+  * Fix [#208](https://github.com/seancorfield/next-jdbc/issues/208) by treating unsupported exception as an empty string, just like the JDBC docs say should happen.
+
 * 1.2.790 -- 2022-07-29
   * Address [#207](https://github.com/seancorfield/next-jdbc/issues/207) by supporting "db-spec" hash maps containing `:datasource` or `:connection-uri` (this is otherwise undocumented and intended to aid migration from `clojure.java.jdbc`).
   * Address [#199](https://github.com/seancorfield/next-jdbc/issues/199) by adding notes on UTC usage -- [@denismccarthykerry](https://github.com/denismccarthykerry).

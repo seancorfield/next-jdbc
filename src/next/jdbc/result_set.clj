@@ -33,12 +33,21 @@
 
 (set! *warn-on-reflection* true)
 
+(defn- get-table-name
+  "No, if it isn't supported, you're supposed to return
+  an empty string. That's what the JDBC docs say!"
+  [^ResultSetMetaData rsmeta ^Integer i]
+  (try
+    (.getTableName rsmeta i)
+    (catch java.sql.SQLFeatureNotSupportedException _
+      "")))
+
 (defn get-column-names
   "Given `ResultSetMetaData`, return a vector of column names, each qualified by
   the table from which it came."
   [^ResultSetMetaData rsmeta _]
   (mapv (fn [^Integer i]
-          (if-let [q (not-empty (.getTableName rsmeta i))]
+          (if-let [q (not-empty (get-table-name rsmeta i))]
             (keyword q (.getColumnLabel rsmeta i))
             (keyword (.getColumnLabel rsmeta i))))
         (range 1 (inc (if rsmeta (.getColumnCount rsmeta) 0)))))
@@ -60,7 +69,7 @@
     (assert qf ":qualifier-fn is required")
     (assert lf ":label-fn is required")
     (mapv (fn [^Integer i]
-            (if-let [q (some-> (.getTableName rsmeta i) (qf) (not-empty))]
+            (if-let [q (some-> (get-table-name rsmeta i) (qf) (not-empty))]
               (keyword q (-> (.getColumnLabel rsmeta i) (lf)))
               (keyword (-> (.getColumnLabel rsmeta i) (lf)))))
           (range 1 (inc (if rsmeta (.getColumnCount rsmeta) 0))))))
