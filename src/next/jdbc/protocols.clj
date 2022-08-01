@@ -54,7 +54,7 @@
   (prepare ^java.sql.PreparedStatement [this sql-params opts]
     "Produce a new `java.sql.PreparedStatement` for use with `with-open`."))
 
-(defprotocol Transactable
+(defprotocol Transactable :extend-via-metadata true
   "Protocol for running SQL operations in a transaction.
 
   Implementations are provided for `Connection`, `DataSource`, and `Object`
