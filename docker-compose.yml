@@ -1,0 +1,17 @@
+version: '2'
+services:
+  mysql:
+    image: percona:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD
+    ports:
+      - "3306:3306"
+    command:
+      [--character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci]
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-GA-ubuntu-16.04
+    environment:
+      ACCEPT_EULA: Y
+      SA_PASSWORD: Str0ngP4ssw0rd
+    ports:
+      - "1433:1433"
