@@ -81,3 +81,24 @@ If you require `next.jdbc.datafy`, the `Datafiable` protocol is extended to seve
 See the Java documentation for these JDBC types for further details on what all the properties from each of these classes mean and which are `int`, `String`, or some other JDBC object type.
 
 In addition, requiring this namespace will affect how `next.jdbc.result-set/metadata` behaves inside the reducing function applied to the result of `plan`. Without this namespace loaded, that function will return a raw `ResultSetMetaData` object (which must not leak outside the reducing function). With this namespace loaded, that function will, instead, return a Clojure data structure describing the columns in the result set.
+
+### SQLite
+
+For some strange reason, SQLite has implemented their `ResultSetMetaData` as also
+being a `ResultSet` which leads to ambiguity when datafying some things when
+using SQLite. `next.jdbc` currently assumes that if it is asked to `datafy` a
+`ResultSet` and that object is _also_ `ResultSetMetaData`, it will treat it
+purely as `ResultSetMetaData`, which produces a vector of column metadata as
+described above. However, there are some results in SQLite's JDBC driver that
+look like `ResultSetMetaData` but should be treated as plain `ResultSet`
+objects (which is what other databases' JDBC drivers return).
+
+An example of this is what happens when you try to `datafy` the result of
+calling `DatabaseMetaData.getTables()`: the JDBC documentation says you get
+back a `ResultSet` but in SQLite, that is also an instance of `ResultSetMetaData`
+and so `next.jdbc.datafy` treats it that way instead of as a plain `ResultSet`.
+You can call `next.jdbc.result-set/datafiable-result-set` directly in this
+case to get the rows as a hash map (although you won't get the underlying
+metadata as a bean).
+
+See issue [#212](https://github.com/seancorfield/next-jdbc/issues/212) for more details.

@@ -2,6 +2,10 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.2.next in progress
+  * Address [#212](https://github.com/seancorfield/next-jdbc/issues/212) by documenting the problem with SQLite's JDBC driver.
+  * Switch SQL Server testing setup to `docker-compose`.
+
 * 1.2.796 -- 2022-08-01
   * Make `Transactable` extensible via metadata, via PR [#209](https://github.com/seancorfield/next-jdbc/issues/209) -- [@vemv](https://github.com/vemv).
   * Fix [#208](https://github.com/seancorfield/next-jdbc/issues/208) by treating unsupported exception as an empty string, just like the JDBC docs say should happen.
