@@ -74,35 +74,6 @@ jobs:
       - name: Run Tests
         run: clojure -T:build test
 
-  build-graalvm-old:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        graalvm: [ '19.3.6', '20.3.2' ]
-        base: [ 'java8', 'java11' ]
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup GraalVM
-        uses: DeLaGuardo/setup-graalvm@5.0
-        with:
-          graalvm: ${{ matrix.graalvm }}
-          java: ${{ matrix.base }}
-      - name: Setup Clojure
-        uses: DeLaGuardo/setup-clojure@master
-        with:
-          tools-deps: '1.10.3.1053'
-      - name: Cache All The Things
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.m2/repository
-            ~/.gitlibs
-            ~/.clojure
-            ~/.cpcache
-          key: ${{ runner.os }}-${{ hashFiles('**/deps.edn') }}
-      - name: Run Tests
-        run: clojure -T:build test
-
   build-graalvm-new:
     runs-on: ubuntu-latest
     strategy:
