@@ -12,6 +12,7 @@
 
 if test "$1" = "create"
 then
+  sleep 30
 	# assumes you already have a MySQL instance running locally
 	NEXT_JDBC_TEST_MYSQL=yes clojure -X:test next.jdbc.test-fixtures/create-clojure-test
 fi

@@ -32,7 +32,6 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: testing
       - name: Create ClojureTest
-        run: sleep 30
         run: ./run-tests.sh create
         env:
           MYSQL_ROOT_PASSWORD: testing
