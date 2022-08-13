@@ -37,6 +37,8 @@ jobs:
           MYSQL_ROOT_PASSWORD: testing
       - name: Run Tests
         run: ./run-tests.sh
+        env:
+          MYSQL_ROOT_PASSWORD: testing
 
   build-graalvm-old:
     runs-on: ubuntu-latest
