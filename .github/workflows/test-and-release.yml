@@ -29,6 +29,18 @@ jobs:
             ~/.clojure
             ~/.cpcache
           key: ${{ runner.os }}-${{ hashFiles('**/deps.edn') }}
+      - name: Setup Databases
+        run: docker-compose up -d
+        env:
+          MYSQL_ROOT_PASSWORD: testing
+      - name: Create ClojureTest
+        run: ./run-tests.sh create
+        env:
+          MYSQL_ROOT_PASSWORD: testing
+      - name: Run All Tests
+        run: ./run-tests.sh
+        env:
+          MYSQL_ROOT_PASSWORD: testing
       - name: Run Tests
         run: clojure -T:build ci :snapshot false
       - name: Deploy Release
