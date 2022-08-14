@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.2.next in progress
   * Address [#212](https://github.com/seancorfield/next-jdbc/issues/212) by documenting the problem with SQLite's JDBC driver.
+  * Fix [#210](https://github.com/seancorfield/next-jdbc/issues/210) by updating CI to test against MySQL and SQL Server.
   * Switch SQL Server testing setup to `docker-compose`.
 
 * 1.2.796 -- 2022-08-01
