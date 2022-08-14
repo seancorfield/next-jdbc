@@ -31,16 +31,19 @@ jobs:
         run: docker-compose up -d
         env:
           MYSQL_ROOT_PASSWORD: testing
-      - name: Create ClojureTest
-        run: ./run-tests.sh create
+      - name: Run MariaDB Tests
+        run: clojure -X:test
         env:
           MYSQL_ROOT_PASSWORD: testing
-      - name: Run All Tests
-        run: ./run-tests.sh
-        env:
-          MYSQL_ROOT_PASSWORD: testing
-      - name: Run Tests
+          NEXT_JDBC_TEST_MYSQL: yes
+          NEXT_JDBC_TEST_MARIADB: yes
+      - name: Run All Tests and Snapshot
         run: clojure -T:build ci :snapshot true
+        env:
+          MYSQL_ROOT_PASSWORD: testing
+          NEXT_JDBC_TEST_MYSQL: yes
+          NEXT_JDBC_TEST_MSSQL: yes
+          MSSQL_SA_PASSWORD: Str0ngP4ssw0rd
       - name: Deploy Snapshot
         run: clojure -T:build deploy :snapshot true
         env:

@@ -36,13 +36,21 @@
 (def ^:private test-mysql
   (when (System/getenv "NEXT_JDBC_TEST_MYSQL") test-mysql-map))
 
-(defn create-clojure-test [_]
+(defn- create-clojure-test []
   (when test-mysql
     (let [mysql (assoc test-mysql :dbname "mysql")]
       (println "Creating clojure-test database in MySQL...")
-      (jdbc/execute-one! mysql ["create database if not exists clojure_test"])
-      (println "...done!")
-      (shutdown-agents))))
+      (loop [n 0]
+        (when (try
+                (jdbc/execute-one! mysql ["create database if not exists clojure_test"])
+                false ; done
+                (catch Throwable t
+                  (when (< 10 n) (throw t))
+                  (println "\t" (ex-message t) "(will retry)")
+                  (Thread/sleep 3000)
+                  true))
+          (recur (inc n))))
+      (println "...done!"))))
 
 (def ^:private test-mssql-map
   {:dbtype "mssql" :dbname "model"
@@ -225,6 +233,8 @@ CREATE PROCEDURE FRUITP" (cond (hsqldb?) "() READS SQL DATA DYNAMIC RESULT SETS 
                            ["Orange" "juicy" 89 88.6]]
                           {:return-keys false})
        (t)))))
+
+(create-clojure-test)
 
 (comment
   ;; this is a convenience to bring next.jdbc's test dependencies
