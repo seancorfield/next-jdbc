@@ -22,7 +22,7 @@
                       {:git/tag "v0.5.1" :git/sha "dfb30dd"}
                       ;; connection pooling
                       ;; 5.0.0 is not compatible with JDK 8:
-                      com.zaxxer/HikariCP {:mvn/version "5.0.1"}
+                      com.zaxxer/HikariCP {:mvn/version "3.4.2"}
                       com.mchange/c3p0 {:mvn/version "0.9.5.5"}
                       ;; JDBC drivers
                       ;; compatible with JDK8+:
