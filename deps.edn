@@ -1,28 +1,28 @@
 {:mvn/repos {"sonatype" {:url "https://oss.sonatype.org/content/repositories/snapshots/"}}
  :paths ["src" "resources"]
- :deps {org.clojure/clojure {:mvn/version "1.10.3"}
+ :deps {org.clojure/clojure {:mvn/version "1.11.1"}
         org.clojure/java.data {:mvn/version "1.0.95"}
 
-        camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.2"}}
+        camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.3"}}
  :aliases
  {;; for help: clojure -A:deps -T:build help/doc
   :build {:deps {io.github.seancorfield/build-clj
-                 {:git/tag "v0.8.0" :git/sha "9bd8b8a"}}
+                 {:git/tag "v0.8.3" :git/sha "7ac1f8d"}}
           :ns-default build}
 
   ;; versions to test against:
   :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.3"}}}
-  :1.11 {:override-deps {org.clojure/clojure {:mvn/version "1.11.0"}}}
+  :1.11 {:override-deps {org.clojure/clojure {:mvn/version "1.11.1"}}}
   :master {:override-deps {org.clojure/clojure {:mvn/version "1.12.0-master-SNAPSHOT"}}}
 
   ;; running tests/checks of various kinds:
   :test {:extra-paths ["test"] ; can also run clojure -X:test
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.1"}
                       io.github.cognitect-labs/test-runner
-                      {:git/tag "v0.5.0" :git/sha "48c3c67"}
+                      {:git/tag "v0.5.1" :git/sha "dfb30dd"}
                       ;; connection pooling
                       ;; 5.0.0 is not compatible with JDK 8:
-                      com.zaxxer/HikariCP {:mvn/version "3.4.2"}
+                      com.zaxxer/HikariCP {:mvn/version "5.0.1"}
                       com.mchange/c3p0 {:mvn/version "0.9.5.5"}
                       ;; JDBC drivers
                       ;; compatible with JDK8+:
@@ -34,23 +34,23 @@
                       org.hsqldb/hsqldb {:mvn/version "2.5.0"}
                       com.h2database/h2 {:mvn/version "1.4.200"}
                       net.sourceforge.jtds/jtds {:mvn/version "1.3.1"}
-                      org.mariadb.jdbc/mariadb-java-client {:mvn/version "2.7.4"}
-                      mysql/mysql-connector-java {:mvn/version "8.0.27"}
-                      org.postgresql/postgresql {:mvn/version "42.3.1"}
-                      io.zonky.test/embedded-postgres {:mvn/version "1.3.1"}
+                      org.mariadb.jdbc/mariadb-java-client {:mvn/version "3.0.7"}
+                      mysql/mysql-connector-java {:mvn/version "8.0.30"}
+                      org.postgresql/postgresql {:mvn/version "42.4.1"}
+                      io.zonky.test/embedded-postgres {:mvn/version "2.0.0"}
                       ;; 14.1.0 doesn't spin up fast enough: tests timeout at startup after 10s
-                      io.zonky.test.postgres/embedded-postgres-binaries-darwin-amd64 {:mvn/version "13.4.0"}
-                      io.zonky.test.postgres/embedded-postgres-binaries-linux-amd64 {:mvn/version "13.4.0"}
-                      io.zonky.test.postgres/embedded-postgres-binaries-windows-amd64 {:mvn/version "13.4.0"}
-                      org.xerial/sqlite-jdbc {:mvn/version "3.36.0.3"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-darwin-amd64 {:mvn/version "14.4.0"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-linux-amd64 {:mvn/version "14.4.0"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-windows-amd64 {:mvn/version "14.4.0"}
+                      org.xerial/sqlite-jdbc {:mvn/version "3.39.2.0"}
                       com.microsoft.sqlserver/mssql-jdbc {:mvn/version "9.4.1.jre8"}
                       ;; supplementary test stuff
                       ;; use log4j 2.x:
-                      org.apache.logging.log4j/log4j-api {:mvn/version "2.17.1"}
+                      org.apache.logging.log4j/log4j-api {:mvn/version "2.18.0"}
                       ;; bridge into log4j:
-                      org.apache.logging.log4j/log4j-1.2-api {:mvn/version "2.17.1"}
-                      org.apache.logging.log4j/log4j-jcl {:mvn/version "2.17.1"}
-                      org.apache.logging.log4j/log4j-jul {:mvn/version "2.17.1"}
-                      org.apache.logging.log4j/log4j-slf4j-impl {:mvn/version "2.17.1"}}
+                      org.apache.logging.log4j/log4j-1.2-api {:mvn/version "2.18.0"}
+                      org.apache.logging.log4j/log4j-jcl {:mvn/version "2.18.0"}
+                      org.apache.logging.log4j/log4j-jul {:mvn/version "2.18.0"}
+                      org.apache.logging.log4j/log4j-slf4j-impl {:mvn/version "2.18.0"}}
          :jvm-opts ["-Dlog4j2.configurationFile=log4j2-info.properties"]
          :exec-fn cognitect.test-runner.api/test}}}

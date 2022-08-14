@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.2.next in progress
+  * Address [#214](https://github.com/seancorfield/next-jdbc/issues/214) by updating test/CI versions.
   * Address [#212](https://github.com/seancorfield/next-jdbc/issues/212) by documenting the problem with SQLite's JDBC driver.
   * Fix [#211](https://github.com/seancorfield/next-jdbc/issues/211) by auto-creating `clojure_test` DB in MySQL if needed; also streamline the CI processes.
   * Fix [#210](https://github.com/seancorfield/next-jdbc/issues/210) by updating CI to test against MySQL and SQL Server.
