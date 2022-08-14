@@ -34,7 +34,7 @@
                       org.hsqldb/hsqldb {:mvn/version "2.5.0"}
                       com.h2database/h2 {:mvn/version "1.4.200"}
                       net.sourceforge.jtds/jtds {:mvn/version "1.3.1"}
-                      org.mariadb.jdbc/mariadb-java-client {:mvn/version "3.0.7"}
+                      org.mariadb.jdbc/mariadb-java-client {:mvn/version "2.7.4"}
                       mysql/mysql-connector-java {:mvn/version "8.0.30"}
                       org.postgresql/postgresql {:mvn/version "42.4.1"}
                       io.zonky.test/embedded-postgres {:mvn/version "2.0.0"}
