@@ -120,6 +120,12 @@ MS SQL Server supports execution of multiple statements when surrounded by `begi
     [{.. table2 row ..} {.. table2 row ..} {..}]]
 ```
 
+### Batch Statements
+
+Even when using `next.jdbc/execute-batch!`, MySQL will still send multiple insert statements to the database unless you specify `:useBulkCopyForBatchInsert true` as part of the db-spec hash map or JDBC URL when the datasource is created.
+
+To use this feature your Microsoft's JDBC driver should be at least version 9.2 and you can use only limited set of data types. For example if you use `inst` to bulk insert data driver will revert to old (slow) behavior. For more details see [Using bulk copy API for batch insert operation](https://docs.microsoft.com/en-us/sql/connect/jdbc/use-bulk-copy-api-batch-insert-operation?view=sql-server-ver16) and [Release notes for JDBC drivers](https://docs.microsoft.com/en-us/sql/connect/jdbc/release-notes-for-the-jdbc-driver?view=sql-server-ver16).
+
 ## MySQL & MariaDB
 
 In MySQL, the generated key from an insert comes back as `:GENERATED_KEY`. In MariaDB, the generated key from an insert comes back as `:insert_id`.
