@@ -106,12 +106,13 @@
   (get-unqualified-modified-column-names rsmeta
                                          (assoc opts :label-fn lower-case)))
 
-(defprotocol ReadableColumn :extend-via-metadata true
+(defprotocol ReadableColumn
   "Protocol for reading objects from the `java.sql.ResultSet`. Default
   implementations (for `Object` and `nil`) return the argument, and the
   `Boolean` implementation ensures a canonicalized `true`/`false` value,
   but it can be extended to provide custom behavior for special types.
   Extension via metadata is supported."
+  :extend-via-metadata true
   (read-column-by-label [val label]
     "Function for transforming values after reading them via a column label.")
   (read-column-by-index [val rsmeta idx]
@@ -443,7 +444,7 @@
 
 (definterface MapifiedResultSet)
 
-(defprotocol InspectableMapifiedResultSet :extend-via-metadata true
+(defprotocol InspectableMapifiedResultSet
   "Protocol for exposing aspects of the (current) result set via functions.
 
   The intent here is to expose information that is associated with either
@@ -452,6 +453,7 @@
   `next.jdbc/plan`, including situations where the reducing function has
   to realize a row by calling `datafiable-row` but still wants to call
   these functions on the (realized) row."
+  :extend-via-metadata true
   (row-number [this]
     "Return the current 1-based row number, if available.
 

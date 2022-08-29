@@ -129,6 +129,12 @@
       (= "derby" db)
       (assoc :create true))))
 
+(deftest test-sourceable-via-metadata
+  (doseq [db test-dbs]
+    (let [ds (p/get-datasource
+              ^{`p/get-datasource (fn [v] (p/get-datasource (first v)))} [db])]
+      (is (instance? javax.sql.DataSource ds)))))
+
 (deftest test-get-connection
   (doseq [db test-dbs]
     (println 'test-get-connection (:dbtype db))

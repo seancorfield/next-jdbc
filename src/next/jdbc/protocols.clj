@@ -11,15 +11,16 @@
 
 (set! *warn-on-reflection* true)
 
-(defprotocol Sourceable :extend-via-metadata true
+(defprotocol Sourceable
   "Protocol for producing a `javax.sql.DataSource`.
 
   Implementations are provided for strings, hash maps (`db-spec` structures),
   and also a `DataSource` (which just returns itself).
 
   Extension via metadata is supported."
+  :extend-via-metadata true
   (get-datasource ^javax.sql.DataSource [this]
-                  "Produce a `javax.sql.DataSource`."))
+    "Produce a `javax.sql.DataSource`."))
 
 (defprotocol Connectable
   "Protocol for producing a new JDBC connection that should be closed when you
@@ -54,10 +55,11 @@
   (prepare ^java.sql.PreparedStatement [this sql-params opts]
     "Produce a new `java.sql.PreparedStatement` for use with `with-open`."))
 
-(defprotocol Transactable :extend-via-metadata true
+(defprotocol Transactable
   "Protocol for running SQL operations in a transaction.
 
   Implementations are provided for `Connection`, `DataSource`, and `Object`
   (on the assumption that an `Object` can be turned into a `DataSource`)."
+  :extend-via-metadata true
   (-transact [this body-fn opts]
     "Run the `body-fn` inside a transaction."))

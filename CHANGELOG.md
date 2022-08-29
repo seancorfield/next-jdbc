@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.2.next in progress
+  * Address [#218](https://github.com/seancorfield/next-jdbc/issues/218) by moving `:extend-via-metadata true` after the protocols' docstrings.
   * Document `:useBulkCopyForBatchInsert` for Microsoft SQL Server via PR [#216](https://github.com/seancorfield/next-jdbc/issues/216) -- [danskarda](https://github.com/danskarda).
   * Address [#214](https://github.com/seancorfield/next-jdbc/issues/214) by updating test/CI versions.
   * Address [#212](https://github.com/seancorfield/next-jdbc/issues/212) by documenting the problem with SQLite's JDBC driver.
