@@ -53,7 +53,7 @@
       (println "...done!"))))
 
 (def ^:private test-mssql-map
-  {:dbtype "mssql" :dbname "model"
+  {:dbtype "mssql" :dbname "model" :encrypt false :trustServerCertificate true
    :user "sa" :password (System/getenv "MSSQL_SA_PASSWORD")})
 (def ^:private test-mssql
   (when (System/getenv "NEXT_JDBC_TEST_MSSQL") test-mssql-map))

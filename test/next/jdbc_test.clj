@@ -327,7 +327,10 @@ VALUES ('Pear', 'green', 49, 47)
 
 (deftest issue-146
   ;; since we use an embedded PostgreSQL data source, we skip this:
-  (when-not (postgres?)
+  (when-not (or (postgres?)
+                ;; and now we skip MS SQL because we can't use the db-spec
+                ;; we'd need to build the jdbcUrl with encryption turned off:
+                (and (mssql?) (not (jtds?))))
     (testing "Hikari and SavePoints"
       (with-open [^HikariDataSource ds (c/->pool HikariDataSource
                                         (let [db (db)]
@@ -798,7 +801,10 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
       (let [[url etc] (#'c/spec->url+etc (db))
             ds (jdbc/get-datasource (assoc etc :jdbcUrl url))]
         (cond (derby?) (is (= {:create true} etc))
-              (mssql?) (is (= #{:user :password} (set (keys etc))))
+              (mssql?) (is (= (cond-> #{:user :password}
+                                (not (jtds?))
+                                (conj :encrypt :trustServerCertificate))
+                              (set (keys etc))))
               (mysql?) (is (= #{:user :password :useSSL :allowMultiQueries}
                               (disj (set (keys etc)) :disableMariaDbDriver)))
               :else    (is (= {} etc)))

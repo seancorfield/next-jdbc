@@ -8,7 +8,7 @@
             [next.jdbc.sql :as sql]
             [next.jdbc.test-fixtures
              :refer [with-test-db ds column default-options
-                      derby? jtds? maria? mssql? mysql? postgres? sqlite?]]
+                     derby? jtds? maria? mssql? mysql? postgres? sqlite?]]
             [next.jdbc.types :refer [as-other as-real as-varchar]]))
 
 (set! *warn-on-reflection* true)
@@ -115,6 +115,8 @@
                    [8M]
                    (sqlite?)
                    [8]
+                   (maria?)
+                   [6]
                    :else
                    [6 7 8])
              (mapv new-key
@@ -137,6 +139,8 @@
                    [11M]
                    (sqlite?)
                    [11]
+                   (maria?)
+                   [9]
                    :else
                    [9 10 11])
              (mapv new-key
@@ -159,6 +163,8 @@
                    [14M]
                    (sqlite?)
                    [14]
+                   (maria?)
+                   [12]
                    :else
                    [12 13 14])
              (mapv new-key
