@@ -2,7 +2,7 @@
 
 Only accretive/fixative changes will be made from now on.
 
-* 1.2.next in progress
+* 1.3.next in progress
   * Address [#218](https://github.com/seancorfield/next-jdbc/issues/218) by moving `:extend-via-metadata true` after the protocols' docstrings.
   * Document `:useBulkCopyForBatchInsert` for Microsoft SQL Server via PR [#216](https://github.com/seancorfield/next-jdbc/issues/216) -- [danskarda](https://github.com/danskarda).
   * Address [#215](https://github.com/seancorfield/next-jdbc/issues/215) by dropping official support for JDK 8 and updating various JDBC drivers in the testing matrix.

@@ -15,7 +15,7 @@
             [org.corfield.build :as bb]))
 
 (def lib 'com.github.seancorfield/next.jdbc)
-(defn- the-version [patch] (format "1.2.%s" patch))
+(defn- the-version [patch] (format "1.3.%s" patch))
 (def version (the-version (b/git-count-revs nil)))
 (def snapshot (the-version "999-SNAPSHOT"))
 
