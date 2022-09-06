@@ -9,7 +9,7 @@
             [next.jdbc.connection :as c]
             [next.jdbc.test-fixtures
              :refer [with-test-db db ds column
-                      default-options stored-proc?
+                      default-options stored-proc? can-set-read-only?
                       derby? hsqldb? jtds? mssql? mysql? postgres? sqlite?]]
             [next.jdbc.prepare :as prep]
             [next.jdbc.result-set :as rs]
@@ -820,6 +820,15 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
         (is (identical? ds (jdbc/get-datasource ds)))
         (with-open [con (jdbc/get-connection ds {})]
           (is (instance? java.sql.Connection con)))))))
+
+(deftest always-call-set-read-only-when-opening-a-tx
+  (when (can-set-read-only?)
+    (with-open [con (jdbc/get-connection (ds))]
+      (.setReadOnly con true)
+      (jdbc/with-transaction [tx con {:read-only false}]
+        (is (not (.isReadOnly con)))
+        (is (not (.isReadOnly tx))))
+      (is (.isReadOnly con)))))
 
 (deftest multi-rs
   (when (mssql?)

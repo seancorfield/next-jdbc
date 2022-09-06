@@ -90,6 +90,8 @@
 
 (defn stored-proc? [] (not (#{"derby" "h2" "h2:mem" "sqlite"} (:dbtype @test-db-spec))))
 
+(defn can-set-read-only? [] (not (#{"h2" "h2:mem" "sqlite"} (:dbtype @test-db-spec))))
+
 (defn column [k]
   (let [n (namespace k)]
     (keyword (when n (cond (postgres?) (str/lower-case n)

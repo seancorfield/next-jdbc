@@ -65,8 +65,8 @@
     (io!
      (when isolation
        (.setTransactionIsolation con (isolation isolation-levels)))
-     (when read-only
-       (.setReadOnly con true))
+     (when (contains? opts :read-only)
+       (.setReadOnly con (boolean read-only)))
      (.setAutoCommit con false)
      (try
        (let [result (f con)]
@@ -107,7 +107,7 @@
            (try
              (.setTransactionIsolation con old-isolation)
              (catch Exception _)))
-         (when read-only
+         (when (contains? opts :read-only)
            (try
              (.setReadOnly con old-readonly)
              (catch Exception _))))))))
