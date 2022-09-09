@@ -100,7 +100,7 @@ In addition to the above, `next.jdbc/execute-batch!` (which may create a `Prepar
 
 The `transact` function and `with-transaction` macro accept the following options:
 
-* `:isolation` -- a keyword that identifies the isolation to be used for this transaction: `:none`, `:read-committed`, `:read-uncommitted`, `:repeatedable-read`, or `:serializable`; these represent increasingly strict levels of transaction isolation and may not all be available depending on the database and/or JDBC driver being used,
+* `:isolation` -- a keyword that identifies the isolation to be used for this transaction: `:none`, `:read-committed`, `:read-uncommitted`, `:repeatable-read`, or `:serializable`; these represent increasingly strict levels of transaction isolation and may not all be available depending on the database and/or JDBC driver being used,
 * `:read-only` -- a `Boolean` that indicates whether the transaction should be read-only or not (the default),
 * `:rollback-only` -- a `Boolean` that indicates whether the transaction should commit on success (the default) or rollback.
 
