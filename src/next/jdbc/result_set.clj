@@ -512,15 +512,15 @@
       clojure.lang.Associative
       (containsKey [this k]
         (try
-          (.getObject rs (name-fn k))
+          (.getObject rs ^String (name-fn k))
           true
           (catch SQLException _
             false)))
       (entryAt [this k]
         (try
           (clojure.lang.MapEntry. k (read-column-by-label
-                                     (.getObject rs (name-fn k))
-                                     (name-fn k)))
+                                     (.getObject rs ^String (name-fn k))
+                                     ^String (name-fn k)))
           (catch SQLException _)))
 
       clojure.lang.Counted
@@ -543,14 +543,14 @@
           (if (number? k)
             (let [^Integer i (inc k)]
               (read-column-by-index (.getObject rs i) (:rsmeta @builder) i))
-            (read-column-by-label (.getObject rs (name-fn k)) (name-fn k)))
+            (read-column-by-label (.getObject rs ^String (name-fn k)) ^String (name-fn k)))
           (catch SQLException _)))
       (valAt [this k not-found]
         (try
           (if (number? k)
             (let [^Integer i (inc k)]
               (read-column-by-index (.getObject rs i) (:rsmeta @builder) i))
-            (read-column-by-label (.getObject rs (name-fn k)) (name-fn k)))
+            (read-column-by-label (.getObject rs ^String (name-fn k)) ^String (name-fn k)))
           (catch SQLException _
             not-found)))
 
