@@ -2,7 +2,7 @@
 
 Only accretive/fixative changes will be made from now on.
 
-* 1.3.828 in progress
+* 1.3.828 -- 2022-08-11
   * Fix [#222](https://github.com/seancorfield/next-jdbc/issues/222) by correcting implementation of `.cons` on a row.
   * Address [#221](https://github.com/seancorfield/next-jdbc/issues/221) by supporting `:column-fn` a top-level option in `plan`-related functions to transform keys used in reducing function contexts. Also corrects handling of column names in schema `nav`igation (which previously only supported `:table-fn` and incorrectly applied it to columns as well).
   * Address [#218](https://github.com/seancorfield/next-jdbc/issues/218) by moving `:extend-via-metadata true` after the protocols' docstrings.
