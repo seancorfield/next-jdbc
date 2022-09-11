@@ -367,7 +367,40 @@
                                     (p/-execute (ds) ["select * from fruit"] {})))))
     (is (every? map-entry? (reduce (fn [_ row] (reduced (seq row)))
                                    nil
-                                   (p/-execute (ds) ["select * from fruit"] {})))))
+                                   (p/-execute (ds) ["select * from fruit"] {}))))
+    (is (map? (reduce (fn [_ row] (reduced (conj row {:a 1})))
+                      nil
+                      (p/-execute (ds) ["select * from fruit"] {}))))
+    (is (map? (reduce (fn [_ row] (reduced (conj row [:a 1])))
+                      nil
+                      (p/-execute (ds) ["select * from fruit"] {}))))
+    (is (map? (reduce (fn [_ row] (reduced (conj row {:a 1 :b 2})))
+                      nil
+                      (p/-execute (ds) ["select * from fruit"] {}))))
+    (is (= 1 (:a (reduce (fn [_ row] (reduced (conj row {:a 1})))
+                         nil
+                         (p/-execute (ds) ["select * from fruit"] {})))))
+    (is (= 1 (:a (reduce (fn [_ row] (reduced (conj row [:a 1])))
+                         nil
+                         (p/-execute (ds) ["select * from fruit"] {})))))
+    (is (= 1 (:a (reduce (fn [_ row] (reduced (conj row {:a 1 :b 2})))
+                         nil
+                         (p/-execute (ds) ["select * from fruit"] {})))))
+    (is (= 2 (:b (reduce (fn [_ row] (reduced (conj row {:a 1 :b 2})))
+                         nil
+                         (p/-execute (ds) ["select * from fruit"] {})))))
+    (is (vector? (reduce (fn [_ row] (reduced (conj row :a)))
+                         nil
+                         (p/-execute (ds) ["select * from fruit"]
+                                     {:builder-fn rs/as-arrays}))))
+    (is (= :a (peek (reduce (fn [_ row] (reduced (conj row :a)))
+                            nil
+                            (p/-execute (ds) ["select * from fruit"]
+                                        {:builder-fn rs/as-arrays})))))
+    (is (= :b (peek (reduce (fn [_ row] (reduced (conj row :a :b)))
+                            nil
+                            (p/-execute (ds) ["select * from fruit"]
+                                        {:builder-fn rs/as-arrays}))))))
   (testing "datafiable-row builds map; with metadata"
     (is (map? (reduce (fn [_ row] (reduced (rs/datafiable-row row (ds) {})))
                       nil

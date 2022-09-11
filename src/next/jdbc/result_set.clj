@@ -528,7 +528,8 @@
 
       clojure.lang.IPersistentCollection
       (cons [this obj]
-        (cons obj (seq (row-builder @builder))))
+        (let [row (row-builder @builder)]
+          (conj row obj)))
       (empty [this]
         {})
       (equiv [this obj]
