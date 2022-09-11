@@ -191,6 +191,8 @@ user=> (reduce
 
 The call to `jdbc/plan` returns an `IReduceInit` object but does not actually run the SQL. Only when the returned object is reduced is the connection obtained from the data source, the SQL executed, and the computation performed. The connection is closed automatically when the reduction is complete. The `row` in the reduction is an abstraction over the underlying (mutable) `ResultSet` object -- it is not a Clojure data structure. Because of that, you can simply access the columns via their SQL labels as shown -- you do not need to use the column-qualified name, and you do not need to worry about the database returning uppercase column names (SQL labels are not case sensitive).
 
+> Note: if you want a column name transformation to be applied here, specify `:column-fn` as an option to the `plan` call.
+
 Here's the same computation rewritten using `transduce`:
 
 ```clojure

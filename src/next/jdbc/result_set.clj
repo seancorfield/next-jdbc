@@ -485,7 +485,8 @@
   realize the full row explicitly before performing other
   (metadata-preserving) operations on it."
   [^ResultSet rs opts]
-  (let [builder (delay ((get opts :builder-fn as-maps) rs opts))]
+  (let [builder (delay ((get opts :builder-fn as-maps) rs opts))
+        name-fn (get opts :column-fn name)]
     (reify
 
       MapifiedResultSet
@@ -511,15 +512,15 @@
       clojure.lang.Associative
       (containsKey [this k]
         (try
-          (.getObject rs (name k))
+          (.getObject rs (name-fn k))
           true
           (catch SQLException _
             false)))
       (entryAt [this k]
         (try
           (clojure.lang.MapEntry. k (read-column-by-label
-                                     (.getObject rs (name k))
-                                     (name k)))
+                                     (.getObject rs (name-fn k))
+                                     (name-fn k)))
           (catch SQLException _)))
 
       clojure.lang.Counted
@@ -542,14 +543,14 @@
           (if (number? k)
             (let [^Integer i (inc k)]
               (read-column-by-index (.getObject rs i) (:rsmeta @builder) i))
-            (read-column-by-label (.getObject rs (name k)) (name k)))
+            (read-column-by-label (.getObject rs (name-fn k)) (name-fn k)))
           (catch SQLException _)))
       (valAt [this k not-found]
         (try
           (if (number? k)
             (let [^Integer i (inc k)]
               (read-column-by-index (.getObject rs i) (:rsmeta @builder) i))
-            (read-column-by-label (.getObject rs (name k)) (name k)))
+            (read-column-by-label (.getObject rs (name-fn k)) (name-fn k)))
           (catch SQLException _
             not-found)))
 
@@ -1082,8 +1083,8 @@
   cardinality is `:one`.
 
   Rows are looked up using `-execute-all` or `-execute-one`, and the `:table-fn`
-  option, if provided, is applied to both the assumed table name and the
-  assumed foreign key column name."
+  option, if provided, is applied to the assumed table name and `:column-fn` if
+  provided to the assumed foreign key column name."
   [connectable opts]
   (fn [row]
     (vary-meta
@@ -1095,15 +1096,16 @@
                            (expand-schema k (or (get-in opts [:schema k])
                                                 (default-schema k)))]
                        (if (and fk connectable)
-                         (let [entity-fn (:table-fn opts identity)
+                         (let [table-fn  (:table-fn opts identity)
+                               column-fn (:column-fn opts identity)
                                exec-fn!  (if (= :many cardinality)
                                            p/-execute-all
                                            p/-execute-one)]
                            (exec-fn! connectable
                                      [(str "SELECT * FROM "
-                                           (entity-fn (name table))
+                                           (table-fn (name table))
                                            " WHERE "
-                                           (entity-fn (name fk))
+                                           (column-fn (name fk))
                                            " = ?")
                                       v]
                                      opts))
@@ -1128,8 +1130,8 @@
   cardinality is `:one`.
 
   Rows are looked up using `-execute-all` or `-execute-one`, and the `:table-fn`
-  option, if provided, is applied to both the assumed table name and the
-  assumed foreign key column name."
+  option, if provided, is applied to the assumed table name and `:column-fn` if
+  provided to the assumed foreign key column name."
   [connectable opts]
   (fn [_ k v]
     (try
@@ -1137,15 +1139,16 @@
             (expand-schema k (or (get-in opts [:schema k])
                                  (default-schema k)))]
         (if (and fk connectable)
-          (let [entity-fn (:table-fn opts identity)
+          (let [table-fn  (:table-fn opts identity)
+                column-fn (:column-fn opts identity)
                 exec-fn!  (if (= :many cardinality)
                             p/-execute-all
                             p/-execute-one)]
             (exec-fn! connectable
                       [(str "SELECT * FROM "
-                            (entity-fn (name table))
+                            (table-fn (name table))
                             " WHERE "
-                            (entity-fn (name fk))
+                            (column-fn (name fk))
                             " = ?")
                        v]
                       opts))

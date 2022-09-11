@@ -39,8 +39,8 @@ If you need additional options set on a connection, you can either use Java inte
 
 Except for `query` (which is simply an alias for `execute!`), all the "friendly" SQL functions accept the following options (in addition to all the options that `plan`, `execute!`, and `execute-one!` can accept):
 
-* `:table-fn` -- the quoting function to be used on the string that identifies the table name, if provided,
-* `:column-fn` -- the quoting function to be used on any string that identifies a column name, if provided.
+* `:table-fn` -- the quoting function to be used on the string that identifies the table name, if provided; this also applies to assumed table names when `nav`igating schemas,
+* `:column-fn` -- the quoting function to be used on any string that identifies a column name, if provided; this also applies to the reducing function context over `plan` and to assumed foreign key column names when `nav`igating schemas.
 
 They also support a `:suffix` argument which can be used to specify a SQL string that should be appended to the generated SQL string before executing it, e.g., `:suffix "FOR UPDATE"`.
 
