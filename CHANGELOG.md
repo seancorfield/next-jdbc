@@ -122,7 +122,7 @@ Only accretive/fixative changes will be made from now on.
   * Fix #130 by implementing `clojure.lang.ILookup` on the three builder adapters.
   * Fix #129 by adding `with-column-value` to `RowBuilder` and a more generic `builder-adapter`.
   * Fix #128 by adding a test for the "not found" arity of lookup on mapified result sets.
-  * Fix #121 by conditionally adding `next.jdbc/snake-kebab-opts`, `next.jdbc/unqualified-snake-kebab-opts`, `next.jdbc.result-set/as-kebab-maps`, and `next.jdbc.result-set/as-unqualified-kebab-maps` (which are present only if `camel-snake-kebab` is on your classpath). _As of 1.2.659, these are including unconditionally and `next.jdbc` depends directly on `camel-snake-kebab`._
+  * Fix #121 by conditionally adding `next.jdbc/snake-kebab-opts`, `next.jdbc/unqualified-snake-kebab-opts`, `next.jdbc.result-set/as-kebab-maps`, and `next.jdbc.result-set/as-unqualified-kebab-maps` (which are present only if `camel-snake-kebab` is on your classpath). _As of 1.2.659, these are included unconditionally and `next.jdbc` depends directly on `camel-snake-kebab`._
   * Correct MySQL batch statement rewrite tip: it's `:rewriteBatchedStatements true` (plural). Also surface the batch statement tips in the **Tips & Tricks** page.
   * Clarify how combining is interleaving with reducing in **Reducing and Folding with `plan`**.
   * Use "JDBC URL" consistently everywhere (instead of "JDBC URI" in several places).
