@@ -26,7 +26,7 @@ In addition, the following generic builders can take `:label-fn` and `:qualifier
 * `as-modified-arrays` -- table-qualified keywords,
 * `as-unqualified-modified-arrays` -- simple keywords.
 
-An example builder that converts `snake_case` database table/column names to `kebab-case` keywords:
+An example builder that naively converts `snake_case` database table/column names to `kebab-case` keywords:
 
 ```clojure
 (defn as-kebab-maps [rs opts]
@@ -34,7 +34,9 @@ An example builder that converts `snake_case` database table/column names to `ke
     (result-set/as-modified-maps rs (assoc opts :qualifier-fn kebab :label-fn kebab))))
 ```
 
-However, a version of `as-kebab-maps` is built-in, as is `as-unqualified-kebab-maps`, which both use the `->kebab-case` function from the [camel-snake-kebab library](https://github.com/clj-commons/camel-snake-kebab/) with `as-modified-maps` and `as-unqualified-modified-maps` respectively.
+However, a version of `as-kebab-maps` is built-in, as is `as-unqualified-kebab-maps`, which both use the `->kebab-case` function from the [camel-snake-kebab library](https://github.com/clj-commons/camel-snake-kebab/) with `as-modified-maps` and `as-unqualified-modified-maps` respectively, so you can just use the built-in `result-set/as-kebab-maps` (or `result-set/as-unqualified-kebab-maps`) builder as a `:builder-fn` option instead of writing your own.
+
+> Note: `next.jdbc/snake-kebab-opts` and `next.jdbc/unqualified-snake-kebab-opts` exist, providing pre-built options hash maps that contain these `:builder-fn` options, as well as appropriate `:table-fn` and `:column-fn` options for the **Friendly SQL Functions** so those are often the most convenient way to enable snake/kebab case conversions with `next.jdbc`.
 
 And finally there are two styles of adapters for the existing builders that let you override the default way that columns are read from result sets.
 The first style takes a `column-reader` function, which is called with the `ResultSet`, the `ResultSetMetaData`, and the column index, and is expected to read the raw column value from the result set and return it. The result is then passed through `read-column-by-index` (from `ReadableColumn`, which may be implemented directly via protocol extension or via metadata on the result of the `column-reader` function):

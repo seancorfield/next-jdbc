@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.3.next in progress
+  * Address [#224](https://github.com/seancorfield/next-jdbc/issues/224) by attempting to clarify how to use the snake/kebab options and builders.
+
 * 1.3.828 -- 2022-09-11
   * Fix [#222](https://github.com/seancorfield/next-jdbc/issues/222) by correcting implementation of `.cons` on a row.
   * Address [#221](https://github.com/seancorfield/next-jdbc/issues/221) by supporting `:column-fn` a top-level option in `plan`-related functions to transform keys used in reducing function contexts. Also corrects handling of column names in schema `nav`igation (which previously only supported `:table-fn` and incorrectly applied it to columns as well).
@@ -119,7 +122,7 @@ Only accretive/fixative changes will be made from now on.
   * Fix #130 by implementing `clojure.lang.ILookup` on the three builder adapters.
   * Fix #129 by adding `with-column-value` to `RowBuilder` and a more generic `builder-adapter`.
   * Fix #128 by adding a test for the "not found" arity of lookup on mapified result sets.
-  * Fix #121 by conditionally adding `next.jdbc/snake-kebab-opts`, `next.jdbc/unqualified-snake-kebab-opts`, `next.jdbc.result-set/as-kebab-maps`, and `next.jdbc.result-set/as-unqualified-kebab-maps` (which are present only if `camel-snake-kebab` is on your classpath).
+  * Fix #121 by conditionally adding `next.jdbc/snake-kebab-opts`, `next.jdbc/unqualified-snake-kebab-opts`, `next.jdbc.result-set/as-kebab-maps`, and `next.jdbc.result-set/as-unqualified-kebab-maps` (which are present only if `camel-snake-kebab` is on your classpath). _As of 1.2.659, these are including unconditionally and `next.jdbc` depends directly on `camel-snake-kebab`._
   * Correct MySQL batch statement rewrite tip: it's `:rewriteBatchedStatements true` (plural). Also surface the batch statement tips in the **Tips & Tricks** page.
   * Clarify how combining is interleaving with reducing in **Reducing and Folding with `plan`**.
   * Use "JDBC URL" consistently everywhere (instead of "JDBC URI" in several places).

@@ -154,6 +154,9 @@ In addition, two pre-built option hash maps are available in `next.jdbc`, that l
 * `snake-kebab-opts` -- provides `:column-fn`, `:table-fn`, `:label-fn`, `:qualifier-fn`, and `:builder-fn` that will convert Clojure identifiers in `:kebab-case` to SQL entities in `snake_case` and will produce result sets with qualified `:kebab-case` names from SQL entities that use `snake_case`,
 * `unqualified-snake-kebab-opts` -- provides `:column-fn`, `:table-fn`, `:label-fn`, `:qualifier-fn`, and `:builder-fn` that will convert Clojure identifiers in `:kebab-case` to SQL entities in `snake_case` and will produce result sets with _unqualified_ `:kebab-case` names from SQL entities that use `snake_case`.
 
+You can `assoc` any additional options you need into these pre-built option hash maps
+and pass the combined options into any of this library's functions.
+
 > Note: Using `camel-snake-kebab` might also be helpful if your database has `camelCase` table and column names, although you'll have to provide `:column-fn` and `:table-fn` yourself as `->camelCase` from that library. Either way, consider relying on the _default_ result set builder first and avoid converting column and table names (see [Advantages of 'snake case': portability and ubiquity](https://vvvvalvalval.github.io/posts/clojure-key-namespacing-convention-considered-harmful.html#advantages_of_'snake_case':_portability_and_ubiquity) for an interesting discussion on kebab-case vs snake_case -- I do not agree with all of the author's points in that article, particularly his position against qualified keywords, but his argument for retaining snake_case around system boundaries is compelling).
 
 
