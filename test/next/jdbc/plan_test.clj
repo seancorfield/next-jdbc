@@ -6,7 +6,8 @@
             [next.jdbc.plan :as plan]
             [next.jdbc.specs :as specs]
             [next.jdbc.test-fixtures
-             :refer [with-test-db ds]]))
+             :refer [with-test-db ds]]
+            [clojure.string :as str]))
 
 (set! *warn-on-reflection* true)
 
@@ -55,3 +56,17 @@
   (is (= {1 "Apple", 2 "Banana", 3 "Peach", 4 "Orange"}
          (plan/select! (ds) (juxt :id :name) ["select * from fruit order by id"]
                        {:into {}}))))
+
+(deftest select-issue-227
+  (is (= ["Apple"]
+         (plan/select! (ds) :name ["select * from fruit where id = ?" 1]
+                       {:column-fn #(str/replace % "-" "_")})))
+  (is (= ["Apple"]
+         (plan/select! (ds) :foo/name ["select * from fruit where id = ?" 1]
+                       {:column-fn #(str/replace % "-" "_")})))
+  (is (= ["Apple"]
+         (plan/select! (ds) #(get % "name") ["select * from fruit where id = ?" 1]
+                       {:column-fn #(str/replace % "-" "_")})))
+  (is (= [["Apple"]]
+         (plan/select! (ds) (juxt :name) ["select * from fruit where id = ?" 1]
+                       {:column-fn #(str/replace % "-" "_")}))))

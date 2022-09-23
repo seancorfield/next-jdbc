@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
+  * Fix [#227](https://github.com/seancorfield/next-jdbc/issues/227) by correcting how [#221](https://github.com/seancorfield/next-jdbc/issues/221) was implemented.
   * Address [#224](https://github.com/seancorfield/next-jdbc/issues/224) by attempting to clarify how to use the snake/kebab options and builders.
 
 * 1.3.828 -- 2022-09-11

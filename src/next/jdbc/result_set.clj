@@ -486,7 +486,9 @@
   (metadata-preserving) operations on it."
   [^ResultSet rs opts]
   (let [builder (delay ((get opts :builder-fn as-maps) rs opts))
-        name-fn (get opts :column-fn name)]
+        name-fn (if (contains? opts :column-fn)
+                  (comp (get opts :column-fn) name)
+                  name)]
     (reify
 
       MapifiedResultSet
