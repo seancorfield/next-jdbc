@@ -2,7 +2,10 @@
 
 Only accretive/fixative changes will be made from now on.
 
-* 1.3.834 in progress
+* 1.3.next in progress
+  * Address [#228](https://github.com/seancorfield/next-jdbc/issues/228) by adding `PreparedStatement` caveat to the Oracle **Tips & Tricks** section.
+
+* 1.3.834 -- 2022-09-23
   * Fix [#227](https://github.com/seancorfield/next-jdbc/issues/227) by correcting how [#221](https://github.com/seancorfield/next-jdbc/issues/221) was implemented.
   * Address [#224](https://github.com/seancorfield/next-jdbc/issues/224) by attempting to clarify how to use the snake/kebab options and builders.
 

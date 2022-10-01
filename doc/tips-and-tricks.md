@@ -167,6 +167,19 @@ An important performance issue to be aware of with Oracle's JDBC driver is that 
 either need to either specify `:prefetch` in your db-spec hash map with a suitable value (say 1,000 or larger), or specify `&prefetch=` in your JDBC URL string. If you want
 to keep the default, you can change it on a per-statement basis by specifying `:fetch-size` as an option to `execute!` etc.
 
+If you are using the 10g or later JDBC driver and you try to execute DDL statements that include SQL entities
+that start with a `:` (such as `:new` or `:old`), they will be treated as bindable parameter references if
+you use a `PreparedStatement` to execute them. Since that's the default for `execute!` etc, it means that you
+will likely get an error like the following:
+
+```
+Missing IN or OUT parameter at index:: 1
+```
+
+You will need to use `next.jdbc.prepare/statement` to create a `Statement` object and then call `execute!`
+on that to avoid this error. Don't forget to `.close` the `Statement` after `execute!` -- using `with-open`
+is the best way to ensure the statement is properly closed after use.
+
 ## PostgreSQL
 
 When you use `:return-keys true` with `execute!` or `execute-one!` (or you use `insert!`), PostgreSQL returns the entire inserted row (unlike nearly every other database that just returns any generated keys!).
