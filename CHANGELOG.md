@@ -5,6 +5,8 @@ Only accretive/fixative changes will be made from now on.
 * 1.3.next in progress
   * Fix [#229](https://github.com/seancorfield/next-jdbc/issues/229) by adding `next.jdbc.connect/uri->db-spec` which converts a URI string to a db-spec hash map; in addition, if `DriverManager/getConnection` fails, it assumes it was passed a URI instead of a JDBC URL, and retries after calling that function and then recreating the JDBC URL (which should have the effect of moving the embedded user/password credentials into the properties structure instead of the URL).
   * Address [#228](https://github.com/seancorfield/next-jdbc/issues/228) by adding `PreparedStatement` caveat to the Oracle **Tips & Tricks** section.
+  * Add `on-connection` to exported `clj-kondo` configuration.
+  * Switch `run-test` from `sh` to `bb`.
 
 * 1.3.834 -- 2022-09-23
   * Fix [#227](https://github.com/seancorfield/next-jdbc/issues/227) by correcting how [#221](https://github.com/seancorfield/next-jdbc/issues/221) was implemented.
