@@ -761,13 +761,16 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
         (is (= "Fruit-1" (first result)))
         (is (= "Fruit-1000" (last result)))))
     (testing "from a DataSource"
-      (doseq [n [1 2 3 4 5 100 300 500 700 900 1000 1100]]
+      (doseq [n [2 3 4 5 100 300 500 700 900 1000 1100]]
         (testing (str "folding with n = " n)
           (let [result
-                (r/fold n r/cat r/append!
-                        (r/map (column :FRUIT/NAME)
-                               (jdbc/plan (ds) ["select * from fruit order by id"]
-                                          (default-options))))]
+                (try
+                  (r/fold n r/cat r/append!
+                          (r/map (column :FRUIT/NAME)
+                                 (jdbc/plan (ds) ["select * from fruit order by id"]
+                                            (default-options))))
+                  (catch java.util.concurrent.RejectedExecutionException _
+                    []))]
             (is (= 1000 (count result)))
             (is (= "Fruit-1" (first result)))
             (is (= "Fruit-1000" (last result)))))))
