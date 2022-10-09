@@ -132,21 +132,6 @@
                       :dbname-separator ":dsn="
                       :host :none}})
 
-(defn- ^Properties as-properties
-  "Convert any seq of pairs to a `java.util.Properties` instance."
-  [m]
-  (let [p (Properties.)]
-    (doseq [[k v] m]
-      (.setProperty p (name k) (str v)))
-    p))
-
-(defn- get-driver-connection
-  "Common logic for loading the designated JDBC driver class and
-  obtaining the appropriate `Connection` object."
-  [url timeout etc]
-  (when timeout (DriverManager/setLoginTimeout timeout))
-  (DriverManager/getConnection url (as-properties etc)))
-
 (def ^:private driver-cache
   "An optimization for repeated calls to get-datasource, or for get-connection
   called on a db-spec hash map, so that we only try to load the classes once."
@@ -358,6 +343,53 @@
   "Given a JDBC URL, return it with an empty set of options with no parsing."
   [s]
   [s {}])
+
+(defn- ^Properties as-properties
+  "Convert any seq of pairs to a `java.util.Properties` instance."
+  [m]
+  (let [p (Properties.)]
+    (doseq [[k v] m]
+      (.setProperty p (name k) (str v)))
+    p))
+
+(defn uri->db-spec
+  "clojure.java.jdbc (and some users out there) considered the URI format
+  to be an acceptable JDBC URL, i.e., with credentials embdedded in the string,
+  rather than as query parameters.
+
+  This function accepts a URI string, optionally prefixed with `jdbc:` and
+  returns a db-spec hash map."
+  [uri]
+  (let [{:keys [scheme userInfo host port path query]}
+        (j/from-java (java.net.URI. (str/replace uri #"^jdbc:" "")))
+        [user password] (when (seq userInfo) (str/split userInfo #":"))
+        properties (when (seq query)
+                     (into {}
+                           (map #(str/split % #"="))
+                           (str/split query #"\&")))]
+    (cond-> (assoc properties
+                   :dbtype scheme
+                   :host   host
+                   :port   port)
+      (seq path) (assoc :dbname (subs path 1))
+      user (assoc :user user)
+      password (assoc :password password))))
+
+(defn- get-driver-connection
+  "Common logic for loading the designated JDBC driver class and
+  obtaining the appropriate `Connection` object."
+  [url timeout etc]
+  (when timeout (DriverManager/setLoginTimeout timeout))
+  (try
+    (DriverManager/getConnection url (as-properties etc))
+    (catch Exception e
+      (try
+        (let [db-spec (uri->db-spec url)
+              [url' etc'] (spec->url+etc db-spec)]
+          (DriverManager/getConnection url' (as-properties (merge etc' etc))))
+        (catch Exception _
+          ;; if the fallback fails too, throw the original exception
+          (throw e))))))
 
 (defn- url+etc->datasource
   "Given a JDBC URL and a map of options, return a `DataSource` that can be
