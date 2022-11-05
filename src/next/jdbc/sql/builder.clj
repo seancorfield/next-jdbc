@@ -150,9 +150,8 @@
   (assert (seq cols) "cols may not be empty")
   (assert (seq rows) "rows may not be empty")
   (let [table-fn  (:table-fn opts identity)
-        column-fn (:column-fn opts identity)
         batch?    (:batch opts)
-        params    (str/join ", " (map (comp column-fn name) cols))
+        params    (as-cols cols opts)
         places    (as-? (first rows) opts)]
     (into [(str "INSERT INTO " (table-fn (safe-name table))
                 " (" params ")"
@@ -164,6 +163,12 @@
                   (str " " suffix)))]
           (if batch? identity cat)
           rows)))
+
+(comment
+  (as-cols [:aa :bb :cc] {})
+  (for-insert-multi :table [:aa :bb :cc] [[1 2 3] [4 5 6]]
+                    {:table-fn str/upper-case :column-fn str/capitalize})
+  )
 
 (defn for-order-col
   "Given a column name, or a pair of column name and direction,
