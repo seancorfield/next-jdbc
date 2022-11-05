@@ -9,8 +9,8 @@
             [next.jdbc.connection :as c]
             [next.jdbc.test-fixtures
              :refer [with-test-db db ds column
-                      default-options stored-proc?
-                      derby? hsqldb? jtds? mssql? mysql? postgres? sqlite?]]
+                     default-options stored-proc?
+                     derby? hsqldb? jtds? mssql? mysql? postgres? sqlite?]]
             [next.jdbc.prepare :as prep]
             [next.jdbc.result-set :as rs]
             [next.jdbc.specs :as specs]
@@ -439,6 +439,29 @@ VALUES ('Pear', 'green', 49, 47)
                         result))))
               (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
               (is (= ac (.getAutoCommit con))))))))))
+
+#_
+(deftest duplicate-insert-test
+  ;; this is primarily a look at exception types/information for #226
+  (try
+    (jdbc/execute! (ds) ["
+    INSERT INTO fruit (id, name, appearance, cost, grade)
+    VALUES (1234, '1234', '1234', 1234, 1234)
+    "])
+    (try
+      (jdbc/execute! (ds) ["
+      INSERT INTO fruit (id, name, appearance, cost, grade)
+      VALUES (1234, '1234', '1234', 1234, 1234)
+      "])
+      (println (:dbtype (db)) "allowed duplicate insert")
+      (catch java.sql.SQLException t
+        (println (:dbtype (db)) "duplicate insert threw" (type t)
+                 "error" (.getErrorCode t) "state" (.getSQLState t)
+                 "\n\t" (ex-message t))))
+    (catch java.sql.SQLException t
+      (println (:dbtype (db)) "will not allow specific ID" (type t)
+               "error" (.getErrorCode t) "state" (.getSQLState t)
+               "\n\t" (ex-message t)))))
 
 (deftest bool-tests
   (doseq [[n b] [["zero" 0] ["one" 1] ["false" false] ["true" true]]

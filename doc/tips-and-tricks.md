@@ -38,6 +38,42 @@ Consult the [java.sql.Blob documentation](https://docs.oracle.com/javase/8/docs/
 
 > Note: the standard MySQL JDBC driver seems to return `BLOB` data as `byte[]` instead of `java.sql.Blob`.
 
+## Exceptions
+
+A lot of JDBC operations can fail with an exception. JDBC 4.0 has a
+[well-defined hierarchy of exception types](https://docs.oracle.com/en/java/javase/17/docs/api/java.sql/java/sql/package-tree.html)
+and you can often catch a specific type of exception to do useful handling
+of various error conditions that you might "expect" when working with a
+database.
+
+A good example is [SQLIntegrityConstraintViolationException](https://docs.oracle.com/en/java/javase/17/docs/api/java.sql/java/sql/SQLIntegrityConstraintViolationException.html)
+which typically represents an index/key constraint violation such as a
+duplicate primary key insertion attempt.
+
+However, like some other areas when dealing with JDBC, the reality can
+be very database-specific. Some database drivers **don't** use the hierarchy
+above -- notably PostgreSQL, which has a generic `PSQLException` type
+with its own subclasses and semantics. See [PostgreSQL JDBC issue #963](https://github.com/pgjdbc/pgjdbc/issues/963)
+for a discussion of the difficulty in adopting the standard JDBC hierarchy
+(dating back five years).
+
+The `java.sql.SQLException` class provides `.getErrorCode()` and
+`.getSQLState()` methods but the values returned by those are
+explicitly vendor-specific (error code) or only partly standardized (state).
+In theory, the SQL state should follow either the X/Open (Open Group) or
+ANSI SQL 2003 conventions, both of which were behind paywalls(!). The most
+complete public listing is probably the IBM DB2
+[SQL State](https://www.ibm.com/docs/en/db2woc?topic=messages-sqlstate)
+document.
+See also this [Stack Overflow post about SQL State](https://stackoverflow.com/questions/1399574/what-are-all-the-possible-values-for-sqlexception-getsqlstate)
+for more references and links. Not all database drivers follow either of
+these conventions for SQL State so you may still have to consult your
+vendor's specific documentation.
+
+All of this makes writing _generic_ error handling, that works across
+multiple databases, very hard indeed. You can't rely on the JDBC `SQLException`
+hierarchy; you can sometimes rely on a subset of SQL State values.
+
 ## Handling Timeouts
 
 JDBC provides a number of ways in which you can decide how long an operation should run before it times out. Some of these timeouts are specified in seconds and some are in milliseconds. Some are handled via connection properties (or JDBC URL parameters), some are handled via methods on various JDBC objects.
