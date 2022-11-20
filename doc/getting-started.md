@@ -239,6 +239,18 @@ user=> (into #{}
 #{"apple" "banana" "cucumber"}
 ```
 
+If you want to process the rows purely for side-effects, without a result, you
+can use `run!`:
+
+```clojure
+user=> (run! #(println (:product %))
+             (jdbc/plan ds ["select * from invoice where customer_id = ?" 100]))
+apple
+banana
+cucumber
+nil
+```
+
 Any operation that can perform key-based lookup can be used here without creating hash maps from the rows: `get`, `contains?`, `find` (returns a `MapEntry` of whatever key you requested and the corresponding column value), or direct keyword access as shown above. Any operation that would require a Clojure hash map, such as `assoc` or anything that invokes `seq` (`keys`, `vals`), will cause the full row to be expanded into a hash map, such as produced by `execute!` or `execute-one!`, which implements `Datafiable` and `Navigable` and supports lazy navigation via foreign keys, explained in [`datafy`, `nav`, and the `:schema` option](/doc/datafy-nav-and-schema.md).
 
 This means that `select-keys` can be used to create regular Clojure hash map from (a subset of) columns in the row, without realizing the row, and it will not implement `Datafiable` or `Navigable`.
