@@ -3,7 +3,7 @@
 
 (defn with-transaction
   "Expands (with-transaction [tx expr opts] body)
-  to (let [tx expr] opts body) pre clj-kondo examples."
+  to (let [tx expr] opts body) per clj-kondo examples."
   [{:keys [:node]}]
   (let [[binding-vec & body] (rest (:children node))
         [sym val opts] (:children binding-vec)]
