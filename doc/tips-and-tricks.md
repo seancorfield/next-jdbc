@@ -527,6 +527,8 @@ SQLite supports both `bool` and `bit` column types but, unlike pretty much every
 You can work around this using a builder that handles reading the column directly as a `Boolean`:
 
 ```clojure
+(import java.sql ResultSet ResultSetMetaData)
+
 (jdbc/execute! ds ["select * from some_table"]
                {:builder-fn (rs/builder-adapter
                              rs/as-maps
