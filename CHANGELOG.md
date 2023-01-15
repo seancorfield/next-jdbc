@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
   * Address [clj-kondo#1685](https://github.com/clj-kondo/clj-kondo/issues/1685) by using `.clj_kondo` extension for hook files.
+  * Improve docs for SQLite users per [#239](https://github.com/seancorfield/next-jdbc/pull/239) -- [peristeri](https://github.com/peristeri).
   * Address [#236](https://github.com/seancorfield/next-jdbc/issues/236) by showing examples of `run!` over `plan`.
 
 * 1.3.847 -- 2022-11-04
