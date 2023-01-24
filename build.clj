@@ -28,7 +28,7 @@
           combined (t/combine-aliases basis [:test alias])
           cmds     (b/java-command
                     {:basis basis
-                     :java-opts (:java-opts combined)
+                     :java-opts (:jvm-opts combined)
                      :main      'clojure.main
                      :main-args ["-m" "cognitect.test-runner"]})
           {:keys [exit]} (b/process cmds)]
