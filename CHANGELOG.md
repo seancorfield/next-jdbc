@@ -2,7 +2,7 @@
 
 Only accretive/fixative changes will be made from now on.
 
-* 1.3.next in progress
+* 1.3.858 -- 2023-03-05
   * Address [#241](https://github.com/seancorfield/next-jdbc/issues/241) by correcting link to PostgreSQL docs.
   * Address [clj-kondo#1685](https://github.com/clj-kondo/clj-kondo/issues/1685) by using `.clj_kondo` extension for hook files.
   * Improve docs for SQLite users per [#239](https://github.com/seancorfield/next-jdbc/pull/239) -- [peristeri](https://github.com/peristeri).
