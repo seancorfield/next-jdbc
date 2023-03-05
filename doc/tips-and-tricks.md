@@ -279,7 +279,7 @@ create table example(
 ```
 
 > Note: PostgreSQL JDBC driver supports only 7 primitive array types, but not array types like `UUID[]` -
-[PostgreSQL™ Extensions to the JDBC API](https://jdbc.postgresql.org/documentation/head/arrays.html).
+[PostgreSQL™ Extensions to the JDBC API](https://jdbc.postgresql.org/documentation/server-prepare/#arrays).
 
 ### Working with Date and Time
 
