@@ -365,7 +365,8 @@
         [user password] (when (seq userInfo) (str/split userInfo #":"))
         properties (when (seq query)
                      (into {}
-                           (map #(str/split % #"="))
+                           (map #(let [[k v] (str/split % #"=")]
+                                   [(keyword k) v]))
                            (str/split query #"\&")))]
     (cond-> (assoc properties
                    :dbtype scheme

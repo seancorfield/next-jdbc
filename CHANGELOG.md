@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.3.next in progress
+  * Fix [#243](https://github.com/seancorfield/next-jdbc/issues/243) by ensure URI properties become keywords.
+
 * 1.3.858 -- 2023-03-05
   * Address [#241](https://github.com/seancorfield/next-jdbc/issues/241) by correcting link to PostgreSQL docs.
   * Address [clj-kondo#1685](https://github.com/clj-kondo/clj-kondo/issues/1685) by using `.clj_kondo` extension for hook files.

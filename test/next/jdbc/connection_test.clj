@@ -188,3 +188,13 @@
     (testing "connection via map (Object)"
       (with-open [con (p/get-connection db {})]
         (is (instance? java.sql.Connection con))))))
+
+(deftest issue-243-uri->db-spec
+  (is (= {:dbtype "mysql" :dbname "mydb"
+          :host "myserver" :port 1234
+          :user "foo" :password "bar"}
+         (c/uri->db-spec "mysql://foo:bar@myserver:1234/mydb")))
+  (is (= {:dbtype "mysql" :dbname "mydb"
+          :host "myserver" :port 1234
+          :user "foo" :password "bar"}
+         (c/uri->db-spec "jdbc:mysql://myserver:1234/mydb?user=foo&password=bar"))))
