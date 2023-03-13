@@ -1,4 +1,4 @@
-;; copyright (c) 2018-2021 Sean Corfield, all rights reserved
+;; copyright (c) 2018-2023 Sean Corfield, all rights reserved
 
 (ns next.jdbc
   "The public API of the next generation java.jdbc library.
@@ -438,7 +438,7 @@
   the Datasources, Connections & Transactions section of Getting Started for
   more details, and some examples of use with these functions."
   [connectable sql-logger & [result-logger]]
-  (logger/->SQLLogging connectable sql-logger result-logger))
+  (logger/->SQLLogging connectable sql-logger result-logger (:options connectable)))
 
 (def snake-kebab-opts
   "A hash map of options that will convert Clojure identifiers to

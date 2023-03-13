@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
   * Fix [#243](https://github.com/seancorfield/next-jdbc/issues/243) by ensure URI properties become keywords.
+  * Address [#242](https://github.com/seancorfield/next-jdbc/issues/242) by making the logging wrapper aware of the default options wrapper.
 
 * 1.3.858 -- 2023-03-05
   * Address [#241](https://github.com/seancorfield/next-jdbc/issues/241) by correcting link to PostgreSQL docs.
