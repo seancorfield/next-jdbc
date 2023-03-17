@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
   * Address [#245](https://github.com/seancorfield/next-jdbc/issues/245) by not `locking` the `Connection` when `*nested-tx*` is bound to `:ignore` -- improving `clojure.java.jdbc` compatibility.
+  * Address [#237](https://github.com/seancorfield/next-jdbc/issues/237) by adding an `:init-fn` option to the `db-spec` argument for `next.jdbc.connection/component`.
 
 * 1.3.862 -- 2023-03-13
   * Fix [#243](https://github.com/seancorfield/next-jdbc/issues/243) by ensuring URI properties become keywords.

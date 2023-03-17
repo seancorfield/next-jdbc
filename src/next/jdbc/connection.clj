@@ -1,4 +1,4 @@
-;; copyright (c) 2018-2021 Sean Corfield, all rights reserved
+;; copyright (c) 2018-2023 Sean Corfield, all rights reserved
 
 (ns next.jdbc.connection
   "Standard implementations of `get-datasource` and `get-connection`.
@@ -288,6 +288,11 @@
   called on it to shutdown the datasource (and return a new startable
   entity).
 
+  If `db-spec` contains `:init-fn`, that is assumed to be a function
+  that should be called on the newly-created datasource. This allows for
+  modification of (mutable) connection pooled datasource and/or some sort
+  of database initialization/setup to be called automatically.
+
   By default, the datasource is shutdown by calling `.close` on it.
   If the datasource class implements `java.io.Closeable` then a direct,
   type-hinted call to `.close` will be used, with no reflection,
@@ -305,7 +310,9 @@
    (with-meta {}
      {'com.stuartsierra.component/start
       (fn [_]
-        (let [pool (->pool clazz db-spec)]
+        (let [init-fn (:init-fn db-spec)
+              pool    (->pool clazz (dissoc db-spec :init-fn))]
+          (when init-fn (init-fn pool))
           (with-meta (fn ^DataSource [] pool)
             {'com.stuartsierra.component/stop
              (fn [_]

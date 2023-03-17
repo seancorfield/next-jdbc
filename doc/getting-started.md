@@ -568,6 +568,12 @@ If you are using [Component](https://github.com/stuartsierra/component), a conne
         (component/stop ds)))))
 ```
 
+If you have want to either modify the connection pooled datasource after it is
+created, or want to perform some database initialization, you can pass a
+function as `:init-fn` in the `db-spec` hash map. The `component` function
+will arrange for that initialization function to be invoked on the newly-created
+datasource whenever `start` is called on the Component returned.
+
 ## Working with Additional Data Types
 
 By default, `next.jdbc` relies on the JDBC driver to handle all data type conversions when reading from a result set (to produce Clojure values from SQL values) or setting parameters (to produce SQL values from Clojure values). Sometimes that means that you will get back a database-specific Java object that would need to be manually converted to a Clojure data structure, or that certain database column types require you to manually construct the appropriate database-specific Java object to pass into a SQL operation. You can usually automate those conversions using either the [`ReadableColumn` protocol](/doc/result-set-builders.md#readablecolumn) (for converting database-specific types to Clojure values) or the [`SettableParameter` protocol](/doc/prepared-statements.md#prepared-statement-parameters) (for converting Clojure values to database-specific types).
