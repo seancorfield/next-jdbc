@@ -115,7 +115,12 @@
 (extend-protocol p/Transactable
   java.sql.Connection
   (-transact [this body-fn opts]
-    (cond (or (not *active-tx*) (= :allow *nested-tx*))
+    (cond
+      (and (not *active-tx*) (= :ignore *nested-tx*))
+      ;; #245 do not lock when in c.j.j compatibility mode:
+      (binding [*active-tx* true]
+        (transact* this body-fn opts))
+      (or (not *active-tx*) (= :allow *nested-tx*))
       (locking this
         (binding [*active-tx* true]
           (transact* this body-fn opts)))

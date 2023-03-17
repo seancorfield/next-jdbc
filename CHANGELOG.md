@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.3.next in progress
+  * Address [#245](https://github.com/seancorfield/next-jdbc/issues/245) by not `locking` the `Connection` when `*nested-tx*` is bound to `:ignore` -- improving `clojure.java.jdbc` compatibility.
+
 * 1.3.862 -- 2023-03-13
   * Fix [#243](https://github.com/seancorfield/next-jdbc/issues/243) by ensuring URI properties become keywords.
   * Fix [#242](https://github.com/seancorfield/next-jdbc/issues/242) by making the logging wrapper aware of the default options wrapper.
