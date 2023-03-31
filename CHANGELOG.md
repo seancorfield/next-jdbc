@@ -2,7 +2,8 @@
 
 Only accretive/fixative changes will be made from now on.
 
-* 1.3.next in progress
+* 1.3.865 -- 2023-03-31
+  * Fix [#246](https://github.com/seancorfield/next-jdbc/issues/246) by adopting the `strop` function from HoneySQL.
   * Address [#245](https://github.com/seancorfield/next-jdbc/issues/245) by not `locking` the `Connection` when `*nested-tx*` is bound to `:ignore` -- improving `clojure.java.jdbc` compatibility.
   * Address [#237](https://github.com/seancorfield/next-jdbc/issues/237) by adding an `:init-fn` option to the `db-spec` argument for `next.jdbc.connection/component`.
 

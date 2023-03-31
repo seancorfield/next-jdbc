@@ -1,4 +1,4 @@
-;; copyright (c) 2019-2021 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2023 Sean Corfield, all rights reserved
 
 (ns next.jdbc.quoted
   "Provides functions for use with the `:table-fn` and `:column-fn` options
@@ -8,11 +8,16 @@
 
 (set! *warn-on-reflection* true)
 
-(defn ansi "ANSI \"quoting\"" [s] (str \" s \"))
+(defn strop
+  "Escape any embedded closing strop characters."
+  [s x e]
+  (str s (str/replace x (str e) (str e e)) e))
 
-(defn mysql "MySQL `quoting`" [s] (str \` s \`))
+(defn ansi "ANSI \"quoting\"" [s] (strop \" s \"))
 
-(defn sql-server "SQL Server [quoting]" [s] (str \[ s \]))
+(defn mysql "MySQL `quoting`" [s] (strop \` s \`))
+
+(defn sql-server "SQL Server [quoting]" [s] (strop \[ s \]))
 
 (def oracle "Oracle \"quoting\" (ANSI)" ansi)
 
