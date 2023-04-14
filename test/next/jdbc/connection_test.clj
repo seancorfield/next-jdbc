@@ -74,6 +74,10 @@
   (is (= ["jdbc:acme:(*)12.34.56.70:1234/my-db" {} nil]
          (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
                              :dbname "my-db" :host "12.34.56.70" :port 1234
+                             :host-prefix "(*)"})))
+  (is (= ["jdbc:acme:(*)12.34.56.70/my-db" {} nil]
+         (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
+                             :dbname "my-db" :host "12.34.56.70" :port :none
                              :host-prefix "(*)"}))))
 
 (deftest jdbc-url-tests

@@ -92,7 +92,8 @@
       can be `:none` which means the host/port segment of the JDBC URL should
       be omitted entirely (for 'local' databases)
   * `:port` -- the port for the database connection (the default is database-
-      specific -- see below)
+      specific -- see below); can be `:none` which means the port segment of
+      the JDBC URL should be omitted entirely
   * `:classname` -- if you need to override the default for the `:dbtype`
       (or you want to use a database that next.jdbc does not know about!)
 

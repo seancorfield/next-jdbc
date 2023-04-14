@@ -176,7 +176,7 @@
                       (str "jdbc:" subprotocol ":"
                            (or host-prefix (-> dbtype dbtypes :host-prefix (or "//")))
                            host
-                           (when port (str ":" port))
+                           (when (and port (not= :none port)) (str ":" port))
                            db-sep dbname))]
         ;; verify the datasource is loadable
         (if-let [class-name (or classname (-> dbtype dbtypes :classname))]

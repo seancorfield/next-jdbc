@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.3.next in progress
+  * Fix [#248](https://github.com/seancorfield/next-jdbc/issues/248) by allowing `:port` to be `:none`.
+
 * 1.3.865 -- 2023-03-31
   * Fix [#246](https://github.com/seancorfield/next-jdbc/issues/246) by adopting the `strop` function from HoneySQL.
   * Address [#245](https://github.com/seancorfield/next-jdbc/issues/245) by not `locking` the `Connection` when `*nested-tx*` is bound to `:ignore` -- improving `clojure.java.jdbc` compatibility.

@@ -35,7 +35,8 @@
 (s/def ::host (s/or :name string?
                     :none #{:none}))
 (s/def ::host-prefix string?)
-(s/def ::port pos-int?)
+(s/def ::port (s/or :port pos-int?
+                    :none #{:none}))
 (s/def ::db-spec-map (s/keys :req-un [::dbtype ::dbname]
                              :opt-un [::classname
                                       ::user ::password
