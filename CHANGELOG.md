@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
   * Fix [#248](https://github.com/seancorfield/next-jdbc/issues/248) by allowing `:port` to be `:none`.
+  * Address [#247](https://github.com/seancorfield/next-jdbc/issues/247) by adding examples of using `next.jdbc.connection/jdbc-url` to build a connection string with additional parameters when creating connection pools.
 
 * 1.3.865 -- 2023-03-31
   * Fix [#246](https://github.com/seancorfield/next-jdbc/issues/246) by adopting the `strop` function from HoneySQL.

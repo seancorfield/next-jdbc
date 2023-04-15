@@ -504,6 +504,19 @@ In addition, for HikariCP, you can specify properties to be applied to the under
 
 _(under the hood, `java.data` converts that hash map to a `java.util.Properties` object with `String` keys and `String` values)_
 
+If you need to pass in extra connection URL parameters, it can be easier to use
+`next.jdbc.connection/jdbc-url` to construct URL, e.g.,
+
+```clojure
+(connection/->pool com.zaxxer.hikari.HikariDataSource
+                   {:jdbcUrl
+                    (connection/jdbc-url {:dbtype "mysql" :dbname "thedb" :useSSL false})
+                    :username "dbuser" :password "secret"})
+```
+
+Here we pass `:useSSL false` to `jdbc-url` so that it ends up in the
+connection string, but pass `:username` and `:password` for the pool itself.
+
 > Note: both HikariCP and c3p0 defer validation of the settings until a connection is requested. If you want to ensure that your datasource is set up correctly, and the database is reachable, when you first create the connection pool, you will need to call `jdbc/get-connection` on it (and then close that connection and return it to the pool). This will also ensure that the pool is fully initialized. See the examples below.
 
 Some important notes regarding HikariCP:

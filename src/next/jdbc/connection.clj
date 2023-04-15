@@ -253,6 +253,16 @@
   `.setJdbcUrl`). `clojure.java.data/to-java` is used to construct the
   object and call the setters.
 
+  If you need to pass in connection URL parameters, it can be easier to use
+  `next.jdbc.connection/jdbc-url` to construct URL, e.g.,
+
+  (->pool HikariDataSource
+          {:jdbcUrl (jdbc-url {:dbtype .. :dbname .. :useSSL false})
+           :username .. :password ..})
+
+  Here we pass `:useSSL false` to `jdbc-url` so that it ends up in the
+  connection string, but pass `:username` and `:password` for the pool itself.
+
   Note that the result is not type-hinted (because there's no common base
   class or interface that can be assumed). In particular, connection pooled
   datasource objects may need to be closed but they don't necessarily implement
@@ -325,6 +335,12 @@
           '(com.zaxxer.hikari HikariDataSource))
   (isa? PooledDataSource java.io.Closeable) ;=> false
   (isa? HikariDataSource java.io.Closeable) ;=> true
+  ;; create a pool with a combination of JDBC URL and username/password:
+  (->pool HikariDataSource
+          {:jdbcUrl
+           (jdbc-url {:dbtype "mysql" :dbname "clojure_test"
+                      :useSSL false})
+           :username "root" :password (System/getenv "MYSQL_ROOT_PASSWORD")})
   ;; use c3p0 with default reflection-based closing function:
   (def dbc (component ComboPooledDataSource
                       {:dbtype "mysql" :dbname "clojure_test"
@@ -344,7 +360,8 @@
   ;; invoke datasource component to get the underlying javax.sql.DataSource:
   (next.jdbc.sql/get-by-id (ds) :fruit 1)
   ;; stop the component and close the pooled datasource:
-  (component/stop ds))
+  (component/stop ds)
+  )
 
 (defn- string->url+etc
   "Given a JDBC URL, return it with an empty set of options with no parsing."
