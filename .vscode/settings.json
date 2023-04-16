@@ -1,0 +1,18 @@
+{
+  "calva.replConnectSequences": [
+    {
+      "name": "next.jdbc (Jack-In)",
+      "projectType": "deps.edn",
+      "autoSelectForJackIn": true,
+      "menuSelections": {
+        "cljAliases": ["1.12", "dev/repl", "portal", "test"]
+      }
+    },
+    {
+      "name": "next.jdbc (Connect)",
+      "projectType": "deps.edn",
+      "autoSelectForConnect": true
+    }
+  ],
+  "calva.autoConnectRepl": true
+}
