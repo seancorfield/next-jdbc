@@ -2,7 +2,7 @@
 
 Only accretive/fixative changes will be made from now on.
 
-* 1.3.next in progress
+* 1.3.874 -- 2023-04-15
   * Fix [#248](https://github.com/seancorfield/next-jdbc/issues/248) by allowing `:port` to be `:none`.
   * Address [#247](https://github.com/seancorfield/next-jdbc/issues/247) by adding examples of using `next.jdbc.connection/jdbc-url` to build a connection string with additional parameters when creating connection pools.
 
