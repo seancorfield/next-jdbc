@@ -4,7 +4,7 @@
   "Some utility functions for building SQL strings.
 
   These were originally private functions in `next.jdbc.sql` but
-  they may proof useful to developers who want to write their own
+  they may prove useful to developers who want to write their own
   'SQL sugar' functions, such as a database-specific `upsert!` etc."
   (:require [clojure.string :as str]))
 
