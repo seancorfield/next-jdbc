@@ -169,7 +169,7 @@ The default behavior is to return all the columns in each row. You can specify a
 * a pair consisting of a string and a keyword, representing a SQL expression and an alias (`:column-fn` will be applied to the alias, if provided).
 
 ```clojure
-(sql/find-by-keys ds :address {:name "Stella"} {:columns [[:email :address]]})
+(sql/find-by-keys ds :address {:name "Stella"} {:columns [:email :address]})
 ;; equivalent to
 (jdbc/execute! ds ["SELECT email AS address FROM address WHERE name = ?"
                    "Stella"])
