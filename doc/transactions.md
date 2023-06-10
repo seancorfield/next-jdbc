@@ -10,6 +10,10 @@ By default, all connections that `next.jdbc` creates are automatically committab
 
 It is possible to tell `next.jdbc` to create connections that do not automatically commit operations: pass `{:auto-commit false}` as part of the options map to anything that creates a connection (including `get-connection` itself). You can then decide when to commit or rollback by calling `.commit` or `.rollback` on the connection object itself. You can also create save points (`(.setSavepoint con)`, `(.setSavepoint con name)`) and rollback to them (`(.rollback con save-point)`). You can also change the auto-commit state of an open connection at any time (`(.setAutoCommit con on-off)`).
 
+This is the machinery behind "transactions": one or more operations on a
+`Connection` that are not automatically committed, and which can be rolled back
+or committed explicitly at any point.
+
 ## Automatic Commit & Rollback
 
 `next.jdbc`'s transaction handling provides a convenient baseline for either committing a group of operations if they all succeed or rolling them all back if any of them fails, by throwing an exception. You can either do this on an existing connection -- and `next.jdbc` will try to restore the state of the connection after the transaction completes -- or by providing a datasource and letting `with-transaction` create and manage its own connection:
@@ -34,6 +38,14 @@ You can also provide an options map as the third element of the binding vector (
 * `:rollback-only` -- set the transaction to always rollback, even on success (if `true`).
 
 The latter can be particularly useful in tests, to run a series of SQL operations during a test and then roll them all back at the end.
+
+If you use `next.jdbc/with-transaction` (or `next.jdbc/transact`), then
+`next.jdbc` keeps track of whether a "transaction" is in progress or not, and
+you can call `next.jdbc/active-tx?` to determine that, in your own code, in
+case you want to write code that behaves differently inside or outside a
+transaction.
+
+> Note: `active-tx?` only knows about `next.jdbc` transactions -- it cannot track any transactions that you create yourself using the underlying JDBC `Connection`. In addition, this is a **global** state (per thread) and not related to just a single connection, so you can't use this predicate if you are working with multiple databases in the same context.
 
 ## Manual Rollback Inside a Transaction
 

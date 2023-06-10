@@ -217,17 +217,21 @@ VALUES ('Pear', 'green', 49, 47)
                           {:rollback-only true})))
     (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
   (testing "with-transaction rollback-only"
+    (is (not (jdbc/active-tx?)) "should not be in a transaction")
     (is (= [{:next.jdbc/update-count 1}]
            (jdbc/with-transaction [t (ds) {:rollback-only true}]
+             (is (jdbc/active-tx?) "should be in a transaction")
              (jdbc/execute! t ["
 INSERT INTO fruit (name, appearance, cost, grade)
 VALUES ('Pear', 'green', 49, 47)
 "]))))
     (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))
+    (is (not (jdbc/active-tx?)) "should not be in a transaction")
     (with-open [con (jdbc/get-connection (ds))]
       (let [ac (.getAutoCommit con)]
         (is (= [{:next.jdbc/update-count 1}]
                (jdbc/with-transaction [t con {:rollback-only true}]
+                 (is (jdbc/active-tx?) "should be in a transaction")
                  (jdbc/execute! t ["
 INSERT INTO fruit (name, appearance, cost, grade)
 VALUES ('Pear', 'green', 49, 47)
@@ -241,8 +245,10 @@ VALUES ('Pear', 'green', 49, 47)
 INSERT INTO fruit (name, appearance, cost, grade)
 VALUES ('Pear', 'green', 49, 47)
 "])
+             (is (jdbc/active-tx?) "should be in a transaction")
              (throw (ex-info "abort" {})))))
     (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))
+    (is (not (jdbc/active-tx?)) "should not be in a transaction")
     (with-open [con (jdbc/get-connection (ds))]
       (let [ac (.getAutoCommit con)]
         (is (thrown? Throwable
@@ -251,6 +257,7 @@ VALUES ('Pear', 'green', 49, 47)
 INSERT INTO fruit (name, appearance, cost, grade)
 VALUES ('Pear', 'green', 49, 47)
 "])
+                 (is (jdbc/active-tx?) "should be in a transaction")
                  (throw (ex-info "abort" {})))))
         (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
         (is (= ac (.getAutoCommit con))))))
@@ -262,8 +269,11 @@ INSERT INTO fruit (name, appearance, cost, grade)
 VALUES ('Pear', 'green', 49, 47)
 "])]
                (.rollback t)
+               ;; still in a next.jdbc TX even tho' we rolled back!
+               (is (jdbc/active-tx?) "should be in a transaction")
                result))))
     (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))
+    (is (not (jdbc/active-tx?)) "should not be in a transaction")
     (with-open [con (jdbc/get-connection (ds))]
       (let [ac (.getAutoCommit con)]
         (is (= [{:next.jdbc/update-count 1}]
@@ -285,8 +295,11 @@ INSERT INTO fruit (name, appearance, cost, grade)
 VALUES ('Pear', 'green', 49, 47)
 "])]
                (.rollback t save-point)
+               ;; still in a next.jdbc TX even tho' we rolled back to a save point!
+               (is (jdbc/active-tx?) "should be in a transaction")
                result))))
     (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))
+    (is (not (jdbc/active-tx?)) "should not be in a transaction")
     (with-open [con (jdbc/get-connection (ds))]
       (let [ac (.getAutoCommit con)]
         (is (= [{:next.jdbc/update-count 1}]

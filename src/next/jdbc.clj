@@ -68,7 +68,7 @@
             [next.jdbc.protocols :as p]
             [next.jdbc.result-set :as rs]
             [next.jdbc.sql-logging :as logger]
-            [next.jdbc.transaction])
+            [next.jdbc.transaction :as tx])
   (:import (java.sql PreparedStatement)))
 
 (set! *warn-on-reflection* true)
@@ -398,6 +398,17 @@
   [[sym transactable opts] & body]
   (let [con (vary-meta sym assoc :tag 'java.sql.Connection)]
    `(transact ~transactable (^{:once true} fn* [~con] ~@body) ~(or opts {}))))
+
+(defn active-tx?
+  "Returns true if `next.jdbc` has a currently active transaction in the
+  current thread, else false.
+
+  Note: transactions are a convention of operations on a `Connection` so
+  this predicate only reflects `next.jdbc/transact` and `next.jdbc/with-transaction`
+  operations -- it does not reflect any other operations on a `Connection`,
+  performed via JDBC interop directly."
+  []
+  @#'tx/*active-tx*)
 
 (defn with-options
   "Given a connectable/transactable object and a set of (default) options
