@@ -434,8 +434,13 @@
     * `next.jdbc/plan`, `next.jdbc/execute-one!`, `next.jdbc/execute!`,
       or `next.jdbc/prepare`
   * the vector containing the SQL string and its parameters
+
   Whatever the sql/params logging function returns will be passed as a
-  `state` argument to the optional result logging function.
+  `state` argument to the optional result logging function. This means you can
+  use this mechanism to provide some timing information, since your sql/params
+  logging function can return the current system time, and your result logging
+  function can then calculate the elapsed time. There is an example of this in
+  the Naive Logging with Timing section of Getting Started.
 
   The result logging function, if provided, will be called with the
   same symbol passed to the sql/params logging function, the `state`
