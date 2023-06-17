@@ -5,6 +5,7 @@ Only accretive/fixative changes will be made from now on.
 * 1.3.next in progress
   * Address [#254](https://github.com/seancorfield/next-jdbc/issues/254) by adding `next.jdbc/active-tx?` and adding more explanation to [**Transactions**](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/doc/getting-started/transactions) about the conventions behind transactions and the limitations of thread-local tracking of active transactions in `next.jdbc`.
   * Address [#251](https://github.com/seancorfield/next-jdbc/issues/251) by updating `next.jdbc/with-logging` docstring.
+  * Update dev/test dependencies.
 
 * 1.3.874 -- 2023-04-15
   * Fix [#248](https://github.com/seancorfield/next-jdbc/issues/248) by allowing `:port` to be `:none`.
