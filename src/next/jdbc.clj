@@ -360,16 +360,50 @@
   Otherwise, creates a new `Connection` object from the connectable,
   executes the body, and automatically closes it for you."
   [[sym connectable] & body]
-  (let [con-sym (vary-meta sym assoc :tag 'java.sql.Connection)
-        con-obj connectable]
-    `(cond (instance? java.sql.Connection ~con-obj)
-           ((^{:once true} fn* [~con-sym] ~@body) ~con-obj)
-           (and (satisfies? p/Connectable ~con-obj)
-                (instance? java.sql.Connection (:connectable ~con-obj)))
-           ((^{:once true} fn* [~con-sym] ~@body) (:connectable ~con-obj))
+  (let [con-sym (vary-meta sym assoc :tag 'java.sql.Connection)]
+    `(let [con-obj# ~connectable]
+       (cond (instance? java.sql.Connection con-obj#)
+             ((^{:once true} fn* [~con-sym] ~@body) con-obj#)
+             (and (satisfies? p/Connectable con-obj#)
+                  (instance? java.sql.Connection (:connectable con-obj#)))
+             ((^{:once true} fn* [~con-sym] ~@body) (:connectable con-obj#))
+             :else
+             (with-open [con# (get-connection con-obj#)]
+               ((^{:once true} fn* [~con-sym] ~@body) con#))))))
+
+(defmacro on-connection+options
+  "Given a connectable object, assumed to be wrapped with options, gets
+  a connection, rewraps it with those options, and binds it to `sym`,
+  then executes the `body` in that context.
+
+  This allows you to write generic, **wrapped** connectable code without
+  needing to know the exact type of an incoming datasource:
+
+```clojure
+  (on-connection+options [conn datasource]
+    (execute! conn some-insert-sql)
+    (execute! conn some-update-sql))
+```
+
+  If passed a `Connection` then that `Connection` is used as-is.
+
+  If passed a `Connectable` that wraps a `Connection`, then that
+  `Connectable` is used as-is.
+
+  Otherwise, creates a new `Connection` object from the connectable,
+  wraps that with options, executes the body, and automatically closes
+  the new `Connection` for you."
+  [[sym connectable] & body]
+  `(let [con-obj# ~connectable]
+     (cond (instance? java.sql.Connection con-obj#)
+           ((^{:once true} fn* [~sym] ~@body) con-obj#)
+           (and (satisfies? p/Connectable con-obj#)
+                (instance? java.sql.Connection (:connectable con-obj#)))
+           ((^{:once true} fn* [~sym] ~@body) con-obj#)
            :else
-           (with-open [con# (get-connection ~con-obj)]
-             ((^{:once true} fn* [~con-sym] ~@body) con#)))))
+           (with-open [con# (get-connection con-obj#)]
+             ((^{:once true} fn* [~sym] ~@body)
+              (with-options con# (:options con-obj# {})))))))
 
 (defn transact
   "Given a transactable object and a function (taking a `Connection`),

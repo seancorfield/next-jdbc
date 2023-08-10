@@ -944,11 +944,49 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
 (deftest issue-204
   (testing "against a Connection"
     (is (seq (with-open [con (jdbc/get-connection (ds))]
-               (jdbc/on-connection [x con] (jdbc/execute! x ["select * from fruit"]))))))
+               (jdbc/on-connection
+                [x con]
+                (jdbc/execute! x ["select * from fruit"]))))))
   (testing "against a wrapped Connection"
     (is (seq (with-open [con (jdbc/get-connection (ds))]
-               (jdbc/on-connection [x (jdbc/with-options con {})] (jdbc/execute! x ["select * from fruit"]))))))
+               (jdbc/on-connection
+                [x (jdbc/with-options con {})]
+                (jdbc/execute! x ["select * from fruit"]))))))
   (testing "against a wrapped Datasource"
-    (is (seq (jdbc/on-connection [x (jdbc/with-options (ds) {})] (jdbc/execute! x ["select * from fruit"])))))
+    (is (seq (jdbc/on-connection
+              [x (jdbc/with-options (ds) {})]
+              (jdbc/execute! x ["select * from fruit"])))))
   (testing "against a Datasource"
-    (is (seq (jdbc/on-connection [x (ds)] (jdbc/execute! x ["select * from fruit"]))))))
+    (is (seq (jdbc/on-connection
+              [x (ds)]
+              (jdbc/execute! x ["select * from fruit"]))))))
+
+(deftest issue-256
+  (testing "against a Connection"
+    (is (seq (with-open [con (jdbc/get-connection (ds))]
+               (jdbc/on-connection+options
+                [x con] ; raw connection stays raw
+                (is (instance? java.sql.Connection x))
+                (jdbc/execute! x ["select * from fruit"]))))))
+  (testing "against a wrapped Connection"
+    (is (seq (with-open [con (jdbc/get-connection (ds))]
+               (jdbc/on-connection+options
+                [x (jdbc/with-options con {:test-option 42})]
+                ;; ensure we get the same wrapped connection
+                (is (instance? java.sql.Connection (:connectable x)))
+                (is (= {:test-option 42} (:options x)))
+                (jdbc/execute! x ["select * from fruit"]))))))
+  (testing "against a wrapped Datasource"
+    (is (seq (jdbc/on-connection+options
+              [x (jdbc/with-options (ds) {:test-option 42})]
+              ;; ensure we get a wrapped connection
+              (is (instance? java.sql.Connection (:connectable x)))
+              (is (= {:test-option 42} (:options x)))
+              (jdbc/execute! x ["select * from fruit"])))))
+  (testing "against a Datasource"
+    (is (seq (jdbc/on-connection+options
+              [x (ds)] ; unwrapped datasource has no options
+              ;; ensure we get a wrapped connection (empty options)
+              (is (instance? java.sql.Connection (:connectable x)))
+              (is (= {} (:options x)))
+              (jdbc/execute! x ["select * from fruit"]))))))
