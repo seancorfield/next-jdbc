@@ -65,6 +65,18 @@
                      ds-opts
                      ["select appearance as looks_like from fruit where id = ?" 1]
                      jdbc/snake-kebab-opts))))
+      (let [ds' (jdbc/with-options ds-opts jdbc/snake-kebab-opts)]
+        (is (= "red" (:fruit/looks-like
+                      (jdbc/execute-one!
+                       ds'
+                       ["select appearance as looks_like from fruit where id = ?" 1])))))
+      (jdbc/with-transaction+options [ds' (jdbc/with-options ds-opts jdbc/snake-kebab-opts)]
+        (is (= (merge (default-options) jdbc/snake-kebab-opts)
+               (:options ds')))
+        (is (= "red" (:fruit/looks-like
+                      (jdbc/execute-one!
+                       ds'
+                       ["select appearance as looks_like from fruit where id = ?" 1])))))
       (is (= "red" (:looks-like
                     (jdbc/execute-one!
                      ds-opts

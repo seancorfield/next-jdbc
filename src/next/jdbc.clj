@@ -389,6 +389,9 @@
   Like `with-open`, if `with-transaction` creates a new `Connection` object,
   it will automatically close it for you.
 
+  If you are working with default options via `with-options`, you might want
+  to use `with-transaction+options` instead.
+
   The options map supports:
   * `:isolation` -- `:none`, `:read-committed`, `:read-uncommitted`,
       `:repeatable-read`, `:serializable`,
@@ -419,9 +422,45 @@
   return plain Java objects, so if you call any of those on this wrapped
   object, you'll need to re-wrap the Java object `with-options` again. See
   the Datasources, Connections & Transactions section of Getting Started for
-  more details, and some examples of use with these functions."
+  more details, and some examples of use with these functions.
+
+  `with-transaction+options` exists to automatically rewrap a `Connection`
+  with the options from a `with-options` wrapper."
   [connectable opts]
-  (opts/->DefaultOptions connectable opts))
+  (let [c (:connectable connectable)
+        o (:options connectable)]
+    (if (and c o)
+      (opts/->DefaultOptions c (merge o opts))
+      (opts/->DefaultOptions connectable opts))))
+
+(defmacro with-transaction+options
+  "Given a transactable object, assumed to be wrapped with options, gets a
+  connection, rewraps it with those options, and binds it to `sym`, then
+  executes the `body` in that context, committing any changes if the body
+  completes successfully, otherwise rolling back any changes made.
+
+  Like `with-open`, if `with-transaction+options` creates a new `Connection`
+  object, it will automatically close it for you.
+
+  Note: the bound `sym` will be a **wrapped** connectable and not a plain
+  Java object, so you cannot call JDBC methods directly on it like you can
+  with `with-transaction`.
+
+  The options map supports:
+  * `:isolation` -- `:none`, `:read-committed`, `:read-uncommitted`,
+      `:repeatable-read`, `:serializable`,
+  * `:read-only` -- `true` / `false` (`true` will make the `Connection` readonly),
+  * `:rollback-only` -- `true` / `false` (`true` will make the transaction
+      rollback, even if it would otherwise succeed)."
+  [[sym transactable opts] & body]
+  (let [con (vary-meta sym assoc :tag 'java.sql.Connection)]
+   `(let [tx# ~transactable]
+      (transact tx#
+               (^{:once true} fn*
+                [con#]
+                (let [~con (with-options con# (:options tx# {}))]
+                  ~@body))
+               ~(or opts {})))))
 
 (defn with-logging
   "Given a connectable/transactable object and a sql/params logging
