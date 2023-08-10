@@ -453,14 +453,13 @@
   * `:rollback-only` -- `true` / `false` (`true` will make the transaction
       rollback, even if it would otherwise succeed)."
   [[sym transactable opts] & body]
-  (let [con (vary-meta sym assoc :tag 'java.sql.Connection)]
-   `(let [tx# ~transactable]
-      (transact tx#
+  `(let [tx# ~transactable]
+     (transact tx#
                (^{:once true} fn*
-                [con#]
-                (let [~con (with-options con# (:options tx# {}))]
+                [con#] ; this is the unwrapped java.sql.connection
+                (let [~sym (with-options con# (:options tx# {}))]
                   ~@body))
-               ~(or opts {})))))
+               ~(or opts {}))))
 
 (defn with-logging
   "Given a connectable/transactable object and a sql/params logging
