@@ -6,8 +6,7 @@
         camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.3"}}
  :aliases
  {;; for help: clojure -A:deps -T:build help/doc
-  :build {:deps {io.github.clojure/tools.build
-                 {:git/tag "v0.9.4" :git/sha "76b78fe"}
+  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.9.4"}
                  slipset/deps-deploy {:mvn/version "0.2.1"}}
           :ns-default build}
 

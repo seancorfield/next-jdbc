@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
   * Address [#256](https://github.com/seancorfield/next-jdbc/issues/256) by adding `with-transaction+options` and `on-connection+options`. Documentation TBD.
+  * Update `tools.build` to 0.9.5 (and remove `:java-opts` from `build/test`)
 
 * 1.3.883 -- 2023-06-25
   * Address [#254](https://github.com/seancorfield/next-jdbc/issues/254) by adding `next.jdbc/active-tx?` and adding more explanation to [**Transactions**](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/doc/getting-started/transactions) about the conventions behind transactions and the limitations of thread-local tracking of active transactions in `next.jdbc`.

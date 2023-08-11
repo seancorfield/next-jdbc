@@ -12,7 +12,6 @@
   clojure -A:deps -T:build help/doc"
   (:refer-clojure :exclude [test])
   (:require [clojure.tools.build.api :as b]
-            [clojure.tools.deps :as t]
             [deps-deploy.deps-deploy :as dd]))
 
 (def lib 'com.github.seancorfield/next.jdbc)
@@ -25,10 +24,8 @@
   (doseq [alias [:1.10 :1.11 :master]]
     (println "\nRunning tests for Clojure" (name alias))
     (let [basis    (b/create-basis {:aliases [:test alias]})
-          combined (t/combine-aliases basis [:test alias])
           cmds     (b/java-command
-                    {:basis basis
-                     :java-opts (:jvm-opts combined)
+                    {:basis     basis
                      :main      'clojure.main
                      :main-args ["-m" "cognitect.test-runner"]})
           {:keys [exit]} (b/process cmds)]
