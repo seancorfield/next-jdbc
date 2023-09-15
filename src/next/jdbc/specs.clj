@@ -1,4 +1,4 @@
-;; copyright (c) 2019-2021 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2023 Sean Corfield, all rights reserved
 
 (ns next.jdbc.specs
   "Specs for the core API of next.jdbc.
@@ -151,11 +151,30 @@
                      :opts ::opts-map))
 
 (s/fdef jdbc/with-transaction
-        :args (s/cat :binding (s/and vector?
-                                     (s/cat :sym simple-symbol?
-                                            :transactable ::transactable
-                                            :opts (s/? ::opts-map)))
-                     :body (s/* any?)))
+  :args (s/cat :binding (s/and vector?
+                               (s/cat :sym simple-symbol?
+                                      :transactable ::transactable
+                                      :opts (s/? any?)))
+               :body (s/* any?)))
+
+(s/fdef jdbc/with-transaction+options
+  :args (s/cat :binding (s/and vector?
+                               (s/cat :sym simple-symbol?
+                                      :transactable ::transactable
+                                      :opts (s/? any?)))
+               :body (s/* any?)))
+
+(s/fdef jdbc/on-connection
+  :args (s/cat :binding (s/and vector?
+                               (s/cat :sym simple-symbol?
+                                      :connectable ::connectable))
+               :body (s/* any?)))
+
+(s/fdef jdbc/on-connection+options
+  :args (s/cat :binding (s/and vector?
+                               (s/cat :sym simple-symbol?
+                                      :connectable ::connectable))
+               :body (s/* any?)))
 
 (s/fdef connection/->pool
         :args (s/cat :clazz #(instance? Class %)

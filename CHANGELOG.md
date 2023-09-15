@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
+  * Fix [#257](https://github.com/seancorfield/next-jdbc/issues/257) by making the `fdef` spec for `with-transaction` more permissive. Also add specs for `on-connection` and the `+options` variants of both macros.
   * Address [#256](https://github.com/seancorfield/next-jdbc/issues/256) by adding `with-transaction+options` and `on-connection+options`. Documentation TBD.
   * Update `tools.build` to 0.9.5 (and remove `:java-opts` from `build/test`)
 
