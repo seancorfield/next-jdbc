@@ -97,13 +97,15 @@
                       (mssql?)    :GENERATED_KEYS
                       (mysql?)    :GENERATED_KEY
                       (postgres?) :fruit/id
-                      (sqlite?)   (keyword "last_insert_rowid()")
                       :else       :FRUIT/ID)]
     (testing "single insert/delete"
       (is (== 5 (new-key (sql/insert! (ds) :fruit
                                       {:name (as-varchar "Kiwi")
                                        :appearance "green & fuzzy"
-                                       :cost 100 :grade (as-real 99.9)}))))
+                                       :cost 100 :grade (as-real 99.9)}
+                                      {:suffix
+                                       (when (sqlite?)
+                                         "RETURNING *")}))))
       (is (= 5 (count (sql/query (ds) ["select * from fruit"]))))
       (is (= {:next.jdbc/update-count 1}
              (sql/delete! (ds) :fruit {:id 5})))
@@ -113,8 +115,6 @@
                    [nil] ; WTF Apache Derby?
                    (mssql?)
                    [8M]
-                   (sqlite?)
-                   [8]
                    (maria?)
                    [6]
                    :else
@@ -124,7 +124,10 @@
                                       [:name :appearance :cost :grade]
                                       [["Kiwi" "green & fuzzy" 100 99.9]
                                        ["Grape" "black" 10 50]
-                                       ["Lemon" "yellow" 20 9.9]]))))
+                                       ["Lemon" "yellow" 20 9.9]]
+                                      {:suffix
+                                       (when (sqlite?)
+                                         "RETURNING *")}))))
       (is (= 7 (count (sql/query (ds) ["select * from fruit"]))))
       (is (= {:next.jdbc/update-count 1}
              (sql/delete! (ds) :fruit {:id 6})))
@@ -137,8 +140,6 @@
                    [nil] ; WTF Apache Derby?
                    (mssql?)
                    [11M]
-                   (sqlite?)
-                   [11]
                    (maria?)
                    [9]
                    :else
@@ -148,7 +149,10 @@
                                       '(:name :appearance :cost :grade)
                                       '(("Kiwi" "green & fuzzy" 100 99.9)
                                         ("Grape" "black" 10 50)
-                                        ("Lemon" "yellow" 20 9.9))))))
+                                        ("Lemon" "yellow" 20 9.9))
+                                      {:suffix
+                                       (when (sqlite?)
+                                         "RETURNING *")}))))
       (is (= 7 (count (sql/query (ds) ["select * from fruit"]))))
       (is (= {:next.jdbc/update-count 1}
              (sql/delete! (ds) :fruit {:id 9})))
@@ -161,8 +165,6 @@
                    [nil] ; WTF Apache Derby?
                    (mssql?)
                    [14M]
-                   (sqlite?)
-                   [14]
                    (maria?)
                    [12]
                    :else
@@ -180,7 +182,10 @@
                                        {:name       "Lemon"
                                         :appearance "yellow"
                                         :cost       20
-                                        :grade      9.9}]))))
+                                        :grade      9.9}]
+                                      {:suffix
+                                       (when (sqlite?)
+                                         "RETURNING *")}))))
       (is (= 7 (count (sql/query (ds) ["select * from fruit"]))))
       (is (= {:next.jdbc/update-count 1}
              (sql/delete! (ds) :fruit {:id 12})))
@@ -191,7 +196,10 @@
     (testing "empty insert-multi!" ; per #44
       (is (= [] (sql/insert-multi! (ds) :fruit
                                    [:name :appearance :cost :grade]
-                                   []))))))
+                                   []
+                                   {:suffix
+                                    (when (sqlite?)
+                                      "RETURNING *")}))))))
 
 (deftest no-empty-example-maps
   (is (thrown? clojure.lang.ExceptionInfo

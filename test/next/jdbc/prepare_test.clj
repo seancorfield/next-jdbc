@@ -96,7 +96,7 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
                    (conj result (count (jdbc/execute! t ["select * from fruit"]))))))))
       (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))))
   (testing "return generated keys"
-    (when-not (mssql?)
+    (when-not (or (mssql?) (sqlite?))
       (let [results
             (jdbc/with-transaction [t (ds) {:rollback-only true}]
               (with-open [ps (jdbc/prepare t ["
