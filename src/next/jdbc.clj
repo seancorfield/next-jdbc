@@ -392,7 +392,11 @@
 
   Otherwise, creates a new `Connection` object from the connectable,
   wraps that with options, executes the body, and automatically closes
-  the new `Connection` for you."
+  the new `Connection` for you.
+
+  Note: the bound `sym` will be a **wrapped** connectable and not a plain
+  Java object, so you cannot call JDBC methods directly on it like you can
+  with `on-connection`."
   [[sym connectable] & body]
   `(let [con-obj# ~connectable]
      (cond (instance? java.sql.Connection con-obj#)

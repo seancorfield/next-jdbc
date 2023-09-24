@@ -445,13 +445,18 @@ You can read more about [working with transactions](/doc/transactions.md) furthe
     (jdbc/execute! con-opts ...) ; auto-committed
 
     (jdbc/with-transaction [tx con-opts] ; will commit or rollback this group:
-      (let [tx-opts (jdbc/with-options tx (:options con-opts)]
+      (let [tx-opts (jdbc/with-options tx (:options con-opts))]
         (jdbc/execute! tx-opts ...)
         (jdbc/execute! tx-opts ...)
         (into [] (map :column) (jdbc/plan tx-opts ...))))
 
     (jdbc/execute! con-opts ...))) ; auto-committed
 ```
+
+As of 1.3.next, you can use `next.jdbc/with-transaction+options` instead,
+which will automatically rewrap the `Connection` with the options from the
+initial transactable. Be aware that means you cannot use Java interop on the
+new connectable because it is no longer a plain Java `java.sql.Connection` object.
 
 ### Prepared Statement Caveat
 
@@ -628,6 +633,14 @@ if one is passed or create a new one if needed (and automatically close it after
 ```
 
 > Note: to avoid confusion and/or incorrect usage, you cannot pass options to `on-connection` because they would be ignored in some cases (existing `Connection` or a wrapped `Connection`).
+
+As of 1.3.next, if you want the options from a wrapped connectable to flow
+through to the new connectable inside `on-connection`, you can use the
+`on-connection+options` variant of the macro. This will automatically rewrap
+the connectable produced with the options from the initial connectable.
+Be aware that means you cannot
+use plain Java interop inside the body of the macro because the connectable
+is no longer a plain Java `java.sql.Connection` object.
 
 ## Logging
 
