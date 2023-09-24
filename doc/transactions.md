@@ -116,7 +116,7 @@ it's important to be aware that `with-transaction` produces a bare Java
 `java.sql.Connection` object that cannot have options -- but does allow direct
 interop. If you want to use `with-options` with `with-transaction`, you must
 either rewrap the `Connection` with a nested call to `with-options` or,
-as of 1.3.next, you can use `with-transaction+options` which will automatically
+as of 1.3.894, you can use `with-transaction+options` which will automatically
 rewrap the `Connection` in a new connectable along with the options from the
 original transactable. Be aware that you cannot use Java interop on this
 wrapped connectable.

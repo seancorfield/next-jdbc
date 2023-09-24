@@ -11,12 +11,12 @@ It is designed to work with Clojure 1.10 or later, supports `datafy`/`nav`, and 
 You can add `next.jdbc` to your project with either:
 
 ```clojure
-com.github.seancorfield/next.jdbc {:mvn/version "1.3.883"}
+com.github.seancorfield/next.jdbc {:mvn/version "1.3.894"}
 ```
 for `deps.edn` or:
 
 ```clojure
-[com.github.seancorfield/next.jdbc "1.3.883"]
+[com.github.seancorfield/next.jdbc "1.3.894"]
 ```
 for `project.clj` or `build.boot`.
 
@@ -38,7 +38,7 @@ For the examples in this documentation, we will use a local H2 database on disk,
 ```clojure
 ;; deps.edn
 {:deps {org.clojure/clojure {:mvn/version "1.10.3"}
-        com.github.seancorfield/next.jdbc {:mvn/version "1.3.883"}
+        com.github.seancorfield/next.jdbc {:mvn/version "1.3.894"}
         com.h2database/h2 {:mvn/version "1.4.199"}}}
 ```
 
@@ -453,7 +453,7 @@ You can read more about [working with transactions](/doc/transactions.md) furthe
     (jdbc/execute! con-opts ...))) ; auto-committed
 ```
 
-As of 1.3.next, you can use `next.jdbc/with-transaction+options` instead,
+As of 1.3.894, you can use `next.jdbc/with-transaction+options` instead,
 which will automatically rewrap the `Connection` with the options from the
 initial transactable. Be aware that means you cannot use Java interop on the
 new connectable because it is no longer a plain Java `java.sql.Connection` object.
@@ -634,7 +634,7 @@ if one is passed or create a new one if needed (and automatically close it after
 
 > Note: to avoid confusion and/or incorrect usage, you cannot pass options to `on-connection` because they would be ignored in some cases (existing `Connection` or a wrapped `Connection`).
 
-As of 1.3.next, if you want the options from a wrapped connectable to flow
+As of 1.3.894, if you want the options from a wrapped connectable to flow
 through to the new connectable inside `on-connection`, you can use the
 `on-connection+options` variant of the macro. This will automatically rewrap
 the connectable produced with the options from the initial connectable.

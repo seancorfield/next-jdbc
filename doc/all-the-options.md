@@ -42,7 +42,11 @@ Except for `query` (which is simply an alias for `execute!`), all the "friendly"
 * `:table-fn` -- the quoting function to be used on the string that identifies the table name, if provided; this also applies to assumed table names when `nav`igating schemas,
 * `:column-fn` -- the quoting function to be used on any string that identifies a column name, if provided; this also applies to the reducing function context over `plan` and to assumed foreign key column names when `nav`igating schemas.
 
-They also support a `:suffix` argument which can be used to specify a SQL string that should be appended to the generated SQL string before executing it, e.g., `:suffix "FOR UPDATE"`.
+They also support a `:suffix` argument which can be used to specify a SQL string that should be appended to the generated SQL string before executing it, e.g., `:suffix "FOR UPDATE"` or, for an `insert!` call `:suffix "RETURNING *"`.
+The latter is particularly useful for databases, such as SQLite these days,
+which do not support calling `.getGeneratedKeys()` on `PreparedStatement` objects,
+so you cannot use `:return-generated-keys` to get back the keys -- you must
+use `RETURNING *`.
 
 In addition, `find-by-keys` accepts the following options (see its docstring for more details):
 
