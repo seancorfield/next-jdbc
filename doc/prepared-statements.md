@@ -133,7 +133,7 @@ If you want to get the generated keys from an `insert` done via `execute-batch!`
 
 This calls `rs/datafiable-result-set` behind the scenes so you can also pass a `:builder-fn` option to `execute-batch!` if you want something other than qualified as-is hash maps.
 
-> Note: not all databases support calling `.getGeneratedKeys` here (everything I test against seems to, except MS SQL Server). Some databases will only return one generated key per batch, rather than a generated key for every row inserted.
+> Note: not all databases support calling `.getGeneratedKeys` here (everything I test against seems to, except MS SQL Server and SQLite). Some databases will only return one generated key per batch, rather than a generated key for every row inserted. You may need to add `RETURNING *` to your `INSERT` statements instead.
 
 ### Caveats
 
@@ -141,4 +141,4 @@ There are several caveats around using batched parameters. Some JDBC drivers nee
 
 In addition, if the batch operation fails for a group of parameters, it is database-specific whether the remaining groups of parameters are used, i.e., whether the operation is performed for any further groups of parameters after the one that failed. The result of calling `execute-batch!` is a vector of integers. Each element of the vector is the number of rows affected by the operation for each group of parameters. `execute-batch!` may throw a `BatchUpdateException` and calling `.getUpdateCounts` (or `.getLargeUpdateCounts`) on the exception may return an array containing a mix of update counts and error values (a Java `int[]` or `long[]`). Some databases don't always return an update count but instead a value indicating the number of rows is not known (but sometimes you can still get the update counts).
 
-Finally, some database drivers don't do batched operations at all -- they accept `.executeBatch` but they run the operation as separate commands for the database rather than a single batched command.
+Finally, some database drivers don't do batched operations at all -- they accept `.executeBatch` but they run the operation as separate commands for the database rather than a single batched command. Some database drivers do not support `.getGeneratedKeys` (e.g., MS SQL Server and SQLite) so you cannot use `:return-generated-keys` and you need to use `RETURNING *` in your `INSERT` statements instead.

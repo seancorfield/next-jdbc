@@ -34,6 +34,12 @@ Given a table name (as a keyword) and a hash map of column names and values, thi
 ;; equivalent to
 (jdbc/execute-one! ds ["INSERT INTO address (name,email) VALUES (?,?)"
                        "A.Person" "albert@person.org"] {:return-keys true})
+;; some databases may require this instead
+(jdbc/execute-one! ds ["INSERT INTO address (name,email) VALUES (?,?) RETURNING *"
+                       "A.Person" "albert@person.org"])
+;; which you can achieve with the :suffix option
+(sql/insert! ds :address {:name "A. Person" :email "albert@person.org"}
+             {:suffix "RETURNING *"})
 ```
 
 ## `insert-multi!`
@@ -109,7 +115,7 @@ will use `execute-batch!` under the hood, instead of `execute!`, as follows:
                      {:return-keys true :return-generated-keys true})
 ```
 
-See [**Batched Parameters**](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/doc/getting-started/prepared-statements#caveats) for caveats and possible database-specific behaviors.
+> Note: not all databases or drivers support returning generated keys like this -- see [**Batched Parameters**](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/doc/getting-started/prepared-statements#caveats) for caveats and possible database-specific behaviors. You may need `RETURNING *` in your SQL instead.
 
 ## `query`
 

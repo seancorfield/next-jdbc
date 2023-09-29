@@ -91,6 +91,7 @@ Any function that creates a `PreparedStatement` will additionally accept the fol
 * `:return-keys` -- a truthy value asks that the JDBC driver to return any generated keys created by the operation; it can be `true` or it can be a vector of keywords identifying column names that should be returned.
 
 Not all databases or drivers support all of these options, or all values for any given option. If `:return-keys` is a vector of column names and that is not supported, `next.jdbc` will attempt a generic "return generated keys" option instead. If that is not supported, `next.jdbc` will fall back to a regular SQL operation. If other options are not supported, you may get a `SQLException`.
+You may need to use `RETURNING *` on `INSERT` statements instead of using `:return-keys` with some database drivers.
 
 > Note: If `plan`, `execute!`, or `execute-one!` are passed a `DataSource`, a "db spec" hash map, or a JDBC URL string, they will call `prepare` to create a `PreparedStatement`, so they will accept the above options in those cases.
 
@@ -98,7 +99,7 @@ In addition to the above, `next.jdbc/execute-batch!` (which may create a `Prepar
 
 * `:batch-size` -- an integer that determines how to partition the parameter groups for submitting to the database in batches,
 * `:large` -- a Boolean flag that indicates whether the batch will produce large update counts (`long` rather than `int` values),
-* `:return-generated-keys` -- a Boolean flag that indicates whether `.getGeneratedKeys` should be called on the `PreparedStatement` after each batch is executed (if `true`, `execute-batch!` will return a vector of hash maps containing generated keys).
+* `:return-generated-keys` -- a Boolean flag that indicates whether `.getGeneratedKeys` should be called on the `PreparedStatement` after each batch is executed (if `true`, `execute-batch!` will return a vector of hash maps containing generated keys). Some databases do not support this and you need to use `RETURNING *` on `INSERT` statements instead.
 
 ## Transactions
 
