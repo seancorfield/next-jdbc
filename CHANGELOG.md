@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.3.894 -- 2023-09-24
+  * Address [#258](https://github.com/seancorfield/next-jdbc/issues/258) by updating all the library (driver) versions in Getting Started to match the latest versions being tested (from `deps.edn`).
   * Fix [#257](https://github.com/seancorfield/next-jdbc/issues/257) by making the `fdef` spec for `with-transaction` more permissive. Also add specs for `on-connection` and the `+options` variants of both macros.
   * Address [#256](https://github.com/seancorfield/next-jdbc/issues/256) by adding `with-transaction+options` and `on-connection+options`.
   * Updates most of the JDBC drivers used for testing, including SQLite 3.43.0.0 which now throws an exception when `.getGeneratedKeys()` is called so you cannot use `:return-generated-keys true` with it but you can add `RETURNING *` to your SQL statements instead (the tests have been updated to reflect this).

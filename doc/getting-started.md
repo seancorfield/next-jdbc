@@ -22,10 +22,10 @@ for `project.clj` or `build.boot`.
 
 **In addition, you will need to add dependencies for the JDBC drivers you wish to use for whatever databases you are using. For example:**
 
-* MySQL: `mysql/mysql-connector-java {:mvn/version "8.0.19"}` ([search for latest version](https://search.maven.org/artifact/mysql/mysql-connector-java))
-* PostgreSQL: `org.postgresql/postgresql {:mvn/version "42.2.10"}` ([search for latest version](https://search.maven.org/artifact/org.postgresql/postgresql))
-* Microsoft SQL Server: `com.microsoft.sqlserver/mssql-jdbc {:mvn/version "8.2.1.jre8"}` ([search for latest version](https://search.maven.org/artifact/com.microsoft.sqlserver/mssql-jdbc))
-* Sqlite: `org.xerial/sqlite-jdbc {:mvn/version "3.39.2.1"}` ([search for latest version](https://search.maven.org/artifact/org.xerial/sqlite-jdbc))
+* MySQL: `com.mysql/mysql-connector-j {:mvn/version "8.1.0"}` ([search for latest version](https://search.maven.org/artifact/com.mysql/mysql-connector-j))
+* PostgreSQL: `org.postgresql/postgresql {:mvn/version "42.6.0"}` ([search for latest version](https://search.maven.org/artifact/org.postgresql/postgresql))
+* Microsoft SQL Server: `com.microsoft.sqlserver/mssql-jdbc {:mvn/version "12.4.1.jre11"}` ([search for latest version](https://search.maven.org/artifact/com.microsoft.sqlserver/mssql-jdbc))
+* Sqlite: `org.xerial/sqlite-jdbc {:mvn/version "3.43.0.0"}` ([search for latest version](https://search.maven.org/artifact/org.xerial/sqlite-jdbc))
 
 > Note: these are the versions that `next.jdbc` is tested against but there may be more recent versions and those should generally work too -- click the "search for latest version" link to see all available versions of those drivers on Maven Central. You can see the full list of drivers and versions that `next.jdbc` is tested against in [the project's `deps.edn` file](https://github.com/seancorfield/next-jdbc/blob/develop/deps.edn#L10-L27), but many other JDBC drivers for other databases should also work (e.g., Oracle, Red Shift).
 
@@ -37,9 +37,9 @@ For the examples in this documentation, we will use a local H2 database on disk,
 
 ```clojure
 ;; deps.edn
-{:deps {org.clojure/clojure {:mvn/version "1.10.3"}
+{:deps {org.clojure/clojure {:mvn/version "1.11.1"}
         com.github.seancorfield/next.jdbc {:mvn/version "1.3.894"}
-        com.h2database/h2 {:mvn/version "1.4.199"}}}
+        com.h2database/h2 {:mvn/version "2.2.224"}}}
 ```
 
 ### Create & Populate a Database
@@ -478,9 +478,9 @@ Not all databases support using a `PreparedStatement` for every type of SQL oper
 First, you need to add the connection pooling library as a dependency, e.g.,
 
 ```clojure
-com.zaxxer/HikariCP {:mvn/version "3.3.1"}
+com.zaxxer/HikariCP {:mvn/version "5.0.1"}
 ;; or:
-com.mchange/c3p0 {:mvn/version "0.9.5.4"}
+com.mchange/c3p0 {:mvn/version "0.9.5.5"}
 ```
 
 _Check those libraries' documentation for the latest version to use!_

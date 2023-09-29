@@ -261,8 +261,8 @@ These quoting functions can be provided to any of the friendly SQL functions abo
 Here's how to get up and running quickly with `next.jdbc` and HugSQL. For more detail, consult the [HugSQL documentation](https://www.hugsql.org/). Add the following dependencies to your project (in addition to `com.github.seancorfield/next.jdbc` and whichever JDBC drivers you need):
 
 ```clojure
-        com.layerware/hugsql-core {:mvn/version "0.5.1"}
-        com.layerware/hugsql-adapter-next-jdbc {:mvn/version "0.5.1"}
+        com.layerware/hugsql-core {:mvn/version "0.5.3"}
+        com.layerware/hugsql-adapter-next-jdbc {:mvn/version "0.5.3"}
 ```
 
 _Check the HugSQL documentation for the latest versions to use!_
