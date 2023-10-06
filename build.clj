@@ -32,17 +32,32 @@
       (when-not (zero? exit) (throw (ex-info "Tests failed" {})))))
   opts)
 
+(defn- pom-template [version]
+  [[:description "The next generation of clojure.java.jdbc: a new low-level Clojure wrapper for JDBC-based access to databases."]
+   [:url "https://github.com/seancorfield/next-jdbc"]
+   [:licenses
+    [:license
+     [:name "Eclipse Public License"]
+     [:url "http://www.eclipse.org/legal/epl-v10.html"]]]
+   [:developers
+    [:developer
+     [:name "Sean Corfield"]]]
+   [:scm
+    [:url "https://github.com/seancorfield/next-jdbc"]
+    [:connection "scm:git:git://github.com/seancorfield/next-jdbc.git"]
+    [:developerConnection "scm:git:ssh://git@github.com/seancorfield/next-jdbc.git"]
+    [:tag (str "v" version)]]])
+
 (defn- jar-opts [opts]
   (let [version (if (:snapshot opts) snapshot version)]
     (assoc opts
-           :lib lib :version version
-           :jar-file (format "target/%s-%s.jar" lib version)
-           :scm {:tag (str "v" version)}
-           :basis (b/create-basis {})
+           :lib lib   :version version
+           :jar-file  (format "target/%s-%s.jar" lib version)
+           :basis     (b/create-basis {})
            :class-dir class-dir
-           :target "target"
-           :src-dirs ["src"]
-           :src-pom "template/pom.xml")))
+           :target    "target"
+           :src-dirs  ["src"]
+           :pom-data  (pom-template version))))
 
 (defn ci "Run the CI pipeline of tests (and build the JAR)." [opts]
   (test opts)
