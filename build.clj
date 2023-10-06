@@ -44,7 +44,7 @@
      [:name "Sean Corfield"]]]
    [:scm
     [:url "https://github.com/seancorfield/next-jdbc"]
-    [:connection "scm:git:git://github.com/seancorfield/next-jdbc.git"]
+    [:connection "scm:git:https://github.com/seancorfield/next-jdbc.git"]
     [:developerConnection "scm:git:ssh://git@github.com/seancorfield/next-jdbc.git"]
     [:tag (str "v" version)]]])
 
