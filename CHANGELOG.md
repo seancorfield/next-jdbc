@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
   * Address [#258](https://github.com/seancorfield/next-jdbc/issues/258) by updating all the library (driver) versions in Getting Started to match the latest versions being tested (from `deps.edn`).
+  * Expand examples for calling `next.jdbc.sql/find-by-keys` to show `LIKE` and `IN` clauses.
   * Update `tools.build` to 0.9.6 (and get rid of `template/pom.xml` in favor of new `:pom-data` option to `b/write-pom`).
 
 * 1.3.894 -- 2023-09-24

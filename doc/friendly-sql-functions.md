@@ -168,6 +168,25 @@ Given a table name (as a keyword) and either a hash map of column names and valu
                    "Stella" "stella@artois.beer"])
 ```
 
+While the hash map approach -- "query by example" -- is great for equality
+comparisons, sometimes you need other types of comparisons. For example, you
+might want to find all the rows where the email address ends in `.beer`:
+
+```clojure
+(sql/find-by-keys ds :address ["email LIKE ?" "%.beer"])
+;; equivalent to
+(jdbc/execute! ds ["SELECT * FROM address WHERE email LIKE ?" "%.beer"])
+```
+
+Or you may want to find all the rows where the name is one of a specific
+set of values:
+
+```clojure
+(sql/find-by-keys ds :address ["name IN (?,?)" "Stella" "Waldo"])
+;; equivalent to
+(jdbc/execute! ds ["SELECT * FROM address WHERE name IN (?,?)" "Stella" "Waldo"])
+```
+
 The default behavior is to return all the columns in each row. You can specify a subset of columns to return using the `:columns` option. It takes a vector and each element of the vector can be:
 
 * a simple keyword representing the column name (`:column-fn` will be applied, if provided),
