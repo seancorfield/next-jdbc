@@ -77,6 +77,11 @@ We described the database with just `:dbtype` and `:dbname` because it is create
 
 > Note: You can see the full list of `:dbtype` values supported in [next.jdbc/get-datasource](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc#get-datasource)'s docstring. If you need this programmatically, you can get it from the [next.jdbc.connection/dbtypes](https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc.connection#dbtypes) hash map. If those lists differ, the hash map is the definitive list (and I'll need to fix the docstring!). The docstring of that Var explains how to tell `next.jdbc` about additional databases.
 
+The hash map can contain arbitrary keys and values: any keys not specifically
+recognized by `next.jdbc` will be passed through to the JDBC driver as part
+of the connection string. For example, if you specify `:useSSL false`, then
+the connection string will have `&useSSL=false` appended to it.
+
 If you already have a JDBC URL (string), you can use that as-is instead of the db-spec hash map. If you have a JDBC URL and still need additional options passed into the JDBC driver, you can use a hash map with the `:jdbcUrl` key specifying the string and whatever additional options you need.
 
 ### `execute!` & `execute-one!`

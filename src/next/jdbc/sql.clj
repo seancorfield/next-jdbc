@@ -1,4 +1,4 @@
-;; copyright (c) 2019-2022 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2023 Sean Corfield, all rights reserved
 
 (ns next.jdbc.sql
   "Some utility functions that make common operations easier by
@@ -78,7 +78,9 @@
          (throw (IllegalArgumentException.
                  "insert-multi! hash maps must all have the same keys")))
        (insert-multi! connectable table cols (map ->row hash-maps-or-cols) opts-or-rows))
-     (insert-multi! connectable table hash-maps-or-cols opts-or-rows {})))
+     (if (map? opts-or-rows)
+       (insert-multi! connectable table hash-maps-or-cols [] opts-or-rows)
+       (insert-multi! connectable table hash-maps-or-cols opts-or-rows {}))))
   ([connectable table cols rows opts]
    (if (seq rows)
      (let [opts   (merge (:options connectable) opts)

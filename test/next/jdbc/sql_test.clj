@@ -1,4 +1,4 @@
-;; copyright (c) 2019-2021 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2023 Sean Corfield, all rights reserved
 
 (ns next.jdbc.sql-test
   "Tests for the syntactic sugar SQL functions."
@@ -193,13 +193,27 @@
       (is (= {:next.jdbc/update-count 2}
              (sql/delete! (ds) :fruit ["id > ?" 10])))
       (is (= 4 (count (sql/query (ds) ["select * from fruit"])))))
-    (testing "empty insert-multi!" ; per #44
+    (testing "empty insert-multi!" ; per #44 and #264
       (is (= [] (sql/insert-multi! (ds) :fruit
                                    [:name :appearance :cost :grade]
                                    []
                                    {:suffix
                                     (when (sqlite?)
-                                      "RETURNING *")}))))))
+                                      "RETURNING *")})))
+      ;; per #264 the following should all be legal too:
+      (is (= [] (sql/insert-multi! (ds) :fruit
+                                   []
+                                   {:suffix
+                                    (when (sqlite?)
+                                      "RETURNING *")})))
+      (is (= [] (sql/insert-multi! (ds) :fruit
+                                   []
+                                   []
+                                   {:suffix
+                                    (when (sqlite?)
+                                      "RETURNING *")})))
+      (is (= [] (sql/insert-multi! (ds) :fruit [])))
+      (is (= [] (sql/insert-multi! (ds) :fruit [] []))))))
 
 (deftest no-empty-example-maps
   (is (thrown? clojure.lang.ExceptionInfo

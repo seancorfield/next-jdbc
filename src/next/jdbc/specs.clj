@@ -205,10 +205,10 @@
           :with-rows-and-columns
           (s/and (s/cat :connectable ::connectable
                         :table keyword?
-                        :cols (s/coll-of keyword?
-                                         :kind sequential?
-                                         :min-count 1)
-                        :rows (s/coll-of (s/coll-of any? :kind sequential?)
+                        :cols (s/coll-of keyword? :kind sequential?)
+                        :rows (s/coll-of (s/coll-of any?
+                                                    :kind sequential?
+                                                    :min-count 1)
                                          :kind sequential?)
                         :opts (s/? ::opts-map))
                  #(apply = (count (:cols %))
@@ -216,9 +216,7 @@
           :with-hash-maps
           (s/cat :connectable ::connectable
                  :table keyword?
-                 :hash-maps (s/coll-of map?
-                                       :kind sequential?
-                                       :min-count 1)
+                 :hash-maps (s/coll-of map? :kind sequential?)
                  :opts (s/? ::opts-map))))
 
 (s/fdef sql/query
