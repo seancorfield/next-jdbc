@@ -624,11 +624,9 @@
   ;; in reality, this is going to be over-optimistic and will like cause `nav`
   ;; to fail on attempts to navigate into result sets that are not hash maps
   (datafiable-row [this connectable opts]
-                  (vary-meta
-                   this
-                   assoc
-                   `core-p/datafy (navize-row  connectable opts)
-                   `core-p/nav    (navable-row connectable opts))))
+                  (vary-meta this assoc
+                             `core-p/datafy (navize-row  connectable opts)
+                             `core-p/nav    (navable-row connectable opts))))
 
 (defn datafiable-result-set
   "Given a ResultSet, a connectable, and an options hash map, return a fully
@@ -1025,12 +1023,52 @@
 (defn- default-schema
   "The default schema lookup rule for column names.
 
-  If a column name ends with `_id` or `id`, it is assumed to be a foreign key
-  into the table identified by the first part of the column name."
-  [col]
-  (let [[_ table] (re-find #"(?i)^(.+?)_?id$" (name col))]
+   We have a foreign key column suffix convention of `<table><fk>` or
+   `<table>_<fk>`, which maps to a (primary) key in the `<table` called
+   `<pk>`.
+
+   By default, both `<fk>` and `<pk>` are assumed to be `id`. That can be
+   overridden by the `:schema-opts` hash map in the options:
+   * `:fk-suffix` -- the suffix for foreign key columns, default `id`
+   * `:pk` -- the (primary) key column name, default `id`
+   * `:pk-fn` -- a function to apply to the table name and the value of `:pk`
+     to get the (primary) key column name, default `(constantly <pk>)`."
+  [opts col]
+  (let [fk-suffix (get-in opts [:schema-opts :fk-suffix] "id")
+        pk        (get-in opts [:schema-opts :pk]        "id")
+        pk-fn     (get-in opts [:schema-opts :pk-fn]     (constantly (name pk)))
+        [_ table] (re-find (re-pattern (str "(?i)^(.+?)_?"
+                                            (name fk-suffix)
+                                            "$"))
+                           (name col))]
     (when table
-      [(keyword table) :id])))
+      [(keyword table) (keyword (pk-fn table pk))])))
+
+(comment
+  (default-schema {} :userstatusid)
+  (default-schema {} :userstatus_id)
+  (default-schema {} :user_statusid)
+  (default-schema {:schema-opts {:fk-suffix "did"}} :user_id)
+  (default-schema {:schema-opts {:fk-suffix "did"}} :user_did)
+  (default-schema {:schema-opts {:fk-suffix "(did|id)"}} :user_id)
+  (default-schema {:schema-opts {:fk-suffix "(did|id)"}} :user_did)
+  (default-schema {:schema-opts {:fk-suffix "(did|id)"
+                                 :pk :did}} :user_did)
+  (default-schema {:schema-opts {:fk-suffix "(did|id)"
+                                 :pk :did
+                                 :pk-fn (fn [table pk]
+                                          (if (= "user" table)
+                                            "id"
+                                            pk))}}
+                  :user_did)
+  (default-schema {:schema-opts {:fk-suffix "(did|id)"
+                                 :pk :did
+                                 :pk-fn (fn [table pk]
+                                          (if (= "user" table)
+                                            "id"
+                                            pk))}}
+                  :book_did)
+  )
 
 (defn- expand-schema
   "Given a (possibly nil) schema entry, return it expanded to a triple of:
@@ -1072,50 +1110,12 @@
 
 (defn- navize-row
   "Given a connectable object, return a function that knows how to turn a row
-  into a `nav`igable object.
+   into a `nav`igable object.
 
-  A `:schema` option can provide a map from qualified column names
-  (`:<table>/<column>`) to tuples that indicate for which table they are a
-  foreign key, the name of the key within that table, and (optionality) the
-  cardinality of that relationship (`:many`, `:one`).
-
-  If no `:schema` item is provided for a column, the convention of `<table>id` or
-  `<table>_id` is used, and the assumption is that such columns are foreign keys
-  in the `<table>` portion of their name, the key is called `id`, and the
-  cardinality is `:one`.
-
-  Rows are looked up using `-execute-all` or `-execute-one`, and the `:table-fn`
-  option, if provided, is applied to the assumed table name and `:column-fn` if
-  provided to the assumed foreign key column name."
+   See navable-row below for more details."
   [connectable opts]
   (fn [row]
-    (vary-meta
-     row
-     assoc
-     `core-p/nav (fn [_ k v]
-                   (try
-                     (let [[table fk cardinality]
-                           (expand-schema k (or (get-in opts [:schema k])
-                                                (default-schema k)))]
-                       (if (and fk connectable)
-                         (let [table-fn  (:table-fn opts identity)
-                               column-fn (:column-fn opts identity)
-                               exec-fn!  (if (= :many cardinality)
-                                           p/-execute-all
-                                           p/-execute-one)]
-                           (exec-fn! connectable
-                                     [(str "SELECT * FROM "
-                                           (table-fn (name table))
-                                           " WHERE "
-                                           (column-fn (name fk))
-                                           " = ?")
-                                      v]
-                                     opts))
-                         v))
-                     (catch Exception _
-                       ;; assume an exception means we just cannot
-                       ;; navigate anywhere, so return just the value
-                       v))))))
+    (vary-meta row assoc `core-p/nav (navable-row connectable opts))))
 
 (defn- navable-row
   "Given a connectable object, return a function that knows how to `nav`
@@ -1131,6 +1131,8 @@
   in the `<table>` portion of their name, the key is called `id`, and the
   cardinality is `:one`.
 
+  That convention can in turn be modified via the `:schema-opts` option.
+
   Rows are looked up using `-execute-all` or `-execute-one`, and the `:table-fn`
   option, if provided, is applied to the assumed table name and `:column-fn` if
   provided to the assumed foreign key column name."
@@ -1139,7 +1141,7 @@
     (try
       (let [[table fk cardinality]
             (expand-schema k (or (get-in opts [:schema k])
-                                 (default-schema k)))]
+                                 (default-schema opts k)))]
         (if (and fk connectable)
           (let [table-fn  (:table-fn opts identity)
                 column-fn (:column-fn opts identity)
@@ -1156,6 +1158,6 @@
                       opts))
           v))
       (catch Exception _
-                       ;; assume an exception means we just cannot
-                       ;; navigate anywhere, so return just the value
+        ;; assume an exception means we just cannot
+        ;; navigate anywhere, so return just the value
         v))))

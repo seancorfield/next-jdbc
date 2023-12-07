@@ -70,6 +70,17 @@ In addition, `execute!` accepts the `:multi-rs true` option to return multiple r
 
 > Note: Subject to the caveats above about `:builder-fn`, that means that `plan`, `execute!`, `execute-one!`, and the "friendly" SQL functions will all accept these options for generating rows and result sets.
 
+## Datafying & Navigating Rows and Result Sets
+
+Any function that produces a result set will accept the following options
+that modify the behavior of `datafy` and `nav` applied to the rows in that
+result set:
+
+* `:schema` -- override the conventions for identifying foreign keys and the related (primary) keys in the tables to which they refer, on a per table/column basis; can also be used to indicate a fk relationship is one-to-many or many-to-many rather than one-to-one or one-to-many,
+* `:schema-opts` -- override the default conventions for identifying foreign keys and the related (primary) keys in the tables to which they refer, as a whole.
+
+See [`datafy`, `nav`, and `:schema`](/doc/datafy-nav-schema.md) for more details.
+
 ## Statements & Prepared Statements
 
 Any function that creates a `Statement` or a `PreparedStatement` will accept the following options (see below for additional options for `PreparedStatement`):

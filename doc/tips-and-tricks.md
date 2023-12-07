@@ -551,3 +551,6 @@ If you are using `plan`, you'll most likely be accessing columns by just the lab
         []
         (jdbc/plan ds ["select * from some_table"]))
 ```
+
+See also [`datafy`, `nav`, and `:schema` > **SQLite**](/doc/datafy-nav-and-schema.md#sqlite)
+for additional caveats on the `next.jdbc.datafy` namespace when using SQLite.

@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
+  * Address [#267](https://github.com/seancorfield/next-jdbc/issues/267) by adding the `:schema-opts` option to override the default conventions for identifying foreign keys in columns.
   * Address [#264](https://github.com/seancorfield/next-jdbc/issues/264) by letting `insert-multi!` accept empty rows (and producing an empty result vector). This improves compatibility with `clojure.javaj.jdbc`.
   * Address [#258](https://github.com/seancorfield/next-jdbc/issues/258) by updating all the library (driver) versions in Getting Started to match the latest versions being tested (from `deps.edn`).
   * Expand examples for calling `next.jdbc.sql/find-by-keys` to show `LIKE` and `IN` clauses.

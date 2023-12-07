@@ -1,6 +1,6 @@
 # `datafy`, `nav`, and the `:schema` option
 
-Clojure 1.10 introduced a new namespace, [`clojure.datafy`](http://clojure.github.io/clojure/clojure.datafy-api.html), and two new protocols (`Datafiable` and `Navigable`) that allow for generalized, lazy navigation around data structures. Cognitect also released [REBL](http://rebl.cognitect.com/) -- a graphical, interactive tool for browsing Clojure data structures, based on the new `datafy` and `nav` functions.
+Clojure 1.10 introduced a new namespace, [`clojure.datafy`](http://clojure.github.io/clojure/clojure.datafy-api.html), and two new protocols (`Datafiable` and `Navigable`) that allow for generalized, lazy navigation around data structures. Cognitect also released REBL (now Nubank's [Morse](https://github.com/nubank/morse)) -- a graphical, interactive tool for browsing Clojure data structures, based on the new `datafy` and `nav` functions.
 
 Shortly after REBL's release, I added experimental support to `clojure.java.jdbc` for `datafy` and `nav` that supported lazy navigation through result sets into foreign key relationships and connected rows and tables. `next.jdbc` bakes that support into result sets produced by `execute!` and `execute-one!`.
 
@@ -13,8 +13,8 @@ Additional tools that understand `datafy` and `nav` include [Portal](https://git
 Here's how the process works, for result sets produced by `next.jdbc`:
 
 * `execute!` and `execute-one!` produce result sets containing rows that are `Datafiable`,
-* Tools like Portal, Reveal, and REBL can call `datafy` on result sets to render them as "pure data" (which they already are, but this makes them also `Navigable`),
-* Tools like Portal, Reveal, and REBL allow users to "drill down" into elements of rows in the "pure data" result set, using `nav`,
+* Tools like Portal, Reveal, and Morse can call `datafy` on result sets to render them as "pure data" (which they already are, but this makes them also `Navigable`),
+* Tools like Portal, Reveal, and Morse allow users to "drill down" into elements of rows in the "pure data" result set, using `nav`,
 * If a column in a row represents a foreign key into another table, calling `nav` will fetch the related row(s),
 * Those can in turn be `datafy`'d and `nav`'d to continue drilling down through connected data in the database.
 
@@ -26,6 +26,18 @@ By default, `next.jdbc` assumes that a column named `<something>id` or `<somethi
 
 You can override this default behavior for any column in any table by providing a `:schema` option that is a hash map whose keys are column names (usually the table-qualified keywords that `next.jdbc` produces by default) and whose values are table-qualified keywords, optionally wrapped in vectors, that identity the name of the table to which that column is a foreign key and the name of the key column within that table.
 
+As of 1.3.next, you can also override this behavior via the `:schema-opts`
+option. This is a hash map whose keys can be:
+* `:fk-suffix` -- a string used instead of `"id"` to identify foreign keys,
+* `:pk` -- a string used instead of `"id"` for the primary key column in the target table,
+* `:pk-fn` -- a function that takes the table name and the value of `:pk` and returns the name of the primary key column in the target table, instead of just using the value of `:pk` (the default is effectively `(constantly <pk>)`).
+
+For `:fk-suffix`, the `_` is still permitted and optional in the column name,
+so if you specified `:schema-opts {:fk-suffix "fk"}` then `addressfk` and
+`address_fk` would both be treated as foreign keys into the `address` table.
+
+The `:pk-fn` can
+
 The default behavior in the example above is equivalent to this `:schema` value:
 
 ```clojure
@@ -33,6 +45,16 @@ The default behavior in the example above is equivalent to this `:schema` value:
                ["select * from contact where city = ?" "San Francisco"]
                ;; a one-to-one or many-to-one relationship
                {:schema {:contact/addressid :address/id}})
+```
+
+or these `:schema-opts` values:
+
+```clojure
+(jdbc/execute! ds
+               ["select * from contact where city = ?" "San Francisco"]
+               ;; a one-to-one or many-to-one relationship
+               {:schema-opts {:fk-suffix "id" :pk "id"
+                              :pk-fn (constantly "id")}})
 ```
 
 If you had a table to track the valid/bouncing status of email addresses over time, `:deliverability`, where `email` is the non-unique key, you could provide automatic navigation into that using:
@@ -45,6 +67,11 @@ If you had a table to track the valid/bouncing status of email addresses over ti
                          :address/email [:deliverability/email]}})
 ```
 
+Since this relies on a foreign key that does not follow a standard suffix
+pattern, there is no comparable `:schema-opts` version. In addition, the
+`:schema-opts` approach cannot designate a one-to-many or many-to-many
+relationship.
+
 When you indicate a `*-to-many` relationship, by wrapping the foreign table/key in a vector, `next.jdbc`'s implementation of `nav` will fetch a multi-row result set from the target table.
 
 If you use foreign key constraints in your database, you could probably generate this `:schema` data structure automatically from the metadata in your database. Similarly, if you use a library that depends on an entity relationship map (such as [seql](https://exoscale.github.io/seql/) or [walkable](https://walkable.gitlab.io/)), then you could probably generate this `:schema` data structure from that entity map.
@@ -55,7 +82,11 @@ Making rows datafiable is implemented by adding metadata to each row with a key 
 
 When called (`datafy` on a row), it adds metadata to the row with a key of `clojure.core.protocols/nav` and another function as the value. That function also closes over the connectable and options passed in.
 
-When that is called (`nav` on a row, column name, and column value), if a `:schema` entry exists for that column or it matches the default convention described above, then it will fetch row(s) using `next.jdbc`'s `Executable` functions `-execute-one` or `-execute-all`, passing in the connectable and options closed over.
+When that is called (`nav` on a row, column name, and column value), if a
+`:schema` entry exists for that column or it matches the convention described
+above (either by default or via `:schema-opts`), then it will fetch row(s)
+using `next.jdbc`'s `Executable` functions `-execute-one` or `-execute-all`,
+passing in the connectable and options closed over.
 
 The protocol `next.jdbc.result-set/DatafiableRow` has a default implementation of `datafiable-row` for `clojure.lang.IObj` that just adds the metadata to support `datafy`. There is also an implementation baked into the result set handling behind `plan` so that you can call `datafiable-row` directly during reduction and get a fully-realized row that can be `datafy`'d (and then `nav`igated).
 
