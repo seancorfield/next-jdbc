@@ -45,7 +45,7 @@ you can call `next.jdbc/active-tx?` to determine that, in your own code, in
 case you want to write code that behaves differently inside or outside a
 transaction.
 
-> Note: `active-tx?` only knows about `next.jdbc` transactions -- it cannot track any transactions that you create yourself using the underlying JDBC `Connection`. In addition, this is a **global** state (per thread) and not related to just a single connection, so you can't use this predicate if you are working with multiple databases in the same context.
+> Note: `active-tx?` only knows about `next.jdbc` transactions -- it cannot track any transactions that you create yourself using the underlying JDBC `Connection`. In addition, this is a per-thread "global" setting and not related to just a single connection, so you can't use this setting if you are working with multiple databases in the same dynamic thread context (`binding`).
 
 ## Manual Rollback Inside a Transaction
 
@@ -107,7 +107,7 @@ transactions in the code under test.
 * `(binding [next.jdbc.transaction/*nested-tx* :ignore] ...)` provides the same behavior as `clojure.java.jdbc` where nested calls are essentially ignored and only the outermost transaction takes effect,
 * `(binding [next.jdbc.transaction/*nested-tx* :prohibit] ...)` will cause any attempt to start a nested transaction to throw an exception instead; this could be a useful way to detect the potentially buggy behavior described above (for either `:allow` or `:ignore`).
 
- > Note: this is a **global** setting (per thread) and not related to just a single connection, so you can't use this setting if you are working with multiple databases in the same context.
+ > Note: this is a per-thread "global" setting and not related to just a single connection, so you can't use this setting if you are working with multiple databases in the same dynamic thread context (`binding`).
 
 ### `with-options`
 
