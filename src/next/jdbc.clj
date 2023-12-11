@@ -14,8 +14,8 @@
   * `get-connection` -- given a connectable, obtain a new `java.sql.Connection`
       from it and return that,
   * `plan` -- given a connectable and SQL + parameters or a statement,
-      return a reducible that, when reduced will execute the SQL and consume
-      the `ResultSet` produced,
+      return a reducible that, when reduced (with an initial value) will
+      execute the SQL and consume the `ResultSet` produced,
   * `execute!` -- given a connectable and SQL + parameters or a statement,
       execute the SQL, consume the `ResultSet` produced, and return a vector
       of hash maps representing the rows (@1); this can be datafied to allow
@@ -199,7 +199,10 @@
 (defn plan
   "General SQL execution function (for working with result sets).
 
-  Returns a reducible that, when reduced, runs the SQL and yields the result.
+  Returns a reducible that, when reduced (with an initial value), runs the
+  SQL and yields the result. `plan` returns an `IReduceInit` object so you
+  must provide an initial value when calling `reduce` on it.
+
   The reducible is also foldable (in the `clojure.core.reducers` sense) but
   see the **Tips & Tricks** section of the documentation for some important
   caveats about that.

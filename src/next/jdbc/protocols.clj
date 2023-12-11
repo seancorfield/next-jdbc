@@ -38,8 +38,8 @@
   `PreparedStatement`, and `Object`, on the assumption that an `Object` can be
   turned into a `DataSource` and therefore used to get a `Connection`."
   (-execute ^clojure.lang.IReduceInit [this sql-params opts]
-    "Produce a 'reducible' that, when reduced, executes the SQL and
-    processes the rows of the `ResultSet` directly.")
+    "Produce a 'reducible' that, when reduced (with an initial value), executes
+    the SQL and processes the rows of the `ResultSet` directly.")
   (-execute-one [this sql-params opts]
     "Executes the SQL or DDL and produces the first row of the `ResultSet`
     as a fully-realized, datafiable hash map (by default).")

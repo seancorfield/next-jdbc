@@ -198,7 +198,8 @@ user=> (reduce
 14.67M
 ```
 
-The call to `jdbc/plan` returns an `IReduceInit` object but does not actually run the SQL. Only when the returned object is reduced is the connection obtained from the data source, the SQL executed, and the computation performed. The connection is closed automatically when the reduction is complete. The `row` in the reduction is an abstraction over the underlying (mutable) `ResultSet` object -- it is not a Clojure data structure. Because of that, you can simply access the columns via their SQL labels as shown -- you do not need to use the column-qualified name, and you do not need to worry about the database returning uppercase column names (SQL labels are not case sensitive).
+The call to `jdbc/plan` returns an `IReduceInit` object (a "reducible collection" that requires an initial value) but does not actually run the SQL.
+Only when the returned object is reduced is the connection obtained from the data source, the SQL executed, and the computation performed. The connection is closed automatically when the reduction is complete. The `row` in the reduction is an abstraction over the underlying (mutable) `ResultSet` object -- it is not a Clojure data structure. Because of that, you can simply access the columns via their SQL labels as shown -- you do not need to use the column-qualified name, and you do not need to worry about the database returning uppercase column names (SQL labels are not case sensitive).
 
 > Note: if you want a column name transformation to be applied here, specify `:column-fn` as an option to the `plan` call.
 
@@ -310,6 +311,8 @@ As of 1.1.588, two helper functions are available to make some `plan` operations
 
 * `next.jdbc.plan/select-one!` -- reduces over `plan` and returns part of just the first row,
 * `next.jdbc.plan/select!` -- reduces over `plan` and returns a sequence of parts of each row.
+
+> Note: in both those cases, an appropriate initial value is supplied to the `reduce` (since `plan` returns an `IReduceInit` object).
 
 `select!` accepts a vector of column names to extract or a function to apply to each row. It is equivalent to the following:
 

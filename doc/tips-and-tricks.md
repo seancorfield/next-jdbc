@@ -124,7 +124,7 @@ you can use `run!` instead of `reduce`:
 ```
 
 `run!` is based on `reduce` and `process-row` here takes just one argument --
-the row -- rather than the usual reducing function that takes two
+the row -- rather than the usual reducing function that takes two.
 
 The result of `plan` is also foldable in the [clojure.core.reducers](https://clojure.org/reference/reducers) sense. While you could use `execute!` to produce a vector of fully-realized rows as hash maps and then fold that vector (Clojure's vectors support fork-join parallel reduce-combine), that wouldn't be possible for very large result sets. If you fold the result of `plan`, the result set will be partitioned and processed using fork-join parallel reduce-combine. Unlike reducing over `plan`, each row **is** realized into a Clojure data structure and each batch is forked for reduction as soon as that many rows have been realized. By default, `fold`'s batch size is 512 but you can specify a different value in the 4-arity call. Once the entire result set has been read, the last (partial) batch is forked for reduction. The combining operations are forked and interleaved with the reducing operations, so the order (of forked tasks) is batch-1, batch-2, combine-1-2, batch-3, combine-1&2-3, batch-4, combine-1&2&3-4, etc. The amount of parallelization you get will depend on many factors including the number of processors, the speed of your reducing function, the speed of your combining function, and the speed with which result sets can actually be streamed from your database.
 
