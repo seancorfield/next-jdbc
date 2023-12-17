@@ -38,15 +38,6 @@
                       io.zonky.test.postgres/embedded-postgres-binaries-linux-amd64 {:mvn/version "16.1.1"}
                       io.zonky.test.postgres/embedded-postgres-binaries-windows-amd64 {:mvn/version "16.1.1"}
                       org.xerial/sqlite-jdbc {:mvn/version "3.44.1.0"}
-                      com.microsoft.sqlserver/mssql-jdbc {:mvn/version "12.4.1.jre11"}
-                      ;; supplementary test stuff
-                      ;; ;; use log4j 2.x:
-                      ;; org.apache.logging.log4j/log4j-api {:mvn/version "2.22.0"}
-                      ;; ;; bridge into log4j:
-                      ;; org.apache.logging.log4j/log4j-1.2-api {:mvn/version "2.22.0"}
-                      ;; org.apache.logging.log4j/log4j-jcl {:mvn/version "2.22.0"}
-                      ;; org.apache.logging.log4j/log4j-jul {:mvn/version "2.22.0"}
-                      ;; org.apache.logging.log4j/log4j-slf4j-impl {:mvn/version "2.22.0"}
-                      }
+                      com.microsoft.sqlserver/mssql-jdbc {:mvn/version "12.4.1.jre11"}}
          :jvm-opts ["-Dlog4j2.configurationFile=log4j2-info.properties"]
          :exec-fn cognitect.test-runner.api/test}}}
