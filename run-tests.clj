@@ -8,5 +8,8 @@
                "NEXT_JDBC_TEST_MYSQL" "yes"
                "MSSQL_SA_PASSWORD"    "Str0ngP4ssw0rd"}
         maria?
-        (assoc "NEXT_JDBC_TEST_MARIA" "yes"))]
-  (p/shell {:extra-env env} "clojure" "-X:test"))
+        (assoc "NEXT_JDBC_TEST_MARIA" "yes"))
+      {:keys [exit]}
+      (p/shell {:extra-env env} "clojure" "-X:test")]
+  (when-not (zero? exit)
+    (System/exit exit)))
