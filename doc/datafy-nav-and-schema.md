@@ -26,7 +26,7 @@ By default, `next.jdbc` assumes that a column named `<something>id` or `<somethi
 
 You can override this default behavior for any column in any table by providing a `:schema` option that is a hash map whose keys are column names (usually the table-qualified keywords that `next.jdbc` produces by default) and whose values are table-qualified keywords, optionally wrapped in vectors, that identity the name of the table to which that column is a foreign key and the name of the key column within that table.
 
-As of 1.3.next, you can also override this behavior via the `:schema-opts`
+As of 1.3.909, you can also override this behavior via the `:schema-opts`
 option. This is a hash map whose keys can be:
 * `:fk-suffix` -- a string used instead of `"id"` to identify foreign keys,
 * `:pk` -- a string used instead of `"id"` for the primary key column in the target table,
