@@ -4,7 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.3.909 -- 2023-12-16
   * Address [#267](https://github.com/seancorfield/next-jdbc/issues/267) by adding the `:schema-opts` option to override the default conventions for identifying foreign keys in columns.
-  * Address [#264](https://github.com/seancorfield/next-jdbc/issues/264) by letting `insert-multi!` accept empty rows (and producing an empty result vector). This improves compatibility with `clojure.javaj.jdbc`.
+  * Address [#264](https://github.com/seancorfield/next-jdbc/issues/264) by letting `insert-multi!` accept empty rows (and producing an empty result vector). This improves compatibility with `clojure.java.jdbc`.
   * Address [#258](https://github.com/seancorfield/next-jdbc/issues/258) by updating all the library (driver) versions in Getting Started to match the latest versions being tested (from `deps.edn`).
   * Update `java.data` to 1.1.103 so that `next.jdbc` no longer has a transitive dependency on `org.clojure/tools.logging`!
   * Attempt to clarify that when calling `reduce` on the result of `plan`, you must provide an initial value.
