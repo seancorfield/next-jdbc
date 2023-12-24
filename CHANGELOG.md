@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.3.next in progress
+  * Address [#268](https://github.com/seancorfield/next-jdbc/issues/268) by expanding the documentation around `insert-multi!` and `insert!`.
+
 * 1.3.909 -- 2023-12-16
   * Address [#267](https://github.com/seancorfield/next-jdbc/issues/267) by adding the `:schema-opts` option to override the default conventions for identifying foreign keys in columns.
   * Address [#264](https://github.com/seancorfield/next-jdbc/issues/264) by letting `insert-multi!` accept empty rows (and producing an empty result vector). This improves compatibility with `clojure.java.jdbc`.

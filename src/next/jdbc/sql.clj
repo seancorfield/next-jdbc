@@ -52,8 +52,8 @@
   generated keys.
 
   Given a connectable object, a table name, a sequence of hash maps of data,
-  inserts the data as multiple rows in the database and attempts to return
-  a vector of maps of generated keys.
+  which all have the same set of keys, inserts the data as multiple rows in
+  the database and attempts to return a vector of maps of generated keys.
 
   If called with `:batch` true will call `execute-batch!` - see its documentation
   for situations in which the generated keys may or may not be returned as well as

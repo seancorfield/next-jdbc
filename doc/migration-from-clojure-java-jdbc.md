@@ -64,7 +64,7 @@ If you were using other forms of the `db-spec` hash map, you'll need to adjust t
 The `next.jdbc.sql` namespace contains several functions with similarities to `clojure.java.jdbc`'s core API:
 
 * `insert!` -- similar to `clojure.java.jdbc/insert!` but only supports inserting a single map,
-* `insert-multi!` -- similar to `clojure.java.jdbc/insert-multi!` but only supports inserting columns and a vector of row values,
+* `insert-multi!` -- similar to `clojure.java.jdbc/insert-multi!` but only supports inserting columns and a vector of row values, or a sequence of hash maps _that all have the same keys_ -- unlike `clojure.java.jdbc/insert-multi!`, you should always get a single multi-row insertion,
 * `query` -- similar to `clojure.java.jdbc/query`,
 * `find-by-keys` -- similar to `clojure.java.jdbc/find-by-keys` but will also accept a partial where clause (vector) instead of a hash map of column name/value pairs,
 * `get-by-id` -- similar to `clojure.java.jdbc/get-by-id`,

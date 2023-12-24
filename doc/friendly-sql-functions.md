@@ -42,9 +42,14 @@ Given a table name (as a keyword) and a hash map of column names and values, thi
              {:suffix "RETURNING *"})
 ```
 
+If you have multiple rows (hash maps) to insert and they all have the same
+set of keys, you can use `insert-multi!` instead (see below), which will
+perform a single multi-row insertion, which will generally be faster.
+
 ## `insert-multi!`
 
-Given a table name (as a keyword), a vector of column names, and a vector of row value vectors, this performs a multi-row insertion into the database:
+Given a table name (as a keyword), a vector of column names, and a vector of
+row value vectors, this performs a single multi-row insertion into the database:
 
 ```clojure
 (sql/insert-multi! ds :address
@@ -59,7 +64,11 @@ Given a table name (as a keyword), a vector of column names, and a vector of row
                    "Aunt Sally" "sour@lagunitas.beer"] {:return-keys true})
 ```
 
-Given a table name (as a keyword) and a vector of hash maps, this performs a multi-row insertion into the database:
+All the row vectors must be the same length, and must match the number of
+columns specified.
+
+Given a table name (as a keyword) and a vector of hash maps, this performs a
+single multi-row insertion into the database:
 
 ```clojure
 (sql/insert-multi! ds :address
@@ -73,7 +82,15 @@ Given a table name (as a keyword) and a vector of hash maps, this performs a mul
                    "Aunt Sally" "sour@lagunitas.beer"] {:return-keys true})
 ```
 
-> Note: this expands to a single SQL statement with placeholders for every
+All the hash maps must have the same set of keys, so that the vector of hash
+maps can be converted to a vector of columns names and a vector of row value
+vectors, as above, so a single multi-row insertion can be performed.
+
+If you wish to insert multiple hash maps that do not have identical keys, you
+need to iterate over `insert!` and insert one row at a time, which will
+generally be much slower.
+
+> Note: both of these expand to a single SQL statement with placeholders for every
 value being inserted -- for large sets of rows, this may exceed the limits
 on SQL string size and/or number of parameters for your JDBC driver or your
 database. Several databases have a limit of 1,000 parameter placeholders.
