@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
   * Address [#268](https://github.com/seancorfield/next-jdbc/issues/268) by expanding the documentation around `insert-multi!` and `insert!`.
+  * Code cleanup per `clj-kondo`.
 
 * 1.3.909 -- 2023-12-16
   * Address [#267](https://github.com/seancorfield/next-jdbc/issues/267) by adding the `:schema-opts` option to override the default conventions for identifying foreign keys in columns.

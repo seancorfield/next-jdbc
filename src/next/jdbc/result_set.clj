@@ -183,37 +183,37 @@
     (let [builder (builder-fn rs opts)]
       (reify
         RowBuilder
-        (->row [this] (->row builder))
-        (column-count [this] (column-count builder))
+        (->row [_this] (->row builder))
+        (column-count [_this] (column-count builder))
         (with-column [this row i]
           (with-column-value this row (nth (:cols builder) (dec i))
             (column-by-index-fn builder rs i)))
-        (with-column-value [this row col v]
+        (with-column-value [_this row col v]
           (with-column-value builder row col v))
-        (row! [this row] (row! builder row))
+        (row! [_this row] (row! builder row))
         ResultSetBuilder
-        (->rs [this] (->rs builder))
-        (with-row [this mrs row] (with-row builder mrs row))
-        (rs! [this mrs] (rs! builder mrs))
+        (->rs [_this] (->rs builder))
+        (with-row [_this mrs row] (with-row builder mrs row))
+        (rs! [_this mrs] (rs! builder mrs))
         clojure.lang.ILookup
-        (valAt [this k] (get builder k))
-        (valAt [this k not-found] (get builder k not-found))))))
+        (valAt [_this k] (get builder k))
+        (valAt [_this k not-found] (get builder k not-found))))))
 
 (defrecord MapResultSetBuilder [^ResultSet rs rsmeta cols]
   RowBuilder
-  (->row [this] (transient {}))
-  (column-count [this] (count cols))
+  (->row [_this] (transient {}))
+  (column-count [_this] (count cols))
   (with-column [this row i]
     (with-column-value this row (nth cols (dec i))
       (read-column-by-index (.getObject rs ^Integer i) rsmeta i)))
-  (with-column-value [this row col v]
+  (with-column-value [_this row col v]
     (assoc! row col v))
-  (row! [this row] (persistent! row))
+  (row! [_this row] (persistent! row))
   ResultSetBuilder
-  (->rs [this] (transient []))
-  (with-row [this mrs row]
+  (->rs [_this] (transient []))
+  (with-row [_this mrs row]
     (conj! mrs row))
-  (rs! [this mrs] (persistent! mrs)))
+  (rs! [_this mrs] (persistent! mrs)))
 
 (defn as-maps
   "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
@@ -323,19 +323,19 @@
 
 (defrecord ArrayResultSetBuilder [^ResultSet rs rsmeta cols]
   RowBuilder
-  (->row [this] (transient []))
-  (column-count [this] (count cols))
+  (->row [_this] (transient []))
+  (column-count [_this] (count cols))
   (with-column [this row i]
     (with-column-value this row nil
       (read-column-by-index (.getObject rs ^Integer i) rsmeta i)))
-  (with-column-value [this row _ v]
+  (with-column-value [_this row _ v]
     (conj! row v))
-  (row! [this row] (persistent! row))
+  (row! [_this row] (persistent! row))
   ResultSetBuilder
-  (->rs [this] (transient [cols]))
-  (with-row [this ars row]
+  (->rs [_this] (transient [cols]))
+  (with-row [_this ars row]
     (conj! ars row))
-  (rs! [this ars] (persistent! ars)))
+  (rs! [_this ars] (persistent! ars)))
 
 (defn as-arrays
   "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
@@ -495,30 +495,30 @@
       ;; marker, just for printing resolution
 
       InspectableMapifiedResultSet
-      (row-number   [this] (.getRow rs))
-      (column-names [this] (:cols @builder))
-      (metadata     [this] (d/datafy (.getMetaData rs)))
+      (row-number   [_this] (.getRow rs))
+      (column-names [_this] (:cols @builder))
+      (metadata     [_this] (d/datafy (.getMetaData rs)))
 
       clojure.lang.IPersistentMap
-      (assoc [this k v]
+      (assoc [_this k v]
         (assoc (row-builder @builder) k v))
-      (assocEx [this k v]
+      (assocEx [_this k v]
         (.assocEx ^clojure.lang.IPersistentMap (row-builder @builder) k v))
-      (without [this k]
+      (without [_this k]
         (dissoc (row-builder @builder) k))
 
       java.lang.Iterable ; Java 7 compatible: no forEach / spliterator
-      (iterator [this]
+      (iterator [_this]
         (.iterator ^java.lang.Iterable (row-builder @builder)))
 
       clojure.lang.Associative
-      (containsKey [this k]
+      (containsKey [_this k]
         (try
           (.getObject rs ^String (name-fn k))
           true
           (catch SQLException _
             false)))
-      (entryAt [this k]
+      (entryAt [_this k]
         (try
           (clojure.lang.MapEntry. k (read-column-by-label
                                      (.getObject rs ^String (name-fn k))
@@ -526,28 +526,28 @@
           (catch SQLException _)))
 
       clojure.lang.Counted
-      (count [this]
+      (count [_this]
         (column-count @builder))
 
       clojure.lang.IPersistentCollection
-      (cons [this obj]
+      (cons [_this obj]
         (let [row (row-builder @builder)]
           (conj row obj)))
-      (empty [this]
+      (empty [_this]
         {})
-      (equiv [this obj]
+      (equiv [_this obj]
         (.equiv ^clojure.lang.IPersistentCollection (row-builder @builder) obj))
 
       ;; we support get with a numeric key for array-based builders:
       clojure.lang.ILookup
-      (valAt [this k]
+      (valAt [_this k]
         (try
           (if (number? k)
             (let [^Integer i (inc k)]
               (read-column-by-index (.getObject rs i) (:rsmeta @builder) i))
             (read-column-by-label (.getObject rs ^String (name-fn k)) ^String (name-fn k)))
           (catch SQLException _)))
-      (valAt [this k not-found]
+      (valAt [_this k not-found]
         (try
           (if (number? k)
             (let [^Integer i (inc k)]
@@ -558,12 +558,12 @@
 
       ;; we support nth for array-based builders (i is primitive int here!):
       clojure.lang.Indexed
-      (nth [this i]
+      (nth [_this i]
         (try
           (let [i (inc i)]
             (read-column-by-index (.getObject rs i) (:rsmeta @builder) i))
           (catch SQLException _)))
-      (nth [this i not-found]
+      (nth [_this i not-found]
         (try
           (let [i (inc i)]
             (read-column-by-index (.getObject rs i) (:rsmeta @builder) i))
@@ -571,11 +571,11 @@
             not-found)))
 
       clojure.lang.Seqable
-      (seq [this]
+      (seq [_this]
         (seq (row-builder @builder)))
 
       DatafiableRow
-      (datafiable-row [this connectable opts]
+      (datafiable-row [_this connectable opts]
         ;; since we have to call these eagerly, we trap any exceptions so
         ;; that they can be thrown when the actual functions are called
         (let [row  (try (.getRow rs)     (catch Throwable t t))

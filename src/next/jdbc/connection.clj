@@ -1,4 +1,4 @@
-;; copyright (c) 2018-2023 Sean Corfield, all rights reserved
+;; copyright (c) 2018-2024 Sean Corfield, all rights reserved
 
 (ns next.jdbc.connection
   "Standard implementations of `get-datasource` and `get-connection`.
@@ -330,7 +330,8 @@
                (component clazz db-spec close-fn))})))})))
 
 (comment
-  (require '[com.stuartsierra.component :as component])
+  (require '[com.stuartsierra.component :as component]
+           '[next.jdbc.sql :as sql])
   (import '(com.mchange.v2.c3p0 ComboPooledDataSource PooledDataSource)
           '(com.zaxxer.hikari HikariDataSource))
   (isa? PooledDataSource java.io.Closeable) ;=> false
@@ -358,7 +359,7 @@
   ;; start the chosen datasource component:
   (def ds  (component/start dbc))
   ;; invoke datasource component to get the underlying javax.sql.DataSource:
-  (next.jdbc.sql/get-by-id (ds) :fruit 1)
+  (sql/get-by-id (ds) :fruit 1)
   ;; stop the component and close the pooled datasource:
   (component/stop ds)
   )
@@ -368,9 +369,9 @@
   [s]
   [s {}])
 
-(defn- ^Properties as-properties
+(defn- as-properties
   "Convert any seq of pairs to a `java.util.Properties` instance."
-  [m]
+  ^Properties [m]
   (let [p (Properties.)]
     (doseq [[k v] m]
       (.setProperty p (name k) (str v)))

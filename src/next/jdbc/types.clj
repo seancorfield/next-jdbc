@@ -1,11 +1,11 @@
-;; copyright (c) 2018-2021 Sean Corfield, all rights reserved
+;; copyright (c) 2018-2024 Sean Corfield, all rights reserved
 
 (ns next.jdbc.types
   "Provides convenience functions for wrapping values you pass into SQL
   operations that have per-instance implementations of `SettableParameter`
   so that `.setObject()` is called with the appropriate `java.sql.Types` value."
   (:require [clojure.string :as str]
-            [next.jdbc.prepare :as prep])
+            [next.jdbc.prepare])
   (:import (java.lang.reflect Field Modifier)
            (java.sql PreparedStatement)))
 

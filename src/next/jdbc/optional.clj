@@ -1,4 +1,4 @@
-;; copyright (c) 2019-2021 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2024 Sean Corfield, all rights reserved
 
 (ns next.jdbc.optional
   "Builders that treat NULL SQL values as 'optional' and omit the
@@ -11,8 +11,8 @@
 
 (defrecord MapResultSetOptionalBuilder [^ResultSet rs rsmeta cols]
   rs/RowBuilder
-  (->row [this] (transient {}))
-  (column-count [this] (count cols))
+  (->row [_this] (transient {}))
+  (column-count [_this] (count cols))
   (with-column [this row i]
     ;; short-circuit on null to avoid column reading logic
     (let [v (.getObject rs ^Integer i)]
@@ -20,17 +20,17 @@
         row
         (rs/with-column-value this row (nth cols (dec i))
           (rs/read-column-by-index v rsmeta i)))))
-  (with-column-value [this row col v]
+  (with-column-value [_this row col v]
     ;; ensure that even if this is adapted, we omit null columns
     (if (nil? v)
       row
       (assoc! row col v)))
-  (row! [this row] (persistent! row))
+  (row! [_this row] (persistent! row))
   rs/ResultSetBuilder
-  (->rs [this] (transient []))
-  (with-row [this mrs row]
+  (->rs [_this] (transient []))
+  (with-row [_this mrs row]
     (conj! mrs row))
-  (rs! [this mrs] (persistent! mrs)))
+  (rs! [_this mrs] (persistent! mrs)))
 
 (defn as-maps
   "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`
@@ -117,25 +117,25 @@
     (let [mrsb (builder-fn rs opts)]
       (reify
         rs/RowBuilder
-        (->row [this] (rs/->row mrsb))
-        (column-count [this] (rs/column-count mrsb))
-        (with-column [this row i]
+        (->row [_this] (rs/->row mrsb))
+        (column-count [_this] (rs/column-count mrsb))
+        (with-column [_this row i]
           ;; short-circuit on null to avoid column reading logic
           (let [v (column-reader rs (:rsmeta mrsb) i)]
             (if (nil? v)
               row
               (rs/with-column-value mrsb row (nth (:cols mrsb) (dec i))
                 (rs/read-column-by-index v (:rsmeta mrsb) i)))))
-        (with-column-value [this row col v]
+        (with-column-value [_this row col v]
           ;; ensure that even if this is adapted, we omit null columns
           (if (nil? v)
             row
             (rs/with-column-value mrsb row col v)))
-        (row! [this row] (rs/row! mrsb row))
+        (row! [_this row] (rs/row! mrsb row))
         rs/ResultSetBuilder
-        (->rs [this] (rs/->rs mrsb))
-        (with-row [this mrs row] (rs/with-row mrsb mrs row))
-        (rs! [this mrs] (rs/rs! mrsb mrs))
+        (->rs [_this] (rs/->rs mrsb))
+        (with-row [_this mrs row] (rs/with-row mrsb mrs row))
+        (rs! [_this mrs] (rs/rs! mrsb mrs))
         clojure.lang.ILookup
-        (valAt [this k] (get mrsb k))
-        (valAt [this k not-found] (get mrsb k not-found))))))
+        (valAt [_this k] (get mrsb k))
+        (valAt [_this k not-found] (get mrsb k not-found))))))
