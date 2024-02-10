@@ -19,5 +19,5 @@
                "MSSQL_SA_PASSWORD"    "Str0ngP4ssw0rd"}
         maria?
         (assoc "NEXT_JDBC_TEST_MARIA" "yes"))]
-  (doseq [v (if all? ["1.10" "1.11" "master"] [nil])]
+  (doseq [v (if all? ["1.10" "1.11" "1.12"] [nil])]
     (run-tests env v)))
