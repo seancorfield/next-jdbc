@@ -76,7 +76,7 @@
   locales where the lower case version of a character is not a valid SQL
   entity name (e.g., Turkish)."
   [^String s]
-  (.toLowerCase s (Locale/US)))
+  (.toLowerCase s Locale/US))
 
 (defn as-lower-maps
   "Given a `ResultSet` and options, return a `RowBuilder` / `ResultSetBuilder`

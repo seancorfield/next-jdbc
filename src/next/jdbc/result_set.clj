@@ -1,4 +1,4 @@
-;; copyright (c) 2018-2021 Sean Corfield, all rights reserved
+;; copyright (c) 2018-2024 Sean Corfield, all rights reserved
 
 (ns next.jdbc.result-set
   "An implementation of `ResultSet` handling functions.
@@ -90,7 +90,7 @@
   locales where the lower case version of a character is not a valid SQL
   entity name (e.g., Turkish)."
   [^String s]
-  (.toLowerCase s (Locale/US)))
+  (.toLowerCase s Locale/US))
 
 (defn get-lower-column-names
   "Given `ResultSetMetaData`, return a vector of lower-case column names, each
