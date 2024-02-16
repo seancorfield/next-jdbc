@@ -20,6 +20,8 @@
 
 (def ^:private test-sqlite {:dbtype "sqlite" :dbname "clojure_test_sqlite"})
 
+(def ^:private test-duckdb {:dbtype "duckdb" :dbname "clojure_test_duckdb"})
+
 ;; this is just a dummy db-spec -- it's handled in with-test-db below
 (def ^:private test-postgres-map {:dbtype "embedded-postgres" :dbname "clojure_test"})
 (def ^:private test-postgres
@@ -65,7 +67,7 @@
   (when (System/getenv "NEXT_JDBC_TEST_MSSQL") test-jtds-map))
 
 (def ^:private test-db-specs
-  (cond-> [test-derby test-h2-mem test-h2 test-hsql test-sqlite]
+  (cond-> [test-derby test-h2-mem test-h2 test-hsql test-sqlite test-duckdb]
     test-postgres (conj test-postgres)
     test-mysql    (conj test-mysql)
     test-mssql    (conj test-mssql test-jtds)))
@@ -87,6 +89,8 @@
 (defn postgres? [] (= "embedded-postgres" (:dbtype @test-db-spec)))
 
 (defn sqlite? [] (= "sqlite" (:dbtype @test-db-spec)))
+
+(defn duckdb? [] (= "duckdb" (:dbtype @test-db-spec)))
 
 (defn stored-proc? [] (not (#{"derby" "h2" "h2:mem" "sqlite"} (:dbtype @test-db-spec))))
 
@@ -153,6 +157,8 @@
                 "IDENTITY PRIMARY KEY"
                 (sqlite?)
                 "PRIMARY KEY AUTOINCREMENT"
+                (duckdb?)
+                (str "PRIMARY KEY DEFAULT nextval('seq_" fruit "_id')")
                 :else
                 "AUTO_INCREMENT PRIMARY KEY")]
       (with-open [con (jdbc/get-connection (ds))]
@@ -177,7 +183,11 @@
           (do-commands con ["
 CREATE TABLE LANG_TEST (
   LANG LANGUAGE NOT NULL
-)"]))
+)"])) 
+        (when (duckdb?)
+          (try
+            (do-commands con [(str "CREATE SEQUENCE seq_" fruit "_id START 1")])
+            (catch Exception _)))
         (do-commands con [(str "
 CREATE TABLE " fruit " (
   ID INTEGER " auto-inc-pk ",

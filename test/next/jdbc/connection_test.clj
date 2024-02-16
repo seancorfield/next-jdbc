@@ -125,7 +125,7 @@
                                :useSSL true :user "dba"}))))))
 
 ;; these are the 'local' databases that we can always test against
-(def test-db-type ["derby" "h2" "h2:mem" "hsqldb" "sqlite"])
+(def test-db-type ["derby" "h2" "h2:mem" "hsqldb" "sqlite" "duckdb"])
 
 (def test-dbs
   (for [db test-db-type]
