@@ -39,6 +39,7 @@
                       io.zonky.test.postgres/embedded-postgres-binaries-windows-amd64 {:mvn/version "16.1.1"}
                       org.xerial/sqlite-jdbc {:mvn/version "3.44.1.0"}
                       com.microsoft.sqlserver/mssql-jdbc {:mvn/version "12.4.1.jre11"}
+                      org.duckdb/duckdb_jdbc {:mvn/version "0.10.0"}
                       ;; use log4j2 to reduce log noise during testing:
                       org.apache.logging.log4j/log4j-api {:mvn/version "2.22.0"}
                       ;; bridge everything into log4j:
