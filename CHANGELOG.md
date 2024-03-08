@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
   * Address [#268](https://github.com/seancorfield/next-jdbc/issues/268) by expanding the documentation around `insert-multi!` and `insert!`.
+  * Update dependency versions (including Clojure).
   * Code cleanup per `clj-kondo`.
 
 * 1.3.909 -- 2023-12-16

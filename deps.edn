@@ -1,7 +1,7 @@
 {:mvn/repos {"sonatype" {:url "https://oss.sonatype.org/content/repositories/snapshots/"}}
  :paths ["src" "resources"]
- :deps {org.clojure/clojure {:mvn/version "1.11.1"}
-        org.clojure/java.data {:mvn/version "1.1.103"}
+ :deps {org.clojure/clojure {:mvn/version "1.11.2"}
+        org.clojure/java.data {:mvn/version "1.2.107"}
 
         camel-snake-kebab/camel-snake-kebab {:mvn/version "0.4.3"}}
  :aliases
@@ -12,8 +12,8 @@
 
   ;; versions to test against:
   :1.10 {:override-deps {org.clojure/clojure {:mvn/version "1.10.3"}}}
-  :1.11 {:override-deps {org.clojure/clojure {:mvn/version "1.11.1"}}}
-  :1.12 {:override-deps {org.clojure/clojure {:mvn/version "1.12.0-alpha7"}}}
+  :1.11 {:override-deps {org.clojure/clojure {:mvn/version "1.11.2"}}}
+  :1.12 {:override-deps {org.clojure/clojure {:mvn/version "1.12.0-alpha9"}}}
 
   ;; running tests/checks of various kinds:
   :test {:extra-paths ["test"] ; can also run clojure -X:test
@@ -22,7 +22,7 @@
                       {:git/tag "v0.5.1" :git/sha "dfb30dd"}
                       ;; connection pooling
                       com.zaxxer/HikariCP {:mvn/version "5.1.0"}
-                      com.mchange/c3p0 {:mvn/version "0.9.5.5"}
+                      com.mchange/c3p0 {:mvn/version "0.10.0"}
                       ;; JDBC drivers
                       ;; 10.16.x is JDK17+
                       org.apache.derby/derby {:mvn/version "10.15.2.0"}
@@ -30,21 +30,21 @@
                       org.hsqldb/hsqldb {:mvn/version "2.7.2"}
                       com.h2database/h2 {:mvn/version "2.2.224"}
                       net.sourceforge.jtds/jtds {:mvn/version "1.3.1"}
-                      org.mariadb.jdbc/mariadb-java-client {:mvn/version "3.3.1"}
-                      com.mysql/mysql-connector-j {:mvn/version "8.2.0"}
-                      org.postgresql/postgresql {:mvn/version "42.7.1"}
+                      org.mariadb.jdbc/mariadb-java-client {:mvn/version "3.3.3"}
+                      com.mysql/mysql-connector-j {:mvn/version "8.3.0"}
+                      org.postgresql/postgresql {:mvn/version "42.7.2"}
                       io.zonky.test/embedded-postgres {:mvn/version "2.0.6"}
-                      io.zonky.test.postgres/embedded-postgres-binaries-darwin-amd64 {:mvn/version "16.1.1"}
-                      io.zonky.test.postgres/embedded-postgres-binaries-linux-amd64 {:mvn/version "16.1.1"}
-                      io.zonky.test.postgres/embedded-postgres-binaries-windows-amd64 {:mvn/version "16.1.1"}
-                      org.xerial/sqlite-jdbc {:mvn/version "3.44.1.0"}
-                      com.microsoft.sqlserver/mssql-jdbc {:mvn/version "12.4.1.jre11"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-darwin-amd64 {:mvn/version "16.2.0"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-linux-amd64 {:mvn/version "16.2.0"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-windows-amd64 {:mvn/version "16.2.0"}
+                      org.xerial/sqlite-jdbc {:mvn/version "3.45.1.0"}
+                      com.microsoft.sqlserver/mssql-jdbc {:mvn/version "12.6.1.jre11"}
                       ;; use log4j2 to reduce log noise during testing:
-                      org.apache.logging.log4j/log4j-api {:mvn/version "2.22.0"}
+                      org.apache.logging.log4j/log4j-api {:mvn/version "2.23.0"}
                       ;; bridge everything into log4j:
-                      org.apache.logging.log4j/log4j-1.2-api {:mvn/version "2.22.0"}
-                      org.apache.logging.log4j/log4j-jcl {:mvn/version "2.22.0"}
-                      org.apache.logging.log4j/log4j-jul {:mvn/version "2.22.0"}
-                      org.apache.logging.log4j/log4j-slf4j-impl {:mvn/version "2.22.0"}}
+                      org.apache.logging.log4j/log4j-1.2-api {:mvn/version "2.23.0"}
+                      org.apache.logging.log4j/log4j-jcl {:mvn/version "2.23.0"}
+                      org.apache.logging.log4j/log4j-jul {:mvn/version "2.23.0"}
+                      org.apache.logging.log4j/log4j-slf4j-impl {:mvn/version "2.23.0"}}
          :jvm-opts ["-Dlog4j2.configurationFile=log4j2-info.properties"]
          :exec-fn cognitect.test-runner.api/test}}}

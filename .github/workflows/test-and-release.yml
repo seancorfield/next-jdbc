@@ -19,9 +19,9 @@ jobs:
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
-          cli: '1.11.1.1429'
+          cli: '1.11.2.1441'
       - name: Cache All The Things
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.m2/repository

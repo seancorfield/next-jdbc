@@ -17,9 +17,9 @@ jobs:
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
-          cli: '1.11.1.1429'
+          cli: '1.11.2.1441'
       - name: Cache All The Things
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.m2/repository
@@ -44,32 +44,3 @@ jobs:
           NEXT_JDBC_TEST_MYSQL: yes
           NEXT_JDBC_TEST_MSSQL: yes
           MSSQL_SA_PASSWORD: Str0ngP4ssw0rd
-
-  build-graalvm-new:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        graalvm: [ '21.1.0' ]
-        base: [ 'java11', 'java16' ]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup GraalVM
-        uses: DeLaGuardo/setup-graalvm@5.0
-        with:
-          graalvm: ${{ matrix.graalvm }}
-          java: ${{ matrix.base }}
-      - name: Setup Clojure
-        uses: DeLaGuardo/setup-clojure@master
-        with:
-          cli: '1.11.1.1429'
-      - name: Cache All The Things
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.m2/repository
-            ~/.gitlibs
-            ~/.clojure
-            ~/.cpcache
-          key: ${{ runner.os }}-${{ hashFiles('**/deps.edn') }}
-      - name: Run Tests
-        run: clojure -T:build test
