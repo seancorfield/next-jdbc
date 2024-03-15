@@ -229,6 +229,15 @@ is the best way to ensure the statement is properly closed after use.
 
 When you use `:return-keys true` with `execute!` or `execute-one!` (or you use `insert!`), PostgreSQL returns the entire inserted row (unlike nearly every other database that just returns any generated keys!).
 
+The default result set builder for `next.jdbc` is `as-qualified-maps` which
+uses the `.getTableName()` method on `ResultSetMetaData` to qualify the
+columns in the result set. While some database drivers have this information
+on hand from the original SQL operation, PostgreSQL's JDBC driver does not
+and it performs an extra SQL query to fetch table names the first time this
+method is called for each query. If you want to avoid those extra queries,
+and you can live with unqualified column names, you can use `as-unqualified-maps`
+as the result set builder instead.
+
 If you have a query where you want to select where a column is `IN` a sequence of values, you can use `col = ANY(?)` with a native array of the values instead of `IN (?,?,?,,,?)` and a sequence of values.
 
 What does this mean for your use of `next.jdbc`? In `plan`, `execute!`, and `execute-one!`, you can use `col = ANY(?)` in the SQL string and a single primitive array parameter, such as `(int-array [1 2 3 4])`. That means that in `next.jdbc.sql`'s functions that take a where clause (`find-by-keys`, `update!`, and `delete!`) you can specify `["col = ANY(?)" (int-array data)]` for what would be a `col IN (?,?,?,,,?)` where clause for other databases and require multiple values.
