@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
   * Address [#275](https://github.com/seancorfield/next-jdbc/issues/275) by noting that PostgreSQL may perform additional SQL queries to produce table names used in qualified result set builders.
+  * Address [#273](https://github.com/seancorfield/next-jdbc/issues/273) by linking to [PG2](https://github.com/igrishaev/pg2) in the PostgreSQL **Tips & Tricks** section.
   * Address [#268](https://github.com/seancorfield/next-jdbc/issues/268) by expanding the documentation around `insert-multi!` and `insert!`.
   * Update dependency versions (including Clojure).
   * Code cleanup per `clj-kondo`.

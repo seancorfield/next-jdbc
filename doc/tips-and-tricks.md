@@ -227,6 +227,15 @@ is the best way to ensure the statement is properly closed after use.
 
 ## PostgreSQL
 
+As you can see in this section (and elsewhere in this documentation), the
+PostgreSQL JDBC driver has a number of interesting quirks and behaviors that
+you need to be aware of. Although accessing PostgreSQL via JDBC is the most
+common approach, there is also a non-JDBC Clojure/Java driver for PostgreSQL called
+[PG2](https://github.com/igrishaev/pg2) which supports JSON operations natively
+(see below for what's required for JDBC), as well as supporting Java Time natively
+(see the section above about **Times, Dates, and Timezones**), and it also
+quite a bit faster than using JDBC.
+
 When you use `:return-keys true` with `execute!` or `execute-one!` (or you use `insert!`), PostgreSQL returns the entire inserted row (unlike nearly every other database that just returns any generated keys!).
 
 The default result set builder for `next.jdbc` is `as-qualified-maps` which
