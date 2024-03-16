@@ -6,7 +6,7 @@ It is designed to work with Clojure 1.10 or later, supports `datafy`/`nav`, and 
 
 ## Installation
 
-**You must be using Clojure 1.10 or later.** 1.11.1 is the most recent stable version of Clojure (as of April 5th, 2022).
+**You must be using Clojure 1.10 or later.** 1.11.2 is the most recent stable version of Clojure (as of March 15th, 2024).
 
 You can add `next.jdbc` to your project with either:
 
@@ -37,7 +37,7 @@ For the examples in this documentation, we will use a local H2 database on disk,
 
 ```clojure
 ;; deps.edn
-{:deps {org.clojure/clojure {:mvn/version "1.11.1"}
+{:deps {org.clojure/clojure {:mvn/version "1.11.2"}
         com.github.seancorfield/next.jdbc {:mvn/version "1.3.925"}
         com.h2database/h2 {:mvn/version "2.2.224"}}}
 ```
@@ -48,7 +48,7 @@ In this REPL session, we'll define an H2 datasource, create a database with a si
 
 ```clojure
 > clj
-Clojure 1.11.1
+Clojure 1.11.2
 user=> (require '[next.jdbc :as jdbc])
 nil
 user=> (def db {:dbtype "h2" :dbname "example"})
