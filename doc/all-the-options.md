@@ -58,7 +58,7 @@ In the simple case, the `:columns` option expects a vector of keywords and each 
 
 > Note: `get-by-id` accepts the same options as `find-by-keys` but it will only ever produce one row, as a hash map, so sort order and pagination are less applicable, although `:columns` may be useful.
 
-As of 1.3.next, `aggregate-by-keys` exists as a wrapper around `find-by-keys`
+As of 1.3.925, `aggregate-by-keys` exists as a wrapper around `find-by-keys`
 that accepts the same options as `find-by-keys` except that `:columns` may not
 be specified (since it is used to add the aggregate to the query).
 

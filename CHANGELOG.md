@@ -2,7 +2,7 @@
 
 Only accretive/fixative changes will be made from now on.
 
-* 1.3.next in progress
+* 1.3.925 -- 2024-03-15
   * Address [#275](https://github.com/seancorfield/next-jdbc/issues/275) by noting that PostgreSQL may perform additional SQL queries to produce table names used in qualified result set builders.
   * Address [#274](https://github.com/seancorfield/next-jdbc/issues/274) by adding `next.jdbc.sql/aggregate-by-keys` as a convenient wrapper around `find-by-keys` when you want just a single aggregate value back (such as `count`, `max`, etc).
   * Address [#273](https://github.com/seancorfield/next-jdbc/issues/273) by linking to [PG2](https://github.com/igrishaev/pg2) in the PostgreSQL **Tips & Tricks** section.

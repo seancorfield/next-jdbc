@@ -25,7 +25,7 @@ These functions are described in more detail below. They are deliberately simple
 
 If you prefer to write your SQL separately from your code, take a look at [HugSQL](https://github.com/layerware/hugsql) -- [HugSQL documentation](https://www.hugsql.org/) -- which has a `next.jdbc` adapter, as of version 0.5.1. See below for a "[quick start](#hugsql-quick-start)" for using HugSQL with `next.jdbc`.
 
-As of 1.3.next, `aggregate-by-keys` exists as a wrapper around `find-by-keys`
+As of 1.3.925, `aggregate-by-keys` exists as a wrapper around `find-by-keys`
 that accepts the same options as `find-by-keys` and an aggregate SQL expression
 and it returns a single value (the aggregate). `aggregate-by-keys` accepts the
 same options as `find-by-keys` except that `:columns` may not be specified
@@ -255,7 +255,7 @@ If no rows match, `find-by-keys` returns `[]`, just like `execute!`.
 
 ## `aggregate-by-keys`
 
-Added in 1.3.next, this is a wrapper around `find-by-keys` that makes it easier
+Added in 1.3.925, this is a wrapper around `find-by-keys` that makes it easier
 to perform aggregate queries::
 
 ```clojure
