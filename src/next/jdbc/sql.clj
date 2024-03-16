@@ -1,4 +1,4 @@
-;; copyright (c) 2019-2023 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2024 Sean Corfield, all rights reserved
 
 (ns next.jdbc.sql
   "Some utility functions that make common operations easier by
@@ -21,10 +21,11 @@
 
   In addition, `find-by-keys` supports `:order-by` to add an `ORDER BY`
   clause to the generated SQL."
-  (:require [next.jdbc :refer [execute! execute-one! execute-batch!]]
+  (:require [clojure.string :as str]
+            [next.jdbc :refer [execute! execute-batch! execute-one!]]
             [next.jdbc.sql.builder
-             :refer [for-delete for-insert for-insert-multi
-                     for-query for-update]]))
+             :refer [for-delete for-insert for-insert-multi for-query
+                     for-update]]))
 
 (set! *warn-on-reflection* true)
 
@@ -137,6 +138,42 @@
   ([connectable table key-map opts]
    (let [opts (merge (:options connectable) opts)]
      (execute! connectable (for-query table key-map opts) opts))))
+
+(defn aggregate-by-keys
+  "A wrapper over `find-by-keys` that additionally takes an aggregate SQL
+  expression (a string), and returns just a single result: the value of that
+  of that aggregate for the matching rows.
+
+  Accepts all the same options as `find-by-keys` except `:columns` since that
+  is used internally by this wrapper to pass the aggregate expression in."
+  ([connectable table aggregate key-map]
+   (aggregate-by-keys connectable table aggregate key-map {}))
+  ([connectable table aggregate key-map opts]
+   (let [opts         (merge (:options connectable) opts)
+         _
+         (when-not (string? aggregate)
+           (throw (IllegalArgumentException.
+                   "aggregate-by-keys requires a string aggregate expression")))
+         _
+         (when (:columns opts)
+           (throw (IllegalArgumentException.
+                   "aggregate-by-keys does not support the :columns option")))
+
+         ;; this should be unique enough as an alias to never clash with
+         ;; a real column name in anyone's tables -- in addition it is
+         ;; stable for a given aggregate expression so it should allow
+         ;; for query caching in the JDBC driver:
+         ;; (we use abs to avoid negative hash codes which would produce
+         ;; a hyphen in the alias name which is not valid in SQL identifiers)
+         total-name   (str "next_jdbc_aggregate_"
+                           (Math/abs (.hashCode ^String aggregate)))
+         total-column (keyword total-name)
+         ;; because some databases return uppercase column names:
+         total-col-u  (keyword (str/upper-case total-name))]
+     (-> (find-by-keys connectable table key-map
+                       (assoc opts :columns [[aggregate total-column]]))
+         (first)
+         (as-> row (or (get row total-column) (get row total-col-u)))))))
 
 (defn get-by-id
   "Syntactic sugar over `execute-one!` to make certain common queries easier.

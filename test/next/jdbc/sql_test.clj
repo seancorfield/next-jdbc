@@ -1,4 +1,4 @@
-;; copyright (c) 2019-2023 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2024 Sean Corfield, all rights reserved
 
 (ns next.jdbc.sql-test
   "Tests for the syntactic sugar SQL functions."
@@ -57,6 +57,22 @@
       (is (every? map? rs))
       (is (every? meta rs))
       (is (= 2 ((column :FRUIT/ID) (first rs)))))))
+
+(deftest test-aggregate-by-keys
+  (let [ds-opts (jdbc/with-options (ds) (default-options))]
+    (let [count-v (sql/aggregate-by-keys ds-opts :fruit "count(*)" {:appearance "neon-green"})]
+      (is (number? count-v))
+      (is (= 0 count-v)))
+    (let [count-v (sql/aggregate-by-keys ds-opts :fruit "count(*)" {:appearance "yellow"})]
+      (is (= 1 count-v)))
+    (let [count-v (sql/aggregate-by-keys ds-opts :fruit "count(*)" :all)]
+      (is (= 4 count-v)))
+    (let [max-id (sql/aggregate-by-keys ds-opts :fruit "max(id)" :all)]
+      (is (= 4 max-id)))
+    (let [min-name (sql/aggregate-by-keys ds-opts :fruit "min(name)" :all)]
+      (is (= "Apple" min-name)))
+    (is (thrown? IllegalArgumentException
+                 (sql/aggregate-by-keys ds-opts :fruit "count(*)" :all {:columns []})))))
 
 (deftest test-get-by-id
   (let [ds-opts (jdbc/with-options (ds) (default-options))]

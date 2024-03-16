@@ -232,6 +232,15 @@
                                     :all #{:all})
                      :opts (s/? ::opts-map)))
 
+(s/fdef sql/aggregate-by-keys
+  :args (s/cat :connectable ::connectable
+               :table keyword?
+               :aggregate string?
+               :key-map (s/or :example ::example-map
+                              :where ::sql-params
+                              :all #{:all})
+               :opts (s/? ::opts-map)))
+
 (s/fdef sql/get-by-id
         :args (s/alt :with-id (s/cat :connectable ::connectable
                                      :table keyword?
