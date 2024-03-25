@@ -1,4 +1,9 @@
+*.class
+*.jar
+*.swp
+*~
 .calva/output-window/
+.calva/repl.calva-repl
 .classpath
 .clj-kondo/.cache
 .clj-kondo/com.github.seancorfield/next.jdbc
@@ -19,10 +24,6 @@
 .settings
 .socket-repl-port
 .sw*
-*.class
-*.jar
-*.swp
-*~
 /checkouts
 /classes
 /clojure_test_*
