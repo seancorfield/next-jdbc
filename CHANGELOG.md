@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
   * Fix documentation examples of `execute-batch!` via PR [#292](https://github.com/seancorfield/next-jdbc/pull/292) from [@devurandom](https://github.com/devurandom).
+  * Update `java.data` to 1.3.113.
   * Beef up bit/boolean tests and enable them for XTDB.
 
 * 1.3.981 -- 2024-12-13
