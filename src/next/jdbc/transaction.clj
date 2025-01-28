@@ -145,7 +145,11 @@
   javax.sql.DataSource
   (-transact [this body-fn opts]
     (with-open [con (p/get-connection this opts)]
-      (p/-transact con body-fn opts)))
+      ;; this connection is assumed unique so we do not need the active-tx check:
+      (let [raw (raw-connection con)]
+        ;; we don't lock either, per #293:
+        (binding [*active-tx* (conj *active-tx* raw)]
+          (transact* con body-fn opts)))))
   Object
   (-transact [this body-fn opts]
     (p/-transact (p/get-datasource this) body-fn opts)))

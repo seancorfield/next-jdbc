@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
+  * Fix [#293](https://github.com/seancorfield/next-jdbc/issues/293) by no longer `locking` on the `Connection` retrieved from a `DataSource`.
   * Fix documentation examples of `execute-batch!` via PR [#292](https://github.com/seancorfield/next-jdbc/pull/292) from [@devurandom](https://github.com/devurandom).
   * Update `java.data` to 1.3.113.
   * Beef up bit/boolean tests and enable them for XTDB.
