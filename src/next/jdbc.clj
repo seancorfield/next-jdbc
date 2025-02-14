@@ -1,4 +1,4 @@
-;; copyright (c) 2018-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2018-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc
   "The public API of the next generation java.jdbc library.
@@ -336,13 +336,14 @@
                          result))))
            params)))
   ([connectable sql param-groups opts]
-   (if (or (instance? java.sql.Connection connectable)
-           (and (satisfies? p/Connectable connectable)
-                (instance? java.sql.Connection (:connectable connectable))))
-     (with-open [ps (prepare connectable [sql] opts)]
-       (execute-batch! ps param-groups opts))
-     (with-open [con (get-connection connectable)]
-       (execute-batch! con sql param-groups opts)))))
+   (let [conn (p/unwrap connectable)]
+     (if (instance? java.sql.Connection conn)
+       (with-open [ps (prepare conn [sql] (if-let [opts' (:options connectable)]
+                                            (merge opts' opts)
+                                            opts))]
+         (execute-batch! ps param-groups opts))
+       (with-open [con (get-connection connectable)]
+         (execute-batch! con sql param-groups opts))))))
 
 (defmacro on-connection
   "Given a connectable object, gets a connection and binds it to `sym`,
@@ -365,15 +366,12 @@
   executes the body, and automatically closes it for you."
   [[sym connectable] & body]
   (let [con-sym (vary-meta sym assoc :tag 'java.sql.Connection)]
-    `(let [con-obj# ~connectable]
-       (cond (instance? java.sql.Connection con-obj#)
-             ((^{:once true} fn* [~con-sym] ~@body) con-obj#)
-             (and (satisfies? p/Connectable con-obj#)
-                  (instance? java.sql.Connection (:connectable con-obj#)))
-             ((^{:once true} fn* [~con-sym] ~@body) (:connectable con-obj#))
-             :else
-             (with-open [con# (get-connection con-obj#)]
-               ((^{:once true} fn* [~con-sym] ~@body) con#))))))
+    `(let [con-obj#  ~connectable
+           bare-con# (p/unwrap con-obj#)]
+       (if (instance? java.sql.Connection bare-con#)
+         ((^{:once true} fn* [~con-sym] ~@body) bare-con#)
+         (with-open [con# (get-connection con-obj#)]
+           ((^{:once true} fn* [~con-sym] ~@body) con#))))))
 
 (defmacro on-connection+options
   "Given a connectable object, assumed to be wrapped with options, gets
@@ -403,15 +401,11 @@
   with `on-connection`."
   [[sym connectable] & body]
   `(let [con-obj# ~connectable]
-     (cond (instance? java.sql.Connection con-obj#)
-           ((^{:once true} fn* [~sym] ~@body) con-obj#)
-           (and (satisfies? p/Connectable con-obj#)
-                (instance? java.sql.Connection (:connectable con-obj#)))
-           ((^{:once true} fn* [~sym] ~@body) con-obj#)
-           :else
-           (with-open [con# (get-connection con-obj#)]
-             ((^{:once true} fn* [~sym] ~@body)
-              (with-options con# (:options con-obj# {})))))))
+     (if (instance? java.sql.Connection (p/unwrap con-obj#))
+       ((^{:once true} fn* [~sym] ~@body) con-obj#)
+       (with-open [con# (get-connection con-obj#)]
+         ((^{:once true} fn* [~sym] ~@body)
+          (with-options con# (:options con-obj# {})))))))
 
 (defn transact
   "Given a transactable object and a function (taking a `Connection`),

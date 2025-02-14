@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
   * Address [#295](https://github.com/seancorfield/next-jdbc/issues/295) by providing a way to tell `next.jdbc` that certain options should be passed "as-is" in the `Properties` object when creating a `Connection`.
+  * Fix [#181](https://github.com/seancorfield/next-jdbc/issues/181) (again!) by adding `Wrapped` protocol as a way for `DefaultOptions` and `SQLLogging` to consistently expose the underlying connectable, even when nested.
 
 * 1.3.994 -- 2025-01-28
   * Fix [#293](https://github.com/seancorfield/next-jdbc/issues/293) by no longer `locking` on the `Connection` retrieved from a `DataSource`.

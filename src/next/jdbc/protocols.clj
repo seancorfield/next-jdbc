@@ -1,4 +1,4 @@
-;; copyright (c) 2018-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2018-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.protocols
   "This is the extensible core of the next generation java.jdbc library.
@@ -63,3 +63,15 @@
   :extend-via-metadata true
   (-transact [this body-fn opts]
     "Run the `body-fn` inside a transaction."))
+
+(defprotocol Wrapped
+  "Protocol for (un)wrapping a `next.jdbc` connectable.
+
+  Implementations are provided for `Object` (identity) and `DefaultOptions`
+  and SQLLogging."
+  (unwrap [this]
+    "Unwrap the connectable to get the underlying connectable."))
+
+(extend-protocol Wrapped
+  Object
+  (unwrap [this] this))

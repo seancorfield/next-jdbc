@@ -1,4 +1,4 @@
-;; copyright (c) 2020-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2020-2025 Sean Corfield, all rights reserved
 
 (ns ^:no-doc next.jdbc.default-options
   "Implementation of default options logic."
@@ -7,6 +7,10 @@
 (set! *warn-on-reflection* true)
 
 (defrecord DefaultOptions [connectable options])
+
+(extend-protocol p/Wrapped
+  DefaultOptions
+  (unwrap [this] (p/unwrap (:connectable this))))
 
 (extend-protocol p/Sourceable
   DefaultOptions

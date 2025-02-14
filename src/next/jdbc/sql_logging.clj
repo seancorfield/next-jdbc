@@ -1,4 +1,4 @@
-;; copyright (c) 2021-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2021-2025 Sean Corfield, all rights reserved
 
 (ns ^:no-doc next.jdbc.sql-logging
   "Implementation of sql-logging logic."
@@ -7,6 +7,10 @@
 (set! *warn-on-reflection* true)
 
 (defrecord SQLLogging [connectable sql-logger result-logger options])
+
+(extend-protocol p/Wrapped
+  SQLLogging
+  (unwrap [this] (p/unwrap (:connectable this))))
 
 (extend-protocol p/Sourceable
   SQLLogging
