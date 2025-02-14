@@ -110,7 +110,7 @@
                      :opts (s/? ::opts-map)))
 
 (s/fdef jdbc/prepare
-        :args (s/cat :connection ::connection
+        :args (s/cat :connection ::proto-connectable
                      :sql-params ::sql-params
                      :opts (s/? ::opts-map)))
 

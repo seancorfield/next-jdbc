@@ -336,14 +336,11 @@
                          result))))
            params)))
   ([connectable sql param-groups opts]
-   (let [conn (p/unwrap connectable)]
-     (if (instance? java.sql.Connection conn)
-       (with-open [ps (prepare conn [sql] (if-let [opts' (:options connectable)]
-                                            (merge opts' opts)
-                                            opts))]
-         (execute-batch! ps param-groups opts))
-       (with-open [con (get-connection connectable)]
-         (execute-batch! con sql param-groups opts))))))
+   (if (instance? java.sql.Connection (p/unwrap connectable))
+     (with-open [ps (prepare connectable [sql] opts)]
+       (execute-batch! ps param-groups opts))
+     (with-open [con (get-connection connectable)]
+       (execute-batch! con sql param-groups opts)))))
 
 (defmacro on-connection
   "Given a connectable object, gets a connection and binds it to `sym`,

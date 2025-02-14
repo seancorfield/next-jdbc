@@ -732,62 +732,132 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
                  (jdbc/execute-one! (ds) [(str "delete from fruit where " (index) " > 4")])))))
       (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
     (testing "batch with-logging"
-      (is (= [1 1 1 1 1 1 1 1 1 13]
-             (try
-               (let [result (jdbc/execute-batch! (jdbc/with-logging (ds) println println)
-                                                 "INSERT INTO fruit (name, appearance) VALUES (?,?)"
-                                                 [["fruit1" "one"]
-                                                  ["fruit2" "two"]
-                                                  ["fruit3" "three"]
-                                                  ["fruit4" "four"]
-                                                  ["fruit5" "five"]
-                                                  ["fruit6" "six"]
-                                                  ["fruit7" "seven"]
-                                                  ["fruit8" "eight"]
-                                                  ["fruit9" "nine"]]
-                                                 {})]
-                 (conj result (count (jdbc/execute! (ds) ["select * from fruit"]))))
-               (finally
-                 (jdbc/execute-one! (ds) [(str "delete from fruit where " (index) " > 4")])))))
-      (is (= [1 1 1 1 1 1 1 1 1 13]
-             (try
-               (let [result (jdbc/execute-batch! (jdbc/with-options
-                                                   (jdbc/with-logging (ds) println println)
-                                                   {:ignore "me"})
-                                                 "INSERT INTO fruit (name, appearance) VALUES (?,?)"
-                                                 [["fruit1" "one"]
-                                                  ["fruit2" "two"]
-                                                  ["fruit3" "three"]
-                                                  ["fruit4" "four"]
-                                                  ["fruit5" "five"]
-                                                  ["fruit6" "six"]
-                                                  ["fruit7" "seven"]
-                                                  ["fruit8" "eight"]
-                                                  ["fruit9" "nine"]]
-                                                 {})]
-                 (conj result (count (jdbc/execute! (ds) ["select * from fruit"]))))
-               (finally
-                 (jdbc/execute-one! (ds) [(str "delete from fruit where " (index) " > 4")])))))
-      (is (= [1 1 1 1 1 1 1 1 1 13]
-             (try
-               (let [result (jdbc/execute-batch! (jdbc/with-logging
-                                                   (jdbc/with-options (ds) {:ignore "me"})
-                                                   println println)
-                                                 "INSERT INTO fruit (name, appearance) VALUES (?,?)"
-                                                 [["fruit1" "one"]
-                                                  ["fruit2" "two"]
-                                                  ["fruit3" "three"]
-                                                  ["fruit4" "four"]
-                                                  ["fruit5" "five"]
-                                                  ["fruit6" "six"]
-                                                  ["fruit7" "seven"]
-                                                  ["fruit8" "eight"]
-                                                  ["fruit9" "nine"]]
-                                                 {})]
-                 (conj result (count (jdbc/execute! (ds) ["select * from fruit"]))))
-               (finally
-                 (jdbc/execute-one! (ds) [(str "delete from fruit where " (index) " > 4")])))))
-      (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"])))))
+      (let [tracker  (atom {:opts 0, :log1 0 :log2 0})
+            ;; opts and log2 never get invoked with batch/prepare -- because
+            ;; no fn opts are invoked on that path, and no post-logging is done:
+            track-fn (fn ([k] (fn [& _] (swap! tracker update k inc)))
+                       ([k f] (fn [& args] (swap! tracker update k inc) (apply f args))))]
+        (is (= {:opts 0, :log1 0 :log2 0} @tracker))
+        (is (= [1 1 1 1 1 1 1 1 1 13]
+               (try
+                 ;; wrapping a non-connection will lose the wrapper:
+                 (let [result (jdbc/execute-batch! (jdbc/with-options (ds) {:builder-fn (track-fn :opts rs/as-maps)})
+                                                   "INSERT INTO fruit (name, appearance) VALUES (?,?)"
+                                                   [["fruit1" "one"]
+                                                    ["fruit2" "two"]
+                                                    ["fruit3" "three"]
+                                                    ["fruit4" "four"]
+                                                    ["fruit5" "five"]
+                                                    ["fruit6" "six"]
+                                                    ["fruit7" "seven"]
+                                                    ["fruit8" "eight"]
+                                                    ["fruit9" "nine"]]
+                                                   {})]
+                   (conj result (count (jdbc/execute! (ds) ["select * from fruit"]))))
+                 (finally
+                   (jdbc/execute-one! (ds) [(str "delete from fruit where " (index) " > 4")])))))
+        (is (= {:opts 0, :log1 0 :log2 0} @tracker))
+        (is (= [1 1 1 1 1 1 1 1 1 13]
+               (try
+                 ;; wrapping a non-connection will lose the wrapper:
+                 (let [result (jdbc/execute-batch! (jdbc/with-logging (ds) {:builder-fn (track-fn :opts rs/as-maps)})
+                                                   "INSERT INTO fruit (name, appearance) VALUES (?,?)"
+                                                   [["fruit1" "one"]
+                                                    ["fruit2" "two"]
+                                                    ["fruit3" "three"]
+                                                    ["fruit4" "four"]
+                                                    ["fruit5" "five"]
+                                                    ["fruit6" "six"]
+                                                    ["fruit7" "seven"]
+                                                    ["fruit8" "eight"]
+                                                    ["fruit9" "nine"]]
+                                                   {})]
+                   (conj result (count (jdbc/execute! (ds) ["select * from fruit"]))))
+                 (finally
+                   (jdbc/execute-one! (ds) [(str "delete from fruit where " (index) " > 4")])))))
+        (is (= {:opts 0, :log1 0 :log2 0} @tracker))
+        (is (= [1 1 1 1 1 1 1 1 1 13]
+               (try
+                 (with-open [con (jdbc/get-connection (ds))]
+                   (let [result (jdbc/execute-batch! (jdbc/with-options con {:builder-fn (track-fn :opts rs/as-maps)})
+                                                     "INSERT INTO fruit (name, appearance) VALUES (?,?)"
+                                                     [["fruit1" "one"]
+                                                      ["fruit2" "two"]
+                                                      ["fruit3" "three"]
+                                                      ["fruit4" "four"]
+                                                      ["fruit5" "five"]
+                                                      ["fruit6" "six"]
+                                                      ["fruit7" "seven"]
+                                                      ["fruit8" "eight"]
+                                                      ["fruit9" "nine"]]
+                                                     {})]
+                     (conj result (count (jdbc/execute! (ds) ["select * from fruit"])))))
+                 (finally
+                   (jdbc/execute-one! (ds) [(str "delete from fruit where " (index) " > 4")])))))
+        (is (= {:opts 0, :log1 0 :log2 0} @tracker))
+        (is (= [1 1 1 1 1 1 1 1 1 13]
+               (try
+                 (with-open [con (jdbc/get-connection (ds))]
+                   (let [result (jdbc/execute-batch! (jdbc/with-logging con (track-fn :log1) (track-fn :log2))
+                                                     "INSERT INTO fruit (name, appearance) VALUES (?,?)"
+                                                     [["fruit1" "one"]
+                                                      ["fruit2" "two"]
+                                                      ["fruit3" "three"]
+                                                      ["fruit4" "four"]
+                                                      ["fruit5" "five"]
+                                                      ["fruit6" "six"]
+                                                      ["fruit7" "seven"]
+                                                      ["fruit8" "eight"]
+                                                      ["fruit9" "nine"]]
+                                                     {})]
+                     (conj result (count (jdbc/execute! (ds) ["select * from fruit"])))))
+                 (finally
+                   (jdbc/execute-one! (ds) [(str "delete from fruit where " (index) " > 4")])))))
+        (is (= {:opts 0, :log1 1 :log2 0} @tracker))
+        (is (= [1 1 1 1 1 1 1 1 1 13]
+               (try
+                 (with-open [con (jdbc/get-connection (ds))]
+                   (let [result (jdbc/execute-batch! (jdbc/with-options
+                                                       (jdbc/with-logging con (track-fn :log1) (track-fn :log2))
+                                                       {:builder-fn (track-fn :opts rs/as-maps)})
+                                                     "INSERT INTO fruit (name, appearance) VALUES (?,?)"
+                                                     [["fruit1" "one"]
+                                                      ["fruit2" "two"]
+                                                      ["fruit3" "three"]
+                                                      ["fruit4" "four"]
+                                                      ["fruit5" "five"]
+                                                      ["fruit6" "six"]
+                                                      ["fruit7" "seven"]
+                                                      ["fruit8" "eight"]
+                                                      ["fruit9" "nine"]]
+                                                     {})]
+                     (conj result (count (jdbc/execute! (ds) ["select * from fruit"])))))
+                 (finally
+                   (jdbc/execute-one! (ds) [(str "delete from fruit where " (index) " > 4")])))))
+        (is (= {:opts 0, :log1 2 :log2 0} @tracker))
+        (is (= [1 1 1 1 1 1 1 1 1 13]
+               (try
+                 (with-open [con (jdbc/get-connection (ds))]
+                   (let [result (jdbc/execute-batch! (jdbc/with-logging
+                                                       (jdbc/with-options con
+                                                         {:builder-fn (track-fn :opts rs/as-maps)})
+                                                       (track-fn :log1) (track-fn :log2))
+                                                     "INSERT INTO fruit (name, appearance) VALUES (?,?)"
+                                                     [["fruit1" "one"]
+                                                      ["fruit2" "two"]
+                                                      ["fruit3" "three"]
+                                                      ["fruit4" "four"]
+                                                      ["fruit5" "five"]
+                                                      ["fruit6" "six"]
+                                                      ["fruit7" "seven"]
+                                                      ["fruit8" "eight"]
+                                                      ["fruit9" "nine"]]
+                                                     {})]
+                     (conj result (count (jdbc/execute! (ds) ["select * from fruit"])))))
+                 (finally
+                   (jdbc/execute-one! (ds) [(str "delete from fruit where " (index) " > 4")])))))
+        (is (= {:opts 0, :log1 3 :log2 0} @tracker))
+        (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))))
     (testing "small batch insert"
       (is (= [1 1 1 1 1 1 1 1 1 13]
              (try
