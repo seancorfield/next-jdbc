@@ -1,4 +1,4 @@
-;; copyright (c) 2019-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.connection-string-test
   "Tests for the main hash map spec to JDBC URL logic and the get-datasource
@@ -11,7 +11,8 @@
             [next.jdbc.connection :as c]
             [next.jdbc.protocols :as p]
             [next.jdbc.specs :as specs]
-            [next.jdbc.test-fixtures :refer [with-test-db db]]))
+            [next.jdbc.test-fixtures :refer [db with-test-db]])
+  (:import [java.util Properties]))
 
 (set! *warn-on-reflection* true)
 
@@ -39,3 +40,16 @@
       (when (and user password)
         (with-open [con (p/get-connection ds {})]
           (is (instance? java.sql.Connection con)))))))
+
+(deftest property-tests
+  (is (string? (.getProperty ^Properties (#'c/as-properties {:foo [42]}) "foo")))
+  (is (string? (.get ^Properties (#'c/as-properties {:foo [42]}) "foo")))
+  (is (vector? (.get ^Properties (#'c/as-properties
+                                  {:foo [42]
+                                   :next.jdbc/as-is-properties [:foo]})
+                     "foo")))
+  ;; because .getProperty drops non-string values!
+  (is (nil? (.getProperty ^Properties (#'c/as-properties
+                                       {:foo [42]
+                                        :next.jdbc/as-is-properties [:foo]})
+                          "foo"))))

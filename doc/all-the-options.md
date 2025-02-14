@@ -33,6 +33,9 @@ Any path that calls `get-connection` will accept the following options:
 
 If you need additional options set on a connection, you can either use Java interop to set them directly, or provide them as part of the "db spec" hash map passed to `get-datasource` (although then they will apply to _all_ connections obtained from that datasource).
 
+Additional options passed are set as `java.util.Properties` and, by default, are coerced to strings.
+If you are working with a driver that requires a non-string value for a property (such as the Snowflake driver), you can provide a `:next.jdbc/as-is-properties` option containing a sequence of options that should be added as-is, rather than coerced to strings.
+
 > Note: If `plan`, `execute!`, or `execute-one!` are passed a `DataSource`, a "db spec" hash map, or a JDBC URL string, they will call `get-connection`, so they will accept the above options in those cases.
 
 ## Generating SQL

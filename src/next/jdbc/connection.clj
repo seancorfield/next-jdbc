@@ -1,4 +1,4 @@
-;; copyright (c) 2018-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2018-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.connection
   "Standard implementations of `get-datasource` and `get-connection`.
@@ -374,9 +374,12 @@
 (defn- as-properties
   "Convert any seq of pairs to a `java.util.Properties` instance."
   ^Properties [m]
-  (let [p (Properties.)]
-    (doseq [[k v] m]
-      (.setProperty p (name k) (str v)))
+  (let [p (Properties.)
+        as-is (set (:next.jdbc/as-is-properties m))]
+    (doseq [[k v] (dissoc m :next.jdbc/as-is-properties)]
+      (if (contains? as-is k)
+        (.put p (name k) v)
+        (.setProperty p (name k) (str v))))
     p))
 
 (defn uri->db-spec
