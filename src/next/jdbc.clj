@@ -177,6 +177,14 @@
     [spec user password opts]
     (p/get-connection spec (assoc opts :user user :password password))))
 
+(defn- ensure-sql-params [sql-params]
+  (when-not (or (nil? sql-params)
+                (and (seqable? sql-params)
+                     (or (empty? sql-params)
+                         (string? (first sql-params)))))
+    (throw (ex-info "sql-params should be a vector containing a SQL string and any parameters"
+                    {:sql-params sql-params}))))
+
 (defn prepare
   "Given a connection to a database, and a vector containing SQL and any
   parameters it needs, return a new `PreparedStatement`.
@@ -191,11 +199,13 @@
   See the list of options above (in the namespace docstring) for what can
   be passed to prepare."
   (^java.sql.PreparedStatement
-    [connection sql-params]
-    (p/prepare connection sql-params {}))
+   [connection sql-params]
+   (ensure-sql-params sql-params)
+   (p/prepare connection sql-params {}))
   (^java.sql.PreparedStatement
-    [connection sql-params opts]
-    (p/prepare connection sql-params opts)))
+   [connection sql-params opts]
+   (ensure-sql-params sql-params)
+   (p/prepare connection sql-params opts)))
 
 (defn plan
   "General SQL execution function (for working with result sets).
@@ -228,16 +238,18 @@
   (or they can be different, depending on how you want the row to be built,
   and how you want any subsequent lazy navigation to be handled)."
   (^clojure.lang.IReduceInit
-    [stmt]
-    (p/-execute stmt [] {}))
+   [stmt]
+   (p/-execute stmt [] {}))
   (^clojure.lang.IReduceInit
-    [connectable sql-params]
-    (p/-execute connectable sql-params
-                {:next.jdbc/sql-params sql-params}))
+   [connectable sql-params]
+   (ensure-sql-params sql-params)
+   (p/-execute connectable sql-params
+               {:next.jdbc/sql-params sql-params}))
   (^clojure.lang.IReduceInit
-    [connectable sql-params opts]
-    (p/-execute connectable sql-params
-                (assoc opts :next.jdbc/sql-params sql-params))))
+   [connectable sql-params opts]
+   (ensure-sql-params sql-params)
+   (p/-execute connectable sql-params
+               (assoc opts :next.jdbc/sql-params sql-params))))
 
 (defn execute!
   "General SQL execution function.
@@ -252,9 +264,11 @@
   ([stmt]
    (p/-execute-all stmt [] {}))
   ([connectable sql-params]
+   (ensure-sql-params sql-params)
    (p/-execute-all connectable sql-params
                    {:next.jdbc/sql-params sql-params}))
   ([connectable sql-params opts]
+   (ensure-sql-params sql-params)
    (p/-execute-all connectable sql-params
                    (assoc opts :next.jdbc/sql-params sql-params))))
 
@@ -271,9 +285,11 @@
   ([stmt]
    (p/-execute-one stmt [] {}))
   ([connectable sql-params]
+   (ensure-sql-params sql-params)
    (p/-execute-one connectable sql-params
                    {:next.jdbc/sql-params sql-params}))
   ([connectable sql-params opts]
+   (ensure-sql-params sql-params)
    (p/-execute-one connectable sql-params
                    (assoc opts :next.jdbc/sql-params sql-params))))
 
@@ -336,6 +352,8 @@
                          result))))
            params)))
   ([connectable sql param-groups opts]
+   (when-not (string? sql)
+     (throw (IllegalArgumentException. "execute-batch! requires a SQL string")))
    (if (instance? java.sql.Connection (p/unwrap connectable))
      (with-open [ps (prepare connectable [sql] opts)]
        (execute-batch! ps param-groups opts))
