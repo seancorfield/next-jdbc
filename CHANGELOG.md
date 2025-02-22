@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
+  * Address [#296](https://github.com/seancorfield/next-jdbc/issues/296) by adding an explicit check (and `throw`) for `sql-params` in `next.jdbc` functions.
   * Address [#295](https://github.com/seancorfield/next-jdbc/issues/295) by providing a way to tell `next.jdbc` that certain options should be passed "as-is" in the `Properties` object when creating a `Connection`.
   * Fix [#181](https://github.com/seancorfield/next-jdbc/issues/181) (again!) by adding `Wrapped` protocol as a way for `DefaultOptions` and `SQLLogging` to consistently expose the underlying connectable, even when nested.
 
