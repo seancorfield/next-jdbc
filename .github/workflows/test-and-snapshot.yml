@@ -23,7 +23,6 @@ jobs:
         with:
           path: |
             ~/.m2/repository
-            ~/.gitlibs
             ~/.clojure
             ~/.cpcache
           key: ${{ runner.os }}-${{ hashFiles('**/deps.edn') }}
@@ -73,7 +72,6 @@ jobs:
         with:
           path: |
             ~/.m2/repository
-            ~/.gitlibs
             ~/.clojure
             ~/.cpcache
           key: ${{ runner.os }}-${{ hashFiles('**/deps.edn') }}
