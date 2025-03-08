@@ -34,7 +34,7 @@ jobs:
       - name: Prep libs
         run: clojure -X:deps prep :aliases '[:test]'
       - name: Run MariaDB Tests
-        run: clojure -M:test:runner:1.11
+        run: clojure -M:test:runner
         env:
           MYSQL_ROOT_PASSWORD: testing
           NEXT_JDBC_TEST_MYSQL: yes

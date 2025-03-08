@@ -5,7 +5,7 @@
   clojure -T:build deploy
 
   Run tests via:
-  clojure -M:test:runner:1.11
+  clojure -M:test:runner
 
   For more information, run:
 
