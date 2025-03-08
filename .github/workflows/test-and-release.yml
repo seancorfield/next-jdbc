@@ -33,6 +33,8 @@ jobs:
         run: docker compose up -d
         env:
           MYSQL_ROOT_PASSWORD: testing
+      - name: Prep libs
+        run: clojure -X:deps prep :aliases '[:test]'
       - name: Run MariaDB Tests
         run: clojure -M:test:runner:1.11
         env:

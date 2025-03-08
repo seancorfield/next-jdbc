@@ -23,5 +23,6 @@
         (assoc "NEXT_JDBC_TEST_MARIADB" "yes")
         xtdb?
         (assoc "NEXT_JDBC_TEST_XTDB" "yes"))]
-  (doseq [v (if all? [#_"1.10" "1.11" "1.12"] [nil])]
+  (p/shell "clojure" "-X:deps" "prep" ":aliases" "[:test]")
+  (doseq [v (if all? ["1.10" "1.11" "1.12"] [nil])]
     (run-tests env v)))
