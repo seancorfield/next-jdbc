@@ -1,4 +1,4 @@
-;; copyright (c) 2019-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.date-time-test
   "Date/time parameter auto-conversion tests.
@@ -6,17 +6,17 @@
   These tests contain no assertions. Without requiring `next.jdbc.date-time`
   several of the `insert` operations would throw exceptions for some databases
   so the test here just checks those operations 'succeed'."
-  (:require [clojure.test :refer [deftest is testing use-fixtures]]
+  (:require [lazytest.core :refer [around set-ns-context!]]
+            [lazytest.experimental.interfaces.clojure-test :refer [deftest]]
             [next.jdbc :as jdbc]
             [next.jdbc.date-time] ; to extend SettableParameter to date/time
-            [next.jdbc.test-fixtures :refer [with-test-db db ds
+            [next.jdbc.test-fixtures :refer [with-test-db ds
                                              mssql? xtdb?]]
-            [next.jdbc.specs :as specs])
-  (:import (java.sql ResultSet)))
+            [next.jdbc.specs :as specs]))
 
 (set! *warn-on-reflection* true)
 
-(use-fixtures :once with-test-db)
+(set-ns-context! [(around [f] (with-test-db f))])
 
 (specs/instrument)
 

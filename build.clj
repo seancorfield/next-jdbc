@@ -5,7 +5,7 @@
   clojure -T:build deploy
 
   Run tests via:
-  clojure -X:test
+  clojure -M:test:runner:1.11
 
   For more information, run:
 
@@ -21,13 +21,13 @@
 (def class-dir "target/classes")
 
 (defn test "Run all the tests." [opts]
-  (doseq [alias [:1.10 :1.11 :1.12]]
+  (doseq [alias [#_:1.10 :1.11 :1.12]]
     (println "\nRunning tests for Clojure" (name alias))
     (let [basis    (b/create-basis {:aliases [:test alias]})
           cmds     (b/java-command
                     {:basis     basis
                      :main      'clojure.main
-                     :main-args ["-m" "cognitect.test-runner"]})
+                     :main-args ["-m" "lazytest.main"]})
           {:keys [exit]} (b/process cmds)]
       (when-not (zero? exit) (throw (ex-info "Tests failed" {})))))
   opts)

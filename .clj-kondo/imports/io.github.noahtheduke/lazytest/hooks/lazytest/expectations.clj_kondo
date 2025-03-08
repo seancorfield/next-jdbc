@@ -1,0 +1,31 @@
+;; Copied from https://github.com/clojure-expectations/clojure-test/blob/b90ed5b24924238b3b16b0bbaaee4c3b05a1268a
+
+(ns hooks.lazytest.expectations
+  (:require [clj-kondo.hooks-api :as api]))
+
+(defn more-> [{:keys [node]}]
+  (let [tail (rest (:children node))
+        rewritten
+        (api/list-node
+         (list*
+          (api/token-node 'cond->)
+          (api/token-node 'nil)
+          tail))]
+    {:node rewritten}))
+
+(defn more-of [{:keys [node]}]
+  (let [bindings (fnext (:children node))
+        pairs (partition 2 (nnext (:children node)))
+        rewritten
+        (api/list-node
+         (list*
+          (api/token-node 'fn)
+          (api/vector-node (vector bindings))
+          (map (fn [[e a]]
+                 (api/list-node
+                  (list
+                   (api/token-node 'lazytest.core/expect)
+                   e
+                   a)))
+               pairs)))]
+    {:node rewritten}))

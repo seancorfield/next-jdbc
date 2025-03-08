@@ -1,8 +1,9 @@
-;; copyright (c) 2019-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.sql.builder-test
   "Tests for the SQL string building functions in next.jdbc.sql.builder."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [lazytest.core :refer [throws?]]
+            [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing]]
             [next.jdbc.quoted :refer [mysql sql-server]]
             [next.jdbc.sql.builder :as builder]))
 
@@ -158,11 +159,11 @@
 
 (deftest test-for-update
   (testing "empty example (would be a SQL error)"
-    (is (thrown? IllegalArgumentException
-                 (builder/for-update :user
-                                     {:status 42}
-                                     {}
-                                     {:table-fn sql-server :column-fn mysql}))))
+    (is (throws? IllegalArgumentException
+                 #(builder/for-update :user
+                                      {:status 42}
+                                      {}
+                                      {:table-fn sql-server :column-fn mysql}))))
   (testing "by example"
     (is (= (builder/for-update :user
                                {:status 42}

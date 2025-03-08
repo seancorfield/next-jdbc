@@ -1,19 +1,21 @@
-;; copyright (c) 2019-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.sql-test
   "Tests for the syntactic sugar SQL functions."
-  (:require [clojure.test :refer [deftest is testing use-fixtures]]
-            [next.jdbc :as jdbc]
-            [next.jdbc.specs :as specs]
-            [next.jdbc.sql :as sql]
-            [next.jdbc.test-fixtures
-             :refer [column col-kw default-options derby? ds index
-                     jtds? maria? mssql? mysql? postgres? sqlite? with-test-db xtdb?]]
-            [next.jdbc.types :refer [as-other as-real as-varchar]]))
+  (:require
+   [lazytest.core :refer [around set-ns-context! throws?]]
+   [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing]]
+   [next.jdbc :as jdbc]
+   [next.jdbc.specs :as specs]
+   [next.jdbc.sql :as sql]
+   [next.jdbc.test-fixtures
+             :refer [col-kw column default-options derby? ds index jtds?
+                     maria? mssql? mysql? postgres? sqlite? with-test-db xtdb?]]
+   [next.jdbc.types :refer [as-other as-real as-varchar]]))
 
 (set! *warn-on-reflection* true)
 
-(use-fixtures :once with-test-db)
+(set-ns-context! [(around [f] (with-test-db f))])
 
 (specs/instrument)
 
@@ -72,8 +74,8 @@
     (when-not (xtdb?) ; XTDB does not support min/max on strings?
       (let [min-name (sql/aggregate-by-keys ds-opts :fruit "min(name)" :all)]
         (is (= "Apple" min-name))))
-    (is (thrown? IllegalArgumentException
-                 (sql/aggregate-by-keys ds-opts :fruit "count(*)" :all {:columns []})))))
+    (is (throws? IllegalArgumentException
+                 #(sql/aggregate-by-keys ds-opts :fruit "count(*)" :all {:columns []})))))
 
 (deftest test-get-by-id
   (let [ds-opts (jdbc/with-options (ds) (default-options))]
@@ -258,26 +260,26 @@
       (is (= [] (sql/insert-multi! (ds) :fruit [] []))))))
 
 (deftest no-empty-example-maps
-  (is (thrown? clojure.lang.ExceptionInfo
-               (sql/find-by-keys (ds) :fruit {})))
-  (is (thrown? clojure.lang.ExceptionInfo
-               (sql/update! (ds) :fruit {} {})))
-  (is (thrown? clojure.lang.ExceptionInfo
-               (sql/delete! (ds) :fruit {}))))
+  (is (throws? clojure.lang.ExceptionInfo
+               #(sql/find-by-keys (ds) :fruit {})))
+  (is (throws? clojure.lang.ExceptionInfo
+               #(sql/update! (ds) :fruit {} {})))
+  (is (throws? clojure.lang.ExceptionInfo
+               #(sql/delete! (ds) :fruit {}))))
 
 (deftest no-empty-columns
-  (is (thrown? clojure.lang.ExceptionInfo
-               (sql/insert-multi! (ds) :fruit [] [[] [] []]))))
+  (is (throws? clojure.lang.ExceptionInfo
+               #(sql/insert-multi! (ds) :fruit [] [[] [] []]))))
 
 (deftest no-mismatched-columns
-  (is (thrown? IllegalArgumentException
-               (sql/insert-multi! (ds) :fruit [{:name "Apple"} {:cost 1.23}]))))
+  (is (throws? IllegalArgumentException
+               #(sql/insert-multi! (ds) :fruit [{:name "Apple"} {:cost 1.23}]))))
 
 (deftest no-empty-order-by
-  (is (thrown? clojure.lang.ExceptionInfo
-               (sql/find-by-keys (ds) :fruit
-                                 {:name "Apple"}
-                                 {:order-by []}))))
+  (is (throws? clojure.lang.ExceptionInfo
+               #(sql/find-by-keys (ds) :fruit
+                                  {:name "Apple"}
+                                  {:order-by []}))))
 
 (deftest array-in
   (when (postgres?)

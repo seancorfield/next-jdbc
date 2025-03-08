@@ -1,10 +1,11 @@
-;; copyright (c) 2020-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2020-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.datafy-test
   "Tests for the datafy extensions over JDBC types."
   (:require [clojure.datafy :as d]
             [clojure.set :as set]
-            [clojure.test :refer [deftest is testing use-fixtures]]
+            [lazytest.core :refer [around set-ns-context!]]
+            [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing]]
             [next.jdbc :as jdbc]
             [next.jdbc.datafy]
             [next.jdbc.result-set :as rs]
@@ -15,7 +16,7 @@
 
 (set! *warn-on-reflection* true)
 
-(use-fixtures :once with-test-db)
+(set-ns-context! [(around [f] (with-test-db f))])
 
 (specs/instrument)
 

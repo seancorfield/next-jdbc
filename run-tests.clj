@@ -5,9 +5,10 @@
 (defn- run-tests [env v]
   (when v (println "\nTesting Clojure" v))
   (let [{:keys [exit]}
-        (p/shell {:extra-env env} "clojure" (str "-X"
-                                                 (when v (str ":" v))
-                                                 ":test"))]
+        (p/shell {:extra-env env}
+                 "clojure"
+                 (str "-M" (when v (str ":" v)) ":test:runner")
+                 "--output" "dots")]
     (when-not (zero? exit)
       (System/exit exit))))
 
@@ -22,5 +23,5 @@
         (assoc "NEXT_JDBC_TEST_MARIADB" "yes")
         xtdb?
         (assoc "NEXT_JDBC_TEST_XTDB" "yes"))]
-  (doseq [v (if all? ["1.10" "1.11" "1.12"] [nil])]
+  (doseq [v (if all? [#_"1.10" "1.11" "1.12"] [nil])]
     (run-tests env v)))

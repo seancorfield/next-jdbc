@@ -1,4 +1,4 @@
-;; copyright (c) 2024 Sean Corfield, all rights reserved
+;; copyright (c) 2024-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.defer-test
   "The idea behind the next.jdbc.defer namespace is to provide a
@@ -11,7 +11,8 @@
    describes a series of SQL operations to be performed, that
    are held in a dynamic var, and that can be executed at a
    later time, in a transaction."
-  (:require [clojure.test :refer [deftest is testing use-fixtures]]
+  (:require [lazytest.core :refer [around set-ns-context!]]
+            [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing]]
             [next.jdbc :as jdbc]
             [next.jdbc.defer :as sut]
             [next.jdbc.test-fixtures
@@ -19,7 +20,7 @@
 
 (set! *warn-on-reflection* true)
 
-(use-fixtures :once with-test-db)
+(set-ns-context! [(around [f] (with-test-db f))])
 
 (deftest basic-test
   (when-not (xtdb?)
