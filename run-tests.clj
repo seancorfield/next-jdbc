@@ -5,9 +5,9 @@
 (defn- run-tests [env v]
   (when v (println "\nTesting Clojure" v))
   (let [{:keys [exit]}
-        (p/shell {:extra-env env}
-                 "clojure"
-                 (str "-M" (when v (str ":" v)) ":test:runner")
+        (p/shell {:extra-env env} "clojure" (str "-M"
+                                                 (when v (str ":" v))
+                                                 ":test:runner")
                  "--output" "dots")]
     (when-not (zero? exit)
       (System/exit exit))))
