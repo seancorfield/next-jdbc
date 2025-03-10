@@ -2,8 +2,8 @@
 
 (ns next.jdbc.sql-test
   "Tests for the syntactic sugar SQL functions."
-  (:require [lazytest.core :refer [around set-ns-context! throws?]]
-            [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing]]
+  (:require [lazytest.core :refer [around set-ns-context!]]
+            [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing thrown?]]
             [next.jdbc :as jdbc]
             [next.jdbc.specs :as specs]
             [next.jdbc.sql :as sql]
@@ -73,8 +73,8 @@
     (when-not (xtdb?) ; XTDB does not support min/max on strings?
       (let [min-name (sql/aggregate-by-keys ds-opts :fruit "min(name)" :all)]
         (is (= "Apple" min-name))))
-    (is (throws? IllegalArgumentException
-                 #(sql/aggregate-by-keys ds-opts :fruit "count(*)" :all {:columns []})))))
+    (is (thrown? IllegalArgumentException
+                 (sql/aggregate-by-keys ds-opts :fruit "count(*)" :all {:columns []})))))
 
 (deftest test-get-by-id
   (let [ds-opts (jdbc/with-options (ds) (default-options))]
@@ -259,24 +259,24 @@
       (is (= [] (sql/insert-multi! (ds) :fruit [] []))))))
 
 (deftest no-empty-example-maps
-  (is (throws? clojure.lang.ExceptionInfo
-               #(sql/find-by-keys (ds) :fruit {})))
-  (is (throws? clojure.lang.ExceptionInfo
-               #(sql/update! (ds) :fruit {} {})))
-  (is (throws? clojure.lang.ExceptionInfo
-               #(sql/delete! (ds) :fruit {}))))
+  (is (thrown? clojure.lang.ExceptionInfo
+               (sql/find-by-keys (ds) :fruit {})))
+  (is (thrown? clojure.lang.ExceptionInfo
+               (sql/update! (ds) :fruit {} {})))
+  (is (thrown? clojure.lang.ExceptionInfo
+               (sql/delete! (ds) :fruit {}))))
 
 (deftest no-empty-columns
-  (is (throws? clojure.lang.ExceptionInfo
-               #(sql/insert-multi! (ds) :fruit [] [[] [] []]))))
+  (is (thrown? clojure.lang.ExceptionInfo
+               (sql/insert-multi! (ds) :fruit [] [[] [] []]))))
 
 (deftest no-mismatched-columns
-  (is (throws? IllegalArgumentException
-               #(sql/insert-multi! (ds) :fruit [{:name "Apple"} {:cost 1.23}]))))
+  (is (thrown? IllegalArgumentException
+               (sql/insert-multi! (ds) :fruit [{:name "Apple"} {:cost 1.23}]))))
 
 (deftest no-empty-order-by
-  (is (throws? clojure.lang.ExceptionInfo
-               #(sql/find-by-keys (ds) :fruit
+  (is (thrown? clojure.lang.ExceptionInfo
+               (sql/find-by-keys (ds) :fruit
                                   {:name "Apple"}
                                   {:order-by []}))))
 

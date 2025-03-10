@@ -5,8 +5,8 @@
   (:require
    [clojure.core.reducers :as r]
    [clojure.string :as str]
-   [lazytest.core :refer [around throws?]]
-   [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing]]
+   [lazytest.core :refer [around]]
+   [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing thrown?]]
    [next.jdbc :as jdbc]
    [next.jdbc.connection :as c]
    [next.jdbc.prepare :as prep]
@@ -259,28 +259,28 @@ VALUES ('Pear', 'green', 49, 47)
           (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
           (is (= ac (.getAutoCommit con))))))
     (testing "with-transaction exception"
-      (is (throws? Throwable
-                   #(jdbc/with-transaction [t (ds)]
-                      (jdbc/execute! t ["
+      (is (thrown? Throwable
+                   (jdbc/with-transaction [t (ds)]
+                     (jdbc/execute! t ["
 INSERT INTO fruit (name, appearance, cost, grade)
 VALUES ('Pear', 'green', 49, 47)
 "])
-                      (is (jdbc/active-tx?) "should be in a transaction")
-                      (is (jdbc/active-tx? t) "connection should be in a transaction")
-                      (throw (ex-info "abort" {})))))
+                     (is (jdbc/active-tx?) "should be in a transaction")
+                     (is (jdbc/active-tx? t) "connection should be in a transaction")
+                     (throw (ex-info "abort" {})))))
       (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))
       (is (not (jdbc/active-tx?)) "should not be in a transaction")
       (with-open [con (jdbc/get-connection (ds))]
         (let [ac (.getAutoCommit con)]
-          (is (throws? Throwable
-                       #(jdbc/with-transaction [t con]
-                          (jdbc/execute! t ["
+          (is (thrown? Throwable
+                       (jdbc/with-transaction [t con]
+                         (jdbc/execute! t ["
 INSERT INTO fruit (name, appearance, cost, grade)
 VALUES ('Pear', 'green', 49, 47)
 "])
-                          (is (jdbc/active-tx?) "should be in a transaction")
-                          (is (jdbc/active-tx? t) "connection should be in a transaction")
-                          (throw (ex-info "abort" {})))))
+                         (is (jdbc/active-tx?) "should be in a transaction")
+                         (is (jdbc/active-tx? t) "connection should be in a transaction")
+                         (throw (ex-info "abort" {})))))
           (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
           (is (= ac (.getAutoCommit con))))))
     (testing "with-transaction call rollback"
@@ -1106,8 +1106,8 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
   (is (every? #(re-find #"(?i)^(#:fruit)?\{.*:_?id.*\}$" %)
               (into [] (map pr-str) (jdbc/plan (ds) ["select * from fruit"]
                                                (default-options)))))
-  (is (throws? IllegalArgumentException
-               #(doall (take 3 (jdbc/plan (ds) ["select * from fruit"]))))))
+  (is (thrown? IllegalArgumentException
+               (doall (take 3 (jdbc/plan (ds) ["select * from fruit"]))))))
 
 (deftest issue-204
   {:context [(around [f] (with-test-db f))]}

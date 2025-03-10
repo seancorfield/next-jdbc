@@ -19,10 +19,7 @@
   ;; running tests/checks of various kinds:
   :test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.1"}
-                      io.github.noahtheduke/lazytest
-                      {:git/url "https://github.com/NoahTheDuke/lazytest/"
-                       :git/sha "4e4a746bed3eb5642b67d63117aef60954fe424f"}
-                      #_{:mvn/version "1.5.0"}
+                      io.github.noahtheduke/lazytest {:mvn/version "1.6.1"}
                       ;; connection pooling
                       com.zaxxer/HikariCP {:mvn/version "6.2.1"}
                       com.mchange/c3p0 {:mvn/version "0.10.1"}
