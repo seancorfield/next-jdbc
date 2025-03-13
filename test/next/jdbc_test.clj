@@ -5,8 +5,9 @@
   (:require
    [clojure.core.reducers :as r]
    [clojure.string :as str]
-   [lazytest.core :refer [around]]
-   [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing thrown?]]
+   [lazytest.core :refer [around ok?]]
+   [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing
+                                                          thrown?]]
    [next.jdbc :as jdbc]
    [next.jdbc.connection :as c]
    [next.jdbc.prepare :as prep]
@@ -26,16 +27,17 @@
 
 (specs/instrument)
 
-(deftest spec-tests
+(defdescribe spec-tests
+  "sanity checks on instrumented function calls"
   {:context [(around [f] (with-test-db f))]}
   (let [db-spec {:dbtype "h2:mem" :dbname "clojure_test"}]
-    ;; some sanity checks on instrumented function calls:
-    (jdbc/get-datasource db-spec)
-    (jdbc/get-connection db-spec)
-    ;; and again with options:
+    (it "succeeds with a basic db-spec"
+      (ok? #(jdbc/get-datasource db-spec))
+      (ok? #(jdbc/get-connection db-spec)))
     (let [db-spec' (jdbc/with-options db-spec {})]
-      (jdbc/get-datasource db-spec')
-      (jdbc/get-connection db-spec'))))
+      (it "succeeds with an option-wrapped db-spec"
+        (ok? #(jdbc/get-datasource db-spec'))
+        (ok? #(jdbc/get-connection db-spec'))))))
 
 (deftest basic-tests
   {:context [(around [f] (with-test-db f))]}
