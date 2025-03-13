@@ -1,19 +1,20 @@
-;; copyright (c) 2019-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.sql-test
   "Tests for the syntactic sugar SQL functions."
-  (:require [clojure.test :refer [deftest is testing use-fixtures]]
+  (:require [lazytest.core :refer [around set-ns-context!]]
+            [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing thrown?]]
             [next.jdbc :as jdbc]
             [next.jdbc.specs :as specs]
             [next.jdbc.sql :as sql]
             [next.jdbc.test-fixtures
-             :refer [column col-kw default-options derby? ds index
-                     jtds? maria? mssql? mysql? postgres? sqlite? with-test-db xtdb?]]
+             :refer [col-kw column default-options derby? ds index jtds?
+                     maria? mssql? mysql? postgres? sqlite? with-test-db xtdb?]]
             [next.jdbc.types :refer [as-other as-real as-varchar]]))
 
 (set! *warn-on-reflection* true)
 
-(use-fixtures :once with-test-db)
+(set-ns-context! [(around [f] (with-test-db f))])
 
 (specs/instrument)
 
@@ -276,8 +277,8 @@
 (deftest no-empty-order-by
   (is (thrown? clojure.lang.ExceptionInfo
                (sql/find-by-keys (ds) :fruit
-                                 {:name "Apple"}
-                                 {:order-by []}))))
+                                  {:name "Apple"}
+                                  {:order-by []}))))
 
 (deftest array-in
   (when (postgres?)

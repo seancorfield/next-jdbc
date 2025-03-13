@@ -1,4 +1,4 @@
-;; copyright (c) 2019-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.prepare-test
   "Stub test namespace for PreparedStatement creation etc.
@@ -8,7 +8,8 @@
 
   The tests for the deprecated version of `execute-batch!` are here
   as a guard against regressions."
-  (:require [clojure.test :refer [deftest is testing use-fixtures]]
+  (:require [lazytest.core :refer [around set-ns-context!]]
+            [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing]]
             [next.jdbc :as jdbc]
             [next.jdbc.test-fixtures
              :refer [with-test-db ds jtds? mssql? sqlite? xtdb?]]
@@ -17,7 +18,7 @@
 
 (set! *warn-on-reflection* true)
 
-(use-fixtures :once with-test-db)
+(set-ns-context! [(around [f] (with-test-db f))])
 
 (specs/instrument)
 

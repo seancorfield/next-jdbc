@@ -1,4 +1,4 @@
-;; copyright (c) 2019-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.result-set-test
   "Test namespace for the result set functions.
@@ -8,7 +8,8 @@
   (:require [clojure.core.protocols :as core-p]
             [clojure.datafy :as d]
             [clojure.string :as str]
-            [clojure.test :refer [deftest is testing use-fixtures]]
+            [lazytest.core :refer [around set-ns-context!]]
+            [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing]]
             [next.jdbc.protocols :as p]
             [next.jdbc.result-set :as rs]
             [next.jdbc.specs :as specs]
@@ -19,7 +20,7 @@
 
 (set! *warn-on-reflection* true)
 
-(use-fixtures :once with-test-db)
+(set-ns-context! [(around [f] (with-test-db f))])
 
 (specs/instrument)
 

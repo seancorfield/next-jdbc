@@ -1,11 +1,12 @@
-;; copyright (c) 2019-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc-test
   "Basic tests for the primary API of `next.jdbc`."
   (:require
    [clojure.core.reducers :as r]
    [clojure.string :as str]
-   [clojure.test :refer [deftest is testing use-fixtures]]
+   [lazytest.core :refer [around]]
+   [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing thrown?]]
    [next.jdbc :as jdbc]
    [next.jdbc.connection :as c]
    [next.jdbc.prepare :as prep]
@@ -23,12 +24,10 @@
 
 (set! *warn-on-reflection* true)
 
-;; around each test because of the folding tests using 1,000 rows
-(use-fixtures :each with-test-db)
-
 (specs/instrument)
 
 (deftest spec-tests
+  {:context [(around [f] (with-test-db f))]}
   (let [db-spec {:dbtype "h2:mem" :dbname "clojure_test"}]
     ;; some sanity checks on instrumented function calls:
     (jdbc/get-datasource db-spec)
@@ -39,6 +38,7 @@
       (jdbc/get-connection db-spec'))))
 
 (deftest basic-tests
+  {:context [(around [f] (with-test-db f))]}
   ;; use ds-opts instead of (ds) anywhere you want default options applied:
   (let [ds-opts (jdbc/with-options (ds) (default-options))]
     (testing "plan"
@@ -363,6 +363,7 @@ VALUES ('Pear', 'green', 49, 47)
           (is (= ac (.getAutoCommit con))))))))
 
 (deftest issue-146
+  {:context [(around [f] (with-test-db f))]}
   ;; since we use an embedded PostgreSQL data source, we skip this:
   (when-not (or (postgres?) (xtdb?)
                 ;; and now we skip MS SQL because we can't use the db-spec
@@ -479,6 +480,7 @@ VALUES ('Pear', 'green', 49, 47)
 
 #_
 (deftest duplicate-insert-test
+  {:context [(around [f] (with-test-db f))]}
   ;; this is primarily a look at exception types/information for #226
   (try
     (jdbc/execute! (ds) ["
@@ -501,6 +503,7 @@ VALUES ('Pear', 'green', 49, 47)
                "\n\t" (ex-message t)))))
 
 (deftest bool-tests
+  {:context [(around [f] (with-test-db f))]} ;; Ensure the test database is used
   (testing (str "bool-tests for " (:dbtype (db)))
     (let [lit-t (cond (hsqldb?) "(1=1)" (mssql?) "1" :else "TRUE")
           lit-f (cond (hsqldb?) "(1=0)" (mssql?) "0" :else "FALSE")]
@@ -590,6 +593,7 @@ VALUES ('Pear', 'green', 49, 47)
           (is (every? boolean? (map :twiddle data))))))))
 
 (deftest execute-batch-tests
+  {:context [(around [f] (with-test-db f))]}
   (when-not (xtdb?)
     (testing "simple batch insert"
       (is (= [1 1 1 1 1 1 1 1 1 13]
@@ -692,6 +696,7 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
         (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))))))
 
 (deftest execute-batch-connectable-tests
+  {:context [(around [f] (with-test-db f))]}
   (when-not (xtdb?)
     (testing "simple batch insert"
       (is (= [1 1 1 1 1 1 1 1 1 13]
@@ -948,6 +953,7 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
         (is (= 4 (count (jdbc/execute! (ds) ["select * from fruit"]))))))))
 
 (deftest folding-test
+  {:context [(around [f] (with-test-db f))]}
   (jdbc/execute-one! (ds) ["delete from fruit"])
   (if (xtdb?)
     (with-open [con (jdbc/get-connection (ds))
@@ -1006,6 +1012,7 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
         (is (= "Fruit-1000" (last result)))))))
 
 (deftest connection-tests
+  {:context [(around [f] (with-test-db f))]}
   (testing "datasource via jdbcUrl"
     (when-not (or (postgres?) (xtdb?))
       (let [[url etc] (#'c/spec->url+etc (db))
@@ -1032,6 +1039,7 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
           (is (instance? java.sql.Connection con)))))))
 
 (deftest multi-rs
+  {:context [(around [f] (with-test-db f))]}
   (when (mssql?)
     (testing "script with multiple result sets"
       (let [multi-rs
@@ -1080,6 +1088,7 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
           (println 'call-proc (:dbtype (db)) (ex-message t) (some-> t (ex-cause) (ex-message))))))))
 
 (deftest plan-misuse
+  {:context [(around [f] (with-test-db f))]}
   (let [s (pr-str (jdbc/plan (ds) ["select * from fruit"]))]
     (is (re-find #"missing reduction" s)))
   (let [s (pr-str (into [] (jdbc/plan (ds) ["select * from fruit"])))]
@@ -1101,6 +1110,7 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
                (doall (take 3 (jdbc/plan (ds) ["select * from fruit"]))))))
 
 (deftest issue-204
+  {:context [(around [f] (with-test-db f))]}
   (testing "against a Connection"
     (is (seq (with-open [con (jdbc/get-connection (ds))]
                (jdbc/on-connection
@@ -1121,6 +1131,7 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
               (jdbc/execute! x ["select * from fruit"]))))))
 
 (deftest issue-256
+  {:context [(around [f] (with-test-db f))]}
   (testing "against a Connection"
     (is (seq (with-open [con (jdbc/get-connection (ds))]
                (jdbc/on-connection+options

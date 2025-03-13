@@ -1,8 +1,8 @@
-;; copyright (c) 2020-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2020-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.types-test
   "Some tests for the type-assist functions."
-  (:require [clojure.test :refer [deftest is]]
+  (:require [lazytest.experimental.interfaces.clojure-test :refer [deftest is]]
             [next.jdbc.types :refer [as-varchar]]))
 
 (set! *warn-on-reflection* true)

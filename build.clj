@@ -5,7 +5,7 @@
   clojure -T:build deploy
 
   Run tests via:
-  clojure -X:test
+  clojure -M:test:runner
 
   For more information, run:
 
@@ -27,7 +27,7 @@
           cmds     (b/java-command
                     {:basis     basis
                      :main      'clojure.main
-                     :main-args ["-m" "cognitect.test-runner"]})
+                     :main-args ["-m" "lazytest.main"]})
           {:keys [exit]} (b/process cmds)]
       (when-not (zero? exit) (throw (ex-info "Tests failed" {})))))
   opts)

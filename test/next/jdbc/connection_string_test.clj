@@ -7,7 +7,8 @@
   At some point, the datasource/connection tests should probably be extended
   to accept EDN specs from an external source (environment variables?)."
   (:require [clojure.string :as str]
-            [clojure.test :refer [deftest is testing use-fixtures]]
+            [lazytest.core :refer [around set-ns-context!]]
+            [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing]]
             [next.jdbc.connection :as c]
             [next.jdbc.protocols :as p]
             [next.jdbc.specs :as specs]
@@ -16,7 +17,7 @@
 
 (set! *warn-on-reflection* true)
 
-(use-fixtures :once with-test-db)
+(set-ns-context! [(around [f] (with-test-db f))])
 
 (specs/instrument)
 

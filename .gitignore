@@ -1,11 +1,8 @@
-*.class
-*.jar
-*.swp
-*~
 .calva/output-window/
 .calva/repl.calva-repl
 .classpath
 .clj-kondo/.cache
+.clj-kondo/.lock
 .cpcache
 .eastwood
 .factorypath
@@ -23,6 +20,10 @@
 .settings
 .socket-repl-port
 .sw*
+*.class
+*.jar
+*.swp
+*~
 /checkouts
 /classes
 /clojure_test_*

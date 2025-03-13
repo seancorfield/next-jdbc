@@ -1,9 +1,10 @@
-;; copyright (c) 2019-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.optional-test
   "Test namespace for the optional builder functions."
   (:require [clojure.string :as str]
-            [clojure.test :refer [deftest is testing use-fixtures]]
+            [lazytest.core :refer [around set-ns-context!]]
+            [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing]]
             [next.jdbc.optional :as opt]
             [next.jdbc.protocols :as p]
             [next.jdbc.test-fixtures :refer [col-kw column default-options ds index
@@ -13,7 +14,7 @@
 
 (set! *warn-on-reflection* true)
 
-(use-fixtures :once with-test-db)
+(set-ns-context! [(around [f] (with-test-db f))])
 
 (deftest test-map-row-builder
   (testing "default row builder"
@@ -62,7 +63,7 @@
       (is (= "Peach" ((column :FRUIT/name) row))))))
 
 (defn- default-column-reader
-  [^ResultSet rs ^ResultSetMetaData rsmeta ^Integer i]
+  [^ResultSet rs ^ResultSetMetaData _ ^Integer i]
   (.getObject rs i))
 
 (deftest test-map-row-adapter

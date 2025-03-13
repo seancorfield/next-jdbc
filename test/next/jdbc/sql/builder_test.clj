@@ -1,8 +1,8 @@
-;; copyright (c) 2019-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.sql.builder-test
   "Tests for the SQL string building functions in next.jdbc.sql.builder."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing thrown?]]
             [next.jdbc.quoted :refer [mysql sql-server]]
             [next.jdbc.sql.builder :as builder]))
 

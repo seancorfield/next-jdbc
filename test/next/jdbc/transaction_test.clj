@@ -1,17 +1,10 @@
-;; copyright (c) 2019-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.transaction-test
   "Stub test namespace for transaction handling."
-  (:require [clojure.test :refer [deftest is testing use-fixtures]]
-            [next.jdbc :as jdbc]
-            [next.jdbc.specs :as specs]
-            [next.jdbc.test-fixtures :refer [with-test-db db ds column
-                                              default-options
-                                              derby? mssql? mysql? postgres?]]
-            [next.jdbc.transaction :as tx]))
+  (:require [next.jdbc.specs :as specs]
+            [next.jdbc.transaction]))
 
 (set! *warn-on-reflection* true)
-
-(use-fixtures :once with-test-db)
 
 (specs/instrument)

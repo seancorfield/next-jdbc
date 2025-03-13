@@ -34,7 +34,7 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: testing
       - name: Run MariaDB Tests
-        run: clojure -X:test
+        run: clojure -M:test:runner
         env:
           MYSQL_ROOT_PASSWORD: testing
           NEXT_JDBC_TEST_MYSQL: yes
