@@ -5,7 +5,7 @@
   (:require
    [clojure.core.reducers :as r]
    [clojure.string :as str]
-   [lazytest.core :refer [around ok?]]
+   [lazytest.core :refer [around defdescribe it ok?]]
    [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing
                                                           thrown?]]
    [next.jdbc :as jdbc]
