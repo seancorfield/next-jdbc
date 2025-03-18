@@ -2,13 +2,18 @@
 
 (ns next.jdbc.types-test
   "Some tests for the type-assist functions."
-  (:require [lazytest.experimental.interfaces.clojure-test :refer [deftest is]]
+  (:require [lazytest.core :refer [defdescribe describe it expect]]
             [next.jdbc.types :refer [as-varchar]]))
 
 (set! *warn-on-reflection* true)
 
-(deftest as-varchar-test
+(defdescribe as-varchar-tests
   (let [v (as-varchar "Hello")]
-    (is (= "Hello" (v)))
-    (is (contains? (meta v) 'next.jdbc.prepare/set-parameter))
-    (is (fn? (get (meta v) 'next.jdbc.prepare/set-parameter)))))
+    (describe "produces a function"
+      (it "yields the original value when invoked"
+        (expect (fn? v))
+        (expect (= "Hello" (v)))))
+    (describe "carries metadata"
+      (it "has a `set-parameter` function"
+        (expect (contains? (meta v) 'next.jdbc.prepare/set-parameter))
+        (expect (fn? (get (meta v) 'next.jdbc.prepare/set-parameter)))))))
