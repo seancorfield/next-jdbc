@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
   * Switch tests to LazyTest via PR [#297](https://github.com/seancorfield/next-jdbc/pull/297).
+  * Update dev/test/build deps.
 
 * 1.3.1002 -- 2025-03-06
   * Address [#296](https://github.com/seancorfield/next-jdbc/issues/296) by adding an explicit check (and `throw`) for `sql-params` in `next.jdbc` functions.
