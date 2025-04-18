@@ -323,7 +323,7 @@
   "An example column-reader that still uses `.getObject` but expands CLOB
   columns into strings."
   [^ResultSet rs ^ResultSetMetaData _ ^Integer i]
-  (when-let [value (.getObject rs i)]
+  (let [value (.getObject rs i)]
     (cond-> value
       (instance? Clob value)
       (clob->string))))
