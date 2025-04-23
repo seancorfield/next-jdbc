@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
+  * Fix handling of `false` in `clob-column-reader` [#299](https://github.com/seancorfield/next-jdbc/issues/299) via PR [#300](https://github.com/seancorfield/next-jdbc/pull/300) from [@GAumala](https://github.com/GAumala)
   * Switch tests to LazyTest via PR [#297](https://github.com/seancorfield/next-jdbc/pull/297).
   * Update dev/test/build deps.
 
