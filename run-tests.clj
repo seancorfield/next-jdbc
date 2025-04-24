@@ -10,6 +10,9 @@
                  (str "-M"
                       (when v (str ":" v))
                       ":test:runner"
+                      ;; jdk21+ adds xtdb:
+                      (when (System/getenv "NEXT_JDBC_TEST_XTDB")
+                        ":jdk21")
                       ;; to suppress native access warnings on JDK24:
                       ":jdk24")
                  "--output" "dots")]

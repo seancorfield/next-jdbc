@@ -67,7 +67,10 @@
 (def ^:private test-xtdb-map {:dbtype "xtdb" :dbname "xtdb"})
 
 (def ^:private test-xtdb
-  (when (System/getenv "NEXT_JDBC_TEST_XTDB") test-xtdb-map))
+  (when (and (System/getenv "NEXT_JDBC_TEST_XTDB")
+             ;; only if we're on jdk21+
+             (str/starts-with? (System/getProperty "java.version") "2"))
+    test-xtdb-map))
 
 (def ^:private test-db-specs
   (cond-> [test-derby test-h2-mem test-h2 test-hsql test-sqlite]

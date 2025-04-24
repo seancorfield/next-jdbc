@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '11'
+          java-version: '21'
       - name: Setup Clojure
         uses: DeLaGuardo/setup-clojure@master
         with:
@@ -75,4 +75,4 @@ jobs:
             ~/.cpcache
           key: ${{ runner.os }}-${{ hashFiles('**/deps.edn') }}
       - name: Run Tests
-        run: clojure -T:build test
+        run: clojure -T:build:jdk${{ matrix.java }} test

@@ -38,7 +38,7 @@ jobs:
           NEXT_JDBC_TEST_MYSQL: yes
           NEXT_JDBC_TEST_MARIADB: yes
       - name: Run All Tests
-        run: clojure -M:test:runner
+        run: clojure -M:test:runner:jdk${{ matrix.java }}
         env:
           MYSQL_ROOT_PASSWORD: testing
           NEXT_JDBC_TEST_MYSQL: yes
