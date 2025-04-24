@@ -41,7 +41,7 @@
                       org.xerial/sqlite-jdbc {:mvn/version "3.49.1.0"}
                       com.microsoft.sqlserver/mssql-jdbc {:mvn/version "12.10.0.jre11"}
                       ;; only need the XTDB JDBC module:
-                      com.xtdb/xtdb-jdbc {:mvn/version "2.0.0-beta7"}
+                      com.xtdb/xtdb-jdbc {:mvn/version "2.0.0-beta6"}
                       ;; use log4j2 to reduce log noise during testing:
                       org.apache.logging.log4j/log4j-api {:mvn/version "2.24.3"}
                       ;; bridge everything into log4j:
