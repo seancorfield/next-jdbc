@@ -12,7 +12,8 @@
   clojure -A:deps -T:build help/doc"
   (:refer-clojure :exclude [test])
   (:require [clojure.tools.build.api :as b]
-            [deps-deploy.deps-deploy :as dd]))
+            [deps-deploy.deps-deploy :as dd]
+            [clojure.string :as str]))
 
 (def lib 'com.github.seancorfield/next.jdbc)
 (defn- the-version [patch] (format "1.3.%s" patch))
@@ -23,7 +24,10 @@
 (defn test "Run all the tests." [opts]
   (doseq [alias [:1.10 :1.11 :1.12]]
     (println "\nRunning tests for Clojure" (name alias))
-    (let [basis    (b/create-basis {:aliases [:test alias]})
+    (let [basis    (b/create-basis
+                    {:aliases (cond-> [:test alias]
+                                (str/starts-with? (System/getProperty "java.version") "21")
+                                (conj :jdk21))})
           cmds     (b/java-command
                     {:basis     basis
                      :main      'clojure.main
