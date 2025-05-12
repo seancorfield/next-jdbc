@@ -31,7 +31,10 @@ via `next.jdbc/with-transaction` -- there are some important considerations when
 There are some strategies you can take to mitigate these differences:
 1. Migrate code bottom-up so that you don't end up with calls to `clojure.java.jdbc` operations inside `next.jdbc/with-transaction` calls.
 2. When you migrate a `with-db-transaction` call, think carefully about whether it could be a nested call (in which case simply remove it) or a conditionally nested call which you'll need to be much more careful about migrating.
-3. You can bind `next.jdbc.transaction/*nested-tx*` to `:prohibit` which will throw exceptions if you accidentally nest calls to `next.jdbc/with-transaction`. Although you can bind it to `:ignore` in order to mimic the behavior of `clojure.java.jdbc`, that should be considered a last resort for dealing with complex conditional nesting of transaction calls. _Note that this is a per-thread "global" setting and not related to just a single connection, so you can't use this setting if you are working with multiple databases in the same dynamic thread context (`binding`)._
+3. When working with connections created by `clojure.java.jdbc/with-db-transaction`, you may need to extract the actual connection before passing to next.jdbc functions: either use `(:connection conn)` directly or `(some conn [:connection :datasource])` to handle both connection and datasource cases.
+4. You can bind `next.jdbc.transaction/*nested-tx*` to `:prohibit` which will throw exceptions if you accidentally nest calls to `next.jdbc/with-transaction`. Although you can bind it to `:ignore` in order to mimic the behavior of `clojure.java.jdbc`, that should be considered a last resort for dealing with complex conditional nesting of transaction calls. _Note that this is a per-thread "global" setting and not related to just a single connection, so you can't use this setting if you are working with multiple databases in the same dynamic thread context (`binding`)._
+
+See [Issue #301](https://github.com/seancorfield/next-jdbc/issues/301) for more details about transaction compatibility.
 
 ### Option Handling
 
