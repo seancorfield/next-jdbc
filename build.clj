@@ -23,10 +23,11 @@
 
 (defn test "Run all the tests." [opts]
   (doseq [alias [:1.10 :1.11 :1.12]]
-    (println "\nRunning tests for Clojure" (name alias))
+    (println "\nRunning tests for Clojure"
+             (name alias) "and Java" (System/getProperty "java.version"))
     (let [basis    (b/create-basis
                     {:aliases (cond-> [:test alias]
-                                (str/starts-with? (System/getProperty "java.version") "21")
+                                (str/starts-with? (System/getProperty "java.version") "2")
                                 (conj :jdk21))})
           cmds     (b/java-command
                     {:basis     basis
