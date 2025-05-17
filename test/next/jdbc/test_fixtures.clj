@@ -69,7 +69,9 @@
 (def ^:private test-xtdb
   (when (and (System/getenv "NEXT_JDBC_TEST_XTDB")
              ;; only if we're on jdk21+
-             (str/starts-with? (System/getProperty "java.version") "2"))
+             (str/starts-with? (System/getProperty "java.version") "2")
+             ;; and only if we're on clojure 1.12+
+             (re-find #"^1\.1[2-9]" (clojure-version)))
     test-xtdb-map))
 
 (def ^:private test-db-specs
