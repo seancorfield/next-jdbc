@@ -162,6 +162,7 @@
   in test functions (that operate inside this fixture)."
   [t]
   (doseq [db test-db-specs]
+    (println "\nTesting against" (:dbtype db "unknown database"))
     (reset! test-db-spec db)
     (if (= "embedded-postgres" (:dbtype db))
       (reset! test-datasource
@@ -285,7 +286,7 @@ CREATE PROCEDURE FRUITP" (cond (hsqldb?) "() READS SQL DATA DYNAMIC RESULT SETS 
                                 ["Peach" nil 139 90.0]
                                 ["Orange" "juicy" 89 88.6]]
                                {:return-keys false})))
-       (t)))))
+        (t)))))
 
 (create-clojure-test)
 
