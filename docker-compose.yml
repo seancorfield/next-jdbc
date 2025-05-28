@@ -15,7 +15,8 @@ services:
     ports:
       - "1433:1433"
   xtdb:
-    image: ghcr.io/xtdb/xtdb:latest
+    #image: ghcr.io/xtdb/xtdb:latest beta8.3
+    image: ghcr.io/xtdb/xtdb:2.0.0-beta8.1
     pull_policy: always
     ports:
       - "5432:5432"
