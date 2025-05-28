@@ -22,6 +22,7 @@
 (let [maria? (some #(= "maria" %) *command-line-args*)
       xtdb?  (some #(= "xtdb"  %) *command-line-args*)
       all?   (some #(= "all"   %) *command-line-args*)
+      base-v (when xtdb? "1.12")
       env
       (cond-> {"NEXT_JDBC_TEST_MSSQL" "yes"
                "NEXT_JDBC_TEST_MYSQL" "yes"
@@ -30,5 +31,5 @@
         (assoc "NEXT_JDBC_TEST_MARIADB" "yes")
         xtdb?
         (assoc "NEXT_JDBC_TEST_XTDB" "yes"))]
-  (doseq [v (if all? ["1.10" "1.11" "1.12"] [nil])]
+  (doseq [v (if all? ["1.10" "1.11" "1.12"] [base-v])]
     (run-tests env v)))
