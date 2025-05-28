@@ -162,7 +162,7 @@
   in test functions (that operate inside this fixture)."
   [t]
   (doseq [db test-db-specs]
-    (println "\nTesting against" (:dbtype db "unknown database"))
+    (println "\n    ---->" (:dbtype db "unknown database"))
     (reset! test-db-spec db)
     (if (= "embedded-postgres" (:dbtype db))
       (reset! test-datasource
