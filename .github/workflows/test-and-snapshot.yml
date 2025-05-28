@@ -43,7 +43,6 @@ jobs:
           MYSQL_ROOT_PASSWORD: testing
           NEXT_JDBC_TEST_MYSQL: yes
           NEXT_JDBC_TEST_XTDB: yes
-          XTDB_LOGGING_LEVEL_PGWIRE: debug
           NEXT_JDBC_TEST_MSSQL: yes
           MSSQL_SA_PASSWORD: Str0ngP4ssw0rd
       - name: Deploy Snapshot

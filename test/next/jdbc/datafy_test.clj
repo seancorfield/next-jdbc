@@ -107,13 +107,10 @@
                              (sqlite?)   (-> (disj :clientInfoProperties :rowIdLifetime)
                                              (conj :clientInfoProperties/exception
                                                    :rowIdLifetime/exception)))
-            info (d/datafy (.getMetaData con))
-            data (set (keys info #_(d/datafy (.getMetaData con))))]
+            data (set (keys (d/datafy (.getMetaData con))))]
         (when-let [diff (seq (set/difference data reference-keys))]
           (println (format "%6s :%-10s %s"
-                           (:dbtype (db)) "db-meta" (str (sort diff))))
-          (when-let [ex (:SQLKeywords/exception info)]
-            (println "SQLKeywords exception:" ex)))
+                           (:dbtype (db)) "db-meta" (str (sort diff)))))
         (is (= reference-keys
                (set/intersection reference-keys data))))))
   (testing "nav to catalogs yields object"
