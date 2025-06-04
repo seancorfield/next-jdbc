@@ -15,7 +15,7 @@ services:
     ports:
       - "1433:1433"
   xtdb:
-    image: ghcr.io/xtdb/xtdb:edge
+    image: ghcr.io/xtdb/xtdb:nightly-20250604
     #2.0.0-beta8.4
     ports:
       - "5432:5432"
