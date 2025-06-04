@@ -6,7 +6,7 @@ It is designed to work with Clojure 1.10 or later, supports `datafy`/`nav`, and 
 
 ## Installation
 
-**You must be using Clojure 1.10 or later.** 1.12.0 is the most recent stable version of Clojure (as of March 15th, 2024).
+**You must be using Clojure 1.10 or later.** 1.12.1 is the most recent stable version of Clojure (as of June 4th, 2025).
 
 You can add `next.jdbc` to your project with either:
 
@@ -22,7 +22,7 @@ for `project.clj` or `build.boot`.
 
 **In addition, you will need to add dependencies for the JDBC drivers you wish to use for whatever databases you are using. For example:**
 
-* MySQL: `com.mysql/mysql-connector-j {:mvn/version "9.1.0"}` ([search for latest version](https://search.maven.org/artifact/com.mysql/mysql-connector-j))
+* MySQL: `com.mysql/mysql-connector-j {:mvn/version "9.3.0"}` ([search for latest version](https://search.maven.org/artifact/com.mysql/mysql-connector-j))
 * PostgreSQL: `org.postgresql/postgresql {:mvn/version "42.7.4"}` ([search for latest version](https://search.maven.org/artifact/org.postgresql/postgresql))
 * Microsoft SQL Server: `com.microsoft.sqlserver/mssql-jdbc {:mvn/version "12.8.1.jre11"}` ([search for latest version](https://search.maven.org/artifact/com.microsoft.sqlserver/mssql-jdbc))
 * Sqlite: `org.xerial/sqlite-jdbc {:mvn/version "3.47.1.0"}` ([search for latest version](https://search.maven.org/artifact/org.xerial/sqlite-jdbc))
@@ -37,7 +37,7 @@ For the examples in this documentation, we will use a local H2 database on disk,
 
 ```clojure
 ;; deps.edn
-{:deps {org.clojure/clojure {:mvn/version "1.12.0"}
+{:deps {org.clojure/clojure {:mvn/version "1.12.1"}
         com.github.seancorfield/next.jdbc {:mvn/version "1.3.1002"}
         com.h2database/h2 {:mvn/version "2.3.232"}}}
 ```
@@ -48,7 +48,7 @@ In this REPL session, we'll define an H2 datasource, create a database with a si
 
 ```clojure
 > clj
-Clojure 1.12.0
+Clojure 1.12.1
 user=> (require '[next.jdbc :as jdbc])
 nil
 user=> (def db {:dbtype "h2" :dbname "example"})
@@ -489,7 +489,7 @@ First, you need to add the connection pooling library as a dependency, e.g.,
 ```clojure
 com.zaxxer/HikariCP {:mvn/version "6.2.1"}
 ;; or:
-com.mchange/c3p0 {:mvn/version "0.10.1"}
+com.mchange/c3p0 {:mvn/version "0.11.1"}
 ```
 
 _Check those libraries' documentation for the latest version to use!_
