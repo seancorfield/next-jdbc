@@ -24,7 +24,24 @@
           (map (fn [[e a]]
                  (api/list-node
                   (list
-                   (api/token-node 'lazytest.core/expect)
+                   (api/token-node 'lazytest.extensions.expectations/expect)
+                   e
+                   a)))
+               pairs)))]
+    {:node rewritten}))
+
+(defn interface-more-of [{:keys [node]}]
+  (let [bindings (fnext (:children node))
+        pairs (partition 2 (nnext (:children node)))
+        rewritten
+        (api/list-node
+         (list*
+          (api/token-node 'fn)
+          (api/vector-node (vector bindings))
+          (map (fn [[e a]]
+                 (api/list-node
+                  (list
+                   (api/token-node 'lazytest.experimental.interfaces.expectations/expect)
                    e
                    a)))
                pairs)))]
