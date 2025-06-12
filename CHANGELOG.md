@@ -2,8 +2,8 @@
 
 Only accretive/fixative changes will be made from now on.
 
-* 1.3.next in progress
-  * Address [#302](https://github.com/seancorfield/next-jdbc/issues/302) by updating the XTDB tests to Beta 8 (switching from `xtdb-jdbc` to `xtdb-api`, only testing XTDB on Clojure 1.12, and fixing a bug in `run-tests.clj`).
+* 1.3.1048 -- 2025-06-12
+  * Address [#302](https://github.com/seancorfield/next-jdbc/issues/302) by updating the XTDB tests to 2.0.0 GA (switching from `xtdb-jdbc` to `xtdb-api`, only testing XTDB on Clojure 1.12, and fixing a bug in `run-tests.clj`).
   * Fix handling of `false` in `clob-column-reader` [#299](https://github.com/seancorfield/next-jdbc/issues/299) via PR [#300](https://github.com/seancorfield/next-jdbc/pull/300) from [@GAumala](https://github.com/GAumala)
   * Switch tests to LazyTest via PR [#297](https://github.com/seancorfield/next-jdbc/pull/297).
   * Update dev/test/build deps.
