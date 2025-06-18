@@ -150,6 +150,10 @@ way to minimize long term confusion.
 
 > Original text contributed by [Denis McCarthy](https://github.com/denismccarthykerry); in addition: I generally recommend not only using UTC everywhere but also setting your database _and your servers_ to all be in the UTC timezones, to avoid the possibly of incorrect date/time translations -- Sean Corfield.
 
+## DuckDB
+
+The main issue I'm aware of with `next.jdbc` is that DuckDB's JDBC drivers all return an empty string from `ResultSetMetaData.getTableName()` so you won't get qualified keywords in the result set hash maps. Sorry!
+
 ## MS SQL Server
 
 In MS SQL Server, the generated key from an insert comes back as `:GENERATED_KEYS`.
