@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
   * Noted that DuckDB returns an empty string from `.getTableName()` so you cannot get qualified maps with DuckDB.
+  * Update dev/test deps.
 
 * 1.3.1048 -- 2025-06-12
   * Address [#302](https://github.com/seancorfield/next-jdbc/issues/302) by updating the XTDB tests to 2.0.0 GA (switching from `xtdb-jdbc` to `xtdb-api`, only testing XTDB on Clojure 1.12, and fixing a bug in `run-tests.clj`).
