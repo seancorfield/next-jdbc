@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
   * Noted that DuckDB returns an empty string from `.getTableName()` so you cannot get qualified maps with DuckDB.
+  * Assume `bb` for testing/building; add `bb.edn`; switch GitHub Actions to use `bb`.
   * Update dev/test deps.
 
 * 1.3.1048 -- 2025-06-12
