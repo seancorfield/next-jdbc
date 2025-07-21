@@ -1,41 +1,24 @@
 (ns build
   "next.jdbc's build script.
 
-  clojure -T:build ci
+  clojure -T:build jar
   clojure -T:build deploy
 
   Run tests via:
-  clojure -M:test:runner
+  bb test
 
   For more information, run:
 
   clojure -A:deps -T:build help/doc"
   (:refer-clojure :exclude [test])
   (:require [clojure.tools.build.api :as b]
-            [deps-deploy.deps-deploy :as dd]
-            [clojure.string :as str]))
+            [deps-deploy.deps-deploy :as dd]))
 
 (def lib 'com.github.seancorfield/next.jdbc)
 (defn- the-version [patch] (format "1.3.%s" patch))
 (def version (the-version (b/git-count-revs nil)))
 (def snapshot (the-version "9999-SNAPSHOT"))
 (def class-dir "target/classes")
-
-(defn test "Run all the tests." [opts]
-  (doseq [alias [:1.10 :1.11 :1.12]]
-    (println "\nRunning tests for Clojure"
-             (name alias) "and Java" (System/getProperty "java.version"))
-    (let [basis    (b/create-basis
-                    {:aliases (cond-> [:test alias]
-                                (str/starts-with? (System/getProperty "java.version") "2")
-                                (conj :jdk21))})
-          cmds     (b/java-command
-                    {:basis     basis
-                     :main      'clojure.main
-                     :main-args ["-m" "lazytest.main"]})
-          {:keys [exit]} (b/process cmds)]
-      (when-not (zero? exit) (throw (ex-info "Tests failed" {})))))
-  opts)
 
 (defn- pom-template [version]
   [[:description "The next generation of clojure.java.jdbc: a new low-level Clojure wrapper for JDBC-based access to databases."]
@@ -64,8 +47,7 @@
            :src-dirs  ["src"]
            :pom-data  (pom-template version))))
 
-(defn ci "Run the CI pipeline of tests (and build the JAR)." [opts]
-  (test opts)
+(defn jar "Build the JAR file." [opts]
   (b/delete {:path "target"})
   (let [opts (jar-opts opts)]
     (println "\nWriting pom.xml...")

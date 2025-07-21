@@ -18,6 +18,7 @@ jobs:
         uses: DeLaGuardo/setup-clojure@master
         with:
           cli: '1.12.1.1550'
+          bb: 'latest'
       - name: Cache All The Things
         uses: actions/cache@v4
         with:
@@ -32,16 +33,10 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: testing
       - name: Run MariaDB Tests
-        run: clojure -M:test:runner
+        run: bb test maria jdk${{ matrix.java }}
         env:
           MYSQL_ROOT_PASSWORD: testing
-          NEXT_JDBC_TEST_MYSQL: yes
-          NEXT_JDBC_TEST_MARIADB: yes
       - name: Run All Tests
-        run: clojure -M:test:runner:jdk${{ matrix.java }}
+        run: bb test all jdk${{ matrix.java }}
         env:
           MYSQL_ROOT_PASSWORD: testing
-          NEXT_JDBC_TEST_MYSQL: yes
-          NEXT_JDBC_TEST_XTDB: yes
-          NEXT_JDBC_TEST_MSSQL: yes
-          MSSQL_SA_PASSWORD: Str0ngP4ssw0rd
