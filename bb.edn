@@ -8,8 +8,9 @@
               versions (or (seq (filter (fn [v] (str/starts-with? v "1."))
                                         *command-line-args*))
                            ["1.12"])
-              jdk      (or (first (filter (fn [v] (str/starts-with? v "jdk"))
-                                          *command-line-args*))
+              base-jdk (first (filter (fn [v] (str/starts-with? v "jdk"))
+                                      *command-line-args*))
+              jdk      (or base-jdk
                            ;; sean's local default:
                            "jdk24")
               env
@@ -29,7 +30,8 @@
                         (when v (str ":" v))
                         ":test:runner"
                         ;; jdk21+ adds xtdb:
-                        (when (get env "NEXT_JDBC_TEST_XTDB")
+                        (when (and (get env "NEXT_JDBC_TEST_XTDB")
+                                   (not base-jdk))
                           ":jdk21")
                         ;; add jdk-specific alias if provided
                         ":" jdk))))}
