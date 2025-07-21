@@ -68,4 +68,4 @@ jobs:
             ~/.cpcache
           key: ${{ runner.os }}-${{ hashFiles('**/deps.edn') }}
       - name: Run Tests
-        run: bb test jdk${{ matrix.java }}
+        run: bb test local jdk${{ matrix.java }}

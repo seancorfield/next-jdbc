@@ -3,8 +3,9 @@
 
   test {:doc "Run the test suite."
         :task
-        (let [maria?   (some #{"maria"} *command-line-args*)
-              all?     (some #{"all"} *command-line-args*)
+        (let [maria?   (some #{"maria"} *command-line-args*) ; test mariadb driver?
+              local?   (some #{"local"} *command-line-args*) ; only test local dbs?
+              all?     (some #{"all"} *command-line-args*) ; test all clojure versions?
               versions (or (seq (filter (fn [v] (str/starts-with? v "1."))
                                         *command-line-args*))
                            ["1.12"])
@@ -14,13 +15,16 @@
                            ;; sean's local default:
                            "jdk24")
               env
-              (if maria?
-                {"NEXT_JDBC_TEST_MARIADB" "yes"
-                 "NEXT_JDBC_TEST_MYSQL"   "yes"}
-                {"NEXT_JDBC_TEST_MSSQL" "yes"
-                 "NEXT_JDBC_TEST_MYSQL" "yes"
-                 "NEXT_JDBC_TEST_XTDB"  "yes"
-                 "MSSQL_SA_PASSWORD"    "Str0ngP4ssw0rd"})]
+              (cond local?
+                    {}
+                    maria?
+                    {"NEXT_JDBC_TEST_MARIADB" "yes"
+                     "NEXT_JDBC_TEST_MYSQL"   "yes"}
+                    :else
+                    {"NEXT_JDBC_TEST_MSSQL" "yes"
+                     "NEXT_JDBC_TEST_MYSQL" "yes"
+                     "NEXT_JDBC_TEST_XTDB"  "yes"
+                     "MSSQL_SA_PASSWORD"    "Str0ngP4ssw0rd"})]
           ;; since we test xtdb by default now, we default to 1.12:
           (doseq [v (if all? ["1.10" "1.11" "1.12"] versions)]
             (println "\nTesting Clojure" v)
