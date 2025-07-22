@@ -31,7 +31,7 @@ jobs:
             ~/.cpcache
           key: ${{ runner.os }}-${{ hashFiles('**/deps.edn') }}
       - name: Setup Databases
-        run: docker compose up -d
+        run: bb docker:up
         env:
           MYSQL_ROOT_PASSWORD: testing
       - name: Run MariaDB Tests
