@@ -40,12 +40,12 @@
                         ;; add jdk-specific alias if provided
                         ":" jdk))))}
 
-  test-all {:doc "Run the test suite for all Clojure versions."
+  test:all {:doc "Run the test suite for all Clojure versions."
             :task (binding [*command-line-args* (conj *command-line-args* "all")]
                     (run 'test))}
 
   ci {:doc "Run the CI pipeline of tests and build the JAR."
-      :depends [test-all]
+      :depends [test:all]
       :task (let [snapshot? (some #{"snapshot"} *command-line-args*)
                   opts (if snapshot?
                          [:snapshot true]
