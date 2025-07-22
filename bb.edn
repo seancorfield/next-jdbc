@@ -60,4 +60,10 @@
                                 [:snapshot true]
                                 [])]
                      (apply shell "clojure -T:build deploy"
-                            (map str opts)))}}}
+                            (map str opts)))}
+
+  docker:up {:doc "Start the Docker containers for testing."
+             :task (shell "docker compose up -d")}
+
+  docker:down {:doc "Stop the Docker containers."
+               :task (shell "docker compose down")}}}
