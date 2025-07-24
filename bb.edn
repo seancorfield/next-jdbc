@@ -44,23 +44,19 @@
             :task (binding [*command-line-args* (conj *command-line-args* "all")]
                     (run 'test))}
 
+  -snapshot {:doc "Return snapshot options, if requested."
+             :task (->> (if (some #{"snapshot"} *command-line-args*)
+                          [:snapshot true]
+                          [])
+                        (map str))}
+
   ci {:doc "Run the CI pipeline of tests and build the JAR."
       :depends [test:all]
-      :task (let [snapshot? (some #{"snapshot"} *command-line-args*)
-                  opts (if snapshot?
-                         [:snapshot true]
-                         [])]
-              (apply shell "clojure -T:build jar"
-                     (map str opts)))}
+      :task (apply shell "clojure -T:build jar" (run '-snapshot))}
 
   ci:deploy {:doc "Deploy the JAR we just built to Clojars."
              :depends [ci]
-             :task (let [snapshot? (some #{"snapshot"} *command-line-args*)
-                         opts (if snapshot?
-                                [:snapshot true]
-                                [])]
-                     (apply shell "clojure -T:build deploy"
-                            (map str opts)))}
+             :task (apply shell "clojure -T:build deploy" (run '-snapshot))}
 
   docker:up {:doc "Start the Docker containers for testing."
              :task (shell "docker compose up -d")}
