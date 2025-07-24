@@ -29,7 +29,8 @@ jobs:
             ~/.gitlibs
             ~/.clojure
             ~/.cpcache
-          key: ${{ runner.os }}-${{ hashFiles('**/deps.edn') }}
+            ~/.deps.clj
+          key: ${{ runner.os }}-${{ hashFiles('**/deps.edn', '**/bb.edn') }}
       - name: Setup Databases
         run: bb docker:up
         env:
