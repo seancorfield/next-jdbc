@@ -31,7 +31,7 @@
             (shell {:extra-env env}
                    "clojure"
                    (str "-M"
-                        (when v (str ":" v))
+                        (str ":" v)
                         ":test:runner"
                         ;; jdk21+ adds xtdb:
                         (when (and (get env "NEXT_JDBC_TEST_XTDB")
