@@ -11,12 +11,12 @@ It is designed to work with Clojure 1.10 or later, supports `datafy`/`nav`, and 
 You can add `next.jdbc` to your project with either:
 
 ```clojure
-com.github.seancorfield/next.jdbc {:mvn/version "1.3.1048"}
+[com.github.seancorfield/next.jdbc "1.3.1048"]
 ```
 for `deps.edn` or:
 
 ```clojure
-[com.github.seancorfield/next.jdbc "1.3.1048"]
+com.github.seancorfield/next.jdbc {:mvn/version "1.3.1048"}
 ```
 for `project.clj` or `build.boot`.
 
