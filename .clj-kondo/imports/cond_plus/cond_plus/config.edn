@@ -1,6 +1,5 @@
 {:linters {:cond-plus/empty-else {:level :error}
            :cond-plus/missing-fn {:level :error}
            :cond-plus/non-final-else {:level :error}
-           :cond-plus/sequence {:level :error}
-           :unresolved-symbol {:exclude [(cond-plus.core/cond+ [=> else])]}}
+           :cond-plus/sequence {:level :error}}
  :hooks {:analyze-call {cond-plus.core/cond+ hooks.cond-plus-hook/cond+}}}
