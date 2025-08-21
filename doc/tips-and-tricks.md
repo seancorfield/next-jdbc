@@ -252,6 +252,18 @@ method is called for each query. If you want to avoid those extra queries,
 and you can live with unqualified column names, you can use `as-unqualified-maps`
 as the result set builder instead.
 
+By default, `next.jdbc` uses `.setObject()` to bind parameters for prepared
+statement execution, and assumes the JDBC driver will "do the right thing".
+Which most drivers do in most cases. For some values and types, PostgreSQL
+will insert a cast, and this can cause the index on that column to not be used.
+See this
+[article about forcing sequential scans](https://code.jeremyevans.net/2022-11-01-forcing-sequential-scans-on-postgresql.html).
+If you think you are running into this problem -- unexpectedly slow queries
+when certain numeric parameter values are provided -- you can try using the
+`next.jdbc.types/as-other` wrapper on your values. This causes the parameter
+to be bound using a different arity of `.setObject()` that passes
+`java.sql.Types/OTHER` as the SQL type.
+
 If you have a query where you want to select where a column is `IN` a sequence of values, you can use `col = ANY(?)` with a native array of the values instead of `IN (?,?,?,,,?)` and a sequence of values. **Be aware of
 [PostgreSQL bug 17822](https://www.postgresql.org/message-id/flat/17922-1e2e0aeedd294424%40postgresql.org)
 which can cause pathological performance when the array has a single element!**

@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
+  * Address [#307](https://github.com/seancorfield/next-jdbc/issues/307) by documenting the use of `next.jdbc.types/as-other` for binding parameters, to work around PostgreSQL's implicit casts, in **Tips & Tricks**. Thanks to [Peter Bex](https://github.com/sjamaan) for alerting me to this issue.
   * Noted that DuckDB returns an empty string from `.getTableName()` so you cannot get qualified maps with DuckDB.
   * Assume `bb` for testing/building; add `bb.edn`; switch GitHub Actions to use `bb`.
   * Fix clj-kondo lint issues in source files (`reify` calls in `next.jdbc.result-set`).
