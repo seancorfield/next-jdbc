@@ -1,4 +1,4 @@
-;; copyright (c) 2018-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2018-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.result-set
   "An implementation of `ResultSet` handling functions.
@@ -602,6 +602,7 @@
            `metadata
            (fn [_] (if (instance? Throwable meta) (throw meta) meta)))))
 
+      Object
       (toString [_]
         (try
           (str (row-builder @builder))
@@ -877,6 +878,7 @@
                                          (rest sql-params)
                                          opts)]
           (fold-stmt stmt n combinef reducef this opts)))
+      Object
       (toString [_] "`IReduceInit` from `plan` -- missing reduction?")))
   (-execute-one [this sql-params opts]
     (with-open [stmt (prepare/create this
@@ -922,6 +924,7 @@
                                          (rest sql-params)
                                          opts)]
           (fold-stmt stmt n combinef reducef this opts)))
+      Object
       (toString [_] "`IReduceInit` from `plan` -- missing reduction?")))
   (-execute-one [this sql-params opts]
     (with-open [con  (p/get-connection this opts)
@@ -963,6 +966,7 @@
       (coll-fold [_ n combinef reducef]
         (fold-stmt this n combinef reducef (.getConnection this)
                    (merge {:return-keys true} opts)))
+      Object
       (toString [_] "`IReduceInit` from `plan` -- missing reduction?")))
   (-execute-one [this _ opts]
     (if-let [rs (stmt->result-set this (merge {:return-keys true} opts))]
@@ -995,6 +999,7 @@
       (coll-fold [_ n combinef reducef]
         (fold-stmt-sql this (first sql-params) n combinef reducef
                        (.getConnection this) opts))
+      Object
       (toString [_] "`IReduceInit` from `plan` -- missing reduction?")))
   (-execute-one [this sql-params opts]
     (validate (= 1 (count sql-params))
