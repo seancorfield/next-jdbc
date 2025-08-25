@@ -6,7 +6,7 @@ It is designed to work with Clojure 1.10 or later, supports `datafy`/`nav`, and 
 
 ## Installation
 
-**You must be using Clojure 1.10 or later.** 1.12.1 is the most recent stable version of Clojure (as of June 4th, 2025).
+**You must be using Clojure 1.10 or later.** 1.12.2 is the most recent stable version of Clojure (as of August 25th, 2025).
 
 You can add `next.jdbc` to your project with either:
 
@@ -37,7 +37,7 @@ For the examples in this documentation, we will use a local H2 database on disk,
 
 ```clojure
 ;; deps.edn
-{:deps {org.clojure/clojure {:mvn/version "1.12.1"}
+{:deps {org.clojure/clojure {:mvn/version "1.12.2"}
         com.github.seancorfield/next.jdbc {:mvn/version "1.3.1048"}
         com.h2database/h2 {:mvn/version "2.3.232"}}}
 ```
