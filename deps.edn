@@ -21,7 +21,7 @@
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.1"}
                       io.github.noahtheduke/lazytest {:mvn/version "1.8.0"}
                       ;; connection pooling
-                      com.zaxxer/HikariCP {:mvn/version "7.0.1"}
+                      com.zaxxer/HikariCP {:mvn/version "7.0.2"}
                       com.mchange/c3p0 {:mvn/version "0.11.2"}
                       ;; JDBC drivers
                       ;; 10.16.x is JDK17+
@@ -34,12 +34,12 @@
                       com.mysql/mysql-connector-j {:mvn/version "9.4.0"}
                       ;; 42.7.4 changes update count (to -1) for stored procs:
                       org.postgresql/postgresql {:mvn/version "42.7.7"}
-                      io.zonky.test/embedded-postgres {:mvn/version "2.1.0"}
-                      io.zonky.test.postgres/embedded-postgres-binaries-darwin-amd64 {:mvn/version "17.5.0"}
-                      io.zonky.test.postgres/embedded-postgres-binaries-linux-amd64 {:mvn/version "17.5.0"}
-                      io.zonky.test.postgres/embedded-postgres-binaries-windows-amd64 {:mvn/version "17.5.0"}
+                      io.zonky.test/embedded-postgres {:mvn/version "2.1.1"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-darwin-amd64 {:mvn/version "17.6.0"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-linux-amd64 {:mvn/version "17.6.0"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-windows-amd64 {:mvn/version "17.6.0"}
                       org.xerial/sqlite-jdbc {:mvn/version "3.50.3.0"}
-                      com.microsoft.sqlserver/mssql-jdbc {:mvn/version "12.10.0.jre11"}
+                      com.microsoft.sqlserver/mssql-jdbc {:mvn/version "13.2.0.jre11"}
                       ;; use log4j2 to reduce log noise during testing:
                       org.apache.logging.log4j/log4j-api {:mvn/version "2.25.1"}
                       ;; bridge everything into log4j:
