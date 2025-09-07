@@ -1,3 +1,9 @@
+;; all tasks that run tests can also accept:
+;;   all       - run tests against all supported Clojure versions
+;;   local     - only test local DBs (H2, HSQLDB, SQLite, Derby)
+;;   maria     - test MariaDB (and MySQL) drivers only
+;;   1.10/1.11/1.12 - run only against the specified Clojure version (defaults to 1.12)
+;;   jdk11/jdk17/jdk21/jdk24 - indicate which JDK you are using (defaults to jdk24)
 {:tasks
  {:requires [[clojure.string :as str]]
 
