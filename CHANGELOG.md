@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.3.next in progress
+  * Fix [#308](https://github.com/seancorfield/next-jdbc/issues/308) by using raw `Connection` internally for the `active-tx?` check.
+
 * 1.3.1070 -- 2025-09-06
   * Address [#307](https://github.com/seancorfield/next-jdbc/issues/307) by documenting the use of `next.jdbc.types/as-other` for binding parameters, to work around PostgreSQL's implicit casts, in **Tips & Tricks**. Thanks to [Peter Bex](https://github.com/sjamaan) for alerting me to this issue.
   * Noted that DuckDB returns an empty string from `.getTableName()` so you cannot get qualified maps with DuckDB.

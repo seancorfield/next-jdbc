@@ -469,7 +469,8 @@
   ([]
    (boolean (seq @#'tx/*active-tx*)))
   ([con]
-   (contains? @#'tx/*active-tx* con)))
+   (contains? @#'tx/*active-tx*
+              (#'tx/raw-connection con))))
 
 (defn with-options
   "Given a connectable/transactable object and a set of (default) options
