@@ -1,0 +1,9 @@
+; This Source Code Form is subject to the terms of the Mozilla Public
+; License, v. 2.0. If a copy of the MPL was not distributed with this
+; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+{:linters {:cond-plus/empty-else {:level :error}
+           :cond-plus/missing-fn {:level :error}
+           :cond-plus/non-final-else {:level :error}
+           :cond-plus/sequence {:level :error}}
+ :hooks {:analyze-call {noahtheduke.cond-plus/cond+ hooks.cond-plus-hook/cond+}}}
