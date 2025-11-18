@@ -268,28 +268,12 @@
   Note that the result is not type-hinted (because there's no common base
   class or interface that can be assumed). In particular, connection pooled
   datasource objects may need to be closed but they don't necessarily implement
-  `java.io.Closeable` (HikariCP does, c3p0 does not)."
+  `java.lang.AutoCloseable`."
   [clazz db-spec]
   (if (:jdbcUrl db-spec)
     (j/to-java clazz db-spec)
     (let [[url etc] (spec->url+etc db-spec)]
       (j/to-java clazz (assoc etc :jdbcUrl url)))))
-
-(defn- attempt-close
-  "Given an arbitrary object that almost certainly supports a `.close`
-  method that takes no arguments and returns `void`, try to find it
-  and call it."
-  [obj]
-  (let [^Class clazz (class obj)
-        ^java.lang.reflect.Method close
-        (->> (.getMethods clazz)
-             (filter (fn [^java.lang.reflect.Method m]
-                       (and (= "close" (.getName m))
-                            (empty? (.getParameterTypes m))
-                            (= "void" (.getName (.getReturnType m))))))
-             (first))]
-    (when close
-      (.invoke close obj (object-array [])))))
 
 (defn component
   "Takes the same arguments as `->pool` but returns an entity compatible
@@ -305,19 +289,16 @@
   modification of (mutable) connection pooled datasource and/or some sort
   of database initialization/setup to be called automatically.
 
-  By default, the datasource is shutdown by calling `.close` on it.
-  If the datasource class implements `java.io.Closeable` then a direct,
-  type-hinted call to `.close` will be used, with no reflection,
-  otherwise Java reflection will be used to find the first `.close`
-  method in the datasource class that takes no arguments and returns `void`.
+  By default, the datasource is shutdown by calling `.close` on it. The
+  datasource class object will be cast to `java.lang.AutoCloseable` first.
 
-  If neither of those behaviors is appropriate, you may supply a third
-  argument to this function -- `close-fn` -- which performs whatever
-  action is appropriate to your chosen datasource class."
+  If that behavior is not appropriate, you may supply a third argument to
+  this function -- `close-fn` -- which performs whatever action is
+  appropriate to your chosen datasource class."
   ([clazz db-spec]
-   (component clazz db-spec #(if (isa? clazz java.io.Closeable)
-                               (.close ^java.io.Closeable %)
-                               (attempt-close %))))
+   (component clazz db-spec #(try
+                               (.close ^java.lang.AutoCloseable %)
+                               (catch Exception _))))
   ([clazz db-spec close-fn]
    (with-meta {}
      {'com.stuartsierra.component/start
@@ -332,19 +313,20 @@
                (component clazz db-spec close-fn))})))})))
 
 (comment
+  ((requiring-resolve 'clojure.repl.deps/add-lib) 'com.stuartsierra/component)
   (require '[com.stuartsierra.component :as component]
            '[next.jdbc.sql :as sql])
   (import '(com.mchange.v2.c3p0 ComboPooledDataSource PooledDataSource)
           '(com.zaxxer.hikari HikariDataSource))
-  (isa? PooledDataSource java.io.Closeable) ;=> false
-  (isa? HikariDataSource java.io.Closeable) ;=> true
+  (isa? PooledDataSource java.lang.AutoCloseable) ;=> true
+  (isa? HikariDataSource java.lang.AutoCloseable) ;=> true
   ;; create a pool with a combination of JDBC URL and username/password:
   (->pool HikariDataSource
           {:jdbcUrl
            (jdbc-url {:dbtype "mysql" :dbname "clojure_test"
                       :useSSL false})
            :username "root" :password (System/getenv "MYSQL_ROOT_PASSWORD")})
-  ;; use c3p0 with default reflection-based closing function:
+  ;; use c3p0 with default AutoCloseable .close function:
   (def dbc (component ComboPooledDataSource
                       {:dbtype "mysql" :dbname "clojure_test"
                        :user "clojure_test" :password "clojure_test"}))
@@ -353,7 +335,7 @@
                       {:dbtype "mysql" :dbname "clojure_test"
                        :user "clojure_test" :password "clojure_test"}
                       #(.close ^PooledDataSource %)))
-  ;; use HikariCP with default Closeable .close function:
+  ;; use HikariCP with default AutoCloseable .close function:
   (def dbc (component HikariDataSource
                       {:dbtype "mysql" :dbname "clojure_test"
                        ;; HikariCP requires :username, not :user
