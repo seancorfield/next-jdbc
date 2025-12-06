@@ -7,8 +7,7 @@
   At some point, the datasource/connection tests should probably be extended
   to accept EDN specs from an external source (environment variables?)."
   (:require [clojure.string :as str]
-            [lazytest.core :refer [around set-ns-context!]]
-            [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing]]
+            [lazytest.core :refer [around defdescribe expect it]]
             [next.jdbc.connection :as c]
             [next.jdbc.protocols :as p]
             [next.jdbc.specs :as specs]
@@ -17,12 +16,12 @@
 
 (set! *warn-on-reflection* true)
 
-(set-ns-context! [(around [f] (with-test-db f))])
-
 (specs/instrument)
 
-(deftest test-uri-strings
-  (testing "datasource via String"
+(defdescribe test-uri-strings
+  "derive datasource from uri string"
+  {:context [(around [f] (with-test-db f))]}
+  (it "datasource via String"
     (let [db-spec (db)
           db-spec (if (= "embedded-postgres" (:dbtype db-spec))
                     (assoc db-spec :dbtype "postgresql")
@@ -40,17 +39,19 @@
           ds (p/get-datasource (assoc etc :jdbcUrl uri))]
       (when (and user password)
         (with-open [con (p/get-connection ds {})]
-          (is (instance? java.sql.Connection con)))))))
+          (expect (instance? java.sql.Connection con)))))))
 
-(deftest property-tests
-  (is (string? (.getProperty ^Properties (#'c/as-properties {:foo [42]}) "foo")))
-  (is (string? (.get ^Properties (#'c/as-properties {:foo [42]}) "foo")))
-  (is (vector? (.get ^Properties (#'c/as-properties
-                                  {:foo [42]
-                                   :next.jdbc/as-is-properties [:foo]})
-                     "foo")))
-  ;; because .getProperty drops non-string values!
-  (is (nil? (.getProperty ^Properties (#'c/as-properties
-                                       {:foo [42]
-                                        :next.jdbc/as-is-properties [:foo]})
-                          "foo"))))
+(defdescribe property-tests
+  "private as-properties function"
+  (it "as-properties converts map to Properties"
+    (expect (string? (.getProperty ^Properties (#'c/as-properties {:foo [42]}) "foo")))
+    (expect (string? (.get ^Properties (#'c/as-properties {:foo [42]}) "foo")))
+    (expect (vector? (.get ^Properties (#'c/as-properties
+                                        {:foo [42]
+                                         :next.jdbc/as-is-properties [:foo]})
+                           "foo")))
+    ;; because .getProperty drops non-string values!
+    (expect (nil? (.getProperty ^Properties (#'c/as-properties
+                                             {:foo [42]
+                                              :next.jdbc/as-is-properties [:foo]})
+                                "foo")))))
