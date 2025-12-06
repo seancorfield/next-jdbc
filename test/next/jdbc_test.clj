@@ -5,7 +5,7 @@
   (:require
    [clojure.core.reducers :as r]
    [clojure.string :as str]
-   [lazytest.core :refer [around defdescribe it ok?]]
+   [lazytest.core :refer [around defdescribe expect it ok?]]
    [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing
                                                           thrown?]]
    [next.jdbc :as jdbc]
@@ -32,12 +32,12 @@
   {:context [(around [f] (with-test-db f))]}
   (let [db-spec {:dbtype "h2:mem" :dbname "clojure_test"}]
     (it "succeeds with a basic db-spec"
-      (ok? #(jdbc/get-datasource db-spec))
-      (ok? #(jdbc/get-connection db-spec)))
+        (expect (ok? #(jdbc/get-datasource db-spec)))
+        (expect (ok? #(jdbc/get-connection db-spec))))
     (let [db-spec' (jdbc/with-options db-spec {})]
       (it "succeeds with an option-wrapped db-spec"
-        (ok? #(jdbc/get-datasource db-spec'))
-        (ok? #(jdbc/get-connection db-spec'))))))
+          (expect (ok? #(jdbc/get-datasource db-spec')))
+          (expect (ok? #(jdbc/get-connection db-spec')))))))
 
 (deftest basic-tests
   {:context [(around [f] (with-test-db f))]}
