@@ -18,7 +18,7 @@
 
   ;; running tests/checks of various kinds:
   :test {:extra-paths ["test"]
-         :extra-deps {org.clojure/test.check {:mvn/version "1.1.1"}
+         :extra-deps {org.clojure/test.check {:mvn/version "1.1.2"}
                       io.github.noahtheduke/lazytest {:mvn/version "1.9.1"}
                       ;; connection pooling
                       com.zaxxer/HikariCP {:mvn/version "7.0.2"}
