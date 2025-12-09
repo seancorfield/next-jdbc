@@ -1,4 +1,4 @@
-;; copyright (c) 2019-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.test-fixtures
   "Multi-database testing fixtures."
@@ -162,7 +162,6 @@
   in test functions (that operate inside this fixture)."
   [t]
   (doseq [db test-db-specs]
-    (println "\n    ---->" (:dbtype db "unknown database"))
     (reset! test-db-spec db)
     (if (= "embedded-postgres" (:dbtype db))
       (reset! test-datasource

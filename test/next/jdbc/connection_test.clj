@@ -7,122 +7,128 @@
   At some point, the datasource/connection tests should probably be extended
   to accept EDN specs from an external source (environment variables?)."
   (:require [clojure.string :as str]
-            [lazytest.experimental.interfaces.clojure-test :refer [deftest is testing]]
+            [lazytest.core :refer [defdescribe expect it]]
             [next.jdbc.connection :as c]
             [next.jdbc.protocols :as p])
-  (:import (com.zaxxer.hikari HikariDataSource)
-           (com.mchange.v2.c3p0 ComboPooledDataSource PooledDataSource)))
+  (:import (com.mchange.v2.c3p0 ComboPooledDataSource PooledDataSource)
+           (com.zaxxer.hikari HikariDataSource)))
 
 (set! *warn-on-reflection* true)
 
 (def ^:private db-name "clojure_test")
 
-(deftest test-aliases-and-defaults
-  (testing "aliases"
-    (is (= (#'c/spec->url+etc {:dbtype "hsql" :dbname db-name})
-           (#'c/spec->url+etc {:dbtype "hsqldb" :dbname db-name})))
-    (is (= (#'c/spec->url+etc {:dbtype "jtds" :dbname db-name})
-           (#'c/spec->url+etc {:dbtype "jtds:sqlserver" :dbname db-name})))
-    (is (= (#'c/spec->url+etc {:dbtype "mssql" :dbname db-name})
-           (#'c/spec->url+etc {:dbtype "sqlserver" :dbname db-name})))
-    (is (= (#'c/spec->url+etc {:dbtype "oracle" :dbname db-name})
-           (#'c/spec->url+etc {:dbtype "oracle:thin" :dbname db-name})))
-    (is (= (#'c/spec->url+etc {:dbtype "oracle:sid" :dbname db-name})
-           (-> (#'c/spec->url+etc {:dbtype "oracle:thin" :dbname db-name})
-               ;; oracle:sid uses : before DB name, not /
-               (update 0 str/replace (re-pattern (str "/" db-name)) (str ":" db-name)))))
-    (is (= (#'c/spec->url+etc {:dbtype "oracle:oci" :dbname db-name})
-           (-> (#'c/spec->url+etc {:dbtype "oracle:thin" :dbname db-name})
-               ;; oracle:oci and oracle:thin only differ in the protocol
-               (update 0 str/replace #":thin" ":oci"))))
-    (is (= (#'c/spec->url+etc {:dbtype "postgres" :dbname db-name})
-           (#'c/spec->url+etc {:dbtype "postgresql" :dbname db-name}))))
-  (testing "default ports"
-    (is (= (#'c/spec->url+etc {:dbtype "jtds:sqlserver" :dbname db-name})
-           (#'c/spec->url+etc {:dbtype "jtds:sqlserver" :dbname db-name :port 1433})))
-    (is (= (#'c/spec->url+etc {:dbtype "mysql" :dbname db-name})
-           (#'c/spec->url+etc {:dbtype "mysql" :dbname db-name :port 3306})))
-    (is (= (#'c/spec->url+etc {:dbtype "oracle:oci" :dbname db-name})
-           (#'c/spec->url+etc {:dbtype "oracle:oci" :dbname db-name :port 1521})))
-    (is (= (#'c/spec->url+etc {:dbtype "oracle:sid" :dbname db-name})
-           (#'c/spec->url+etc {:dbtype "oracle:sid" :dbname db-name :port 1521})))
-    (is (= (#'c/spec->url+etc {:dbtype "oracle:thin" :dbname db-name})
-           (#'c/spec->url+etc {:dbtype "oracle:thin" :dbname db-name :port 1521})))
-    (is (= (#'c/spec->url+etc {:dbtype "postgresql" :dbname db-name})
-           (#'c/spec->url+etc {:dbtype "postgresql" :dbname db-name :port 5432})))
-    (is (= (#'c/spec->url+etc {:dbtype "sqlserver" :dbname db-name})
-           (#'c/spec->url+etc {:dbtype "sqlserver" :dbname db-name :port 1433})))))
+(def ^:private spec->url+etc #'c/spec->url+etc)
 
-(deftest custom-dbtypes
-  (is (= ["jdbc:acme:my-db" {} nil]
-         (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
-                             :dbname "my-db" :host :none})))
-  (is (= ["jdbc:acme://127.0.0.1/my-db" {} nil]
-         (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
-                             :dbname "my-db"})))
-  (is (= ["jdbc:acme://12.34.56.70:1234/my-db" {} nil]
-         (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
-                             :dbname "my-db" :host "12.34.56.70" :port 1234})))
-  (is (= ["jdbc:acme:dsn=my-db" {} nil]
-         (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
-                             :dbname "my-db" :host :none
-                             :dbname-separator ":dsn="})))
-  (is (= ["jdbc:acme:(*)127.0.0.1/my-db" {} nil]
-         (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
-                             :dbname "my-db"
-                             :host-prefix "(*)"})))
-  (is (= ["jdbc:acme:(*)12.34.56.70:1234/my-db" {} nil]
-         (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
-                             :dbname "my-db" :host "12.34.56.70" :port 1234
-                             :host-prefix "(*)"})))
-  (is (= ["jdbc:acme:(*)12.34.56.70/my-db" {} nil]
-         (#'c/spec->url+etc {:dbtype "acme" :classname "java.lang.String"
-                             :dbname "my-db" :host "12.34.56.70" :port :none
-                             :host-prefix "(*)"}))))
+(defdescribe test-aliases-and-defaults
+  "spec->url+etc dbtype aliases and default ports"
+  (it "aliases"
+    (expect (= (spec->url+etc {:dbtype "hsql" :dbname db-name})
+               (spec->url+etc {:dbtype "hsqldb" :dbname db-name})))
+    (expect (= (spec->url+etc {:dbtype "jtds" :dbname db-name})
+               (spec->url+etc {:dbtype "jtds:sqlserver" :dbname db-name})))
+    (expect (= (spec->url+etc {:dbtype "mssql" :dbname db-name})
+               (spec->url+etc {:dbtype "sqlserver" :dbname db-name})))
+    (expect (= (spec->url+etc {:dbtype "oracle" :dbname db-name})
+               (spec->url+etc {:dbtype "oracle:thin" :dbname db-name})))
+    (expect (= (spec->url+etc {:dbtype "oracle:sid" :dbname db-name})
+               (-> (spec->url+etc {:dbtype "oracle:thin" :dbname db-name})
+                   ;; oracle:sid uses : before DB name, not /
+                   (update 0 str/replace (re-pattern (str "/" db-name)) (str ":" db-name)))))
+    (expect (= (spec->url+etc {:dbtype "oracle:oci" :dbname db-name})
+               (-> (spec->url+etc {:dbtype "oracle:thin" :dbname db-name})
+                   ;; oracle:oci and oracle:thin only differ in the protocol
+                   (update 0 str/replace #":thin" ":oci"))))
+    (expect (= (spec->url+etc {:dbtype "postgres" :dbname db-name})
+               (spec->url+etc {:dbtype "postgresql" :dbname db-name}))))
+  (it "default ports"
+    (expect (= (spec->url+etc {:dbtype "jtds:sqlserver" :dbname db-name})
+               (spec->url+etc {:dbtype "jtds:sqlserver" :dbname db-name :port 1433})))
+    (expect (= (spec->url+etc {:dbtype "mysql" :dbname db-name})
+               (spec->url+etc {:dbtype "mysql" :dbname db-name :port 3306})))
+    (expect (= (spec->url+etc {:dbtype "oracle:oci" :dbname db-name})
+               (spec->url+etc {:dbtype "oracle:oci" :dbname db-name :port 1521})))
+    (expect (= (spec->url+etc {:dbtype "oracle:sid" :dbname db-name})
+               (spec->url+etc {:dbtype "oracle:sid" :dbname db-name :port 1521})))
+    (expect (= (spec->url+etc {:dbtype "oracle:thin" :dbname db-name})
+               (spec->url+etc {:dbtype "oracle:thin" :dbname db-name :port 1521})))
+    (expect (= (spec->url+etc {:dbtype "postgresql" :dbname db-name})
+               (spec->url+etc {:dbtype "postgresql" :dbname db-name :port 5432})))
+    (expect (= (spec->url+etc {:dbtype "sqlserver" :dbname db-name})
+               (spec->url+etc {:dbtype "sqlserver" :dbname db-name :port 1433})))))
 
-(deftest jdbc-url-tests
-  (testing "basic URLs work"
-    (is (= "jdbc:acme:my-db"
-           (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
-                        :dbname "my-db" :host :none})))
-    (is (= "jdbc:acme://127.0.0.1/my-db"
-           (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
-                        :dbname "my-db"})))
-    (is (= "jdbc:acme://12.34.56.70:1234/my-db"
-           (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
-                        :dbname "my-db" :host "12.34.56.70" :port 1234})))
-    (is (= "jdbc:acme:dsn=my-db"
-           (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
-                        :dbname "my-db" :host :none
-                        :dbname-separator ":dsn="})))
-    (is (= "jdbc:acme:(*)127.0.0.1/my-db"
-           (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
-                        :dbname "my-db"
-                        :host-prefix "(*)"})))
-    (is (= "jdbc:acme:(*)12.34.56.70:1234/my-db"
-           (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
-                        :dbname "my-db" :host "12.34.56.70" :port 1234
-                        :host-prefix "(*)"}))))
-  (testing "URLs with properties work"
-    (is (= "jdbc:acme:my-db?useSSL=true"
-           (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
-                        :dbname "my-db" :host :none
-                        :useSSL true})))
-    (is (boolean (#{"jdbc:acme:my-db?useSSL=true&user=dba"
-                    "jdbc:acme:my-db?user=dba&useSSL=true"}
-                  (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
+(defdescribe custom-dbtypes
+  "spec->url+etc custom dbtypes"
+  (it "acme dbtype"
+    (expect (= ["jdbc:acme:my-db" {} nil]
+               (spec->url+etc {:dbtype "acme" :classname "java.lang.String"
+                               :dbname "my-db" :host :none})))
+    (expect (= ["jdbc:acme://127.0.0.1/my-db" {} nil]
+               (spec->url+etc {:dbtype "acme" :classname "java.lang.String"
+                               :dbname "my-db"})))
+    (expect (= ["jdbc:acme://12.34.56.70:1234/my-db" {} nil]
+               (spec->url+etc {:dbtype "acme" :classname "java.lang.String"
+                               :dbname "my-db" :host "12.34.56.70" :port 1234})))
+    (expect (= ["jdbc:acme:dsn=my-db" {} nil]
+               (spec->url+etc {:dbtype "acme" :classname "java.lang.String"
                                :dbname "my-db" :host :none
-                               :useSSL true :user "dba"}))))
+                               :dbname-separator ":dsn="})))
+    (expect (= ["jdbc:acme:(*)127.0.0.1/my-db" {} nil]
+               (spec->url+etc {:dbtype "acme" :classname "java.lang.String"
+                               :dbname "my-db"
+                               :host-prefix "(*)"})))
+    (expect (= ["jdbc:acme:(*)12.34.56.70:1234/my-db" {} nil]
+               (spec->url+etc {:dbtype "acme" :classname "java.lang.String"
+                               :dbname "my-db" :host "12.34.56.70" :port 1234
+                               :host-prefix "(*)"})))
+    (expect (= ["jdbc:acme:(*)12.34.56.70/my-db" {} nil]
+               (spec->url+etc {:dbtype "acme" :classname "java.lang.String"
+                               :dbname "my-db" :host "12.34.56.70" :port :none
+                               :host-prefix "(*)"})))))
 
-    (is (= "jdbc:jtds:sqlserver:my-db;useSSL=true"
-           (c/jdbc-url {:dbtype "jtds"
-                        :dbname "my-db" :host :none
-                        :useSSL true})))
-    (is (boolean (#{"jdbc:jtds:sqlserver:my-db;useSSL=true;user=dba"
-                    "jdbc:jtds:sqlserver:my-db;user=dba;useSSL=true"}
-                  (c/jdbc-url {:dbtype "jtds"
-                               :dbname "my-db" :host :none
-                               :useSSL true :user "dba"}))))))
+(defdescribe jdbc-url-tests
+  "jdbc-url function"
+  (it "basic URLs work"
+    (expect (= "jdbc:acme:my-db"
+               (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
+                            :dbname "my-db" :host :none})))
+    (expect (= "jdbc:acme://127.0.0.1/my-db"
+               (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
+                            :dbname "my-db"})))
+    (expect (= "jdbc:acme://12.34.56.70:1234/my-db"
+               (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
+                            :dbname "my-db" :host "12.34.56.70" :port 1234})))
+    (expect (= "jdbc:acme:dsn=my-db"
+               (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
+                            :dbname "my-db" :host :none
+                            :dbname-separator ":dsn="})))
+    (expect (= "jdbc:acme:(*)127.0.0.1/my-db"
+               (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
+                            :dbname "my-db"
+                            :host-prefix "(*)"})))
+    (expect (= "jdbc:acme:(*)12.34.56.70:1234/my-db"
+               (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
+                            :dbname "my-db" :host "12.34.56.70" :port 1234
+                            :host-prefix "(*)"}))))
+  (it "URLs with properties work"
+    (expect (= "jdbc:acme:my-db?useSSL=true"
+               (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
+                            :dbname "my-db" :host :none
+                            :useSSL true})))
+    (expect (boolean (#{"jdbc:acme:my-db?useSSL=true&user=dba"
+                        "jdbc:acme:my-db?user=dba&useSSL=true"}
+                      (c/jdbc-url {:dbtype "acme" :classname "java.lang.String"
+                                   :dbname "my-db" :host :none
+                                   :useSSL true :user "dba"}))))
+
+    (expect (= "jdbc:jtds:sqlserver:my-db;useSSL=true"
+               (c/jdbc-url {:dbtype "jtds"
+                            :dbname "my-db" :host :none
+                            :useSSL true})))
+    (expect (boolean (#{"jdbc:jtds:sqlserver:my-db;useSSL=true;user=dba"
+                        "jdbc:jtds:sqlserver:my-db;user=dba;useSSL=true"}
+                      (c/jdbc-url {:dbtype "jtds"
+                                   :dbname "my-db" :host :none
+                                   :useSSL true :user "dba"}))))))
 
 ;; these are the 'local' databases that we can always test against
 (def test-db-type ["derby" "h2" "h2:mem" "hsqldb" "sqlite"])
@@ -133,72 +139,76 @@
       (= "derby" db)
       (assoc :create true))))
 
-(deftest test-sourceable-via-metadata
+(defdescribe test-sourceable-via-metadata
+  "get-datasource (via protocol) function"
   (doseq [db test-dbs]
-    (let [ds (p/get-datasource
-              ^{`p/get-datasource (fn [v] (p/get-datasource (first v)))} [db])]
-      (is (instance? javax.sql.DataSource ds)))))
+    (it (str (:dbtype db) " datasource via metadata")
+      (let [ds (p/get-datasource
+                ^{`p/get-datasource (fn [v] (p/get-datasource (first v)))} [db])]
+        (expect (instance? javax.sql.DataSource ds))))))
 
-(deftest test-get-connection
+(defdescribe test-get-connection
+  "get-connection function"
   (doseq [db test-dbs]
-    (println 'test-get-connection (:dbtype db))
-    (testing "datasource via Associative"
+    (it (str (:dbtype db) " datasource via Associative")
       (let [ds (p/get-datasource db)]
-        (is (instance? javax.sql.DataSource ds))
-        (is (str/index-of (pr-str ds) (str "jdbc:" (:dbtype db))))
+        (expect (instance? javax.sql.DataSource ds))
+        (expect (str/index-of (pr-str ds) (str "jdbc:" (:dbtype db))))
         ;; checks get-datasource on a DataSource is identity
-        (is (identical? ds (p/get-datasource ds)))
+        (expect (identical? ds (p/get-datasource ds)))
         (with-open [con (p/get-connection ds {})]
-          (is (instance? java.sql.Connection con)))))
-    (testing "datasource via String"
-      (let [[url _] (#'c/spec->url+etc db)
+          (expect (instance? java.sql.Connection con)))))
+    (it (str (:dbtype db) " datasource via String")
+      (let [[url _] (spec->url+etc db)
             ds (p/get-datasource url)]
-        (is (instance? javax.sql.DataSource ds))
-        (is (str/index-of (pr-str ds) url))
+        (expect (instance? javax.sql.DataSource ds))
+        (expect (str/index-of (pr-str ds) url))
         (.setLoginTimeout ds 0)
-        (is (= 0 (.getLoginTimeout ds)))
+        (expect (= 0 (.getLoginTimeout ds)))
         (with-open [con (p/get-connection ds {})]
-          (is (instance? java.sql.Connection con)))))
-    (testing "datasource via jdbcUrl"
-      (let [[url etc] (#'c/spec->url+etc db)
+          (expect (instance? java.sql.Connection con)))))
+    (it (str (:dbtype db) " datasource via jdbcUrl")
+      (let [[url etc] (spec->url+etc db)
             ds (p/get-datasource (assoc etc :jdbcUrl url))]
         (if (= "derby" (:dbtype db))
-          (is (= {:create true} etc))
-          (is (= {} etc)))
-        (is (instance? javax.sql.DataSource ds))
-        (is (str/index-of (pr-str ds) (str "jdbc:" (:dbtype db))))
+          (expect (= {:create true} etc))
+          (expect (= {} etc)))
+        (expect (instance? javax.sql.DataSource ds))
+        (expect (str/index-of (pr-str ds) (str "jdbc:" (:dbtype db))))
         ;; checks get-datasource on a DataSource is identity
-        (is (identical? ds (p/get-datasource ds)))
+        (expect (identical? ds (p/get-datasource ds)))
         (.setLoginTimeout ds 1)
-        (is (= 1 (.getLoginTimeout ds)))
+        (expect (= 1 (.getLoginTimeout ds)))
         (with-open [con (p/get-connection ds {})]
-          (is (instance? java.sql.Connection con)))))
-    (testing "datasource via HikariCP"
+          (expect (instance? java.sql.Connection con)))))
+    (it (str (:dbtype db) " datasource via HikariCP")
       ;; the type hint is only needed because we want to call .close
       (with-open [^HikariDataSource ds (c/->pool HikariDataSource db)]
-        (is (instance? javax.sql.DataSource ds))
+        (expect (instance? javax.sql.DataSource ds))
         ;; checks get-datasource on a DataSource is identity
-        (is (identical? ds (p/get-datasource ds)))
+        (expect (identical? ds (p/get-datasource ds)))
         (with-open [con (p/get-connection ds {})]
-          (is (instance? java.sql.Connection con)))))
-    (testing "datasource via c3p0"
+          (expect (instance? java.sql.Connection con)))))
+    (it (str (:dbtype db) " datasource via c3p0")
       ;; the type hint is only needed because we want to call .close
       (with-open [^PooledDataSource ds (c/->pool ComboPooledDataSource db)]
-        (is (instance? javax.sql.DataSource ds))
+        (expect (instance? javax.sql.DataSource ds))
         ;; checks get-datasource on a DataSource is identity
-        (is (identical? ds (p/get-datasource ds)))
+        (expect (identical? ds (p/get-datasource ds)))
         (with-open [con (p/get-connection ds {})]
-          (is (instance? java.sql.Connection con)))))
-    (testing "connection via map (Object)"
+          (expect (instance? java.sql.Connection con)))))
+    (it (str (:dbtype db) " connection via map (Object)")
       (with-open [con (p/get-connection db {})]
-        (is (instance? java.sql.Connection con))))))
+        (expect (instance? java.sql.Connection con))))))
 
-(deftest issue-243-uri->db-spec
-  (is (= {:dbtype "mysql" :dbname "mydb"
-          :host "myserver" :port 1234
-          :user "foo" :password "bar"}
-         (c/uri->db-spec "mysql://foo:bar@myserver:1234/mydb")))
-  (is (= {:dbtype "mysql" :dbname "mydb"
-          :host "myserver" :port 1234
-          :user "foo" :password "bar"}
-         (c/uri->db-spec "jdbc:mysql://myserver:1234/mydb?user=foo&password=bar"))))
+(defdescribe issue-243-uri->db-spec
+  "issue #243: uri->db-spec function"
+  (it "parses username and password in URIs correctly"
+    (expect (= {:dbtype "mysql" :dbname "mydb"
+                :host "myserver" :port 1234
+                :user "foo" :password "bar"}
+               (c/uri->db-spec "mysql://foo:bar@myserver:1234/mydb")))
+    (expect (= {:dbtype "mysql" :dbname "mydb"
+                :host "myserver" :port 1234
+                :user "foo" :password "bar"}
+               (c/uri->db-spec "jdbc:mysql://myserver:1234/mydb?user=foo&password=bar")))))

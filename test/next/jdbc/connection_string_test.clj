@@ -23,6 +23,7 @@
   {:context [(around [f] (with-test-db f))]}
   (it "datasource via String"
     (let [db-spec (db)
+          _       (println "  " (:dbtype db-spec))
           db-spec (if (= "embedded-postgres" (:dbtype db-spec))
                     (assoc db-spec :dbtype "postgresql")
                     db-spec)
@@ -41,17 +42,19 @@
         (with-open [con (p/get-connection ds {})]
           (expect (instance? java.sql.Connection con)))))))
 
+(def ^:private as-props #'c/as-properties)
+
 (defdescribe property-tests
   "private as-properties function"
   (it "as-properties converts map to Properties"
-    (expect (string? (.getProperty ^Properties (#'c/as-properties {:foo [42]}) "foo")))
-    (expect (string? (.get ^Properties (#'c/as-properties {:foo [42]}) "foo")))
-    (expect (vector? (.get ^Properties (#'c/as-properties
+    (expect (string? (.getProperty ^Properties (as-props {:foo [42]}) "foo")))
+    (expect (string? (.get ^Properties (as-props {:foo [42]}) "foo")))
+    (expect (vector? (.get ^Properties (as-props
                                         {:foo [42]
                                          :next.jdbc/as-is-properties [:foo]})
                            "foo")))
     ;; because .getProperty drops non-string values!
-    (expect (nil? (.getProperty ^Properties (#'c/as-properties
+    (expect (nil? (.getProperty ^Properties (as-props
                                              {:foo [42]
                                               :next.jdbc/as-is-properties [:foo]})
                                 "foo")))))
