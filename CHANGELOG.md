@@ -5,6 +5,7 @@ Only accretive/fixative changes will be made from now on.
 * 1.3.next in progress
   * Address [#310](https://github.com/seancorfield/next-jdbc/issues/310) by simplifying auto-closing `Component`s.
   * Fix [#308](https://github.com/seancorfield/next-jdbc/issues/308) by using raw `Connection` internally for the `active-tx?` check.
+  * Migrate more tests to core LazyTest constructs.
   * Update dev/test deps (Clojure 1.12.3, CLI 1.12.3.1577).
 
 * 1.3.1070 -- 2025-09-06
