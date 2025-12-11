@@ -6,7 +6,7 @@ Only accretive/fixative changes will be made from now on.
   * Address [#310](https://github.com/seancorfield/next-jdbc/issues/310) by simplifying auto-closing `Component`s.
   * Fix [#308](https://github.com/seancorfield/next-jdbc/issues/308) by using raw `Connection` internally for the `active-tx?` check.
   * Migrate more tests to core LazyTest constructs.
-  * Update dev/test deps (Clojure 1.12.3, CLI 1.12.3.1577).
+  * Update dev/test deps (Clojure 1.12.4, CLI 1.12.4.1582).
 
 * 1.3.1070 -- 2025-09-06
   * Address [#307](https://github.com/seancorfield/next-jdbc/issues/307) by documenting the use of `next.jdbc.types/as-other` for binding parameters, to work around PostgreSQL's implicit casts, in **Tips & Tricks**. Thanks to [Peter Bex](https://github.com/sjamaan) for alerting me to this issue.
