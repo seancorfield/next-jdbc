@@ -1,4 +1,4 @@
-;; copyright (c) 2020-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2020-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.plan
   "Some helper functions that make common operations with `next.jdbc/plan`

@@ -2,7 +2,7 @@
 
 Only accretive/fixative changes will be made from now on.
 
-* 1.3.next in progress
+* 1.3.1086 -- 2025-12-16
   * Address [#310](https://github.com/seancorfield/next-jdbc/issues/310) by simplifying auto-closing `Component`s.
   * Fix [#308](https://github.com/seancorfield/next-jdbc/issues/308) by using raw `Connection` internally for the `active-tx?` check.
   * Migrate more tests to core LazyTest constructs.

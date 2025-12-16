@@ -1,4 +1,4 @@
-;; copyright (c) 2018-2024 Sean Corfield, all rights reserved
+;; copyright (c) 2018-2025 Sean Corfield, all rights reserved
 
 (ns next.jdbc.types
   "Provides convenience functions for wrapping values you pass into SQL
