@@ -245,23 +245,36 @@
   "Given a (connection pooled datasource) class and a database spec, return a
   connection pool object built from that class and the database spec.
 
-  Assumes the `clazz` has a `.setJdbcUrl` method (which HikariCP and c3p0 do).
+  As of 1.3.next, the `clazz` argument can be a string or symbol naming a
+  supported connection pooling library. Currently, only `'hikari-cp` is supported.
+
+  For the datasource class, it is assumed that it has a `.setJdbcUrl` method.
+  (which HikariCP and c3p0 do).
 
   If you already have a JDBC URL and want to use this method, pass `:jdbcUrl`
   in the database spec (instead of `:dbtype`, `:dbname`, etc).
 
-  Properties for the connection pool object can be passed as mixed case
-  keywords that correspond to setter methods (just as `:jdbcUrl` maps to
-  `.setJdbcUrl`). `clojure.java.data/to-java` is used to construct the
-  object and call the setters.
+  For the datasource class, properties for the connection pool object can be
+  passed as mixed case keywords that correspond to setter methods (just as
+  `:jdbcUrl` maps to `.setJdbcUrl`). `clojure.java.data/to-java` is used to
+  construct the object and call the setters.
+
+  For the string/symbol case, properties are passed exactly how that library
+  requires. For `hikari-cp`, `:kebab-case` properties are used, and you must
+  pass `:jdbc-url` or `:adapter` (or `:url` for H2), instead of `:dbtype`,
+  and `:database-name` instead of `:dbname`, if needed.
 
   If you need to pass in connection URL parameters, it can be easier to use
   `next.jdbc.connection/jdbc-url` to construct URL, e.g.,
-
+```clojure
   (->pool HikariDataSource
           {:jdbcUrl (jdbc-url {:dbtype .. :dbname .. :useSSL false})
            :username .. :password ..})
-
+  ;; or:
+  (->pool 'hikari-cp
+          {:jdbc-url (jdbc-url {:dbtype .. :dbname .. :useSSL false})
+           :username .. :password ..})
+```
   Here we pass `:useSSL false` to `jdbc-url` so that it ends up in the
   connection string, but pass `:username` and `:password` for the pool itself.
 

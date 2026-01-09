@@ -492,6 +492,12 @@ com.zaxxer/HikariCP {:mvn/version "6.2.1"}
 com.mchange/c3p0 {:mvn/version "0.11.1"}
 ```
 
+As of 1.3.next, you can also use the [hikari-cp](https://github.com/tomekw/hikari-cp) library.
+
+```clojure
+hikari-cp/hikari-cp {:mvn/version "4.0.0"}
+```
+
 _Check those libraries' documentation for the latest version to use!_
 
 Then import the appropriate classes into your code:
@@ -505,7 +511,13 @@ Then import the appropriate classes into your code:
            (com.mchange.v2.c3p0 ComboPooledDataSource PooledDataSource)))
 ```
 
-Finally, create the connection pooled datasource. `db-spec` here contains the regular `next.jdbc` options (`:dbtype`, `:dbname`, and maybe `:host`, `:port`, `:classname` etc -- or the `:jdbcUrl` format mentioned above). Those are used to construct the JDBC URL that is passed into the datasource object (by calling `.setJdbcUrl` on it). You can also specify any of the connection pooling library's options, as mixed case keywords corresponding to any simple setter methods on the class being passed in, e.g., `:connectionTestQuery`, `:maximumPoolSize` (HikariCP), `:maxPoolSize`, `:preferredTestQuery` (c3p0).
+If you are using `hikari-cp`, you do not need to import any classes.
+
+Finally, create the connection pooled datasource. `db-spec` here either contains the regular `next.jdbc` options
+(`:dbtype`, `:dbname`, and maybe `:host`, `:port`, `:classname` etc -- or the `:jdbcUrl` format mentioned above),
+or the `hikari-cp` options (`:adapter` or `:jdbc-url`, `:database-name`, etc -- or `:url` for H2).
+
+Those are used to construct the JDBC URL that is passed into the datasource object (by calling `.setJdbcUrl` on it). You can also specify any of the connection pooling library's options, as mixed case keywords corresponding to any simple setter methods on the class being passed in, e.g., `:connectionTestQuery`, `:maximumPoolSize` (HikariCP), `:maxPoolSize`, `:preferredTestQuery` (c3p0), or kebab case keywords for `hikari-cp`.
 
 In addition, for HikariCP, you can specify properties to be applied to the underlying `DataSource` itself by passing `:dataSourceProperties` with a hash map containing those properties, such as `:socketTimeout`:
 
@@ -522,7 +534,7 @@ If you need to pass in extra connection URL parameters, it can be easier to use
 `next.jdbc.connection/jdbc-url` to construct URL, e.g.,
 
 ```clojure
-(connection/->pool com.zaxxer.hikari.HikariDataSource
+(connection/->pool com.zaxxer.hikari.HikariDataSource ; or com.mchange.v2.c3p0.ComboPooledDataSource
                    {:jdbcUrl
                     (connection/jdbc-url {:dbtype "mysql" :dbname "thedb" :useSSL false})
                     :username "dbuser" :password "secret"})
@@ -531,12 +543,16 @@ If you need to pass in extra connection URL parameters, it can be easier to use
 Here we pass `:useSSL false` to `jdbc-url` so that it ends up in the
 connection string, but pass `:username` and `:password` for the pool itself.
 
+For HikariCP and c3p0, you pass the pooled datasource class as the first argument.
+For `hikari-cp`, you pass either the string `"hikari-cp"` or the symbol `'hikari-cp`.
+Other connection pooling libraries might be supported in future.
+
 > Note: both HikariCP and c3p0 defer validation of the settings until a connection is requested. If you want to ensure that your datasource is set up correctly, and the database is reachable, when you first create the connection pool, you will need to call `jdbc/get-connection` on it (and then close that connection and return it to the pool). This will also ensure that the pool is fully initialized. See the examples below.
 
 Some important notes regarding HikariCP:
 
 * Authentication credentials must use `:username` (if you are using c3p0 or regular, non-pooled, connections, then the db-spec hash map must contain `:user`).
-* When using `:dbtype "jtds"`, you must specify `:connectionTestQuery "SELECT 1"` (or some other query to verify the health of a connection) because the jTDS JDBC driver does not implement `.isValid()` so HikariCP requires a specific test query instead (c3p0 does not rely on this method so it works with jTDS without needing `:preferredTestQuery`).
+* When using `:dbtype "jtds"`, you must specify `:connectionTestQuery "SELECT 1"` (or some other query to verify the health of a connection) because the jTDS JDBC driver does not implement `.isValid()` so HikariCP requires a specific test query instead (c3p0 does not rely on this method so it works with jTDS without needing `:preferredTestQuery`). For `hikari-cp`, this is `:adapter "sqlserver-jtds"` and you must pass `:connection-test-query`.
 * When using PostgreSQL, and trying to set a default `:schema` via HikariCP, you will need to specify `:connectionInitSql "COMMIT;"` until [this HikariCP issue](https://github.com/brettwooldridge/HikariCP/issues/1369) is addressed.
 
 You will generally want to create the connection pooled datasource at the start of your program (and close it before you exit, although that's not really important since it'll be cleaned up when the JVM shuts down):
@@ -600,6 +616,9 @@ created, or want to perform some database initialization, you can pass a
 function as `:init-fn` in the `db-spec` hash map. The `component` function
 will arrange for that initialization function to be invoked on the newly-created
 datasource whenever `start` is called on the Component returned.
+
+As with `->pool` above, as of 1.3.next, you can pass `"hikari-cp"` or `'hikari-cp`
+as the first argument to `component`.
 
 ## Working with Additional Data Types
 
