@@ -65,7 +65,10 @@
                        :string   ::jdbcUrl
                        :ds       ::datasource))
 (s/def ::db-spec-or-jdbc (s/or :db-spec  ::db-spec-map
-                               :jdbc-url ::jdbc-url-map))
+                               :jdbc-url ::jdbc-url-map
+                               :hikari-adapter  (s/keys :req-un [::adapter])
+                               :hikari-jdbc-url (s/keys :req-un [::jdbc-url])
+                               :hikari-url      (s/keys :req-un [::url])))
 (s/def ::proto-connectable (s/or :db-spec     ::db-spec
                                  :connectable #(satisfies? p/Connectable %)
                                  :sourceable  #(satisfies? p/Sourceable %)))
@@ -177,7 +180,7 @@
                :body (s/* any?)))
 
 (s/fdef connection/->pool
-        :args (s/cat :clazz #(instance? Class %)
+        :args (s/cat :clazz #(or (instance? Class %) (string? %) (symbol? %))
                      :db-spec ::db-spec-or-jdbc))
 
 (s/fdef connection/component

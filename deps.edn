@@ -23,6 +23,7 @@
                       ;; connection pooling
                       com.zaxxer/HikariCP {:mvn/version "7.0.2"}
                       com.mchange/c3p0 {:mvn/version "0.11.2"}
+                      hikari-cp/hikari-cp {:mvn/version "4.0.0"}
                       ;; JDBC drivers
                       ;; 10.16.x is JDK17+
                       org.apache.derby/derby ^:antq/exclude {:mvn/version "10.15.2.0"}
@@ -54,5 +55,7 @@
   :jdk17 {}
   :jdk21 {:extra-deps {;; only need the XTDB API module:
                        com.xtdb/xtdb-api {:mvn/version "2.1.0"}}}
-  :jdk25 {:jvm-opts [;; for SQLite on JDK 25 locally
+  :jdk25 {:extra-deps {;; only need the XTDB API module:
+                       com.xtdb/xtdb-api {:mvn/version "2.1.0"}}
+          :jvm-opts [;; for SQLite on JDK 25 locally
                      "--enable-native-access=ALL-UNNAMED"]}}}
