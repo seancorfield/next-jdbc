@@ -270,10 +270,17 @@
   datasource objects may need to be closed but they don't necessarily implement
   `java.lang.AutoCloseable`."
   [clazz db-spec]
-  (if (:jdbcUrl db-spec)
-    (j/to-java clazz db-spec)
-    (let [[url etc] (spec->url+etc db-spec)]
-      (j/to-java clazz (assoc etc :jdbcUrl url)))))
+  (cond (or (string? clazz) (symbol? clazz))
+        (if (= "hikari-cp" (str clazz))
+          (let [make-ds (requiring-resolve 'hikari-cp.core/make-datasource)]
+            (make-ds db-spec))
+          (throw (IllegalArgumentException.
+                  (str "Unknown connection pool library name: " clazz))))
+        (:jdbcUrl db-spec)
+        (j/to-java clazz db-spec)
+        :else
+        (let [[url etc] (spec->url+etc db-spec)]
+          (j/to-java clazz (assoc etc :jdbcUrl url)))))
 
 (defn component
   "Takes the same arguments as `->pool` but returns an entity compatible

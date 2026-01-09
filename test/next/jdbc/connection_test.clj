@@ -6,7 +6,8 @@
 
   At some point, the datasource/connection tests should probably be extended
   to accept EDN specs from an external source (environment variables?)."
-  (:require [clojure.string :as str]
+  (:require [clojure.set :as set]
+            [clojure.string :as str]
             [lazytest.core :refer [defdescribe expect it]]
             [next.jdbc.connection :as c]
             [next.jdbc.protocols :as p])
@@ -184,6 +185,17 @@
     (it (str (:dbtype db) " datasource via HikariCP")
       ;; the type hint is only needed because we want to call .close
       (with-open [^HikariDataSource ds (c/->pool HikariDataSource db)]
+        (expect (instance? javax.sql.DataSource ds))
+        ;; checks get-datasource on a DataSource is identity
+        (expect (identical? ds (p/get-datasource ds)))
+        (with-open [con (p/get-connection ds {})]
+          (expect (instance? java.sql.Connection con)))))
+    (it (str (:dbtype db) " datasource via hikari-cp")
+      ;; the type hint is only needed because we want to call .close
+      (with-open [^HikariDataSource ds
+                  (c/->pool 'hikari-cp
+                            (set/rename-keys db {:dbtype :adapter
+                                                 :dbname :database-name}))]
         (expect (instance? javax.sql.DataSource ds))
         ;; checks get-datasource on a DataSource is identity
         (expect (identical? ds (p/get-datasource ds)))
