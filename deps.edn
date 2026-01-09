@@ -55,5 +55,7 @@
   :jdk17 {}
   :jdk21 {:extra-deps {;; only need the XTDB API module:
                        com.xtdb/xtdb-api {:mvn/version "2.1.0"}}}
-  :jdk25 {:jvm-opts [;; for SQLite on JDK 25 locally
+  :jdk25 {:extra-deps {;; only need the XTDB API module:
+                       com.xtdb/xtdb-api {:mvn/version "2.1.0"}}
+          :jvm-opts [;; for SQLite on JDK 25 locally
                      "--enable-native-access=ALL-UNNAMED"]}}}
