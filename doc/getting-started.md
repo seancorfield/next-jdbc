@@ -11,12 +11,12 @@ It is designed to work with Clojure 1.10 or later, supports `datafy`/`nav`, and 
 You can add `next.jdbc` to your project with either:
 
 ```clojure
-com.github.seancorfield/next.jdbc {:mvn/version "1.3.1086"}
+com.github.seancorfield/next.jdbc {:mvn/version "1.3.1093"}
 ```
 for `deps.edn` or:
 
 ```clojure
-[com.github.seancorfield/next.jdbc "1.3.1086"]
+[com.github.seancorfield/next.jdbc "1.3.1093"]
 ```
 for `project.clj` or `build.boot`.
 
@@ -38,7 +38,7 @@ For the examples in this documentation, we will use a local H2 database on disk,
 ```clojure
 ;; deps.edn
 {:deps {org.clojure/clojure {:mvn/version "1.12.4"}
-        com.github.seancorfield/next.jdbc {:mvn/version "1.3.1086"}
+        com.github.seancorfield/next.jdbc {:mvn/version "1.3.1093"}
         com.h2database/h2 {:mvn/version "2.3.232"}}}
 ```
 
@@ -492,7 +492,7 @@ com.zaxxer/HikariCP {:mvn/version "6.2.1"}
 com.mchange/c3p0 {:mvn/version "0.11.1"}
 ```
 
-As of 1.3.next, you can also use the [hikari-cp](https://github.com/tomekw/hikari-cp) library.
+As of 1.3.1093, you can also use the [hikari-cp](https://github.com/tomekw/hikari-cp) library.
 
 ```clojure
 hikari-cp/hikari-cp {:mvn/version "4.0.0"}
@@ -617,7 +617,7 @@ function as `:init-fn` in the `db-spec` hash map. The `component` function
 will arrange for that initialization function to be invoked on the newly-created
 datasource whenever `start` is called on the Component returned.
 
-As with `->pool` above, as of 1.3.next, you can pass `"hikari-cp"` or `'hikari-cp`
+As with `->pool` above, as of 1.3.1093, you can pass `"hikari-cp"` or `'hikari-cp`
 as the first argument to `component`.
 
 ## Working with Additional Data Types

@@ -245,7 +245,7 @@
   "Given a (connection pooled datasource) class and a database spec, return a
   connection pool object built from that class and the database spec.
 
-  As of 1.3.next, the `clazz` argument can be a string or symbol naming a
+  As of 1.3.1093, the `clazz` argument can be a string or symbol naming a
   supported connection pooling library. Currently, only `'hikari-cp` is supported.
 
   For the datasource class, it is assumed that it has a `.setJdbcUrl` method.
