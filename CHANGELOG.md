@@ -4,6 +4,8 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
   * Address [#312](https://github.com/seancorfield/next-jdbc/issues/312) by adding support for `'hikari-cp` in `next.jdbc.connection/->pool`.
+  * Update `java.data` to 1.4.120.
+  * Update dev/test deps (CLI 1.12.4.1602).
 
 * 1.3.1086 -- 2025-12-16
   * Address [#310](https://github.com/seancorfield/next-jdbc/issues/310) by simplifying auto-closing `Component`s.
