@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.3.next in progress
+  * Fix `insert-multi!` example in docs via PR [#315](https://github.com/seancorfield/next-jdbc/pull/315) from [@mrnhrd](https://github.com/mrnhrd).
+
 * 1.3.1093 -- 2026-01-31
   * Address [#312](https://github.com/seancorfield/next-jdbc/issues/312) by adding support for `'hikari-cp` in `next.jdbc.connection/->pool`.
   * Update `java.data` to 1.4.120.
