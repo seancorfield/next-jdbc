@@ -124,7 +124,6 @@ will use `execute-batch!` under the hood, instead of `execute!`, as follows:
                      {:return-keys true :return-generated-keys true})
 ;; and
 (sql/insert-multi! ds :address
-  [:name :email]
   [{:name "Stella", :email "stella@artois.beer"}
    {:name "Waldo", :email "waldo@lagunitas.beer"}
    {:name "Aunt Sally", :email "sour@lagunitas.beer"}]
