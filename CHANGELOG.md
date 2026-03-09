@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
   * Fix `insert-multi!` example in docs via PR [#315](https://github.com/seancorfield/next-jdbc/pull/315) from [@mrnhrd](https://github.com/mrnhrd).
+  * Upgrade from EPL-1.0 to EPL-2.0 for broader compatibility. Explicitly allow for relicensing of `next.jdbc` code under Apache-2.0.
   * Update dev/test deps.
 
 * 1.3.1093 -- 2026-01-31
