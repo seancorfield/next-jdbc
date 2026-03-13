@@ -1,4 +1,4 @@
-;; copyright (c) 2019-2025 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2026 Sean Corfield, all rights reserved
 
 (ns next.jdbc-test
   "Basic tests for the primary API of `next.jdbc`."
@@ -558,7 +558,72 @@ VALUES ('Pear', 'green', 49, 47)
           (if (or (sqlite?) (derby?) (xtdb?))
             (is (every? number?  (map (column :BTEST/TWIDDLE) data)))
             (is (every? boolean? (map (column :BTEST/TWIDDLE) data))))))
-      (testing "BOOLEAN read column by index"
+      (testing "BOOLEAN read column by index - :direct adapter"
+        (let [calls (atom 0)
+              data (jdbc/execute! (ds) ["select * from btest"]
+                                  (cond-> (default-options)
+                                    (or (sqlite?) (xtdb?))
+                                    (assoc :builder-fn
+                                           (rs/builder-adapter
+                                            rs/as-maps
+                                            (fn [builder ^ResultSet rs ^Integer i]
+                                              (let [rsm ^ResultSetMetaData (:rsmeta builder)]
+                                                (rs/read-column-by-index
+                                                 ;; we only use bit and bool for
+                                                 ;; sqlite (not boolean), and
+                                                 ;; int8 and bool for xtdb:
+                                                 (if (#{"BIT" "BOOL"
+                                                        "int8" "bool"}
+                                                      (do
+                                                        (swap! calls inc)
+                                                        (.getColumnTypeName rsm i)))
+                                                   (.getBoolean rs i)
+                                                   (.getObject rs i))
+                                                 rsm
+                                                 i)))
+                                            :direct))))]
+          (is (= (if (or (sqlite?) (xtdb?)) 18 0) @calls)) ; 6 rows of 3 columns
+          (is (every? boolean? (map (column :BTEST/IS_IT) data)))
+          (if (derby?)
+            (is (every? number?  (map (column :BTEST/TWIDDLE) data)))
+            (is (every? boolean? (map (column :BTEST/TWIDDLE) data))))))
+      (testing "BOOLEAN read column by index - :factory adapter"
+        (let [calls (atom 0)
+              get-boolean (fn [^ResultSet rs ^Integer i] (.getBoolean rs i))
+              get-object  (fn [^ResultSet rs ^Integer i] (.getObject  rs i))
+              data (jdbc/execute!
+                    (ds) ["select * from btest"]
+                    (cond-> (default-options)
+                      (or (sqlite?) (xtdb?))
+                      (assoc :builder-fn
+                             (rs/builder-adapter
+                              rs/as-maps
+                              (fn [builder ^ResultSet _rs _opts]
+                                (let [rsm ^ResultSetMetaData (:rsmeta builder)
+                                      n   (inc (count (:cols builder)))
+                                      fns (mapv ;; we only use bit and bool for
+                                                ;; sqlite (not boolean), and
+                                                ;; int8 and bool for xtdb:
+                                           #(if (#{"BIT" "BOOL"
+                                                   "int8" "bool"}
+                                                 (do
+                                                   (swap! calls inc)
+                                                   (.getColumnTypeName rsm %)))
+                                              get-boolean
+                                              get-object)
+                                           (range 1 n))]
+                                  (fn [_builder ^ResultSet rs ^Integer i]
+                                    (rs/read-column-by-index
+                                     ((nth fns (dec i)) rs i)
+                                     rsm
+                                     i))))
+                              :factory))))]
+          (is (= (if (or (sqlite?) (xtdb?)) 3 0) @calls)) ; 3 columns only (not called per row)
+          (is (every? boolean? (map (column :BTEST/IS_IT) data)))
+          (if (derby?)
+            (is (every? number?  (map (column :BTEST/TWIDDLE) data)))
+            (is (every? boolean? (map (column :BTEST/TWIDDLE) data))))))
+      (testing "BOOLEAN read column by index - default adapter"
         (let [data (jdbc/execute! (ds) ["select * from btest"]
                                   (cond-> (default-options)
                                     (or (sqlite?) (xtdb?))

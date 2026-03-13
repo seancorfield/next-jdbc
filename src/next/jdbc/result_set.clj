@@ -1,4 +1,4 @@
-;; copyright (c) 2018-2025 Sean Corfield, all rights reserved
+;; copyright (c) 2018-2026 Sean Corfield, all rights reserved
 
 (ns next.jdbc.result-set
   "An implementation of `ResultSet` handling functions.
@@ -169,38 +169,53 @@
   function instead of `.getObject` and `read-column-by-index` so you can
   override the default behavior.
 
-  The default column-by-index-fn behavior would be equivalent to:
-
+  The default `column-by-index-fn` behavior would be equivalent to:
+```
       (defn default-column-by-index-fn
         [builder ^ResultSet rs ^Integer i]
         (read-column-by-index (.getObject rs i) (:rsmeta builder) i))
-
-  Your column-by-index-fn can use the result set metadata `(:rsmeta builder)`
+```
+  Your `column-by-index-fn` can use the result set metadata `(:rsmeta builder)`
   and/or the (processed) column name `(nth (:cols builder) (dec i))` to
   determine whether to call `.getObject` or some other method to read the
   column's value, and can choose whether or not to use the `ReadableColumn`
   protocol-based value processor (and could add metadata to the value to
-  satisfy that protocol on a per-instance basis)."
-  [builder-fn column-by-index-fn]
-  (fn [rs opts]
-    (let [builder (builder-fn rs opts)]
-      (reify
-        RowBuilder
-        (->row [_this] (->row builder))
-        (column-count [_this] (column-count builder))
-        (with-column [this row i]
-          (with-column-value this row (nth (:cols builder) (dec i))
-            (column-by-index-fn builder rs i)))
-        (with-column-value [_this row col v]
-          (with-column-value builder row col v))
-        (row! [_this row] (row! builder row))
-        ResultSetBuilder
-        (->rs [_this] (->rs builder))
-        (with-row [_this mrs row] (with-row builder mrs row))
-        (rs! [_this mrs] (rs! builder mrs))
-        clojure.lang.ILookup
-        (valAt [_this k] (get builder k))
-        (valAt [_this k not-found] (get builder k not-found))))))
+  satisfy that protocol on a per-instance basis).
+
+  As of 1.3.next, `builder-adapter` accepts an optional third argument:
+
+  * `:direct` - use the `column-by-index-fn` directly
+  * `:factory` - call `(column-by-index-fn builder rs opts)` first, to produce
+    a function that will be used to read columns by index.
+
+  The latter allows the 'factory function' to preprocess the result set metadata
+  and return a much more efficient column reading function, that doesn't need to
+  consult the metadata for each column of every row."
+  ([builder-fn column-by-index-fn]
+   (builder-adapter builder-fn column-by-index-fn :direct))
+  ([builder-fn column-by-index-fn col-fn-type]
+   (fn [rs opts]
+     (let [builder   (builder-fn rs opts)
+           col-by-fn (if (= :factory col-fn-type)
+                       (column-by-index-fn builder rs opts)
+                       column-by-index-fn)]
+       (reify
+         RowBuilder
+         (->row [_this] (->row builder))
+         (column-count [_this] (column-count builder))
+         (with-column [this row i]
+           (with-column-value this row (nth (:cols builder) (dec i))
+             (col-by-fn builder rs i)))
+         (with-column-value [_this row col v]
+           (with-column-value builder row col v))
+         (row! [_this row] (row! builder row))
+         ResultSetBuilder
+         (->rs [_this] (->rs builder))
+         (with-row [_this mrs row] (with-row builder mrs row))
+         (rs! [_this mrs] (rs! builder mrs))
+         clojure.lang.ILookup
+         (valAt [_this k] (get builder k))
+         (valAt [_this k not-found] (get builder k not-found)))))))
 
 (defrecord MapResultSetBuilder [^ResultSet rs rsmeta cols]
   RowBuilder
@@ -304,7 +319,9 @@
 
   `read-column-by-index` is still called on the result of that read.
 
-  Note: this is different behavior to `builder-adapter`'s `column-by-index-fn`."
+  Note: this is different behavior to `builder-adapter`'s `column-by-index-fn`.
+  If you want more control over how metadata is used to determine how columns
+  are read, use `builder-adapter` instead, in `:factory` mode."
   [builder-fn column-reader]
   (builder-adapter builder-fn
                    (fn [builder rs i]
@@ -415,7 +432,9 @@
 
   `read-column-by-index` is still called on the result of that read.
 
-  Note: this is different behavior to `builder-adapter`'s `column-by-index-fn`."
+  Note: this is different behavior to `builder-adapter`'s `column-by-index-fn`.
+  If you want more control over how metadata is used to determine how columns
+  are read, use `builder-adapter` instead, in `:factory` mode."
   [builder-fn column-reader]
   (builder-adapter builder-fn
                    (fn [builder rs i]

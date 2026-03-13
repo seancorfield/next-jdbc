@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
+  * Address [#316](https://github.com/seancorfield/next-jdbc/issues/316) by enhancing `next.jdbc.result-set/builder-adapter` to accept a column function "factory" that can preprocess the result set metadata and return a `column-by-index-fn` that can read columns more efficiently.
   * Fix `insert-multi!` example in docs via PR [#315](https://github.com/seancorfield/next-jdbc/pull/315) from [@mrnhrd](https://github.com/mrnhrd).
   * Upgrade from EPL-1.0 to EPL-2.0 for broader compatibility. Explicitly allow for relicensing of `next.jdbc` code under Apache-2.0.
   * Update dev/test deps.

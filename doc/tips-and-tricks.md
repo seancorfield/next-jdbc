@@ -579,6 +579,34 @@ You can work around this using a builder that handles reading the column directl
                                    i))))})
 ```
 
+As of 1.3.next, this can be done more efficiently, using the `:factory` option
+on `rs/builder-adapter`:
+
+```clojure
+(import java.sql ResultSet ResultSetMetaData)
+
+(jdbc/execute! ds ["select * from some_table"]
+               {:builder-fn (rs/builder-adapter
+                             rs/as-maps
+                             (fn [builder ^ResultSet _rs _opts]
+                               (let [rsm ^ResultSetMetaData (:rsmeta builder)
+                                     n   (inc (count (:cols builder)))
+                                     fns (mapv #(if (#{"BIT" "BOOL" "BOOLEAN"}
+                                                     (.getColumnTypeName rsm %))
+                                                  ^[int] ResultSet/.getBoolean
+                                                  ^[int] ResultSet/.getObject)
+                                           (range 1 n))]
+                                 (fn [_builder ^ResultSet rs ^Integer i]
+                                   (rs/read-column-by-index
+                                     ((nth fns (dec i)) rs i)
+                                     rsm
+                                     i))))
+                             :factory)})
+```
+
+This performs the column type check and conversion only once per column, rather
+than for every row, which can significantly improve performance for large result sets.
+
 If you are using `plan`, you'll most likely be accessing columns by just the label (as a keyword) and avoiding the result set building machinery completely. In such cases, you'll still get `bool` and `bit` columns back as `0` or `1` and you'll need to explicitly convert them on a per-column basis since you should know which columns need converting:
 
 ```clojure

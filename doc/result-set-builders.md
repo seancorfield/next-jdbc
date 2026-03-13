@@ -74,6 +74,12 @@ The default `column-by-index-fn` function behavior would be:
 
 Because the builder itself is passed in, the vector of processed column names is available as `(:cols builder)` (in addition to the `ResultSetMetaData` as `(:rsmeta builder)`). This allows you to take different actions based on the metadata or the column name, as well as bypassing the `read-column-by-index` call if you wish.
 
+As of 1.3.next, `builder-adapter` can accept a "factory" function, called with `builder`, `rs`, and `opts`,
+that should return a `column-by-index-fn` to be used when reading column values.
+This factory function can preprocess the result set metadata so that, for example,
+metadata only needs to be inspected once per column, rather than for every row
+times every column.
+
 The older `as-*-adapter` functions are now implemented in terms of this `builder-adapter` because `with-column-value` abstracts away _how_ the new column's value is added to the row being built.
 
 ## RowBuilder Protocol
