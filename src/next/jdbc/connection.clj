@@ -132,7 +132,9 @@
                       :dbname-separator ":dsn="
                       :host :none}
    "xtdb"            {:classname "xtdb.jdbc.Driver"
-                      :port 5432}})
+                      :port 5432}
+   "yugabytedb"      {:classname "com.yugabyte.Driver"
+                      :port 5433}})
 
 (def ^:private driver-cache
   "An optimization for repeated calls to get-datasource, or for get-connection
