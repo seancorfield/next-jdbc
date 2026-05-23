@@ -182,7 +182,7 @@
   protocol-based value processor (and could add metadata to the value to
   satisfy that protocol on a per-instance basis).
 
-  As of 1.3.next, `builder-adapter` accepts an optional third argument:
+  As of 1.3.1108, `builder-adapter` accepts an optional third argument:
 
   * `:direct` - use the `column-by-index-fn` directly
   * `:factory` - call `(column-by-index-fn builder rs opts)` first, to produce

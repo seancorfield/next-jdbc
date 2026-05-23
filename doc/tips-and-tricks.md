@@ -579,7 +579,7 @@ You can work around this using a builder that handles reading the column directl
                                    i))))})
 ```
 
-As of 1.3.next, this can be done more efficiently, using the `:factory` option
+As of 1.3.1108, this can be done more efficiently, using the `:factory` option
 on `rs/builder-adapter`:
 
 ```clojure
