@@ -1,5 +1,6 @@
 {:lint-as {lazytest.core/given clojure.core/let
            lazytest.core/around clojure.core/fn
+           lazytest.core/around-each clojure.core/fn
            lazytest.core/defdescribe clojure.core/def
            ;; clojure.test interface
            lazytest.experimental.interfaces.clojure-test/deftest clojure.test/deftest
@@ -21,8 +22,10 @@
                         lazytest.extensions.expectations/more-of hooks.lazytest.expectations/more-of
                         lazytest.experimental.interfaces.expectations/more-> hooks.lazytest.expectations/more->
                         lazytest.experimental.interfaces.expectations/more-of hooks.lazytest.expectations/interface-more-of
+                        lazytest.hooks/defhook hooks.lazytest.hooks/defhook
                         }}
- :linters {:clojure-lsp/unused-public-var
+ :linters {:lazytest/hook-impl {:level :error}
+           :clojure-lsp/unused-public-var
            {:exclude-when-defined-by #{lazytest.core/defdescribe
                                        lazytest.experimental.interfaces.xunit/defsuite
                                        lazytest.experimental.interfaces.clojure-test/deftest

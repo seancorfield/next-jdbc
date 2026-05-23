@@ -1,0 +1,45 @@
+(ns hooks.lazytest.hooks
+  (:require [clj-kondo.hooks-api :as api]))
+
+(defn get-arg
+  [args pred]
+  (if (pred (first args))
+    [(first args) (next args)]
+    [nil args]))
+
+(defn defhook
+  [{:keys [node]}]
+  (let [[_defmulti hook-name & hook-impls] (:children node)
+        [docstring hook-impls] (get-arg hook-impls api/string-node?)
+        new-node (api/list-node
+                  (concat
+                   [(api/token-node 'do)
+                    (api/list-node
+                     (concat
+                      [(api/token-node 'defmulti) hook-name]
+                      (when docstring [docstring])
+                      [(api/coerce {:arglists '([config m hook-type])})
+                       (api/coerce (list 'var 'lazytest.hooks/hook-dispatch))]))
+                    (api/coerce (list 'defmethod (api/sexpr hook-name) (api/keyword-node :default) '[_config m _hook-type] 'm))]
+                   (map (fn [impl]
+                          (if-not (api/list-node? impl)
+                            (let [{:keys [row col end-row end-col]} (meta impl)]
+                              (api/reg-finding!
+                               {:type :lazytest/hook-impl
+                                :message (str "Expected list, received " (type (api/sexpr impl)))
+                                :row row :col col :end-row end-row :end-col end-col}))
+                            (let [[hook-key hook-args & hook-body] (:children impl)
+                                  hook-key' (with-meta (api/keyword-node (keyword (api/sexpr hook-key))) (meta hook-key))]
+                              (api/reg-keyword! hook-key' true)
+                              (with-meta
+                                (api/list-node
+                                 (list*
+                                  (api/token-node 'defmethod)
+                                  (with-meta hook-name (meta hook-key))
+                                  hook-key'
+                                  (update hook-args :children #(conj (vec %) (api/coerce (gensym "_hook-type"))))
+                                  hook-body))
+                                (meta impl)))))
+                        hook-impls)
+                   [(api/coerce (list 'var (api/sexpr hook-name)))]))]
+    {:node (with-meta new-node (meta node))}))
