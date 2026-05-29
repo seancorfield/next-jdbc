@@ -2,6 +2,9 @@
 
 Only accretive/fixative changes will be made from now on.
 
+* 1.3.next in progress
+  * Update dev/test deps.
+
 * 1.3.1108 -- 2026-05-23
   * Address [#318](https://github.com/seancorfield/next-jdbc/issues/318) by adding `next.jdbc.connection/unwrap` to unwrap a connectable with options, logging, etc.
   * Address [#316](https://github.com/seancorfield/next-jdbc/issues/316) by enhancing `next.jdbc.result-set/builder-adapter` to accept a column function "factory" that can preprocess the result set metadata and return a `column-by-index-fn` that can read columns more efficiently.
