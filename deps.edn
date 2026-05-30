@@ -36,9 +36,9 @@
                       ;; 42.7.4 changes update count (to -1) for stored procs:
                       org.postgresql/postgresql {:mvn/version "42.7.11"}
                       io.zonky.test/embedded-postgres {:mvn/version "2.2.2"}
-                      io.zonky.test.postgres/embedded-postgres-binaries-darwin-amd64  {:mvn/version "18.3.0"}
-                      io.zonky.test.postgres/embedded-postgres-binaries-linux-amd64   {:mvn/version "18.3.0"}
-                      io.zonky.test.postgres/embedded-postgres-binaries-windows-amd64 {:mvn/version "18.3.0"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-darwin-amd64  {:mvn/version "18.4.0"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-linux-amd64   {:mvn/version "18.4.0"}
+                      io.zonky.test.postgres/embedded-postgres-binaries-windows-amd64 {:mvn/version "18.4.0"}
                       org.xerial/sqlite-jdbc {:mvn/version "3.53.1.0"}
                       com.microsoft.sqlserver/mssql-jdbc {:mvn/version "13.4.0.jre11"}
                       ;; use log4j2 to reduce log noise during testing:
