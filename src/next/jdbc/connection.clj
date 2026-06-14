@@ -1,4 +1,4 @@
-;; copyright (c) 2018-2025 Sean Corfield, all rights reserved
+;; copyright (c) 2018-2026 Sean Corfield, all rights reserved
 
 (ns next.jdbc.connection
   "Standard implementations of `get-datasource` and `get-connection`.
@@ -369,6 +369,12 @@
   ;; stop the component and close the pooled datasource:
   (component/stop ds)
   )
+
+(defn unwrap
+  "Given a potentially wrapped `Connection` object, with options or logging
+   etc, return the underlying 'unwrapped' object."
+  [wrapped]
+  (p/unwrap wrapped))
 
 (defn- string->url+etc
   "Given a JDBC URL, return it with an empty set of options with no parsing."

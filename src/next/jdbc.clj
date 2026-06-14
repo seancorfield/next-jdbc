@@ -1,4 +1,4 @@
-;; copyright (c) 2018-2025 Sean Corfield, all rights reserved
+;; copyright (c) 2018-2026 Sean Corfield, all rights reserved
 
 (ns next.jdbc
   "The public API of the next generation java.jdbc library.
@@ -62,7 +62,7 @@
   In addition, wherever a `PreparedStatement` is created, you may specify:
   * `:return-keys` -- either `true` or a vector of key names to return."
   (:require [camel-snake-kebab.core :refer [->kebab-case ->snake_case]]
-            [next.jdbc.connection]
+            [next.jdbc.connection :as conn]
             [next.jdbc.default-options :as opts]
             [next.jdbc.prepare :as prepare]
             [next.jdbc.protocols :as p]
@@ -354,7 +354,7 @@
   ([connectable sql param-groups opts]
    (when-not (string? sql)
      (throw (IllegalArgumentException. "execute-batch! requires a SQL string")))
-   (if (instance? java.sql.Connection (p/unwrap connectable))
+   (if (instance? java.sql.Connection (conn/unwrap connectable))
      (with-open [ps (prepare connectable [sql] opts)]
        (execute-batch! ps param-groups opts))
      (with-open [con (get-connection connectable)]
@@ -382,7 +382,7 @@
   [[sym connectable] & body]
   (let [con-sym (vary-meta sym assoc :tag 'java.sql.Connection)]
     `(let [con-obj#  ~connectable
-           bare-con# (p/unwrap con-obj#)]
+           bare-con# (conn/unwrap con-obj#)]
        (if (instance? java.sql.Connection bare-con#)
          ((^{:once true} fn* [~con-sym] ~@body) bare-con#)
          (with-open [con# (get-connection con-obj#)]
@@ -416,7 +416,7 @@
   with `on-connection`."
   [[sym connectable] & body]
   `(let [con-obj# ~connectable]
-     (if (instance? java.sql.Connection (p/unwrap con-obj#))
+     (if (instance? java.sql.Connection (conn/unwrap con-obj#))
        ((^{:once true} fn* [~sym] ~@body) con-obj#)
        (with-open [con# (get-connection con-obj#)]
          ((^{:once true} fn* [~sym] ~@body)
