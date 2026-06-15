@@ -138,6 +138,7 @@
   * `timesten:client` -- `com.timesten.jdbc.TimesTenClientDriver`
   * `timesten:direct` -- `com.timesten.jdbc.TimesTenDriver`
   * `xtdb` -- `xtdb.jdbc.Driver` -- an XTDB wrapper around `postgresql`
+  * `yugabytedb` -- `com.yugabyte.Driver` -- an official YugabyteDB JDBC Smart Driver
 
   For more details about `:dbtype` and `:classname` values, see:
   https://cljdoc.org/d/com.github.seancorfield/next.jdbc/CURRENT/api/next.jdbc.connection#dbtypes"
