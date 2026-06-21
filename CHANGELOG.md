@@ -3,8 +3,8 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
-  * Update dev/test deps.
   * Added YugabyteDB as supported database via PR [#319](https://github.com/seancorfield/next-jdbc/pull/319) from [@aldebogdanov](https://github.com/aldebogdanov)
+  * Update dev/test deps.
 
 * 1.3.1108 -- 2026-05-23
   * Address [#318](https://github.com/seancorfield/next-jdbc/issues/318) by adding `next.jdbc.connection/unwrap` to unwrap a connectable with options, logging, etc.

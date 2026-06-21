@@ -22,10 +22,10 @@ for `project.clj` or `build.boot`.
 
 **In addition, you will need to add dependencies for the JDBC drivers you wish to use for whatever databases you are using. For example:**
 
-* MySQL: `com.mysql/mysql-connector-j {:mvn/version "9.3.0"}` ([search for latest version](https://search.maven.org/artifact/com.mysql/mysql-connector-j))
-* PostgreSQL: `org.postgresql/postgresql {:mvn/version "42.7.4"}` ([search for latest version](https://search.maven.org/artifact/org.postgresql/postgresql))
-* Microsoft SQL Server: `com.microsoft.sqlserver/mssql-jdbc {:mvn/version "12.8.1.jre11"}` ([search for latest version](https://search.maven.org/artifact/com.microsoft.sqlserver/mssql-jdbc))
-* Sqlite: `org.xerial/sqlite-jdbc {:mvn/version "3.47.1.0"}` ([search for latest version](https://search.maven.org/artifact/org.xerial/sqlite-jdbc))
+* MySQL: `com.mysql/mysql-connector-j {:mvn/version "9.7.0"}` ([search for latest version](https://search.maven.org/artifact/com.mysql/mysql-connector-j))
+* PostgreSQL: `org.postgresql/postgresql {:mvn/version "42.7.11"}` ([search for latest version](https://search.maven.org/artifact/org.postgresql/postgresql))
+* Microsoft SQL Server: `com.microsoft.sqlserver/mssql-jdbc {:mvn/version "13.4.0.jre11"}` ([search for latest version](https://search.maven.org/artifact/com.microsoft.sqlserver/mssql-jdbc))
+* Sqlite: `org.xerial/sqlite-jdbc {:mvn/version ""3.53.2.0""}` ([search for latest version](https://search.maven.org/artifact/org.xerial/sqlite-jdbc))
 
 > Note: these are the versions that `next.jdbc` is tested against but there may be more recent versions and those should generally work too -- click the "search for latest version" link to see all available versions of those drivers on Maven Central. You can see the full list of drivers and versions that `next.jdbc` is tested against in [the project's `deps.edn` file](https://github.com/seancorfield/next-jdbc/blob/develop/deps.edn#L10-L27), but many other JDBC drivers for other databases should also work (e.g., Oracle, Red Shift).
 
@@ -487,15 +487,15 @@ Not all databases support using a `PreparedStatement` for every type of SQL oper
 First, you need to add the connection pooling library as a dependency, e.g.,
 
 ```clojure
-com.zaxxer/HikariCP {:mvn/version "6.2.1"}
+com.zaxxer/HikariCP {:mvn/version "7.1.0"}
 ;; or:
-com.mchange/c3p0 {:mvn/version "0.11.1"}
+com.mchange/c3p0 {:mvn/version "0.14.1"}
 ```
 
 As of 1.3.1093, you can also use the [hikari-cp](https://github.com/tomekw/hikari-cp) library.
 
 ```clojure
-hikari-cp/hikari-cp {:mvn/version "4.0.0"}
+hikari-cp/hikari-cp {:mvn/version "4.1.0"}
 ```
 
 _Check those libraries' documentation for the latest version to use!_
