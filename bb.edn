@@ -2,7 +2,7 @@
 ;;   all       - run tests against all supported Clojure versions
 ;;   local     - only test local DBs (H2, HSQLDB, SQLite, Derby)
 ;;   maria     - test MariaDB (and MySQL) drivers only
-;;   1.10/1.11/1.12 - run only against the specified Clojure version (defaults to 1.12)
+;;   1.10/1.11/1.12/1.13 - run only against the specified Clojure version (defaults to 1.12)
 ;;   jdk11/jdk17/jdk21/jdk25 - indicate which JDK you are using (defaults to jdk25)
 {:tasks
  {:requires [[clojure.string :as str]]
@@ -32,7 +32,7 @@
                      "NEXT_JDBC_TEST_XTDB"  "yes"
                      "MSSQL_SA_PASSWORD"    "Str0ngP4ssw0rd"})]
           ;; since we test xtdb by default now, we default to 1.12:
-          (doseq [v (if all? ["1.10" "1.11" "1.12"] versions)]
+          (doseq [v (if all? ["1.10" "1.11" "1.12" "1.13"] versions)]
             (println "\nTesting Clojure" v)
             (shell {:extra-env env}
                    "clojure"

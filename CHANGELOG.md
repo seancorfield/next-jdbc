@@ -3,6 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
+  * Start testing against Clojure 1.13.0-alpha1.
   * Update dev/test deps.
 
 * 1.3.1118 -- 2026-06-20
