@@ -1,4 +1,4 @@
-;; copyright (c) 2019-2025 Sean Corfield, all rights reserved
+;; copyright (c) 2019-2026 Sean Corfield, all rights reserved
 
 (ns next.jdbc.result-set-test
   "Test namespace for the result set functions.
@@ -337,6 +337,7 @@
                              {:builder-fn (constantly nil)})))))
   (testing "count does not build a map"
     (let [count-builder (fn [_1 _2]
+                          #_{:clj-kondo/ignore [:missing-protocol-method]}
                           (reify rs/RowBuilder
                             (column-count [_] 13)))]
       (is (= [13]
@@ -433,8 +434,8 @@
                         (.getObject rs "cost")
                         (.getObject rs "grade")))
     (column-count [_] 0) ; no need to iterate over columns
-    (with-column [_ row i] row)
-    (with-column-value [_ row col v] row)
+    (with-column [_ row _] row)
+    (with-column-value [_ row _col _v] row)
     (row! [_ row] row)
     rs/ResultSetBuilder
     (->rs [_] (transient []))
@@ -442,7 +443,7 @@
     (rs! [_ rs] (persistent! rs))
     clojure.lang.ILookup ; only supports :cols and :rsmeta
     (valAt [this k] (get this k nil))
-    (valAt [this k not-found]
+    (valAt [_this k not-found]
       (case k
         :cols [(col-kw :id) :name :appearance :cost :grade]
         :rsmeta rsmeta
@@ -482,11 +483,11 @@
       (try
         (p/-execute-one con ["DROP TABLE CLOBBER"] {})
         (catch Exception _))
-      (p/-execute-one con [(str "
+      (p/-execute-one con ["
 CREATE TABLE CLOBBER (
   ID INTEGER,
   STUFF CLOB
-)")]
+)"]
                       {})
       (p/-execute-one con
                       [(str "insert into clobber (id, stuff)"

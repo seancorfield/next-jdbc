@@ -5,4 +5,6 @@
    next.jdbc/with-transaction+options
    hooks.com.github.seancorfield.next-jdbc/with-transaction+options}}
  :lint-as {next.jdbc/on-connection clojure.core/with-open
-           next.jdbc/on-connection+options clojure.core/with-open}}
+           next.jdbc/on-connection+options clojure.core/with-open}
+ :linters
+ {:unresolved-var {:exclude [next.jdbc.types]}}}

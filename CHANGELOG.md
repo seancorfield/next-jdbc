@@ -5,6 +5,7 @@ Only accretive/fixative changes will be made from now on.
 * 1.3.next in progress
   * Start testing against Clojure 1.13.0-alpha4.
   * Update dev/test deps.
+  * Clean up lint issues.
 
 * 1.3.1118 -- 2026-06-20
   * Added YugabyteDB as supported database via PR [#319](https://github.com/seancorfield/next-jdbc/pull/319) from [@aldebogdanov](https://github.com/aldebogdanov)
