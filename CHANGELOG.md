@@ -3,7 +3,7 @@
 Only accretive/fixative changes will be made from now on.
 
 * 1.3.next in progress
-  * Start testing against Clojure 1.13.0-alpha4.
+  * Start testing against Clojure 1.13.
   * Update dev/test deps.
   * Clean up lint issues.
 
