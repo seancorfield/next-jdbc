@@ -2,6 +2,8 @@
 
 The next generation of `clojure.java.jdbc`: a new low-level Clojure wrapper for JDBC-based access to databases.
 
+> [My AI Usage Statement](https://corfield.org/blog/2026/08/02/ai/)
+
 **Featured in [ClojureStream Reitit Course](https://clojure.stream/courses/reitit)!**
 
 ## TL;DR
