@@ -1,1 +1,1 @@
-{:hooks {:analyze-call {noahtheduke.sinker/try+ hooks.sinker.try-plus/try-plus}}}
+{:hooks {:analyze-call {com.noahbogart.sinker/try+ hooks.sinker.try-plus/try+}}}

@@ -16,14 +16,15 @@
             (symbol? (api/sexpr pred))
             (= :var (:tag pred)))
           (api/list-node
-            (list* catch-token (api/token-node 'clojure.lang.ExceptionInfo) id
+            (list* catch-token
+              (vary-meta (api/token-node 'ExceptionInfo) assoc :clj-kondo/ignore [:unresolved-symbol]) id
               (cons pred body)))
           :else
           clause)
         (meta clause)))
     clause))
 
-(defn try-plus
+(defn try+
   [{:keys [node]}]
   (let [[_try+ & children] (:children node)
         body (mapv parse-exprs children)

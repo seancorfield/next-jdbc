@@ -4,8 +4,11 @@
 ;;   maria     - test MariaDB (and MySQL) drivers only
 ;;   1.10/1.11/1.12/1.13 - run only against the specified Clojure version (defaults to 1.12)
 ;;   jdk11/jdk17/jdk21/jdk25 - indicate which JDK you are using (defaults to jdk25)
-{:tasks
- {:requires [[clojure.string :as str]]
+{:paths ["."]
+ :deps {io.github.babashka/deps-deploy {:mvn/version "0.0.1"}}
+ :tasks
+ {:requires [build
+             [clojure.string :as str]]
 
   test {:doc "Run the test suite."
         :task
@@ -50,19 +53,13 @@
             :task (binding [*command-line-args* (conj *command-line-args* "all")]
                     (run 'test))}
 
-  -snapshot {:doc "Return snapshot options, if requested."
-             :task (->> (if (some #{"snapshot"} *command-line-args*)
-                          [:snapshot true]
-                          [])
-                        (map str))}
-
   ci {:doc "Run the CI pipeline of tests and build the JAR."
       :depends [test:all]
-      :task (apply shell "clojure -T:build jar" (run '-snapshot))}
+      :exec-fn build/jar}
 
   ci:deploy {:doc "Deploy the JAR we just built to Clojars."
              :depends [ci]
-             :task (apply shell "clojure -T:build deploy" (run '-snapshot))}
+             :exec-fn build/deploy}
 
   docker:up {:doc "Start the Docker containers for testing."
              :task (shell "docker compose up -d")}

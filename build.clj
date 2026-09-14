@@ -1,18 +1,7 @@
 (ns build
-  "next.jdbc's build script.
-
-  clojure -T:build jar
-  clojure -T:build deploy
-
-  Run tests via:
-  bb test
-
-  For more information, run:
-
-  clojure -T:deps:build help/doc"
-  (:refer-clojure :exclude [test])
+  "next.jdbc's build script. Entirely driven by `bb`."
   (:require [clojure.tools.build.api :as b]
-            [deps-deploy.deps-deploy :as dd]))
+            [babashka.deps-deploy :as dd]))
 
 (def lib 'com.github.seancorfield/next.jdbc)
 (defn- the-version [patch] (format "1.3.%s" patch))
@@ -47,7 +36,9 @@
            :src-dirs  ["src"]
            :pom-data  (pom-template version))))
 
-(defn jar "Build the JAR file." [opts]
+(defn jar "Build the JAR file."
+  {:org.babashka/cli {:spec {:snapshot {:coerce :boolean}}}}
+  [opts]
   (b/delete {:path "target"})
   (let [opts (jar-opts opts)]
     (println "\nWriting pom.xml...")
@@ -58,7 +49,9 @@
     (b/jar opts))
   opts)
 
-(defn deploy "Deploy the JAR to Clojars." [opts]
+(defn deploy "Deploy the JAR to Clojars."
+  {:org.babashka/cli {:spec {:snapshot {:coerce :boolean}}}}
+  [opts]
   (let [{:keys [jar-file] :as opts} (jar-opts opts)]
     (dd/deploy {:installer :remote :artifact (b/resolve-path jar-file)
                 :pom-file (b/pom-path (select-keys opts [:lib :class-dir]))}))
