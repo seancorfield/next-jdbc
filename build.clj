@@ -1,7 +1,8 @@
 (ns build
   "next.jdbc's build script. Entirely driven by `bb`."
-  (:require [clojure.tools.build.api :as b]
-            [babashka.deps-deploy :as dd]))
+  (:require [babashka.deps-deploy :as dd]
+            [babashka.tasks :refer [shell]]
+            [clojure.tools.build.api :as b]))
 
 (def lib 'com.github.seancorfield/next.jdbc)
 (defn- the-version [patch] (format "1.3.%s" patch))
@@ -56,3 +57,53 @@
     (dd/deploy {:installer :remote :artifact (b/resolve-path jar-file)
                 :pom-file (b/pom-path (select-keys opts [:lib :class-dir]))}))
   opts)
+
+;; test-related tasks:
+
+(defn run-tests "Run the test suite for various Clojure versions and databases."
+  {:org.babashka/cli {:spec {:all-versions {:coerce :boolean}
+                             :jdk          {} ; string
+                             :local        {:coerce :boolean}
+                             :maria        {:coerce :boolean}}}}
+  [opts]
+  (let [versions (if (:all-versions opts)
+                   ["1.10" "1.11" "1.12" "1.13"]
+                   ["1.12"])
+        env
+        (cond (:local opts)
+              {}
+              (:maria opts)
+              {"NEXT_JDBC_TEST_MARIADB" "yes"
+               "NEXT_JDBC_TEST_MYSQL"   "yes"}
+              :else
+              {"NEXT_JDBC_TEST_MSSQL" "yes"
+               "NEXT_JDBC_TEST_MYSQL" "yes"
+               "NEXT_JDBC_TEST_XTDB"  "yes"
+               "MSSQL_SA_PASSWORD"    "Str0ngP4ssw0rd"})]
+    (doseq [v versions]
+      (println "\nTesting Clojure" v)
+      (shell {:extra-env env}
+             "clojure"
+             (str "-M"
+                  ":" v
+                  ":test:runner"
+                  ;; 11 17 -- no xtdb
+                  ;; 21 -- xtdb
+                  ;; 25 -- xtdb, native access all unnamed
+                  (if-let [jdk (:jdk opts)]
+                    (str ":jdk" jdk)
+                    ;; sean's local default
+                    ":jdk25"))))))
+
+;; low-level build tasks:
+
+(defn docker "Start or stop Docker."
+  {:org.babashka/cli {:spec {:down {:coerce :boolean}
+                             :up   {:coerce :boolean}}}}
+  [opts]
+  (cond (:up opts)
+        (shell "docker compose up -d")
+        (:down opts)
+        (shell "docker compose down")
+        :else
+        (throw (ex-info "docker task requires either --up or --down" opts))))

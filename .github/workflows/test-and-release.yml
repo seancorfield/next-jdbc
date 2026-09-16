@@ -32,15 +32,15 @@ jobs:
             ~/.deps.clj
           key: ${{ runner.os }}-${{ hashFiles('**/deps.edn', '**/bb.edn') }}
       - name: Setup Databases
-        run: bb docker:up
+        run: bb docker --up
         env:
           MYSQL_ROOT_PASSWORD: testing
       - name: Run MariaDB Tests
-        run: bb test maria jdk21
+        run: bb test --maria --jdk 21
         env:
           MYSQL_ROOT_PASSWORD: testing
       - name: Run All Tests, then Build & Deploy Release
-        run: bb ci:deploy jdk21
+        run: bb ci:deploy --jdk 21
         env:
           MYSQL_ROOT_PASSWORD: testing
           CLOJARS_PASSWORD: ${{secrets.DEPLOY_TOKEN}}

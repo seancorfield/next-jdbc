@@ -30,14 +30,14 @@ jobs:
             ~/.deps.clj
           key: ${{ runner.os }}-${{ hashFiles('**/deps.edn', '**/bb.edn') }}
       - name: Setup Databases
-        run: bb docker:up
+        run: bb docker --up
         env:
           MYSQL_ROOT_PASSWORD: testing
       - name: Run MariaDB Tests
-        run: bb test maria jdk${{ matrix.java }}
+        run: bb test --maria --jdk ${{ matrix.java }}
         env:
           MYSQL_ROOT_PASSWORD: testing
       - name: Run All Tests
-        run: bb test all jdk${{ matrix.java }}
+        run: bb test:all --jdk ${{ matrix.java }}
         env:
           MYSQL_ROOT_PASSWORD: testing

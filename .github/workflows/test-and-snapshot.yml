@@ -30,15 +30,15 @@ jobs:
             ~/.deps.clj
           key: ${{ runner.os }}-${{ hashFiles('**/deps.edn', '**/bb.edn') }}
       - name: Setup Databases
-        run: bb docker:up
+        run: bb docker --up
         env:
           MYSQL_ROOT_PASSWORD: testing
       - name: Run MariaDB Tests
-        run: bb test maria jdk21
+        run: bb test --maria --jdk 21
         env:
           MYSQL_ROOT_PASSWORD: testing
       - name: Run All Tests, then Build & Deploy Snapshot
-        run: bb ci:deploy --snapshot jdk21
+        run: bb ci:deploy --snapshot --jdk 21
         env:
           MYSQL_ROOT_PASSWORD: testing
           CLOJARS_PASSWORD: ${{secrets.DEPLOY_TOKEN}}
@@ -70,4 +70,4 @@ jobs:
             ~/.deps.clj
           key: ${{ runner.os }}-${{ hashFiles('**/deps.edn', '**/bb.edn') }}
       - name: Run Tests
-        run: bb test local jdk${{ matrix.java }}
+        run: bb test --local --jdk ${{ matrix.java }}
