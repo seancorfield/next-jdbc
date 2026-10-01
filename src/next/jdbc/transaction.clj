@@ -59,8 +59,8 @@
         read-only      (:read-only opts)
         rollback-only  (:rollback-only opts)
         old-autocommit (.getAutoCommit con)
-        old-isolation  (.getTransactionIsolation con)
-        old-readonly   (.isReadOnly con)
+        old-isolation  (when isolation (.getTransactionIsolation con))
+        old-readonly   (when read-only (.isReadOnly con))
         restore-ac?    (volatile! true)]
     (io!
      (when isolation
