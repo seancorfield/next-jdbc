@@ -30,7 +30,7 @@
                       org.mariadb.jdbc/mariadb-java-client {:mvn/version "3.5.10"}
                       com.mysql/mysql-connector-j {:mvn/version "26.7.0"}
                       ;; 42.7.4 changes update count (to -1) for stored procs:
-                      org.postgresql/postgresql {:mvn/version "42.7.13"}
+                      org.postgresql/postgresql {:mvn/version "42.7.14"}
                       io.zonky.test/embedded-postgres {:mvn/version "2.2.2"}
                       io.zonky.test.postgres/embedded-postgres-binaries-darwin-amd64  {:mvn/version "18.6.0"}
                       io.zonky.test.postgres/embedded-postgres-binaries-linux-amd64   {:mvn/version "18.6.0"}
