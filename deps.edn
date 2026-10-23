@@ -55,4 +55,4 @@
                        com.xtdb/xtdb-api {:mvn/version "2.2.0"}}
           :jvm-opts [;; for SQLite on JDK 25 locally
                      "--enable-native-access=ALL-UNNAMED"]}
-  :neil {:project {:version "1.4.70"}}}}
+  :neil {:project {:version "1.4.71"}}}}
