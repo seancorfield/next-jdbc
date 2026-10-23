@@ -2,7 +2,7 @@
 
 Only accretive/fixative changes will be made from now on.
 
-* 1.4.71 in progress
+* 1.4.71 -- 2026-10-23
   * Fix [#320](https://github.com/seancorfield/next-jdbc/issues/320) by guarding calls with option checks.
   * Start testing against Clojure 1.13.
   * Switch build to `bb`.
