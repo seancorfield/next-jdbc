@@ -15,8 +15,8 @@
    [next.jdbc.specs :as specs]
    [next.jdbc.test-fixtures
              :refer [col-kw column db default-options derby? ds h2? hsqldb?
-                     index jtds? mssql? mysql? postgres? sqlite? stored-proc?
-                     with-test-db xtdb?]]
+                     index jtds? maria? mssql? mysql? postgres? sqlite?
+                     stored-proc? with-test-db xtdb?]]
    [next.jdbc.types :as types])
   (:import
    (com.mchange.v2.c3p0 ComboPooledDataSource PooledDataSource)
@@ -370,113 +370,117 @@ VALUES ('Pear', 'green', 49, 47)
   (when-not (or (postgres?) (xtdb?)
                 ;; and now we skip MS SQL because we can't use the db-spec
                 ;; we'd need to build the jdbcUrl with encryption turned off:
-                (and (mssql?) (not (jtds?))))
+                (and (mssql?) (not (jtds?)))
+                ;; mariadb 4.0.0 is much stricter about savepoints and
+                ;; connection pooling so we don't run these tests:
+                (maria?))
     (testing "Hikari and SavePoints"
-      (with-open [^HikariDataSource ds (c/->pool HikariDataSource
-                                        (let [db (db)]
-                                          (cond-> db
-                                            ;; jTDS does not support isValid():
-                                            (jtds?)
-                                            (assoc :connectionTestQuery "SELECT 1")
-                                            ;; HikariCP needs username, not user:
-                                            (contains? db :user)
-                                            (assoc :username (:user db)))))]
+      (with-open [^HikariDataSource ds
+                  (c/->pool HikariDataSource
+                            (let [db (db)]
+                              (cond-> db
+                                ;; jTDS does not support isValid():
+                                (jtds?)
+                                (assoc :connectionTestQuery "SELECT 1")
+                                ;; HikariCP needs username, not user:
+                                (contains? db :user)
+                                (assoc :username (:user db)))))]
         (testing "with-transaction with unnamed save point"
           (is (= [{:next.jdbc/update-count 1}]
-                (jdbc/with-transaction [t ds]
-                  (let [save-point (.setSavepoint t)
-                        result (jdbc/execute! t ["
+                 (jdbc/with-transaction [t ds]
+                   (let [save-point (.setSavepoint t)
+                         result (jdbc/execute! t ["
       INSERT INTO fruit (name, appearance, cost, grade)
       VALUES ('Pear', 'green', 49, 47)
       "])]
-                    (.rollback t save-point)
-                    result))))
+                     (.rollback t save-point)
+                     result))))
           (is (= 4 (count (jdbc/execute! ds ["select * from fruit"]))))
           (with-open [con (jdbc/get-connection ds)]
             (let [ac (.getAutoCommit con)]
               (is (= [{:next.jdbc/update-count 1}]
-                    (jdbc/with-transaction [t con]
-                      (let [save-point (.setSavepoint t)
-                            result (jdbc/execute! t ["
+                     (jdbc/with-transaction [t con]
+                       (let [save-point (.setSavepoint t)
+                             result (jdbc/execute! t ["
       INSERT INTO fruit (name, appearance, cost, grade)
       VALUES ('Pear', 'green', 49, 47)
       "])]
-                        (.rollback t save-point)
-                        result))))
+                         (.rollback t save-point)
+                         result))))
               (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
               (is (= ac (.getAutoCommit con))))))
         (testing "with-transaction with named save point"
           (is (= [{:next.jdbc/update-count 1}]
-                (jdbc/with-transaction [t ds]
-                  (let [save-point (.setSavepoint t (name (gensym)))
-                        result (jdbc/execute! t ["
+                 (jdbc/with-transaction [t ds]
+                   (let [save-point (.setSavepoint t (name (gensym)))
+                         result (jdbc/execute! t ["
       INSERT INTO fruit (name, appearance, cost, grade)
       VALUES ('Pear', 'green', 49, 47)
       "])]
-                    (.rollback t save-point)
-                    result))))
+                     (.rollback t save-point)
+                     result))))
           (is (= 4 (count (jdbc/execute! ds ["select * from fruit"]))))
           (with-open [con (jdbc/get-connection ds)]
             (let [ac (.getAutoCommit con)]
               (is (= [{:next.jdbc/update-count 1}]
-                    (jdbc/with-transaction [t con]
-                      (let [save-point (.setSavepoint t (name (gensym)))
-                            result (jdbc/execute! t ["
+                     (jdbc/with-transaction [t con]
+                       (let [save-point (.setSavepoint t (name (gensym)))
+                             result (jdbc/execute! t ["
       INSERT INTO fruit (name, appearance, cost, grade)
       VALUES ('Pear', 'green', 49, 47)
       "])]
-                        (.rollback t save-point)
-                        result))))
+                         (.rollback t save-point)
+                         result))))
               (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
               (is (= ac (.getAutoCommit con))))))))
     (testing "c3p0 and SavePoints"
       (with-open [^PooledDataSource ds (c/->pool ComboPooledDataSource (db))]
         (testing "with-transaction with unnamed save point"
           (is (= [{:next.jdbc/update-count 1}]
-                (jdbc/with-transaction [t ds]
-                  (let [save-point (.setSavepoint t)
-                        result (jdbc/execute! t ["
+                 (jdbc/with-transaction [t ds]
+                   (let [save-point (.setSavepoint t)
+                         result (jdbc/execute! t ["
       INSERT INTO fruit (name, appearance, cost, grade)
       VALUES ('Pear', 'green', 49, 47)
       "])]
-                    (.rollback t save-point)
-                    result))))
+                     (.rollback t save-point)
+                     result))))
           (is (= 4 (count (jdbc/execute! ds ["select * from fruit"]))))
           (with-open [con (jdbc/get-connection ds)]
             (let [ac (.getAutoCommit con)]
               (is (= [{:next.jdbc/update-count 1}]
-                    (jdbc/with-transaction [t con]
-                      (let [save-point (.setSavepoint t)
-                            result (jdbc/execute! t ["
+                     (jdbc/with-transaction [t con]
+                       (let [save-point (.setSavepoint t)
+                             result (jdbc/execute! t ["
       INSERT INTO fruit (name, appearance, cost, grade)
       VALUES ('Pear', 'green', 49, 47)
       "])]
-                        (.rollback t save-point)
-                        result))))
+                         (.rollback t save-point)
+                         result))))
               (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
               (is (= ac (.getAutoCommit con))))))
         (testing "with-transaction with named save point"
           (is (= [{:next.jdbc/update-count 1}]
-                (jdbc/with-transaction [t ds]
-                  (let [save-point (.setSavepoint t (name (gensym)))
-                        result (jdbc/execute! t ["
+                 (jdbc/with-transaction [t ds]
+                   (let [save-point (.setSavepoint t (name (gensym)))
+                         result (jdbc/execute! t ["
       INSERT INTO fruit (name, appearance, cost, grade)
       VALUES ('Pear', 'green', 49, 47)
       "])]
-                    (.rollback t save-point)
-                    result))))
+                     (.rollback t save-point)
+                     result))))
           (is (= 4 (count (jdbc/execute! ds ["select * from fruit"]))))
           (with-open [con (jdbc/get-connection ds)]
             (let [ac (.getAutoCommit con)]
               (is (= [{:next.jdbc/update-count 1}]
-                    (jdbc/with-transaction [t con]
-                      (let [save-point (.setSavepoint t (name (gensym)))
-                            result (jdbc/execute! t ["
+                     (jdbc/with-transaction [t con]
+                       (let [save-point (.setSavepoint t (name (gensym)))
+                             result (jdbc/execute! t ["
       INSERT INTO fruit (name, appearance, cost, grade)
       VALUES ('Pear', 'green', 49, 47)
       "])]
-                        (.rollback t save-point)
-                        result))))
+                         (.rollback t save-point)
+                         result))))
               (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
               (is (= ac (.getAutoCommit con))))))))))
 
