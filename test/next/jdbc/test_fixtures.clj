@@ -29,9 +29,9 @@
 
 (def ^:private test-mysql-map
   (merge (if (System/getenv "NEXT_JDBC_TEST_MARIADB")
-           {:dbtype "mariadb"}
-           {:dbtype "mysql" :disableMariaDbDriver true})
-         {:dbname "clojure_test" :useSSL false :allowMultiQueries true
+           {:dbtype "mariadb" :sslMode "disable"}
+           {:dbtype "mysql" :disableMariaDbDriver true :useSSL false})
+         {:dbname "clojure_test" :allowMultiQueries true
           :user "root" :password (System/getenv "MYSQL_ROOT_PASSWORD")}))
 (def ^:private test-mysql
   (when (System/getenv "NEXT_JDBC_TEST_MYSQL") test-mysql-map))
