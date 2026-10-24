@@ -367,13 +367,7 @@ VALUES ('Pear', 'green', 49, 47)
 (deftest issue-146
   {:context [(around [f] (with-test-db f))]}
   ;; since we use an embedded PostgreSQL data source, we skip this:
-  (when-not (or (postgres?) (xtdb?)
-                ;; and now we skip MS SQL because we can't use the db-spec
-                ;; we'd need to build the jdbcUrl with encryption turned off:
-                (and (mssql?) (not (jtds?)))
-                ;; mariadb 4.0.0 is much stricter about savepoints and
-                ;; connection pooling so we don't run these tests:
-                (maria?))
+  (when-not (or (postgres?) (xtdb?))
     (testing "Hikari and SavePoints"
       (with-open [^HikariDataSource ds
                   (c/->pool HikariDataSource
@@ -382,6 +376,11 @@ VALUES ('Pear', 'green', 49, 47)
                                 ;; jTDS does not support isValid():
                                 (jtds?)
                                 (assoc :connectionTestQuery "SELECT 1")
+                                ;; MariaDB and MS SQL create new connections
+                                ;; without opts, so we need a jdbcUrl here:
+                                (or (maria?)
+                                    (and (mssql?) (not (jtds?))))
+                                (assoc :jdbcUrl (c/jdbc-url db))
                                 ;; HikariCP needs username, not user:
                                 (contains? db :user)
                                 (assoc :username (:user db)))))]
@@ -434,7 +433,14 @@ VALUES ('Pear', 'green', 49, 47)
               (is (= 4 (count (jdbc/execute! con ["select * from fruit"]))))
               (is (= ac (.getAutoCommit con))))))))
     (testing "c3p0 and SavePoints"
-      (with-open [^PooledDataSource ds (c/->pool ComboPooledDataSource (db))]
+      (with-open [^PooledDataSource ds
+                  (c/->pool ComboPooledDataSource
+                            (let [db (db)]
+                              (cond-> db
+                                ;; see notes for HikariCP above:
+                                (or (maria?)
+                                    (and (mssql?) (not (jtds?))))
+                                (assoc :jdbcUrl (c/jdbc-url db)))))]
         (testing "with-transaction with unnamed save point"
           (is (= [{:next.jdbc/update-count 1}]
                  (jdbc/with-transaction [t ds]
@@ -1093,7 +1099,9 @@ INSERT INTO fruit (name, appearance) VALUES (?,?)
                                 (not (jtds?))
                                 (conj :encrypt :trustServerCertificate))
                               (set (keys etc))))
-              (mysql?) (is (= #{:user :password :useSSL :allowMultiQueries}
+              (mysql?) (is (= (cond-> #{:user :password :useSSL :allowMultiQueries}
+                                (maria?) (-> (conj :sslMode)
+                                             (disj :useSSL)))
                               (disj (set (keys etc)) :disableMariaDbDriver)))
               :else    (is (= {} etc)))
         (is (instance? javax.sql.DataSource ds))
