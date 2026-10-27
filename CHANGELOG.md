@@ -4,6 +4,7 @@ Only accretive/fixative changes will be made from now on.
 
 * 1.4.73 in progress
   * Restore connection pool testing for MariaDB after the 4.0.0 upgrade, and add MS SQL Server testing since it had the same root cause (non-SSL connection).
+  * Update dev/test deps.
 
 * 1.4.72 -- 2026-10-23
   * Fix [#320](https://github.com/seancorfield/next-jdbc/issues/320) by guarding calls with option checks.
